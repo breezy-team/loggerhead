@@ -18,9 +18,11 @@
 
 import datetime
 import textwrap
+from StringIO import StringIO
 
 import bzrlib
 import bzrlib.branch
+import bzrlib.diff
 import bzrlib.errors
 import bzrlib.tsort
 
@@ -69,7 +71,11 @@ class History (object):
         return cls.from_branch(b)
     
     last_revid = property(lambda self: self._last_revid, None, None)
+    
     count = property(lambda self: self._count, None, None)
+    
+    def get_revision(self, revid):
+        return self._branch.repository.get_revision(revid)
     
     def get_revno(self, revid):
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
@@ -193,22 +199,86 @@ class History (object):
     
     def scan_range(self, revid, pagesize=20):
         """
-        yield a list of (label, revid) for a scan range through the full
+        yield a list of (label, title, revid) for a scan range through the full
         branch history, centered around the given revid.
         
-        example: [ ('(1)', 'first-revid'), ('-300', '...'), ... ]
+        example: [ ('(1)', 'Oldest', 'first-revid'), ('-300', 'Back 300', '...'), ... ]
         """
         count = self._count
         pos = self.get_sequence(revid)
         if pos < count - 1:
-            yield ('<', self._full_history[min(count - 1, pos + pagesize)])
+            yield ('<', 'Back %d' % (pagesize,),
+                   self._full_history[min(count - 1, pos + pagesize)])
         else:
-            yield ('<', None)
-        yield ('(1)', self._full_history[-1])
+            yield ('<', None, None)
+        yield ('(1)', 'Oldest', self._full_history[-1])
         for offset in reversed([-x for x in util.scan_range(pos, count)]):
-            yield ('%+d' % (offset,), self._full_history[pos - offset])
+            if offset < 0:
+                title = 'Back %d' % (-offset,)
+            else:
+                title = 'Forward %d' % (offset,)
+            yield ('%+d' % (offset,), title, self._full_history[pos - offset])
         if pos > 0:
-            yield ('>', self._full_history[max(0, pos - pagesize)])
+            yield ('>', 'Forward %d' % (pagesize,),
+                   self._full_history[max(0, pos - pagesize)])
         else:
-            yield ('>', None)
+            yield ('>', None, None)
                 
+    def diff_revisions(self, revid, otherrevid):
+        new_tree = self._branch.repository.revision_tree(revid)
+        old_tree = self._branch.repository.revision_tree(otherrevid)
+        
+        s = StringIO()
+        bzrlib.diff.show_diff_trees(old_tree, new_tree, s, old_label='', new_label='')
+        lines = s.getvalue().split('\n')
+        for l in lines:
+            if l.startswith('='):
+                yield ('info', str(l))
+            elif l.startswith('-'):
+                yield ('old-file', l)
+            elif l.startswith('+'):
+                yield ('new-file', l)
+            elif l.startswith('@'):
+                yield ('lineno', l)
+            else:
+                yield ('diffline', l)
+    
+    def get_file_lists(self, revid, otherrevid):
+        """
+        return 4 lists: (files added, files modified, files renamed,
+           files removed)
+        
+        each is a list of filenames, except the renames, which is a list of
+        (old-name, new-name) tuples.
+        """
+        new_tree = self._branch.repository.revision_tree(revid)
+        old_tree = self._branch.repository.revision_tree(otherrevid)
+        delta = new_tree.changes_from(old_tree)
+        
+        added = []
+        modified = []
+        renamed = []
+        removed = []
+        
+        def rich_filename(path, kind):
+            if kind == 'directory':
+                path += '/'
+            if kind == 'symlink':
+                path += '@'
+            return path
+        
+        for path, fid, kind in delta.added:
+            added.append(rich_filename(path, kind))
+        
+        for path, fid, kind, text_modified, meta_modified in delta.modified:
+            modified.append(rich_filename(path, kind))
+        
+        for oldpath, newpath, fid, kind, text_modified, meta_modified in delta.renamed:
+            renamed.append((rich_filename(oldpath, kind), rich_filename(newpath, kind)))
+            if meta_modified or text_modified:
+                modified.append(rich_filename(newpath, kind))
+        
+        for path, fid, kind in delta.removed:
+            removed.append(rich_filename(path, kind))
+        
+        return added, modified, renamed, removed

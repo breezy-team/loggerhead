@@ -9,16 +9,6 @@
 
 <body>
 
-<span py:def="revision_link(revid, revno)">
-    <a title="Show revision info" href="${tg.url([ '/revision', revid ])}">
-        <span class="revno"> ${revno} </span>
-    </a>
-    <a title="Show changelog" href="${tg.url([ '/changes', revid ])}" class="log"> (log) </a>
-    <a title="Show revision info" href="${tg.url([ '/revision', revid ])}">
-        <span class="revid"> ${util.clean_revid(revid)} </span>
-    </a>
-</span>
-
 ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes </h1>
@@ -28,10 +18,7 @@ ${navbar()}
         <tr> <th> merged in: </th>
         <td> 
             <span py:for="merge in merge_points" class="revision">
-	        ${revision_link(merge.revid, merge.revno)}
-	        </span> <br />
-            <span py:for="merge in merge_points" class="revision">
-	        ${revision_link(merge.revid, merge.revno)}
+	        ${revision_link(merge.revid, merge.revno)} <br />
 	        </span>
 	    </td>
 	    </tr>
@@ -41,7 +28,7 @@ ${navbar()}
 <!-- #prevpage# -->
 
 <div class="log-entries">
-    <table width="100%">
+    <table>
         <col class="header" />
         <col class="data" />
         <col class="mark-diff" />

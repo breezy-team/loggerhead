@@ -22,15 +22,11 @@ from loggerhead.history import History
 from loggerhead import util
 
 
-FOLDER = '/Users/robey/code/paramiko/paramiko'
-BRANCH_NAME = 'paramiko-dev'
-EXTERNAL_URL = 'http://localhost:8080'
-
 class AtomUI (object):
 
     @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
     def default(self, *args):
-        h = History.from_folder(FOLDER)
+        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:
             revid = args[0]
         else:
@@ -39,8 +35,8 @@ class AtomUI (object):
         entries = list(h.get_changelist(list(revlist)[:20]))
 
         vals = {
-            'external_url': EXTERNAL_URL,
-            'branch_name': BRANCH_NAME,
+            'external_url': turbogears.config.get('loggerhead.external_url'),
+            'branch_name': turboears.config.get('loggerhead.branch_name'),
             'changes': entries,
             'util': util,
             'history': h,

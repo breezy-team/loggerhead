@@ -162,6 +162,7 @@ h1 {
 /* secret css-jutsu to make hidden margins vanish on a table */
 .log-entries table {
 	border-collapse: collapse;
+    width: 99.9%;
 }
 
 /* left and right cols are fixed size */
@@ -211,3 +212,77 @@ h1 {
     text-align: left;
 }
 
+
+/* ----- revision page ----- */
+
+.info-entries {
+    border: none;
+    font-size: smaller;
+    margin-bottom: 1em;
+    padding: 0;
+    background-color: #f4f5f8;
+    border: 1px solid #8cacbb;
+    width: 80%;
+}
+
+/* secret css-jutsu to make hidden margins vanish on a table */
+.info-entries table {
+	border-collapse: collapse;
+    width: 100%;
+}
+
+.info-entries th {
+	background-color: #dee7ec;
+    color: black;
+	font-weight: normal;
+	text-align: right;
+	vertical-align: top;
+	
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.info-entries td {
+	font-weight: normal;
+  	padding-left: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.info-entries table .date {
+	font-family: monospace;
+}
+
+.info-entries table td.description {
+	font-family: monospace;
+}
+
+.info-entries table td.files {
+	font-family: monospace;
+}
+
+.info-entries table tr.divider {
+    border-top: 1px solid #8cacbb;
+}
+
+.diff {
+    font-size: 66%;
+    margin-bottom: 1em;
+    xxxborder-top: 1px solid #8cacbb;
+    padding-top: 10px;
+    margin-top: 20px;
+    width: 100%;
+    background-color: #fcfcfc;
+    font-family: monospace;
+}
+
+.diff .old-file { color: red; }
+.diff .new-file { color: green; }
+.diff .lineno { color: purple; background-color: #dee7ec; }
+.diff .info {
+	color: blue;
+	background-color: #dee7ec;
+	margin-top: 15px;
+}

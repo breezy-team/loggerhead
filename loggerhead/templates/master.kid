@@ -12,7 +12,7 @@
 
 <!-- define common navbar -->
 <span py:def="navbar()">
-    <!-- requires: ${revid}, ${buttons} -->
+    <!-- requires: ${revid}, ${buttons}, ${pagesize} -->
     <div class="navbar">
         <div class="bar">
             <table>
@@ -24,8 +24,8 @@
                     </span>
                 </td><td align="right">
                     <span class="navbuttons">
-                        <span py:for="label, l_revid in history.scan_range(revid)">
-                            <a py:if="l_revid" href="${tg.url([ scan_url, l_revid ])}"> ${label} </a>
+                        <span py:for="label, l_title, l_revid in history.scan_range(revid, pagesize)">
+                            <a py:if="l_revid" href="${tg.url([ scan_url, l_revid ])}" title="${l_title}"> ${label} </a>
                             <span py:if="not l_revid"> ${label} </span>
                         </span>
                     </span>
@@ -43,6 +43,16 @@
             </table>
         </div>
     </div>
+</span>
+
+<span py:def="revision_link(revid, revno)">
+    <a title="Show revision info" href="${tg.url([ '/revision', revid ])}">
+        <span class="revno"> ${revno} </span>
+    </a>
+    <a title="Show changelog" href="${tg.url([ '/changes', revid ])}" class="log"> (log) </a>
+    <a title="Show revision info" href="${tg.url([ '/revision', revid ])}">
+        <span class="revid"> ${util.clean_revid(revid)} </span>
+    </a>
 </span>
 
 </head>

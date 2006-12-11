@@ -28,14 +28,11 @@ from loggerhead.history import History
 from loggerhead import util
 
 
-FOLDER = '/Users/robey/code/paramiko/paramiko'
-BRANCH_NAME = 'paramiko-dev'
-
 class ChangeLogUI (object):
 
     @turbogears.expose(html='loggerhead.templates.changelog', content_type='html')
     def default(self, *args, **kw):
-        h = History.from_folder(FOLDER)
+        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:
             revid = args[0]
         else:
@@ -56,11 +53,12 @@ class ChangeLogUI (object):
         } for m_revid in merge_revids]
 
         vals = {
-            'branch_name': BRANCH_NAME,
+            'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'changes': entries,
             'util': util,
             'history': h,
             'scan_url': '/changes',
+            'pagesize': 20,
             'revid': revid,
             'buttons': buttons,
             'merge_points': [util.Container(m) for m in merge_points],
