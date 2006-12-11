@@ -267,10 +267,11 @@ h1 {
     border-top: 1px solid #8cacbb;
 }
 
+
+/* ----- overly complex diff display ----- */
+
 .diff {
-    font-size: 66%;
     margin-bottom: 1em;
-    xxxborder-top: 1px solid #8cacbb;
     padding-top: 10px;
     margin-top: 20px;
     width: 100%;
@@ -278,9 +279,44 @@ h1 {
     font-family: monospace;
 }
 
-.diff .old-file { color: red; }
-.diff .new-file { color: green; }
-.diff .lineno { color: purple; background-color: #dee7ec; }
+.diff-block,.diff-chunk {
+	border-collapse: collapse;
+    width: 100%;
+}
+
+.diff-block th.filename {
+	font-family: monospace;
+	font-weight: normal;
+	font-size: smaller;
+	padding-left: 1em;
+	padding-top: 1em;
+	border-top: 1px solid #8cacbb;
+}
+
+.diff-chunk {
+    font-size: 66%;
+    margin-top: 1em;
+	margin-bottom: 1em;
+}
+
+.diff-chunk th.lineno {
+	font-weight: normal;
+    border-bottom: 1px solid #8cacbb;
+}
+.diff-chunk .insert {
+	background-color: #90ff90;
+}
+.diff-chunk .delete {
+	background-color: #ffa0a0;
+}
+
+.diff .lineno {
+	color: purple;
+	background-color: #dee7ec; 
+	width: 3em;
+	text-align: right;
+	padding-right: 3px;
+}
 .diff .info {
 	color: blue;
 	background-color: #dee7ec;

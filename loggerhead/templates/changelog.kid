@@ -25,8 +25,6 @@ ${navbar()}
     </table>
 </span>
 
-<!-- #prevpage# -->
-
 <div class="log-entries">
     <table>
         <col class="header" />
@@ -48,7 +46,7 @@ ${navbar()}
                 </span></td>
             </tr>
             
-            <!-- for multiple-parents: -->
+            <!-- !for multiple-parents: -->
             <span py:if="len(entry.parents) > 1">
                 <span py:for="parent in entry.parents">
                     <tr>
@@ -70,8 +68,6 @@ ${navbar()}
         </span>
     </table>
 </div>
-
-<!-- #nextpage# -->
 
 </body>
 </html>

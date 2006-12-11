@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import cgi
 import datetime
 import textwrap
 from StringIO import StringIO
@@ -24,6 +25,7 @@ import bzrlib
 import bzrlib.branch
 import bzrlib.diff
 import bzrlib.errors
+import bzrlib.textfile
 import bzrlib.tsort
 
 from loggerhead import util
@@ -223,34 +225,28 @@ class History (object):
                    self._full_history[max(0, pos - pagesize)])
         else:
             yield ('>', None, None)
-                
-    def diff_revisions(self, revid, otherrevid):
-        new_tree = self._branch.repository.revision_tree(revid)
-        old_tree = self._branch.repository.revision_tree(otherrevid)
-        
-        s = StringIO()
-        bzrlib.diff.show_diff_trees(old_tree, new_tree, s, old_label='', new_label='')
-        lines = s.getvalue().split('\n')
-        for l in lines:
-            if l.startswith('='):
-                yield ('info', str(l))
-            elif l.startswith('-'):
-                yield ('old-file', l)
-            elif l.startswith('+'):
-                yield ('new-file', l)
-            elif l.startswith('@'):
-                yield ('lineno', l)
-            else:
-                yield ('diffline', l)
     
-    def get_file_lists(self, revid, otherrevid):
+    def diff_revisions(self, revid, otherrevid):
         """
-        return 4 lists: (files added, files modified, files renamed,
-           files removed)
+        Return a nested data structure containing the changes between two
+        revisions::
         
-        each is a list of filenames, except the renames, which is a list of
-        (old-name, new-name) tuples.
+            added: list(filename),
+            renamed: list((old_filename, new_filename)),
+            deleted: list(filename),
+            modified: list(
+                filename: str,
+                chunks: list(
+                    diff: list(
+                        old_lineno: int,
+                        new_lineno: int,
+                        type: str('context', 'delete', or 'insert'),
+                        line: str,
+                    ),
+                ),
+            )
         """
+
         new_tree = self._branch.repository.revision_tree(revid)
         old_tree = self._branch.repository.revision_tree(otherrevid)
         delta = new_tree.changes_from(old_tree)
@@ -267,18 +263,74 @@ class History (object):
                 path += '@'
             return path
         
+        def tree_lines(tree, fid):
+            if not fid in tree:
+                return []
+            tree_file = bzrlib.textfile.text_file(tree.get_file(fid))
+            return tree_file.readlines()
+        
+        def fix_line(s):
+            # to avoid using <pre>, we need to turn spaces into nbsp, and kid
+            # doesn't notice u'\xa0', so we have to do it by hand, and escape
+            # html also.  oh well.
+            s = cgi.escape(s)
+            return s.replace(' ', '&nbsp;')
+        
+        def process_diff(diff):
+            chunks = []
+            chunk = None
+            for line in diff.splitlines():
+                if len(line) == 1:
+                    # i think this happens because bazaar gets too aggressive about removing trailing whitespace
+                    line = line + ' '
+                if line.startswith('+++ ') or line.startswith('--- '):
+                    continue
+                if line.startswith('@@ '):
+                    # new chunk
+                    if chunk is not None:
+                        chunks.append(chunk)
+                    chunk = util.Container()
+                    chunk.diff = []
+                    lines = [int(x.split(',')[0][1:]) for x in line.split(' ')[1:3]]
+                    old_lineno = lines[0]
+                    new_lineno = lines[1]
+                elif line.startswith('  '):
+                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
+                                                     type='context', line=fix_line(line[2:])))
+                    old_lineno += 1
+                    new_lineno += 1
+                elif line.startswith('+ '):
+                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
+                                                     type='insert', line=fix_line(line[2:])))
+                    new_lineno += 1
+                elif line.startswith('- '):
+                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
+                                                     type='delete', line=fix_line(line[2:])))
+                    old_lineno += 1
+                else:
+                    chunk.diff.append(util.Container(type='unknown', line=fix_line(repr(line))))
+            return chunks
+                    
+        def handle_modify(old_path, new_path, fid, kind):
+            old_lines = tree_lines(old_tree, fid)
+            new_lines = tree_lines(new_tree, fid)
+            buffer = StringIO()
+            bzrlib.diff.internal_diff(old_path, old_lines, new_path, new_lines, buffer)
+            diff = buffer.getvalue()
+            modified.append(util.Container(filename=rich_filename(new_path, kind), chunks=process_diff(diff)))
+
         for path, fid, kind in delta.added:
             added.append(rich_filename(path, kind))
         
         for path, fid, kind, text_modified, meta_modified in delta.modified:
-            modified.append(rich_filename(path, kind))
+            handle_modify(path, path, fid, kind)
         
         for oldpath, newpath, fid, kind, text_modified, meta_modified in delta.renamed:
             renamed.append((rich_filename(oldpath, kind), rich_filename(newpath, kind)))
             if meta_modified or text_modified:
-                modified.append(rich_filename(newpath, kind))
+                handle_modify(oldpath, newpath, fid, kind)
         
         for path, fid, kind in delta.removed:
             removed.append(rich_filename(path, kind))
         
-        return added, modified, renamed, removed
+        return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)

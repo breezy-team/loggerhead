@@ -57,6 +57,15 @@ class Container (object):
                 setattr(self, key, value)
         for key, value in kw.iteritems():
             setattr(self, key, value)
+    
+    def __repr__(self):
+        out = '{ '
+        for key, value in self.__dict__.iteritems():
+            if key.startswith('_') or (getattr(self.__dict__[key], '__call__', None) is not None):
+                continue
+            out += '%r => %r, ' % (key, value)
+        out += '}'
+        return out
 
 
 def clean_revid(revid):

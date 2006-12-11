@@ -47,31 +47,40 @@ ${navbar()}
             <td class="description"> <span py:for="line in comment">${line} <br /></span> </td>
         </tr>
         <tr class="divider"> <th></th> <td></td> </tr>
-        <tr py:if="files_added">
+        <tr py:if="changes.added">
             <th class="files"> files added: </th>
-            <td class="files"> <span py:for="filename in files_added">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in changes.added">${filename} <br /></span> </td>
         </tr>
-        <tr py:if="files_removed">
+        <tr py:if="changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename in files_removed">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in changes.removed">${filename} <br /></span> </td>
         </tr>
-        <tr py:if="files_renamed">
+        <tr py:if="changes.renamed">
             <th class="files"> files renamed: </th>
-            <td class="files"> <span py:for="old_filename, new_filename in files_renamed">${old_filename} => ${new_filename}<br /></span> </td>
+            <td class="files"> <span py:for="old_filename, new_filename in changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
         </tr>
-        <tr py:if="files_modified">
+        <tr py:if="changes.modified">
             <th class="files"> files modified: </th>
-            <td class="files"> <span py:for="filename in files_modified">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="item in changes.modified">${item.filename} <br /></span> </td>
         </tr>
     </table>
 </div>
 
-<div class="diff" py:if="diff">
-    <div py:for="css_class, line in diff" class="${css_class}"> ${line} </div>
+<div class="diff" py:if="changes.modified">
+    <table py:for="item in changes.modified" class="diff-block">
+        <tr><th class="filename"> ${item.filename} </th></tr>
+        <tr><td>
+            <table py:for="chunk in item.chunks" class="diff-chunk">
+                <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>
+                <tr py:for="line in chunk.diff">
+                    <td class="lineno">${line.old_lineno}</td>
+                    <td class="lineno">${line.new_lineno}</td>
+                    <td class="${line.type}">${XML(line.line)}</td>
+                </tr>
+            </table>
+        </td></tr>
+    </table>
 </div>
-<span py:if="not diff">
-    <a href="${tg.url([ '/revision', revid ], show_diff=1)}"> (show diff) </a>
-</span>
 
 </body>
 </html>

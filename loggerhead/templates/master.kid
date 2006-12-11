@@ -10,9 +10,9 @@
 @import "/static/css/style.css";
     </style>
 
-<!-- define common navbar -->
+<!-- !define common navbar -->
 <span py:def="navbar()">
-    <!-- requires: ${revid}, ${buttons}, ${pagesize} -->
+    <!-- !requires: ${revid}, ${buttons}, ${pagesize} -->
     <div class="navbar">
         <div class="bar">
             <table>

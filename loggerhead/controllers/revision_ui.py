@@ -53,10 +53,7 @@ class RevisionUI (object):
             # robey-style 1-line long message
             comment = textwrap.wrap(comment[0])
         
-        added, modified, renamed, removed = h.get_file_lists(revid, previous)
-        diff = None
-        if show_diff:
-            diff = h.diff_revisions(revid, previous)
+        changes = h.diff_revisions(revid, previous)
         
         buttons = [
             ('main', turbogears.url('/changes')),
@@ -73,11 +70,7 @@ class RevisionUI (object):
             'author': rev.committer,
             'comment': comment,
             'date': datetime.datetime.fromtimestamp(rev.timestamp),
-            'files_added': added,
-            'files_modified': modified,
-            'files_renamed': renamed,
-            'files_removed': removed,
-            'diff': diff,
+            'changes': changes,
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'util': util,
             'history': h,
