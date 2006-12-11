@@ -1,0 +1,213 @@
+
+/* from launchpad */
+body {
+    background-color: #fcfcfc;
+    color: black;
+    font-family: "Lucida Grande", "Trebuchet MS", sans-serif;
+    font-size: 12pt;
+    padding: 0px;
+    text-align: left;
+}
+
+a {
+	text-decoration: none;
+	color: #000088;
+}
+a:hover {
+	color: black;
+}
+
+h1 {
+    color: #708a96;
+	font-weight: normal;
+	font-size: 1.6em;
+    margin-bottom: 0.5em;
+}
+
+.branch-name {
+	color: #47626e;
+}
+
+
+/* ----- navigation bar at the top ----- */
+
+.navbar {
+}
+
+.navbar table {
+	width: 100%;
+}
+
+.navbar .bar {
+    background-color: #dee7ec;
+    border: 1px solid #8cacbb;
+    font-size: smaller;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+/* revision navigation buttons (the ones at the top right) */
+.navbuttons {
+    padding: 2px;
+	bottom: 0px;
+	text-align: right;
+	width: auto;
+	border-left: 1px dotted #8cacbb;
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+}
+
+.navbuttons a {
+    font-weight: normal;
+    margin-left: 2px;
+    margin-right: 2px;
+}
+
+.navbuttons a:hover {
+    padding: 0;
+    color: blue;
+}
+
+/* the "changes: 425 / 425" header at the top right */
+.navposition {
+	margin-bottom: 1.5em;
+}
+
+.navposition table tr td {
+    margin-top: 0px;
+    font-weight: bold;
+    font-size: smaller;
+}
+
+/* navigation button in the pages (the ones at the top left) */
+.buttons {
+}
+
+.buttons a {
+    font-weight: normal;
+    color: #000088;
+    font-size: 12pt;
+    padding-left: 10px;
+    padding-right: 7px;
+    border-right: 1px dotted #8cacbb;
+}
+
+.buttons a:hover {
+    font-weight: normal;
+    color: blue;
+}
+
+
+/* ----- revision display in various places ----- */
+
+.revision .revno {
+	font-weight: bold;
+}
+
+.revision .revid {
+    font-family: monospace;
+    font-size: smaller;
+    padding-left: 1em;
+}
+
+.revision .log {
+    font-size: smaller;
+}
+
+
+/* ----- list of merge points for a revision ----- */
+
+.info-entry {
+    font-size: smaller;
+    margin-bottom: 2em;
+    padding: 0px;
+    background-color: #f4f5f8;
+    border: 1px solid #8cacbb;
+    width: 60%;
+}
+
+.info-entry th {
+    background-color: #dee7ec;
+    font-weight: normal;
+    color: black;
+    text-align: right;
+    vertical-align: top;
+
+    padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.info-entry td {
+    font-weight: normal;
+  	padding-left: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+
+/* ----- changelog page ----- */
+
+.log-entries {
+    border: none;
+    font-size: smaller;
+    margin-bottom: 1em;
+    padding: 0;
+    background-color: #f4f5f8;
+    border: 1px solid #8cacbb;
+    width: 100%;
+}
+
+/* secret css-jutsu to make hidden margins vanish on a table */
+.log-entries table {
+	border-collapse: collapse;
+}
+
+/* left and right cols are fixed size */
+.log-entries table col.header,col.mark-diff {
+	width: 100pt;
+}
+
+.log-entries table .header {
+	padding-left: 0.5em;
+	padding-right: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.log-entries table .data {
+	padding-left: 0.5em;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+.log-entries table .top {
+	padding-top: 0.3em;
+}
+
+.log-entries table .date {
+	font-family: monospace;
+	padding-bottom: 0.3em;
+	border-bottom: solid 1px #8cacbb;
+}
+
+.log-entries th {
+    background-color: #dee7ec;
+    color: black;
+	font-weight: normal;
+	text-align: right;
+}
+
+.log-entries .firstline {
+    font-weight: bold;
+    text-align: left;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+}
+
+.log-entries td {
+    font-weight: normal;
+    text-align: left;
+}
+
