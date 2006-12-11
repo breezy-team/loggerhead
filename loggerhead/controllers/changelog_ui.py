@@ -30,7 +30,7 @@ from loggerhead import util
 
 class ChangeLogUI (object):
 
-    @turbogears.expose(html='loggerhead.templates.changelog', content_type='html')
+    @turbogears.expose(html='loggerhead.templates.changelog')
     def default(self, *args, **kw):
         h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:

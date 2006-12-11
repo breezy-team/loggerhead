@@ -29,7 +29,7 @@ from loggerhead import util
 
 class RevisionUI (object):
 
-    @turbogears.expose(html='loggerhead.templates.revision', content_type='html')
+    @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
         h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:

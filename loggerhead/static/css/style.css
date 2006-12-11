@@ -251,7 +251,7 @@ h1 {
 	padding-bottom: 2px;
 }
 
-.info-entries table .date {
+.info-entries table td.date {
 	font-family: monospace;
 }
 
@@ -304,7 +304,7 @@ h1 {
     border-bottom: 1px solid #8cacbb;
 }
 .diff-chunk .insert {
-	background-color: #90ff90;
+	background-color: #b0efb0;
 }
 .diff-chunk .delete {
 	background-color: #ffa0a0;
