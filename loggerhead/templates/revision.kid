@@ -44,7 +44,7 @@ ${navbar()}
         </tr>
         <tr>
             <th class="description">description:</th>
-            <td class="description"> <span py:for="line in comment">${line} <br /></span> </td>
+            <td class="description"> <span py:for="line in comment_clean">${XML(line)} <br /></span> </td>
         </tr>
         <tr class="divider"> <th></th> <td></td> </tr>
         <tr py:if="changes.added">
@@ -75,7 +75,7 @@ ${navbar()}
                 <tr py:for="line in chunk.diff">
                     <td class="lineno">${line.old_lineno}</td>
                     <td class="lineno">${line.new_lineno}</td>
-                    <td class="${line.type}">${XML(line.line)}</td>
+                    <td class="${line.type} text">${XML(line.line)}</td>
                 </tr>
             </table>
         </td></tr>

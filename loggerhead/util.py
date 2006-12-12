@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import cgi
 import re
 import sha
 
@@ -133,3 +134,12 @@ def scan_range(pos, max):
         if pos - n >= 0:
             out.insert(0, -n)
 
+
+def html_clean(s):
+    """
+    clean up a string for html display.  expand any tabs, encode any html
+    entities, and replace spaces with '&nbsp;'.  this is primarily for use
+    in displaying monospace text.
+    """
+    s = cgi.escape(s.expandtabs()).replace(' ', '&nbsp;')
+    return s;

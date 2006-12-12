@@ -69,6 +69,7 @@ class RevisionUI (object):
             'children': children,
             'author': rev.committer,
             'comment': comment,
+            'comment_clean': [util.html_clean(s) for s in comment],
             'date': datetime.datetime.fromtimestamp(rev.timestamp),
             'changes': changes,
             'branch_name': turbogears.config.get('loggerhead.branch_name'),

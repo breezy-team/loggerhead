@@ -187,6 +187,11 @@ class History (object):
             'revno': self.get_revno(parent_revid),
         } for parent_revid in rev.parent_ids]
 
+        if len(parents) == 0:
+            left_parent = None
+        else:
+            left_parent = rev.parent_ids[-1]
+            
         entry = {
             'revid': revid,
             'revno': self.get_revno(revid),
@@ -195,7 +200,9 @@ class History (object):
             'age': util.timespan(now - commit_time) + ' ago',
             'short_comment': short_comment,
             'comment': rev.message,
+            'comment_clean': util.html_clean(rev.message),
             'parents': [util.Container(p) for p in parents],
+            'changes': self.diff_revisions(revid, left_parent, get_diffs=False),
         }
         return util.Container(entry)
     
@@ -226,7 +233,7 @@ class History (object):
         else:
             yield ('>', None, None)
     
-    def diff_revisions(self, revid, otherrevid):
+    def diff_revisions(self, revid, otherrevid, get_diffs=True):
         """
         Return a nested data structure containing the changes between two
         revisions::
@@ -245,6 +252,8 @@ class History (object):
                     ),
                 ),
             )
+        
+        if C{get_diffs} is false, the C{chunks} will be omitted.
         """
 
         new_tree = self._branch.repository.revision_tree(revid)
@@ -269,20 +278,12 @@ class History (object):
             tree_file = bzrlib.textfile.text_file(tree.get_file(fid))
             return tree_file.readlines()
         
-        def fix_line(s):
-            # to avoid using <pre>, we need to turn spaces into nbsp, and kid
-            # doesn't notice u'\xa0', so we have to do it by hand, and escape
-            # html also.  oh well.
-            s = cgi.escape(s)
-            return s.replace(' ', '&nbsp;')
-        
         def process_diff(diff):
             chunks = []
             chunk = None
             for line in diff.splitlines():
-                if len(line) == 1:
-                    # i think this happens because bazaar gets too aggressive about removing trailing whitespace
-                    line = line + ' '
+                if len(line) == 0:
+                    continue
                 if line.startswith('+++ ') or line.startswith('--- '):
                     continue
                 if line.startswith('@@ '):
@@ -296,22 +297,44 @@ class History (object):
                     new_lineno = lines[1]
                 elif line.startswith('  '):
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                     type='context', line=fix_line(line[2:])))
+                                                     type='context', line=util.html_clean(line[2:])))
                     old_lineno += 1
                     new_lineno += 1
                 elif line.startswith('+ '):
                     chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                     type='insert', line=fix_line(line[2:])))
+                                                     type='insert', line=util.html_clean(line[2:])))
                     new_lineno += 1
                 elif line.startswith('- '):
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                     type='delete', line=fix_line(line[2:])))
+                                                     type='delete', line=util.html_clean(line[2:])))
+                    old_lineno += 1
+                elif line.startswith(' '):
+                    # why does this happen?
+                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
+                                                     type='context', line=util.html_clean(line[1:])))
+                    old_lineno += 1
+                    new_lineno += 1
+                elif line.startswith('+'):
+                    # why does this happen?
+                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
+                                                     type='insert', line=util.html_clean(line[1:])))
+                    new_lineno += 1
+                elif line.startswith('-'):
+                    # why does this happen?
+                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
+                                                     type='delete', line=util.html_clean(line[1:])))
                     old_lineno += 1
                 else:
-                    chunk.diff.append(util.Container(type='unknown', line=fix_line(repr(line))))
+                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
+                                                     type='unknown', line=util.html_clean(repr(line))))
+            if chunk is not None:
+                chunks.append(chunk)
             return chunks
                     
         def handle_modify(old_path, new_path, fid, kind):
+            if not get_diffs:
+                modified.append(util.Container(filename=rich_filename(new_path, kind)))
+                return
             old_lines = tree_lines(old_tree, fid)
             new_lines = tree_lines(new_tree, fid)
             buffer = StringIO()

@@ -21,7 +21,7 @@ h1 {
     color: #708a96;
 	font-weight: normal;
 	font-size: 1.6em;
-    margin-bottom: 0.5em;
+    margin-bottom: 1.5em;
 }
 
 .branch-name {
@@ -149,7 +149,52 @@ h1 {
 
 /* ----- changelog page ----- */
 
-.log-entries {
+/* secret css-jutsu to make hidden margins vanish on a table */
+.log-entries table {
+	border-collapse: collapse;
+    width: 100%;
+}
+
+.log-entries .revision-header {
+    background-color: #dee7ec;
+    padding: 3px;
+    width: 80%;
+	margin-top: 1em;
+	margin-left: 1em;
+}
+
+.log-entries .revision-header .revision-number {
+	width: 6em;
+	padding-left: 0.5em;
+}
+
+.log-entries .revision-log {
+	width: 60%;
+	border: none;
+	margin-left: 8em;
+	margin-bottom: 1.5em;
+}
+
+.log-entries .revision-log table {
+	font-size: smaller;
+}
+
+.log-entries .revision-log th {
+	width: 8em;
+	text-align: right;
+	padding-right: 0.5em;
+	vertical-align: top;
+}
+
+.log-entries .revision-log td.date {
+/*	font-family: monospace; */
+}
+
+.log-entries .revision-log td.files {
+	font-family: monospace;
+}
+
+.xxlog-entries {
     border: none;
     font-size: smaller;
     margin-bottom: 1em;
@@ -159,55 +204,49 @@ h1 {
     width: 100%;
 }
 
-/* secret css-jutsu to make hidden margins vanish on a table */
-.log-entries table {
-	border-collapse: collapse;
-    width: 99.9%;
-}
-
 /* left and right cols are fixed size */
-.log-entries table col.header,col.mark-diff {
+.xxlog-entries table col.header,col.mark-diff {
 	width: 100pt;
 }
 
-.log-entries table .header {
+.xxlog-entries table .header {
 	padding-left: 0.5em;
 	padding-right: 0.5em;
 	padding-top: 2px;
 	padding-bottom: 2px;
 }
 
-.log-entries table .data {
+.xxlog-entries table .data {
 	padding-left: 0.5em;
 	padding-top: 2px;
 	padding-bottom: 2px;
 }
 
-.log-entries table .top {
+.xxlog-entries table .top {
 	padding-top: 0.3em;
 }
 
-.log-entries table .date {
+.xxlog-entries table .date {
 	font-family: monospace;
 	padding-bottom: 0.3em;
 	border-bottom: solid 1px #8cacbb;
 }
 
-.log-entries th {
+.xxlog-entries th {
     background-color: #dee7ec;
     color: black;
 	font-weight: normal;
 	text-align: right;
 }
 
-.log-entries .firstline {
+.xxlog-entries .firstline {
     font-weight: bold;
     text-align: left;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
 }
 
-.log-entries td {
+.xxlog-entries td {
     font-weight: normal;
     text-align: left;
 }
@@ -308,6 +347,9 @@ h1 {
 }
 .diff-chunk .delete {
 	background-color: #ffa0a0;
+}
+.diff-chunk td.text {
+	padding-left: 1em;
 }
 
 .diff .lineno {

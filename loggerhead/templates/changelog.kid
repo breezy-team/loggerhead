@@ -26,12 +26,58 @@ ${navbar()}
 </span>
 
 <div class="log-entries">
-    <table>
+    <div py:for="entry in changes" class="revision">
+        <div class="revision-header">
+            <table>
+                <tr>
+                    <td class="revision-number"> 
+                        <a title="Show revision" href="${tg.url([ '/revision', entry.revid ])}" class="revno"> ${entry.revno} </a>
+                    </td>
+					<td>
+					    <a title="Show revision" href="${tg.url([ '/revision', entry.revid ])}" class="revno"> ${entry.short_comment} </a>
+					</td>
+				</tr>
+			</table>
+        </div>
+        
+        <div class="revision-log">
+        <table>
+	        <tr>
+	            <th class="author">committer:</th>
+	            <td class="author"> ${util.hide_email(entry.author)} </td>
+	        </tr>
+	        <tr>
+	            <th class="date">date:</th>
+	            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${entry.age}) </td>
+	        </tr>
+	        <!--tr class="divider"> <th></th> <td></td> </tr-->
+	        <tr py:if="entry.changes.added">
+	            <th class="files"> files added: </th>
+	            <td class="files"> <span py:for="filename in entry.changes.added">${filename} <br /></span> </td>
+	        </tr>
+	        <tr py:if="entry.changes.removed">
+	            <th class="files"> files removed: </th>
+	            <td class="files"> <span py:for="filename in entry.changes.removed">${filename} <br /></span> </td>
+	        </tr>
+	        <tr py:if="entry.changes.renamed">
+	            <th class="files"> files renamed: </th>
+	            <td class="files"> <span py:for="old_filename, new_filename in entry.changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
+	        </tr>
+	        <tr py:if="entry.changes.modified">
+	            <th class="files"> files modified: </th>
+	            <td class="files"> <span py:for="item in entry.changes.modified">${item.filename} <br /></span> </td>
+	        </tr>
+        </table>
+	        </div>
+    </div>
+    
+    <!--table>
         <col class="header" />
         <col class="data" />
         <col class="mark-diff" />
         
-        <span py:for="entry in changes">
+        <div py:for="entry in changes">
+            
             <tr>
                 <th class="firstline header age"> ${entry.age} </th>
                 <th class="firstline data"> ${entry.short_comment} </th>
@@ -46,7 +92,6 @@ ${navbar()}
                 </span></td>
             </tr>
             
-            <!-- !for multiple-parents: -->
             <span py:if="len(entry.parents) > 1">
                 <span py:for="parent in entry.parents">
                     <tr>
@@ -65,8 +110,7 @@ ${navbar()}
                 <td class="date data"> ${entry.date.strftime('%d %b %Y %H:%M')} </td>
                 <td class="date mark-diff"> &nbsp; </td>
             </tr>
-        </span>
-    </table>
+        </span-->
 </div>
 
 </body>
