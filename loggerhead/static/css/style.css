@@ -152,6 +152,10 @@ h1 .filename {
 
 /* ----- changelog page ----- */
 
+.hide-all {
+	font-size: smaller;
+}
+
 /* secret css-jutsu to make hidden margins vanish on a table */
 .log-entries table {
 	border-collapse: collapse;
@@ -166,6 +170,10 @@ h1 .filename {
 	margin-left: 1em;
 }
 
+.log-entries .revision-header td.expand-button {
+    width: 20px;
+}
+
 .log-entries .revision-header .revision-number {
 	width: 6em;
 	padding-left: 0.5em;
@@ -173,35 +181,35 @@ h1 .filename {
 
 .log-entries .revision-header .inventory-link {
 	font-size: smaller;
-	vertical-align: center;
+	vertical-align: middle;
 	width: 4em;
 	text-align: right;
 	padding-right: 0.5em;
 }
 
-.log-entries .revision-log {
+.log-entries .revision-details {
 	width: 60%;
 	border: none;
 	margin-left: 8em;
 	margin-bottom: 1.5em;
 }
 
-.log-entries .revision-log table {
+.log-entries .revision-details table {
 	font-size: smaller;
 }
 
-.log-entries .revision-log th {
+.log-entries .revision-details th {
 	width: 8em;
 	text-align: right;
 	padding-right: 0.5em;
 	vertical-align: top;
 }
 
-.log-entries .revision-log td.date {
+.log-entries .revision-details td.date {
 /*	font-family: monospace; */
 }
 
-.log-entries .revision-log td.files {
+.log-entries .revision-details td.files {
 	font-family: monospace;
 }
 
@@ -335,7 +343,7 @@ table.inventory {
 table.inventory td {
 	padding-top: 3px;
 	padding-bottom: 3px;
-	vertical-align: center;
+	vertical-align: middle;
 }
 
 table.inventory th {

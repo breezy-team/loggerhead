@@ -54,4 +54,3 @@ class RevisionUI (object):
             'pagesize': 1,
         }
         return vals
- 

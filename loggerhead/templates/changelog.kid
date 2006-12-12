@@ -9,9 +9,33 @@
     <span py:def="loglink(revid, text)">
         <a title="Show history" href="${tg.url([ '/changes', revid ])}" class="revlink"> ${text} </a>
     </span>
+    
+    <!-- this is totally matty's fault.  i don't like javacsript. ;) -->
+    <script type="text/javascript"> // <!--
+    function displayDetails(name, hide, show) {
+        document.getElementById('details-' + name).style.display = hide;
+        document.getElementById('hide-' + name).style.display = hide;
+        document.getElementById('show-' + name).style.display = show;
+    }
+    function displayAll(hide, show) {
+        var nodes = document.getElementsByTagName('div');
+        for (var i = 0; i < nodes.length; i++) {
+            var id = nodes[i].id;
+            if ((id.length > 8) && (id.substring(0, 8) == 'details-')) {
+                nodes[i].style.display = hide;
+                var revno = id.substring(8);
+                document.getElementById('hide-' + revno).style.display = hide;
+                document.getElementById('show-' + revno).style.display = show;
+            }
+        }
+        document.getElementById('hide-all').style.display = hide;
+        document.getElementById('show-all').style.display = show;
+    }
+    // -->
+	</script>
 </head>
 
-<body>
+<body onLoad="displayAll('', 'none')">
 
 ${navbar()}
 
@@ -19,19 +43,30 @@ ${navbar()}
 <span py:if="path"> to <span class="filename">${path}</span></span>
 </h1>
 
+<a class="hide-all" id="hide-all" href="#" onClick="displayAll('none', '')"> (hide all) </a>
+<a class="hide-all" id="show-all" href="#" onClick="displayAll('', 'none')"> (show all) </a>
+
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
         <div class="revision-header">
             <table>
                 <tr>
                     <td class="revision-number"> ${revlink(entry.revid, entry.revno)} </td>
-					<td> ${revlink(entry.revid, entry.short_comment)} </td>
+                    <td class="expand-button">
+                        <a href="#" onClick="displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}">
+                            <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" border="0" />
+                        </a>
+                        <a href="#" onClick="displayDetails('${entry.revno}', '', 'none')" id="show-${entry.revno}">
+                        	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" border="0" />
+                        </a>
+                    </td>
+					<td class="summary"> ${revlink(entry.revid, entry.short_comment)} </td>
 					<td class="inventory-link"> <a href="${tg.url([ '/inventory', entry.revid ])}">(files)</a> </td>
 				</tr>
 			</table>
         </div>
         
-        <div class="revision-log">
+        <div class="revision-details" id="details-${entry.revno}">
         <table>
 	        <tr>
 	            <th class="author">committed by:</th>
