@@ -25,6 +25,7 @@ from cherrypy import HTTPRedirect, NotFound
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.revision_ui import RevisionUI
+from loggerhead.controllers.inventory_ui import InventoryUI
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -33,9 +34,8 @@ class Root (controllers.RootController):
     changes = ChangeLogUI()
     atom = AtomUI()
     revision = RevisionUI()
+    inventory = InventoryUI()
     
-    @turbogears.expose(template="loggerhead.templates.welcome")
+    @turbogears.expose()
     def index(self):
-        import time
-        log.debug("Happy TurboGears Controller Responding For Duty")
-        return dict(now=time.ctime())
+        raise HTTPRedirect(turbogears.url('/changes'))

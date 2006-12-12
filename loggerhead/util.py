@@ -145,4 +145,15 @@ def html_clean(s):
     in displaying monospace text.
     """
     s = cgi.escape(s.expandtabs()).replace(' ', '&nbsp;')
-    return s;
+    return s
+
+
+def fake_permissions(kind, executable):
+    # fake up unix-style permissions given only a "kind" and executable bit
+    if kind == 'directory':
+        return 'drwxr-xr-x'
+    if executable:
+        return '-rwxr-xr-x'
+    return '-rw-r--r--'
+
+        

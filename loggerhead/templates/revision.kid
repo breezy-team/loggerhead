@@ -12,7 +12,7 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno} </h1>
 
-<div class="info-entries">
+<div class="revision-info">
     <table>
         <tr>
             <th class="author">committed by:</th>

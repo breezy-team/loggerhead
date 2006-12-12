@@ -16,11 +16,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import base64
-import logging
+import datetime
 import os
 import posixpath
-import time
+import textwrap
 
 import turbogears
 from cherrypy import HTTPRedirect, session
@@ -28,12 +27,17 @@ from cherrypy import HTTPRedirect, session
 from loggerhead.history import History
 from loggerhead import util
 
-log = logging.getLogger("loggerhead.controllers")
 
+def dirname(path):
+    while path.endswith('/'):
+        path = path[:-1]
+    path = posixpath.dirname(path)
+    return path
 
-class ChangeLogUI (object):
+        
+class InventoryUI (object):
 
-    @turbogears.expose(html='loggerhead.templates.changelog')
+    @turbogears.expose(html='loggerhead.templates.inventory')
     def default(self, *args, **kw):
         h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:
@@ -41,39 +45,37 @@ class ChangeLogUI (object):
         else:
             revid = h.last_revid
 
-        path = kw.get('path', None)
-        
         try:
-            if path is not None:
-                inv = h.get_inventory(revid)
-                file_id = inv.path2id(path)
-                revlist = list(h.get_short_revision_history_by_fileid_from(file_id, revid, folder=path.endswith('/')))
-            else:
-                revlist = h.get_short_revision_history_from(revid)
-            entries = h.get_changelist(list(revlist)[:20])
-        except Exception, x:
-            log.error('Exception fetching changes: %r, %s' % (x, x))
+            rev = h.get_revision(revid)
+            inv = h.get_inventory(revid)
+        except:
             raise HTTPRedirect(turbogears.url('/changes'))
-
+        
+        path = kw.get('path', None)
+        if path is None:
+            path = '/'
+            file_id = None
+        else:
+            file_id = inv.path2id(path)
+            
         buttons = [
             ('top', turbogears.url('/changes')),
-            ('inventory', turbogears.url([ '/inventory', revid ])),
-            ('feed', turbogears.url('/atom')),
+            ('revision', turbogears.url([ '/revision', revid ])),
+            ('history', turbogears.url([ '/changes', revid ])),
         ]
 
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
-            'changes': entries,
             'util': util,
-            'history': h,
-            'scan_url': '/changes',
-            'pagesize': 20,
-            'revid': revid,
             'buttons': buttons,
+            'revid': revid,
+            'change': h.get_change(revid),
             'path': path,
+            'updir': dirname(path),
+            'filelist': h.get_filelist(inv, path),
+            'history': h,
+            'scan_url': '/revision',
+            'pagesize': 1,
+            'posixpath': posixpath,
         }
-        if kw.get('style', None) == 'rss':
-            vals['tg_template'] = 'loggerhead.templates.changelog-rss'
-            vals['tg_format'] = 'xml'
-            vals['tg_content_type'] = 'application/rss+xml'
         return vals

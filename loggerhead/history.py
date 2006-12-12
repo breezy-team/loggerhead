@@ -18,6 +18,7 @@
 
 import cgi
 import datetime
+import posixpath
 import textwrap
 from StringIO import StringIO
 
@@ -29,6 +30,9 @@ import bzrlib.textfile
 import bzrlib.tsort
 
 from loggerhead import util
+
+
+
 
 
 class History (object):
@@ -80,6 +84,9 @@ class History (object):
         return self._branch.repository.get_revision(revid)
     
     def get_revno(self, revid):
+        if revid not in self._revision_info:
+            # ghost parent?
+            return 'unknown'
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return revno_str
 
@@ -100,6 +107,31 @@ class History (object):
             if len(parents) == 0:
                 return
             revid = self._revision_graph[revid][0]
+    
+    def get_short_revision_history_by_fileid(self, file_id, folder=False):
+        # wow.  is this really the only way we can get this list?  by
+        # man-handling the weave store directly? :-0
+        # FIXME: would be awesome if we could get, for a folder, the list of
+        # revisions where items within that folder changed.
+        w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
+        w_revids = w.versions()
+        revids = [r for r in self._full_history if r in w_revids]
+        return revids
+    
+    def get_short_revision_history_by_fileid_from(self, file_id, revid, folder=False):
+        revids = self.get_short_revision_history_by_fileid(file_id, folder)
+        while True:
+            if revid in revids:
+                yield revid
+            if not self._revision_graph.has_key(revid):
+                return
+            parents = self._revision_graph[revid]
+            if len(parents) == 0:
+                return
+            revid = parents[0]
+
+    def get_inventory(self, revid):
+        return self._branch.repository.get_revision_inventory(revid)
 
     def get_where_merged(self, revid):
         try:
@@ -370,3 +402,28 @@ class History (object):
             removed.append(rich_filename(path, kind))
         
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
+
+    def get_filelist(self, inv, path):
+        """
+        return the list of all files (and their attributes) within a given
+        path subtree.
+        """
+        while path.endswith('/'):
+            path = path[:-1]
+        parity = 0
+        for filepath, entry in inv.entries():
+            if posixpath.dirname(filepath) != path:
+                continue
+            filename = posixpath.basename(filepath)
+            rich_filename = filename
+            if entry.kind == 'directory':
+                rich_filename += '/'
+            
+            # last change:
+            revid = entry.revision
+            
+            yield util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
+                                 revid=revid, revno=self.get_revno(revid), parity=parity)
+            parity ^= 1
+        pass
+

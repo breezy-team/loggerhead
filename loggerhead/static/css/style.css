@@ -23,6 +23,9 @@ h1 {
 	font-size: 1.6em;
     margin-bottom: 1.5em;
 }
+h1 .filename {
+	font-family: monospace;
+}
 
 .branch-name {
 	color: #47626e;
@@ -205,7 +208,7 @@ h1 {
 
 /* ----- revision page ----- */
 
-.info-entries {
+.revision-info {
     border: none;
     font-size: smaller;
     margin-bottom: 1em;
@@ -216,12 +219,12 @@ h1 {
 }
 
 /* secret css-jutsu to make hidden margins vanish on a table */
-.info-entries table {
+.revision-info table {
 	border-collapse: collapse;
     width: 100%;
 }
 
-.info-entries th {
+.revision-info th {
 	background-color: #dee7ec;
     color: black;
 	font-weight: normal;
@@ -234,26 +237,26 @@ h1 {
 	padding-bottom: 2px;
 }
 
-.info-entries td {
+.revision-info td {
 	font-weight: normal;
   	padding-left: 0.5em;
 	padding-top: 2px;
 	padding-bottom: 2px;
 }
 
-.info-entries table td.date {
+.revision-info table td.date {
 	font-family: monospace;
 }
 
-.info-entries table td.description {
+.revision-info table td.description {
 	font-family: monospace;
 }
 
-.info-entries table td.files {
+.revision-info table td.files {
 	font-family: monospace;
 }
 
-.info-entries table tr.divider {
+.revision-info table tr.divider {
     border-top: 1px solid #8cacbb;
 }
 
@@ -281,6 +284,7 @@ h1 {
 	padding-left: 1em;
 	padding-top: 1em;
 	border-top: 1px solid #8cacbb;
+	text-align: left;
 }
 
 .diff-chunk {
@@ -290,7 +294,7 @@ h1 {
 }
 
 .diff-chunk th.lineno {
-	font-weight: normal;
+	font-weight: bold;
     border-bottom: 1px solid #8cacbb;
 }
 .diff-chunk .insert {
@@ -306,12 +310,62 @@ h1 {
 .diff .lineno {
 	color: purple;
 	background-color: #dee7ec; 
-	width: 3em;
+	width: 4em;
 	text-align: right;
 	padding-right: 3px;
+	border-bottom: 1px solid #8cacbb;
 }
 .diff .info {
 	color: blue;
 	background-color: #dee7ec;
 	margin-top: 15px;
 }
+
+
+/* ----- file inventory ----- */
+
+table.inventory {
+	border-collapse: collapse;
+    width: 80%;
+    font-size: smaller;
+    margin-top: 1em;
+    border: 1px solid #8cacbb;
+}
+
+table.inventory td {
+	padding-top: 3px;
+	padding-bottom: 3px;
+	vertical-align: center;
+}
+
+table.inventory th {
+    background-color: #8cacbb;
+    padding-top: 3px;
+    padding-bottom: 3px;
+	text-align: left;
+}
+table.inventory th.permissions {
+	padding-left: 0.5em;
+}
+
+.parity0 { background-color: #dee7ec; }
+.parity1 { background-color: #eff8fd; }
+
+.inventory td.permissions {
+    font-family: monospace;
+    width: 10em;
+	padding-left: 0.5em;
+}
+
+.inventory td.filename {
+    font-family: monospace;
+}
+
+.inventory td.revision {
+    width: 8em;
+}
+
+.inventory td.changes-link {
+    width: 6em;
+}
+

@@ -15,8 +15,10 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : changes </h1>
-    
+<h1> <span class="branch-name">${branch_name}</span> : changes
+<span py:if="path"> to <span class="filename">${path}</span></span>
+</h1>
+
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
         <div class="revision-header">
