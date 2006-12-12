@@ -168,6 +168,14 @@ h1 {
 	padding-left: 0.5em;
 }
 
+.log-entries .revision-header .inventory-link {
+	font-size: smaller;
+	vertical-align: center;
+	width: 4em;
+	text-align: right;
+	padding-right: 0.5em;
+}
+
 .log-entries .revision-log {
 	width: 60%;
 	border: none;
@@ -192,63 +200,6 @@ h1 {
 
 .log-entries .revision-log td.files {
 	font-family: monospace;
-}
-
-.xxlog-entries {
-    border: none;
-    font-size: smaller;
-    margin-bottom: 1em;
-    padding: 0;
-    background-color: #f4f5f8;
-    border: 1px solid #8cacbb;
-    width: 100%;
-}
-
-/* left and right cols are fixed size */
-.xxlog-entries table col.header,col.mark-diff {
-	width: 100pt;
-}
-
-.xxlog-entries table .header {
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
-}
-
-.xxlog-entries table .data {
-	padding-left: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
-}
-
-.xxlog-entries table .top {
-	padding-top: 0.3em;
-}
-
-.xxlog-entries table .date {
-	font-family: monospace;
-	padding-bottom: 0.3em;
-	border-bottom: solid 1px #8cacbb;
-}
-
-.xxlog-entries th {
-    background-color: #dee7ec;
-    color: black;
-	font-weight: normal;
-	text-align: right;
-}
-
-.xxlog-entries .firstline {
-    font-weight: bold;
-    text-align: left;
-    padding-top: 0.5em;
-    padding-bottom: 0.5em;
-}
-
-.xxlog-entries td {
-    font-weight: normal;
-    text-align: left;
 }
 
 

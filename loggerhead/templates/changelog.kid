@@ -5,6 +5,14 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
     <title> ${branch_name} : changes </title>
     <link rel="alternate" type="application/atom+xml" href="${tg.url('/atom')}" title="RSS feed for ${branch_name}" />
+    
+    <span py:def="revlink(revid, text)">
+        <a title="Show revision" href="${tg.url([ '/revision', revid ])}" class="revlink"> ${text} </a>
+    </span>
+
+    <span py:def="loglink(revid, text)">
+        <a title="Show revision" href="${tg.url([ '/changes', revid ])}" class="revlink"> ${text} </a>
+    </span>
 </head>
 
 <body>
@@ -13,7 +21,8 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes </h1>
     
-<span py:if="len(merge_points) > 0">
+<!-- i don't understand this -->
+<!--!span py:if="len(merge_points) > 0">
     <table class="info-entry">
         <tr> <th> merged in: </th>
         <td> 
@@ -23,19 +32,16 @@ ${navbar()}
 	    </td>
 	    </tr>
     </table>
-</span>
+</span-->
 
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
         <div class="revision-header">
             <table>
                 <tr>
-                    <td class="revision-number"> 
-                        <a title="Show revision" href="${tg.url([ '/revision', entry.revid ])}" class="revno"> ${entry.revno} </a>
-                    </td>
-					<td>
-					    <a title="Show revision" href="${tg.url([ '/revision', entry.revid ])}" class="revno"> ${entry.short_comment} </a>
-					</td>
+                    <td class="revision-number"> ${revlink(entry.revid, entry.revno)} </td>
+					<td> ${revlink(entry.revid, entry.short_comment)} </td>
+					<td class="inventory-link"> <a href="${tg.url([ '/inventory', entry.revid ])}">(files)</a> </td>
 				</tr>
 			</table>
         </div>
@@ -43,12 +49,24 @@ ${navbar()}
         <div class="revision-log">
         <table>
 	        <tr>
-	            <th class="author">committer:</th>
+	            <th class="author">committed by:</th>
 	            <td class="author"> ${util.hide_email(entry.author)} </td>
 	        </tr>
 	        <tr>
 	            <th class="date">date:</th>
 	            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${entry.age}) </td>
+	        </tr>
+	        <tr py:if="len(entry.children) > 1">
+	            <th class="children"> merged in: </th>
+	            <td class="children">
+	                <span py:for="child in entry.children">  <span py:if="child.revid != entry.left_child"> ${loglink(child.revid, '(' + child.revno + ')')} &nbsp; </span></span>
+	            </td>
+	        </tr>
+	        <tr py:if="len(entry.parents) > 1">
+	        	<th class="parents"> merged from: </th>
+	        	<td class="parents">
+	        	    <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid"> ${loglink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
+	        	</td>
 	        </tr>
 	        <!--tr class="divider"> <th></th> <td></td> </tr-->
 	        <tr py:if="entry.changes.added">
@@ -68,49 +86,8 @@ ${navbar()}
 	            <td class="files"> <span py:for="item in entry.changes.modified">${item.filename} <br /></span> </td>
 	        </tr>
         </table>
-	        </div>
+	    </div>
     </div>
-    
-    <!--table>
-        <col class="header" />
-        <col class="data" />
-        <col class="mark-diff" />
-        
-        <div py:for="entry in changes">
-            
-            <tr>
-                <th class="firstline header age"> ${entry.age} </th>
-                <th class="firstline data"> ${entry.short_comment} </th>
-                <th class="firstline"> #dodiff# </th>
-            </tr>
-            
-            <tr>
-                <th class="revision header top"> revision: </th>
-                <td class="revision data top"> ${revision_link(entry.revid, entry.revno)} </td>
-                <td class="revision mark-diff top"><span class="buttons">
-                    <a href="${tg.url([ '/changes', entry.revid ])}"> Mark for diff </a>
-                </span></td>
-            </tr>
-            
-            <span py:if="len(entry.parents) > 1">
-                <span py:for="parent in entry.parents">
-                    <tr>
-                        <th class="revision header"> parent: </th>
-                        <td class="revision data"> ${revision_link(parent.revid, parent.revno)} </td>
-                    </tr>
-                </span>
-            </span>
-            
-            <tr>
-                <th class="author header"> committer: </th>
-                <td class="author data"> ${util.hide_email(entry.author)} </td>
-            </tr>
-            <tr>
-                <th class="date header"> date: </th>
-                <td class="date data"> ${entry.date.strftime('%d %b %Y %H:%M')} </td>
-                <td class="date mark-diff"> &nbsp; </td>
-            </tr>
-        </span-->
 </div>
 
 </body>

@@ -46,6 +46,9 @@ class ChangeLogUI (object):
             ('feed', turbogears.url('/atom')),
         ]
 
+        # i don't understand what's going on here, so it's commented out in
+        # the template.  i think it may be superceded by the "merged in" and
+        # "merged from" labels.
         merge_revids = h.simplify_merge_point_list(h.get_merge_point_list(revid))
         merge_points = [{
             'revid': m_revid,

@@ -35,7 +35,7 @@ ${navbar()}
             </td>
         </tr>
         <tr>
-            <th class="author">committer:</th>
+            <th class="author">committed by:</th>
             <td class="author"> ${util.hide_email(author)} </td>
         </tr>
         <tr>

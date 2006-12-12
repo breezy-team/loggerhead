@@ -106,6 +106,12 @@ class History (object):
             return self._where_merged[revid]
         except:
             return []
+    
+    def get_left_child(self, revid):
+        for r in self.get_where_merged(revid):
+            if self._revision_graph[r][0] == revid:
+                return r
+        return None
 
     def get_merge_point_list(self, revid):
         """
@@ -182,15 +188,13 @@ class History (object):
         if len(short_comment) >= 80:
             short_comment = textwrap.wrap(short_comment)[0] + '...'
         
-        parents = [{
-            'revid': parent_revid,
-            'revno': self.get_revno(parent_revid),
-        } for parent_revid in rev.parent_ids]
-
+        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
+        children = [util.Container(revid=r, revno=self.get_revno(r)) for r in self.get_where_merged(revid)]
+        
         if len(parents) == 0:
             left_parent = None
         else:
-            left_parent = rev.parent_ids[-1]
+            left_parent = rev.parent_ids[0]
             
         entry = {
             'revid': revid,
@@ -201,7 +205,9 @@ class History (object):
             'short_comment': short_comment,
             'comment': rev.message,
             'comment_clean': util.html_clean(rev.message),
-            'parents': [util.Container(p) for p in parents],
+            'parents': parents,
+            'children': children,
+            'left_child': self.get_left_child(revid),
             'changes': self.diff_revisions(revid, left_parent, get_diffs=False),
         }
         return util.Container(entry)
