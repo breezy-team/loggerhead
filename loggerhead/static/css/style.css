@@ -187,7 +187,7 @@ h1 .filename {
 	padding-right: 0.5em;
 }
 
-.log-entries .revision-details {
+.log-entries .revision-details-block {
 	width: 60%;
 	border: none;
 	margin-left: 8em;
@@ -202,7 +202,7 @@ h1 .filename {
 	width: 8em;
 	text-align: right;
 	padding-right: 0.5em;
-	vertical-align: top;
+	vertical-align: text-top;
 }
 
 .log-entries .revision-details td.date {
@@ -212,6 +212,15 @@ h1 .filename {
 .log-entries .revision-details td.files {
 	font-family: monospace;
 }
+
+.log-entries .revision-details td.description {
+	font-family: monospace;
+}
+
+/* default state: hide all */
+.show-button { display: none; }
+.hidden-details { display: none; }
+.hide-all#hide-all { display: none; }
 
 
 /* ----- revision page ----- */
