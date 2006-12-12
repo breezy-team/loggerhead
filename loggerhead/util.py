@@ -22,6 +22,9 @@ import sha
 
 
 def timespan(delta):
+    if delta.days > 730:
+        # good grief!
+        return '%d years' % (int(delta.days // 365.25),)
     if delta.days >= 3:
         return '%d days' % delta.days
     seg = []
