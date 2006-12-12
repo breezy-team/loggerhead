@@ -49,20 +49,21 @@ ${navbar()}
 <span py:if="path"> to <span class="filename">${path}</span></span>
 </h1>
 
-<a class="hide-all" id="hide-all" href="#" onClick="displayAll('none', '')"> (hide all) </a>
-<a class="hide-all" id="show-all" href="#" onClick="displayAll('', 'none')"> (show all) </a>
+<a class="hide-all" id="hide-all" href="javascript:displayAll('none', '')"> (hide all) </a>
+<a class="hide-all" id="show-all" href="javascript:displayAll('', 'none')"> (show all) </a>
 
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
+        <a name="entry-${entry.revno}" />
         <div class="revision-header">
             <table>
                 <tr>
                     <td class="revision-number"> ${revlink(entry.revid, entry.revno)} </td>
                     <td class="expand-button">
-                        <a href="#" onClick="displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
+                        <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
                             <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" border="0" />
                         </a>
-                        <a href="#" onClick="displayDetails('${entry.revno}', '', 'none')" id="show-${entry.revno}" class="hide-button">
+                        <a href="javascript:displayDetails('${entry.revno}', '', 'none')" id="show-${entry.revno}" class="hide-button">
                         	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" border="0" />
                         </a>
                     </td>
