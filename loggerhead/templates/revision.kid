@@ -3,71 +3,67 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : revision ${util.clean_revid(revid)} </title>
+    <title> ${branch_name} : revision ${change.revno} </title>
 </head>
 
 <body>
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : revision ${revno} </h1>
+<h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno} </h1>
 
 <div class="info-entries">
     <table>
         <tr>
-            <th class="revision">revision:</th>
-            <td class="revision"> ${revision_link(revid, revno)} </td>
-        </tr>
-        <tr py:if="parents">
-            <th class="revision">parents:</th>
-            <td class="revision">
-                <span py:for="p in parents">
-                    ${revision_link(p.revid, p.revno)} <br />
-                </span>
-            </td>
-        </tr>
-        <tr py:if="children">
-            <th class="revision">children:</th>
-            <td class="revision">
-                <span py:for="c in children">
-                    ${revision_link(c.revid, c.revno)} <br />
-                </span>
-            </td>
-        </tr>
-        <tr>
             <th class="author">committed by:</th>
-            <td class="author"> ${util.hide_email(author)} </td>
+            <td class="author"> ${util.hide_email(change.author)} </td>
         </tr>
         <tr>
             <th class="date">date:</th>
-            <td class="date"> ${date.strftime('%d %b %Y %H:%M')} </td>
+            <td class="date"> ${change.date.strftime('%d %b %Y %H:%M')} </td>
         </tr>
+
+        <tr py:if="len(change.merge_points) > 0">
+            <th class="children"> merged in: </th>
+            <td class="children">
+                <span py:for="child in change.merge_points"> ${revlink(child.revid, '(' + child.revno + ')')} &nbsp; </span>
+            </td>
+        </tr>
+        <tr py:if="len(change.parents) > 1">
+        	<th class="parents"> merged from: </th>
+        	<td class="parents">
+        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid"> ${revlink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
+        	</td>
+        </tr>
+
         <tr>
             <th class="description">description:</th>
-            <td class="description"> <span py:for="line in comment_clean">${XML(line)} <br /></span> </td>
+            <td class="description"><span py:for="line in change.comment_clean">${XML(line)} <br /></span> </td>
         </tr>
+        
         <tr class="divider"> <th></th> <td></td> </tr>
-        <tr py:if="changes.added">
+        
+        <tr py:if="change.changes.added">
             <th class="files"> files added: </th>
-            <td class="files"> <span py:for="filename in changes.added">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.added">${filename} <br /></span> </td>
         </tr>
-        <tr py:if="changes.removed">
+        <tr py:if="change.changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename in changes.removed">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.removed">${filename} <br /></span> </td>
         </tr>
-        <tr py:if="changes.renamed">
+        <tr py:if="change.changes.renamed">
             <th class="files"> files renamed: </th>
-            <td class="files"> <span py:for="old_filename, new_filename in changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
+            <td class="files"> <span py:for="old_filename, new_filename in change.changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
         </tr>
-        <tr py:if="changes.modified">
+        <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
-            <td class="files"> <span py:for="item in changes.modified">${item.filename} <br /></span> </td>
+            <td class="files"> <span py:for="item in change.changes.modified">${item.filename} <br /></span> </td>
         </tr>
     </table>
 </div>
 
-<div class="diff" py:if="changes.modified">
-    <table py:for="item in changes.modified" class="diff-block">
+<div class="diff" py:if="change.changes.modified">
+    <table py:for="item in change.changes.modified" class="diff-block">
         <tr><th class="filename"> ${item.filename} </th></tr>
         <tr><td>
             <table py:for="chunk in item.chunks" class="diff-chunk">

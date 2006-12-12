@@ -6,12 +6,8 @@
     <title> ${branch_name} : changes </title>
     <link rel="alternate" type="application/atom+xml" href="${tg.url('/atom')}" title="RSS feed for ${branch_name}" />
     
-    <span py:def="revlink(revid, text)">
-        <a title="Show revision" href="${tg.url([ '/revision', revid ])}" class="revlink"> ${text} </a>
-    </span>
-
     <span py:def="loglink(revid, text)">
-        <a title="Show revision" href="${tg.url([ '/changes', revid ])}" class="revlink"> ${text} </a>
+        <a title="Show history" href="${tg.url([ '/changes', revid ])}" class="revlink"> ${text} </a>
     </span>
 </head>
 
@@ -21,19 +17,6 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes </h1>
     
-<!-- i don't understand this -->
-<!--!span py:if="len(merge_points) > 0">
-    <table class="info-entry">
-        <tr> <th> merged in: </th>
-        <td> 
-            <span py:for="merge in merge_points" class="revision">
-	        ${revision_link(merge.revid, merge.revno)} <br />
-	        </span>
-	    </td>
-	    </tr>
-    </table>
-</span-->
-
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
         <div class="revision-header">
@@ -56,10 +39,10 @@ ${navbar()}
 	            <th class="date">date:</th>
 	            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${entry.age}) </td>
 	        </tr>
-	        <tr py:if="len(entry.children) > 1">
+	        <tr py:if="len(entry.merge_points) > 0">
 	            <th class="children"> merged in: </th>
 	            <td class="children">
-	                <span py:for="child in entry.children">  <span py:if="child.revid != entry.left_child"> ${loglink(child.revid, '(' + child.revno + ')')} &nbsp; </span></span>
+	                <span py:for="child in entry.merge_points"> ${loglink(child.revid, '(' + child.revno + ')')} &nbsp; </span>
 	            </td>
 	        </tr>
 	        <tr py:if="len(entry.parents) > 1">

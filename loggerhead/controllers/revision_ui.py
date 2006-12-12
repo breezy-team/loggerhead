@@ -37,42 +37,17 @@ class RevisionUI (object):
         else:
             revid = h.last_revid
 
-        rev = h.get_revision(revid)
-        if len(rev.parent_ids) > 0:
-            previous = rev.parent_ids[0]
-        else:
-            previous = None
-        
-        show_diff = kw.get('show_diff', False)
-        
-        parents = [util.Container(revid=r, revno=h.get_revno(r)) for r in rev.parent_ids]
-        children = [util.Container(revid=r, revno=h.get_revno(r)) for r in h.get_where_merged(revid)]
-        
-        comment = rev.message.splitlines()
-        if len(comment) == 1:
-            # robey-style 1-line long message
-            comment = textwrap.wrap(comment[0])
-        
-        changes = h.diff_revisions(revid, previous)
-        
         buttons = [
-            ('main', turbogears.url('/changes')),
+            ('top', turbogears.url('/changes')),
             ('inventory', turbogears.url([ '/inventory', revid ])),
-            ('log', turbogears.url([ '/changes', revid ])),
+            ('history', turbogears.url([ '/changes', revid ])),
         ]
         
         vals = {
-            'revid': revid,
-            'buttons': buttons,
-            'revno': h.get_revno(revid),
-            'parents': parents,
-            'children': children,
-            'author': rev.committer,
-            'comment': comment,
-            'comment_clean': [util.html_clean(s) for s in comment],
-            'date': datetime.datetime.fromtimestamp(rev.timestamp),
-            'changes': changes,
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
+            'revid': revid,
+            'change': h.get_change(revid, get_diffs=True),
+            'buttons': buttons,
             'util': util,
             'history': h,
             'scan_url': '/revision',
@@ -80,4 +55,3 @@ class RevisionUI (object):
         }
         return vals
  
-        

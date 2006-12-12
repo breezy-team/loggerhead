@@ -37,23 +37,18 @@ class ChangeLogUI (object):
             revid = args[0]
         else:
             revid = h.last_revid
-        revlist = h.get_short_revision_history_from(revid)
-        entries = h.get_changelist(list(revlist)[:20])
-        
+
+        try:
+            revlist = h.get_short_revision_history_from(revid)
+            entries = h.get_changelist(list(revlist)[:20])
+        except:
+            raise HTTPRedirect(turbogears.url('/changes'))
+
         buttons = [
-            ('main', turbogears.url('/changes')),
+            ('top', turbogears.url('/changes')),
             ('inventory', turbogears.url([ '/inventory', revid ])),
             ('feed', turbogears.url('/atom')),
         ]
-
-        # i don't understand what's going on here, so it's commented out in
-        # the template.  i think it may be superceded by the "merged in" and
-        # "merged from" labels.
-        merge_revids = h.simplify_merge_point_list(h.get_merge_point_list(revid))
-        merge_points = [{
-            'revid': m_revid,
-            'revno': h.get_revno(m_revid),
-        } for m_revid in merge_revids]
 
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
@@ -64,7 +59,6 @@ class ChangeLogUI (object):
             'pagesize': 20,
             'revid': revid,
             'buttons': buttons,
-            'merge_points': [util.Container(m) for m in merge_points],
         }
         if kw.get('style', None) == 'rss':
             vals['tg_template'] = 'loggerhead.templates.changelog-rss'

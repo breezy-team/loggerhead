@@ -164,7 +164,7 @@ class History (object):
         for revid in revid_list:
             yield self.get_change(revid)
     
-    def get_change(self, revid, parity=0):
+    def get_change(self, revid, get_diffs=False):
         try:
             rev = self._branch.repository.get_revision(revid)
         except (KeyError, bzrlib.errors.NoSuchRevision):
@@ -189,13 +189,20 @@ class History (object):
             short_comment = textwrap.wrap(short_comment)[0] + '...'
         
         parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
-        children = [util.Container(revid=r, revno=self.get_revno(r)) for r in self.get_where_merged(revid)]
+
+        merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
+        merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
         
         if len(parents) == 0:
             left_parent = None
         else:
             left_parent = rev.parent_ids[0]
-            
+        
+        message = rev.message.splitlines()
+        if len(message) == 1:
+            # robey-style 1-line long message
+            message = textwrap.wrap(message[0])
+
         entry = {
             'revid': revid,
             'revno': self.get_revno(revid),
@@ -204,11 +211,11 @@ class History (object):
             'age': util.timespan(now - commit_time) + ' ago',
             'short_comment': short_comment,
             'comment': rev.message,
-            'comment_clean': util.html_clean(rev.message),
+            'comment_clean': [util.html_clean(s) for s in message],
             'parents': parents,
-            'children': children,
+            'merge_points': merge_points,
             'left_child': self.get_left_child(revid),
-            'changes': self.diff_revisions(revid, left_parent, get_diffs=False),
+            'changes': self.diff_revisions(revid, left_parent, get_diffs=get_diffs),
         }
         return util.Container(entry)
     
