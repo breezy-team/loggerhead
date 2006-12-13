@@ -54,7 +54,7 @@ class ChangeLogUI (object):
 
         buttons = [
             ('top', turbogears.url('/changes')),
-            ('inventory', turbogears.url([ '/inventory', revid ])),
+            ('files', turbogears.url([ '/files', revid ])),
             ('feed', turbogears.url('/atom')),
         ]
 

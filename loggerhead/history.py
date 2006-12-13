@@ -23,6 +23,7 @@ import textwrap
 from StringIO import StringIO
 
 import bzrlib
+import bzrlib.annotate
 import bzrlib.branch
 import bzrlib.diff
 import bzrlib.errors
@@ -452,4 +453,30 @@ class History (object):
                                  pathname=pathname, revid=revid, revno=self.get_revno(revid), parity=parity)
             parity ^= 1
         pass
+
+    def annotate_file(self, file_id, revid):
+        lineno = 1
+        parity = 0
+        
+        file_revid = self.get_inventory(revid)[file_id].revision
+        oldvalues = None
+        
+        for revno_str, author, date_str, line_rev_id, text in bzrlib.annotate._annotate_file(self._branch, file_revid, file_id):
+            # remember which lines have a new revno and which don't
+            if revno_str == '':
+                revno, author, line_rev_id = oldvalues
+                status = 'same'
+            else:
+                revno = self.get_revno(line_rev_id)
+                oldvalues = (revno, author, line_rev_id)
+                status = 'changed'
+                parity ^= 1
+            
+            trunc_revno = revno
+            if len(revno) > 10:
+                trunc_revno = revno[:9] + '...'
+                
+            yield util.Container(parity=parity, lineno=lineno, revno=revno, author=author, status=status,
+                                 trunc_revno=trunc_revno, revid=line_rev_id, text=util.html_clean(text))
+            lineno += 1
 

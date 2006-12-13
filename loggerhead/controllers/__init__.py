@@ -26,6 +26,7 @@ from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.inventory_ui import InventoryUI
+from loggerhead.controllers.annotate_ui import AnnotateUI
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -34,7 +35,8 @@ class Root (controllers.RootController):
     changes = ChangeLogUI()
     atom = AtomUI()
     revision = RevisionUI()
-    inventory = InventoryUI()
+    files = InventoryUI()
+    annotate = AnnotateUI()
     
     @turbogears.expose()
     def index(self):

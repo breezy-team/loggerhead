@@ -68,7 +68,7 @@ ${navbar()}
                         </a>
                     </td>
 					<td class="summary"> ${revlink_path(entry.revid, entry.short_comment, path)} </td>
-					<td class="inventory-link"> <a href="${tg.url([ '/inventory', entry.revid ])}">(files)</a> </td>
+					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">(files)</a> </td>
 				</tr>
 			</table>
         </div>
@@ -100,7 +100,7 @@ ${navbar()}
 			        	    <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid"> ${loglink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
 			        	</td>
 			        </tr>
-			        <!--tr class="divider"> <th></th> <td></td> </tr-->
+
 			        <tr py:if="entry.changes.added">
 			            <th class="files"> files added: </th>
 			            <td class="files"> <span py:for="filename in entry.changes.added">${filename} <br /></span> </td>

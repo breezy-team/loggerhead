@@ -38,9 +38,9 @@ def dirname(path):
     return path
 
         
-class InventoryUI (object):
+class AnnotateUI (object):
 
-    @turbogears.expose(html='loggerhead.templates.inventory')
+    @turbogears.expose(html='loggerhead.templates.annotate')
     def default(self, *args, **kw):
         h = History.from_folder(turbogears.config.get('loggerhead.folder'))
         if len(args) > 0:
@@ -49,22 +49,15 @@ class InventoryUI (object):
             revid = None
         
         path = kw.get('path', None)
-        if (path == '/') or (path == ''):
-            path = None
+        if (path == '/') or (path == '') or (path is None):
+            raise HTTPRedirect(turbogears.url('/changes'))
 
         try:
             revlist, revid = h.get_navigation(revid, path)
-            rev = h.get_revision(revid)
-            inv = h.get_inventory(revid)
+            file_id = h.get_inventory(revid).path2id(path)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
-
-        if path is None:
-            path = '/'
-            file_id = None
-        else:
-            file_id = inv.path2id(path)
             
         buttons = [
             ('top', turbogears.url('/changes')),
@@ -79,12 +72,10 @@ class InventoryUI (object):
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'util': util,
             'revid': revid,
-            'change': h.get_change(revid),
             'path': path,
-            'updir': dirname(path),
-            'filelist': h.get_filelist(inv, path),
             'history': h,
-            'posixpath': posixpath,
             'navigation': navigation,
+            'change': h.get_change(revid),
+            'contents': h.annotate_file(file_id, revid),
         }
         return vals

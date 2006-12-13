@@ -3,17 +3,17 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : files for revision ${change.revno} </title>
+    <title> ${branch_name} : contents of ${path} at revision ${change.revno} </title>
 </head>
 
 <body>
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : files for revision ${change.revno} </h1>
+<h1> <span class="branch-name">${branch_name}</span> : ${path} (revision ${change.revno}) </h1>
 
 <!-- !FIXME: this is just copied verbatim from revision.kid -->
-<div class="revision-info">
+<!--div class="revision-info">
     <table>
         <tr>
             <th class="author">committed by:</th>
@@ -42,36 +42,26 @@ ${navbar()}
             <td class="description"><span py:for="line in change.comment_clean">${XML(line)} <br /></span></td>
         </tr>
     </table>
+</div-->
+
+<div class="annotate">
+    <table>
+        <tr>
+            <th class="lineno"> Line# </th>
+            <th class="revision"> Revision </th>
+            <th class="text"> Contents </th>
+        </tr>
+        <tr py:for="line in contents" class="parity${line.parity}">
+            <td class="lineno ${line.status}"> ${line.lineno} </td>
+            <td class="revno ${line.status}">
+                <a py:if="line.status=='changed'" href="${tg.url([ '/revision', line.revid ], path=path)}">${line.trunc_revno}</a>
+            </td>
+            <!--td class="author"> ${util.hide_email(line.author)} </td-->
+            <td class="text ${line.status}"> ${XML(line.text)} </td>
+        </tr>
+    </table>
 </div>
 
-folder: <span class="folder"> ${path} </span>
-
-<table class="inventory" width="100%">
-    <tr class="header">
-        <th class="permissions"> Permissions </th>
-        <th> Filename </th>
-        <th> Last change </th>
-        <th> History </th>
-    </tr>
-    
-    <tr class="parity1" py:if="updir">
-        <td class="permissions">drwxr-xr-x</td>
-        <td class="filename directory"><a href="${tg.url([ '/files', revid ], path=updir)}"> (up) </a></td>
-        <td> </td> <td> </td>
-    </tr>
-
-    <tr py:for="file in filelist" class="parity${file.parity}">
-        <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
-        <td class="filename ${file.kind}">
-            <a py:if="file.kind=='directory'" href="${tg.url([ '/files', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}/</a>
-            <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}</a>
-        </td>
-        <td class="revision"> ${revlink(file.revid, file.revno)} </td>
-        <td class="changes-link"> <a href="${tg.url([ '/changes', file.revid ], path=posixpath.join(path, file.pathname))}"> (changes) </a></td>
-    </tr>
-    <!-- #entries# -->
-</table>
 
 </body>
 </html>

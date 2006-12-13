@@ -50,7 +50,7 @@ class RevisionUI (object):
 
         buttons = [
             ('top', turbogears.url('/changes')),
-            ('inventory', turbogears.url([ '/inventory', revid ])),
+            ('files', turbogears.url([ '/files', revid ])),
             ('history', turbogears.url([ '/changes', revid ])),
         ]
         

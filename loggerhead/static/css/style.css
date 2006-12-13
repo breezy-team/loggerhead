@@ -398,3 +398,64 @@ table.inventory th.permissions {
     width: 6em;
 }
 
+
+/* ----- file annotation ----- */
+
+.annotate table {
+	border-collapse: collapse;
+    width: 100%;
+    font-size: 66%;
+}
+
+.annotate td {
+	padding-top: 2px;
+	padding-bottom: 2px;
+	vertical-align: bottom;
+}
+
+.annotate td.lineno {
+	font-family: monospace;
+	text-align: right;
+	width: 4em;
+	padding-right: 5px;
+	font-weight: bold;
+	border-bottom: 1px solid #8cacbb;
+}
+
+.annotate td.revno {
+	font-family: monospace;
+	text-align: right;
+	width: 5em;
+	padding-right: 5px;
+	border-right: 1px solid #8cacbb;
+}
+
+.annotate td.text {
+    font-family: monospace;
+    padding-left: 1em;
+}
+
+.annotate th {
+    background-color: #8cacbb;
+    padding-top: 3px;
+    padding-bottom: 3px;
+	text-align: left;
+}
+
+.annotate th.lineno {
+    text-align: right;
+}
+
+.annotate th.revision {
+    text-align: right;
+}
+
+.annotate th.text {
+	padding-left: 1em;
+}
+
+.annotate td.changed {
+	xxborder-top: 1px solid #8cacbb;
+}
+
+
