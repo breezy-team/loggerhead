@@ -12,20 +12,20 @@
 
 <!-- !define common navbar -->
 <span py:def="navbar()">
-    <!-- !requires: ${revid}, ${buttons}, ${pagesize}, ${history}, ${scan_url} -->
+    <!-- !requires: ${navigation: revid, revlist, pagesize, buttons, scan_url}, ${history} -->
     <div class="navbar">
         <div class="bar">
             <table>
                 <tr><td>
                     <span class="buttons">
-                        <span py:for="label, url in buttons">
+                        <span py:for="label, url in navigation.buttons">
                             <a href="${url}"> ${label} </a>
                         </span>
                     </span>
-                </td><td align="right">
+                </td><td align="right" py:if="hasattr(navigation, 'revlist')">
                     <span class="navbuttons">
-                        <span py:for="label, l_title, l_revid in history.scan_range(revid, pagesize)">
-                            <a py:if="l_revid" href="${tg.url([ scan_url, l_revid ])}" title="${l_title}"> ${label} </a>
+                        <span py:for="label, l_title, l_revid in history.scan_range(navigation.revlist, navigation.revid, navigation.pagesize)">
+                            <a py:if="l_revid" href="${tg.url([ navigation.scan_url, l_revid ], path=navigation.path)}" title="${l_title}"> ${label} </a>
                             <span py:if="not l_revid"> ${label} </span>
                         </span>
                     </span>
@@ -36,8 +36,8 @@
             <table>
                 <tr>
                     <td> </td>
-                    <td class="navposition" align="right">
-                        changes: ${history.get_sequence(revid) + 1} / ${history.count}
+                    <td class="navposition" align="right" py:if="hasattr(navigation, 'revlist')">
+                        changes: ${len(navigation.revlist) - history.get_revid_sequence(navigation.revlist, navigation.revid)} / ${len(navigation.revlist)}
                     </td>
                 </tr>
             </table>
@@ -47,6 +47,9 @@
 
 <span py:def="revlink(revid, text)">
     <a title="Show revision" href="${tg.url([ '/revision', revid ])}" class="revlink"> ${text} </a>
+</span>
+<span py:def="revlink_path(revid, text, path)">
+    <a title="Show revision" href="${tg.url([ '/revision', revid ], path=path)}" class="revlink"> ${text} </a>
 </span>
 
 </head>

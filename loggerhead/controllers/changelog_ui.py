@@ -39,18 +39,15 @@ class ChangeLogUI (object):
         if len(args) > 0:
             revid = args[0]
         else:
-            revid = h.last_revid
+            revid = None
 
         path = kw.get('path', None)
+        pagesize = int(turbogears.config.get('loggerhead.pagesize', '20'))
         
         try:
-            if path is not None:
-                inv = h.get_inventory(revid)
-                file_id = inv.path2id(path)
-                revlist = list(h.get_short_revision_history_by_fileid_from(file_id, revid, folder=path.endswith('/')))
-            else:
-                revlist = h.get_short_revision_history_from(revid)
-            entries = h.get_changelist(list(revlist)[:20])
+            revlist, revid = h.get_navigation(revid, path)
+            entry_list = list(h.get_revids_from(revlist, revid))[:pagesize]
+            entries = h.get_changelist(entry_list)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
@@ -61,15 +58,15 @@ class ChangeLogUI (object):
             ('feed', turbogears.url('/atom')),
         ]
 
+        navigation = util.Container(pagesize=pagesize, revid=revid, revlist=revlist, path=path,
+                                    buttons=buttons, scan_url='/changes')
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'changes': entries,
             'util': util,
             'history': h,
-            'scan_url': '/changes',
-            'pagesize': 20,
             'revid': revid,
-            'buttons': buttons,
+            'navigation': navigation,
             'path': path,
         }
         if kw.get('style', None) == 'rss':

@@ -39,7 +39,7 @@ ${navbar()}
 
         <tr>
             <th class="description">description:</th>
-            <td class="description"><span py:for="line in change.comment_clean">${XML(line)} <br /></span> </td>
+            <td class="description"><span py:for="line in change.comment_clean">${XML(line)} <br /></span></td>
         </tr>
     </table>
 </div>
@@ -63,10 +63,12 @@ folder: <span class="folder"> ${path} </span>
     <tr py:for="file in filelist" class="parity${file.parity}">
         <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
         <td class="filename ${file.kind}">
-            ${file.filename}<span py:if="file.kind == 'symlink'">@</span><span py:if="file.kind == 'directory'">/</span>
+            <a py:if="file.kind=='directory'" href="${tg.url([ '/inventory', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}/</a>
+            <span py:if="file.kind=='symlink'">${file.filename}@</span>
+            <span py:if="file.kind=='file'">${file.filename}</span>
         </td>
         <td class="revision"> ${revlink(file.revid, file.revno)} </td>
-        <td class="changes-link"> <a href="${tg.url([ '/changes', file.revid ], path=posixpath.join(path, file.rich_filename))}"> (changes) </a></td>
+        <td class="changes-link"> <a href="${tg.url([ '/changes', file.revid ], path=posixpath.join(path, file.pathname))}"> (changes) </a></td>
     </tr>
     <!-- #entries# -->
 </table>

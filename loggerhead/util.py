@@ -110,7 +110,8 @@ def triple_factors():
     index = 0
     n = 1
     while True:
-        yield n * factors[index]
+        if n >= 10:
+            yield n * factors[index]
         index += 1
         if index >= len(factors):
             index = 0

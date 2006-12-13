@@ -93,22 +93,38 @@ class History (object):
     def get_sequence(self, revid):
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return seq
-        
-    def get_short_revision_history(self):
-        return self.get_short_revision_history_from(self._last_revid)
     
-    def get_short_revision_history_from(self, revid):
-        """return the short revision_history, starting from revid"""
+    def get_revision_history(self):
+        return self._full_history
+    
+    def get_revid_sequence(self, revid_list, revid):
+        """
+        given a list of revision ids, return the sequence # of this revid in
+        the list.
+        """
+        seq = 0
+        for r in revid_list:
+            if revid == r:
+                return seq
+            seq += 1
+    
+    def get_revids_from(self, revid_list, revid):
+        """
+        given a list of revision ids, yield revisions in graph order,
+        starting from revid.  the list can be None if you just want to travel
+        across all revisions.
+        """
         while True:
-            yield revid
+            if (revid_list is None) or (revid in revid_list):
+                yield revid
             if not self._revision_graph.has_key(revid):
                 return
             parents = self._revision_graph[revid]
             if len(parents) == 0:
                 return
-            revid = self._revision_graph[revid][0]
-    
-    def get_short_revision_history_by_fileid(self, file_id, folder=False):
+            revid = parents[0]
+        
+    def get_short_revision_history_by_fileid(self, file_id):
         # wow.  is this really the only way we can get this list?  by
         # man-handling the weave store directly? :-0
         # FIXME: would be awesome if we could get, for a folder, the list of
@@ -117,18 +133,23 @@ class History (object):
         w_revids = w.versions()
         revids = [r for r in self._full_history if r in w_revids]
         return revids
-    
-    def get_short_revision_history_by_fileid_from(self, file_id, revid, folder=False):
-        revids = self.get_short_revision_history_by_fileid(file_id, folder)
-        while True:
-            if revid in revids:
-                yield revid
-            if not self._revision_graph.has_key(revid):
-                return
-            parents = self._revision_graph[revid]
-            if len(parents) == 0:
-                return
-            revid = parents[0]
+
+    def get_navigation(self, revid, path):
+        """
+        Given an optional revid and optional path, return a (revlist, revid)
+        for navigation through the current scope.
+        
+        If path is None, the entire revision history is the list scope.
+        If revid is None, the latest revid is used.
+        """
+        if path is not None:
+            inv = self._branch.repository.get_revision_inventory(revid)
+            revlist = list(self.get_short_revision_history_by_fileid(inv.path2id(path)))
+        else:
+            revlist = self._full_history
+        if revid is None:
+            revid = revlist[0]
+        return revlist, revid
 
     def get_inventory(self, revid):
         return self._branch.repository.get_revision_inventory(revid)
@@ -215,11 +236,6 @@ class History (object):
         now = datetime.datetime.now()
         commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
         
-        # make short form of commit message
-        short_comment = rev.message.splitlines(1)[0]
-        if len(short_comment) >= 80:
-            short_comment = textwrap.wrap(short_comment)[0] + '...'
-        
         parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
 
         merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
@@ -234,6 +250,11 @@ class History (object):
         if len(message) == 1:
             # robey-style 1-line long message
             message = textwrap.wrap(message[0])
+        
+        # make short form of commit message
+        short_message = message[0]
+        if len(short_message) > 60:
+            short_message = short_message[:60] + '...'
 
         entry = {
             'revid': revid,
@@ -241,7 +262,7 @@ class History (object):
             'date': commit_time,
             'author': rev.committer,
             'age': util.timespan(now - commit_time) + ' ago',
-            'short_comment': short_comment,
+            'short_comment': short_message,
             'comment': rev.message,
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': parents,
@@ -251,30 +272,32 @@ class History (object):
         }
         return util.Container(entry)
     
-    def scan_range(self, revid, pagesize=20):
+    def scan_range(self, revlist, revid, pagesize=20):
         """
         yield a list of (label, title, revid) for a scan range through the full
         branch history, centered around the given revid.
         
-        example: [ ('(1)', 'Oldest', 'first-revid'), ('-300', 'Back 300', '...'), ... ]
+        example: [ ('(425)', 'Latest', 'rrrr'), ('+1', 'Forward 1', 'rrrr'), ...
+                   ('-300', 'Back 300', 'rrrr'), ('(1)', 'Oldest', 'first-revid') ]
         """
-        count = self._count
-        pos = self.get_sequence(revid)
+        count = len(revlist)
+        pos = self.get_revid_sequence(revlist, revid)
         if pos < count - 1:
             yield ('<', 'Back %d' % (pagesize,),
-                   self._full_history[min(count - 1, pos + pagesize)])
+                   revlist[min(count - 1, pos + pagesize)])
         else:
             yield ('<', None, None)
-        yield ('(1)', 'Oldest', self._full_history[-1])
+        yield ('(1)', 'Oldest', revlist[-1])
         for offset in reversed([-x for x in util.scan_range(pos, count)]):
             if offset < 0:
                 title = 'Back %d' % (-offset,)
             else:
                 title = 'Forward %d' % (offset,)
-            yield ('%+d' % (offset,), title, self._full_history[pos - offset])
+            yield ('%+d' % (offset,), title, revlist[pos - offset])
+        yield ('(%d)' % (len(revlist),) , 'Latest', revlist[0])
         if pos > 0:
             yield ('>', 'Forward %d' % (pagesize,),
-                   self._full_history[max(0, pos - pagesize)])
+                   revlist[max(0, pos - pagesize)])
         else:
             yield ('>', None, None)
     
@@ -410,20 +433,23 @@ class History (object):
         """
         while path.endswith('/'):
             path = path[:-1]
+        if path.startswith('/'):
+            path = path[1:]
         parity = 0
         for filepath, entry in inv.entries():
             if posixpath.dirname(filepath) != path:
                 continue
             filename = posixpath.basename(filepath)
             rich_filename = filename
+            pathname = filename
             if entry.kind == 'directory':
-                rich_filename += '/'
+                pathname += '/'
             
             # last change:
             revid = entry.revision
             
             yield util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
-                                 revid=revid, revno=self.get_revno(revid), parity=parity)
+                                 pathname=pathname, revid=revid, revno=self.get_revno(revid), parity=parity)
             parity ^= 1
         pass
 

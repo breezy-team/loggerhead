@@ -58,7 +58,7 @@ ${navbar()}
         <div class="revision-header">
             <table>
                 <tr>
-                    <td class="revision-number"> ${revlink(entry.revid, entry.revno)} </td>
+                    <td class="revision-number"> ${revlink_path(entry.revid, entry.revno, path)} </td>
                     <td class="expand-button">
                         <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
                             <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" border="0" />
@@ -67,7 +67,7 @@ ${navbar()}
                         	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" border="0" />
                         </a>
                     </td>
-					<td class="summary"> ${revlink(entry.revid, entry.short_comment)} </td>
+					<td class="summary"> ${revlink_path(entry.revid, entry.short_comment, path)} </td>
 					<td class="inventory-link"> <a href="${tg.url([ '/inventory', entry.revid ])}">(files)</a> </td>
 				</tr>
 			</table>

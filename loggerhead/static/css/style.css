@@ -309,19 +309,22 @@ h1 .filename {
 	font-size: smaller;
 	padding-left: 1em;
 	padding-top: 1em;
-	border-top: 1px solid #8cacbb;
+	padding-bottom: 1em;
 	text-align: left;
+	background-color: #dee7ec;
 }
 
 .diff-chunk {
     font-size: 66%;
-    margin-top: 1em;
+    margin-top: 0px;
 	margin-bottom: 1em;
 }
 
 .diff-chunk th.lineno {
 	font-weight: bold;
     border-bottom: 1px solid #8cacbb;
+    border-top: 1px solid #dee7ec;
+    border-left: 1px solid #dee7ec;
 }
 .diff-chunk .insert {
 	background-color: #b0efb0;

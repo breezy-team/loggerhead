@@ -17,6 +17,7 @@
 #
 
 import datetime
+import logging
 import os
 import posixpath
 import textwrap
@@ -27,6 +28,8 @@ from cherrypy import HTTPRedirect, session
 from loggerhead.history import History
 from loggerhead import util
 
+
+log = logging.getLogger("loggerhead.controllers")
 
 def dirname(path):
     while path.endswith('/'):
@@ -43,15 +46,20 @@ class InventoryUI (object):
         if len(args) > 0:
             revid = args[0]
         else:
-            revid = h.last_revid
-
-        try:
-            rev = h.get_revision(revid)
-            inv = h.get_inventory(revid)
-        except:
-            raise HTTPRedirect(turbogears.url('/changes'))
+            revid = None
         
         path = kw.get('path', None)
+        if (path == '/') or (path == ''):
+            path = None
+
+        try:
+            revlist, revid = h.get_navigation(revid, path)
+            rev = h.get_revision(revid)
+            inv = h.get_inventory(revid)
+        except Exception, x:
+            log.error('Exception fetching changes: %r, %s' % (x, x))
+            raise HTTPRedirect(turbogears.url('/changes'))
+
         if path is None:
             path = '/'
             file_id = None
@@ -63,19 +71,20 @@ class InventoryUI (object):
             ('revision', turbogears.url([ '/revision', revid ])),
             ('history', turbogears.url([ '/changes', revid ])),
         ]
+        
+        navigation = util.Container(buttons=buttons, scan_url='/revision', path=path,
+                                    revid=revid, xxevlist=revlist, pagesize=1)
 
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'util': util,
-            'buttons': buttons,
             'revid': revid,
             'change': h.get_change(revid),
             'path': path,
             'updir': dirname(path),
             'filelist': h.get_filelist(inv, path),
             'history': h,
-            'scan_url': '/revision',
-            'pagesize': 1,
             'posixpath': posixpath,
+            'navigation': navigation,
         }
         return vals

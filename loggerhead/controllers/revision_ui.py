@@ -17,6 +17,7 @@
 #
 
 import datetime
+import logging
 import os
 import textwrap
 
@@ -25,6 +26,8 @@ from cherrypy import HTTPRedirect, session
 
 from loggerhead.history import History
 from loggerhead import util
+
+log = logging.getLogger("loggerhead.controllers")
 
 
 class RevisionUI (object):
@@ -35,7 +38,15 @@ class RevisionUI (object):
         if len(args) > 0:
             revid = args[0]
         else:
-            revid = h.last_revid
+            revid = None
+        
+        path = kw.get('path', None)
+        
+        try:
+            revlist, revid = h.get_navigation(revid, path)
+        except Exception, x:
+            log.error('Exception fetching changes: %r, %s' % (x, x))
+            raise HTTPRedirect(turbogears.url('/changes'))
 
         buttons = [
             ('top', turbogears.url('/changes')),
@@ -43,14 +54,16 @@ class RevisionUI (object):
             ('history', turbogears.url([ '/changes', revid ])),
         ]
         
+        navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, path=path,
+                                    pagesize=1, scan_url='/revision')
+        
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'revid': revid,
             'change': h.get_change(revid, get_diffs=True),
-            'buttons': buttons,
             'util': util,
             'history': h,
-            'scan_url': '/revision',
-            'pagesize': 1,
+            'navigation': navigation,
         }
+        import sys; sys.stderr.write('VALS: %r\n' % (vals,))
         return vals
