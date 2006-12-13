@@ -31,6 +31,22 @@ from loggerhead import util
 log = logging.getLogger("loggerhead.controllers")
 
 
+# just thinking out loud here...
+#
+# so, when browsing around, there are 3 pieces of context:
+#     - starting revid 
+#         the current beginning of navigation (navigation continues back to
+#         the original revision) -- this may not be along the primary revision
+#         path since the user may have navigated into a branch
+#     - path
+#         if navigating the revisions that touched a file
+#     - current revid
+#         current location along the navigation path (while browsing)
+#
+# current revid is given on the url path.  'path' and 'starting revid' are
+# handed along as params.
+
+
 class ChangeLogUI (object):
 
     @turbogears.expose(html='loggerhead.templates.changelog')
@@ -42,10 +58,13 @@ class ChangeLogUI (object):
             revid = None
 
         path = kw.get('path', None)
+        start_revid = kw.get('start_revid', None)
         pagesize = int(turbogears.config.get('loggerhead.pagesize', '20'))
         
         try:
-            revlist, revid = h.get_navigation(revid, path)
+            revlist, start_revid = h.get_navigation(start_revid, path)
+            if revid is None:
+                revid = start_revid
             entry_list = list(h.get_revids_from(revlist, revid))[:pagesize]
             entries = h.get_changelist(entry_list)
         except Exception, x:
@@ -58,8 +77,11 @@ class ChangeLogUI (object):
             ('feed', turbogears.url('/atom')),
         ]
 
-        navigation = util.Container(pagesize=pagesize, revid=revid, revlist=revlist, path=path,
-                                    buttons=buttons, scan_url='/changes')
+        navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revlist=revlist,
+                                    path=path, buttons=buttons, scan_url='/changes')
+        next_page_revid = h.get_revlist_offset(revlist, revid, pagesize)
+        prev_page_revid = h.get_revlist_offset(revlist, revid, -pagesize)
+        
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'changes': entries,
@@ -68,6 +90,10 @@ class ChangeLogUI (object):
             'revid': revid,
             'navigation': navigation,
             'path': path,
+            'next_page_revid': next_page_revid,
+            'prev_page_revid': prev_page_revid,
+            'last_revid': h.last_revid,
+            'start_revid': start_revid,
         }
         if kw.get('style', None) == 'rss':
             vals['tg_template'] = 'loggerhead.templates.changelog-rss'

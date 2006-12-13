@@ -37,11 +37,11 @@ h1 .filename {
 .navbar {
 }
 
-.navbar table {
+.navbar table, .bar table {
 	width: 100%;
 }
 
-.navbar .bar {
+.bar {
     background-color: #dee7ec;
     border: 1px solid #8cacbb;
     font-size: smaller;
@@ -95,11 +95,21 @@ h1 .filename {
     border-right: 1px dotted #8cacbb;
 }
 
-.buttons a:hover {
+.buttons a:hover,.rbuttons a:hover {
     font-weight: normal;
     color: blue;
 }
 
+.rbuttons a {
+    font-weight: normal;
+    color: #000088;
+    font-size: 12pt;
+    padding-right: 10px;
+    padding-left: 7px;
+    border-left: 1px dotted #8cacbb;
+    text-align: right;
+    width: auto;
+}
 
 /* ----- revision display in various places ----- */
 

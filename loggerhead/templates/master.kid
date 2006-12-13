@@ -25,7 +25,7 @@
                 </td><td align="right" py:if="hasattr(navigation, 'revlist')">
                     <span class="navbuttons">
                         <span py:for="label, l_title, l_revid in history.scan_range(navigation.revlist, navigation.revid, navigation.pagesize)">
-                            <a py:if="l_revid" href="${tg.url([ navigation.scan_url, l_revid ], path=navigation.path)}" title="${l_title}"> ${label} </a>
+                            <a py:if="l_revid" href="${tg.url([ navigation.scan_url, l_revid ], path=navigation.path, start_revid=navigation.start_revid)}" title="${l_title}"> ${label} </a>
                             <span py:if="not l_revid"> ${label} </span>
                         </span>
                     </span>
@@ -48,8 +48,8 @@
 <span py:def="revlink(revid, text)">
     <a title="Show revision" href="${tg.url([ '/revision', revid ])}" class="revlink"> ${text} </a>
 </span>
-<span py:def="revlink_path(revid, text, path)">
-    <a title="Show revision" href="${tg.url([ '/revision', revid ], path=path)}" class="revlink"> ${text} </a>
+<span py:def="revlink_path(revid, start_revid, text, path)">
+    <a title="Show revision" href="${tg.url([ '/revision', revid ], start_revid=start_revid, path=path)}" class="revlink"> ${text} </a>
 </span>
 
 </head>

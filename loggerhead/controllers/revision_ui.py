@@ -41,9 +41,12 @@ class RevisionUI (object):
             revid = None
         
         path = kw.get('path', None)
+        start_revid = kw.get('start_revid', None)
         
         try:
-            revlist, revid = h.get_navigation(revid, path)
+            revlist, start_revid = h.get_navigation(start_revid, path)
+            if revid is None:
+                revid = start_revid
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
@@ -51,10 +54,10 @@ class RevisionUI (object):
         buttons = [
             ('top', turbogears.url('/changes')),
             ('files', turbogears.url([ '/files', revid ])),
-            ('history', turbogears.url([ '/changes', revid ], path=path)),
+            ('history', turbogears.url('/changes', start_revid=revid, path=path)),
         ]
         
-        navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, path=path,
+        navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, start_revid=start_revid, path=path,
                                     pagesize=1, scan_url='/revision')
         
         vals = {

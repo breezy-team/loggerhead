@@ -64,7 +64,7 @@ ${navbar()}
 
 <div class="diff" py:if="change.changes.modified">
     <table py:for="item in change.changes.modified" class="diff-block">
-        <tr><th class="filename"> ${item.filename} </th></tr>
+        <tr><th class="filename"> <a href="${tg.url([ '/annotate', change.revid ], path=item.filename)}">${item.filename}</a> </th></tr>
         <tr><td>
             <table py:for="chunk in item.chunks" class="diff-chunk">
                 <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>

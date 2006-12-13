@@ -138,16 +138,19 @@ class History (object):
     def get_navigation(self, revid, path):
         """
         Given an optional revid and optional path, return a (revlist, revid)
-        for navigation through the current scope.
+        for navigation through the current scope: from the revid (or the
+        latest revision) back to the original revision.
         
         If path is None, the entire revision history is the list scope.
-        If revid is None, the latest revid is used.
+        If revid is None, the latest revision is used.
         """
+        if revid is None:
+            revid = self._last_revid
         if path is not None:
             inv = self._branch.repository.get_revision_inventory(revid)
             revlist = list(self.get_short_revision_history_by_fileid(inv.path2id(path)))
         else:
-            revlist = self._full_history
+            revlist = list(self.get_revids_from(None, revid))
         if revid is None:
             revid = revlist[0]
         return revlist, revid
@@ -301,6 +304,13 @@ class History (object):
                    revlist[max(0, pos - pagesize)])
         else:
             yield ('>', None, None)
+    
+    def get_revlist_offset(self, revlist, revid, offset):
+        count = len(revlist)
+        pos = self.get_revid_sequence(revlist, revid)
+        if offset < 0:
+            return revlist[max(0, pos + offset)]
+        return revlist[min(count - 1, pos + offset)]
     
     def diff_revisions(self, revid, otherrevid, get_diffs=True):
         """

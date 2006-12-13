@@ -7,7 +7,7 @@
     <link rel="alternate" type="application/atom+xml" href="${tg.url('/atom')}" title="RSS feed for ${branch_name}" />
     
     <span py:def="loglink(revid, text)">
-        <a title="Show history" href="${tg.url([ '/changes', revid ])}" class="revlink"> ${text} </a>
+        <a title="Show history" href="${tg.url('/changes', start_revid=revid)}" class="revlink"> ${text} </a>
     </span>
     
     <!-- this is totally matty's fault.  i don't like javacsript. ;) -->
@@ -47,6 +47,7 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes
 <span py:if="path"> to <span class="filename">${path}</span></span>
+<span py:if="last_revid != start_revid"> from ${history.get_revno(start_revid)} </span>
 </h1>
 
 <a class="hide-all" id="hide-all" href="javascript:displayAll('none', '')"> (hide all) </a>
@@ -58,7 +59,7 @@ ${navbar()}
         <div class="revision-header">
             <table>
                 <tr>
-                    <td class="revision-number"> ${revlink_path(entry.revid, entry.revno, path)} </td>
+                    <td class="revision-number"> ${revlink_path(revid, start_revid, entry.revno, path)} </td>
                     <td class="expand-button">
                         <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
                             <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" border="0" />
@@ -67,7 +68,7 @@ ${navbar()}
                         	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" border="0" />
                         </a>
                     </td>
-					<td class="summary"> ${revlink_path(entry.revid, entry.short_comment, path)} </td>
+					<td class="summary"> ${revlink_path(entry.revid, start_revid, entry.short_comment, path)} </td>
 					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">(files)</a> </td>
 				</tr>
 			</table>
@@ -125,6 +126,19 @@ ${navbar()}
 	    	</div>
         </div>
     </div>
+</div>
+
+<div class="bar">
+    <table>
+        <tr>
+        	<td class="buttons">
+            	<a py:if="prev_page_revid != revid" href="${tg.url([ '/changes', prev_page_revid ], path=path)}"> &lt;&lt; page </a>
+	 		</td>
+ 			<td class="rbuttons" align="right">
+            	<a py:if="next_page_revid != revid" href="${tg.url([ '/changes', next_page_revid ], path=path)}"> page &gt;&gt; </a>
+ 			</td>
+ 		</tr>
+ 	</table>
 </div>
 
 </body>
