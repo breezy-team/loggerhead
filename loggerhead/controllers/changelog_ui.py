@@ -25,7 +25,6 @@ import time
 import turbogears
 from cherrypy import HTTPRedirect, session
 
-from loggerhead.history import History
 from loggerhead import util
 
 log = logging.getLogger("loggerhead.controllers")
@@ -48,10 +47,12 @@ log = logging.getLogger("loggerhead.controllers")
 
 
 class ChangeLogUI (object):
-
+    
     @turbogears.expose(html='loggerhead.templates.changelog')
     def default(self, *args, **kw):
-        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
+        z = time.time()
+        h = util.get_history()
+        
         if len(args) > 0:
             revid = args[0]
         else:
@@ -84,7 +85,7 @@ class ChangeLogUI (object):
         
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
-            'changes': entries,
+            'changes': list(entries),
             'util': util,
             'history': h,
             'revid': revid,
@@ -95,8 +96,6 @@ class ChangeLogUI (object):
             'last_revid': h.last_revid,
             'start_revid': start_revid,
         }
-        if kw.get('style', None) == 'rss':
-            vals['tg_template'] = 'loggerhead.templates.changelog-rss'
-            vals['tg_format'] = 'xml'
-            vals['tg_content_type'] = 'application/rss+xml'
+        h.flush_cache()
+        log.info('/changes %r: %r secs' % (revid, time.time() - z))
         return vals

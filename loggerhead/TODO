@@ -1,0 +1,17 @@
+
+* maybe put this at the footer of each page:
+    paramiko-dev, 419 revisions, 1133 days old
+    first revision: Tue 2003-11-04 08:34:24 +0000
+    latest revision: Sat 2006-12-02 18:33:34 -0800
+    ...or somewhere.
+    
+* the cache-building in History.from_branch() should be an actual on-disk
+  cache.  for bzr.dev it takes almost 6 seconds.  also, each 'get_change()'
+  call takes almost 1 second.  cache those too.
+
+* add back the search bar.
+
+* add next/prev revision to the bottom of revision_ui.
+
+* some of the pages still aren't updated for start_revid.
+* put branch-nick in merge info?

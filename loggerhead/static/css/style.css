@@ -408,6 +408,10 @@ table.inventory th.permissions {
     width: 6em;
 }
 
+span.folder {
+    font-family: monospace;
+}
+
 
 /* ----- file annotation ----- */
 

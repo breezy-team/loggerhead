@@ -18,8 +18,13 @@
 
 import cgi
 import datetime
+import logging
+import os
 import posixpath
+import shelve
 import textwrap
+import threading
+import time
 from StringIO import StringIO
 
 import bzrlib
@@ -32,17 +37,17 @@ import bzrlib.tsort
 
 from loggerhead import util
 
-
-
+log = logging.getLogger("loggerhead.controllers")
 
 
 class History (object):
     
     def __init__(self):
-        pass
+        self._change_cache = None
 
     @classmethod
     def from_branch(cls, branch):
+        z = time.time()
         self = cls()
         self._branch = branch
         self._history = branch.revision_history()
@@ -70,12 +75,47 @@ class History (object):
             for parent in self._revision_graph[revid]:
                 self._where_merged.setdefault(parent, set()).add(revid)
 
+        log.info('build cache: %r' % (time.time() - z,))
         return self
     
     @classmethod
     def from_folder(cls, path):
         b = bzrlib.branch.Branch.open(path)
         return cls.from_branch(b)
+
+    def use_cache(self, path):
+        if not os.path.exists(path):
+            os.mkdir(path)
+        # keep a separate cache for the diffs, because they're very time-consuming to fetch.
+        cachefile = os.path.join(path, 'changes')
+        cachefile_diffs = os.path.join(path, 'changes-diffs')
+        
+        # why can't shelve allow 'cw'?
+        if not os.path.exists(cachefile):
+            self._change_cache = shelve.open(cachefile, 'c', protocol=2)
+        else:
+            self._change_cache = shelve.open(cachefile, 'w', protocol=2)
+        if not os.path.exists(cachefile_diffs):
+            self._change_cache_diffs = shelve.open(cachefile_diffs, 'c', protocol=2)
+        else:
+            self._change_cache_diffs = shelve.open(cachefile_diffs, 'w', protocol=2)
+            
+        # once we process a change (revision), it should be the same forever.
+        log.info('Using change cache %s; %d, %d entries.' % (path, len(self._change_cache), len(self._change_cache_diffs)))
+        self._cache_lock = threading.Lock()
+        self._change_cache_filename = cachefile
+        self._change_cache_diffs_filename = cachefile_diffs
+    
+    def flush_cache(self):
+        # shelve seems to need the file to be closed to save anything :(
+        self._cache_lock.acquire()
+        try:
+            self._change_cache.close()
+            self._change_cache_diffs.close()
+            self._change_cache = shelve.open(self._change_cache_filename, 'w', protocol=2)
+            self._change_cache_diffs = shelve.open(self._change_cache_diffs_filename, 'w', protocol=2)
+        finally:
+            self._cache_lock.release()
     
     last_revid = property(lambda self: self._last_revid, None, None)
     
@@ -147,6 +187,7 @@ class History (object):
         if revid is None:
             revid = self._last_revid
         if path is not None:
+            # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
             inv = self._branch.repository.get_revision_inventory(revid)
             revlist = list(self.get_short_revision_history_by_fileid(inv.path2id(path)))
         else:
@@ -164,12 +205,6 @@ class History (object):
         except:
             return []
     
-    def get_left_child(self, revid):
-        for r in self.get_where_merged(revid):
-            if self._revision_graph[r][0] == revid:
-                return r
-        return None
-
     def get_merge_point_list(self, revid):
         """
         Return the list of revids that have merged this node.
@@ -222,6 +257,37 @@ class History (object):
             yield self.get_change(revid)
     
     def get_change(self, revid, get_diffs=False):
+        if self._change_cache is None:
+            return self._get_change(revid, get_diffs)
+
+        # if the revid is in unicode, use the utf-8 encoding as the key
+        srevid = revid
+        if isinstance(revid, unicode):
+            srevid = revid.encode('utf-8')
+        self._cache_lock.acquire()
+        try:
+            if get_diffs:
+                cache = self._change_cache_diffs
+            else:
+                cache = self._change_cache
+            
+            if srevid in cache:
+                c = cache[srevid]
+            else:
+                log.debug('Entry cache miss: %r' % (revid,))
+                c = self._get_change(revid, get_diffs=get_diffs)
+                cache[srevid] = c
+            
+            # some data needs to be recalculated each time, because it may
+            # change as new revisions are added.
+            merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
+            c.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+            
+            return c
+        finally:
+            self._cache_lock.release()
+    
+    def _get_change(self, revid, get_diffs=False):
         try:
             rev = self._branch.repository.get_revision(revid)
         except (KeyError, bzrlib.errors.NoSuchRevision):
@@ -231,20 +297,21 @@ class History (object):
                 'revno': '',
                 'date': datetime.datetime.fromtimestamp(0),
                 'author': 'missing',
-                'age': 'unknown',
+                'branch_nick': None,
                 'short_comment': 'missing',
+                'comment': 'missing',
+                'comment_clean': 'missing',
                 'parents': [],
+                'merge_points': [],
+                'changes': [],
             }
+            log.error('ghost entry: %r' % (revid,))
             return util.Container(entry)
             
-        now = datetime.datetime.now()
         commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
         
         parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
 
-        merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
-        merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
-        
         if len(parents) == 0:
             left_parent = None
         else:
@@ -265,13 +332,11 @@ class History (object):
             'revno': self.get_revno(revid),
             'date': commit_time,
             'author': rev.committer,
-            'age': util.timespan(now - commit_time) + ' ago',
+            'branch_nick': rev.properties.get('branch-nick', None),
             'short_comment': short_message,
             'comment': rev.message,
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': parents,
-            'merge_points': merge_points,
-            'left_child': self.get_left_child(revid),
             'changes': self.diff_revisions(revid, left_parent, get_diffs=get_diffs),
         }
         return util.Container(entry)
@@ -449,6 +514,7 @@ class History (object):
         pass
 
     def annotate_file(self, file_id, revid):
+        z = time.time()
         lineno = 1
         parity = 0
         
@@ -456,27 +522,29 @@ class History (object):
         oldvalues = None
         revision_cache = {}
         
-        for revno_str, author, date_str, line_rev_id, text in bzrlib.annotate._annotate_file(self._branch, file_revid, file_id):
-            # remember which lines have a new revno and which don't
-            if revno_str == '':
-                revno, author, line_rev_id, change = oldvalues
+        # because we cache revision metadata ourselves, it's actually much
+        # faster to call 'annotate_iter' on the weave directly than it is to
+        # ask bzrlib to annotate for us.
+        w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
+        last_line_revid = None
+        for line_revid, text in w.annotate_iter(file_revid):
+            if line_revid == last_line_revid:
+                # remember which lines have a new revno and which don't
                 status = 'same'
             else:
-                revno = self.get_revno(line_rev_id)
-                change = revision_cache.get(line_rev_id, None)
-                if change is None:
-                    change = self.get_change(line_rev_id)
-                    revision_cache[line_rev_id] = change
-                oldvalues = (revno, author, line_rev_id, change)
                 status = 'changed'
                 parity ^= 1
+                last_line_revid = line_revid
+                change = revision_cache.get(line_revid, None)
+                if change is None:
+                    change = self.get_change(line_revid)
+                    revision_cache[line_revid] = change
+                trunc_revno = change.revno
+                if len(trunc_revno) > 10:
+                    trunc_revno = trunc_revno[:9] + '...'
                 
-            
-            trunc_revno = revno
-            if len(revno) > 10:
-                trunc_revno = revno[:9] + '...'
-                
-            yield util.Container(parity=parity, lineno=lineno, revno=revno, author=author, status=status,
+            yield util.Container(parity=parity, lineno=lineno, status=status,
                                  trunc_revno=trunc_revno, change=change, text=util.html_clean(text))
             lineno += 1
-
+        
+        log.debug('annotate: %r secs' % (time.time() - z,))

@@ -21,11 +21,11 @@ import logging
 import os
 import posixpath
 import textwrap
+import time
 
 import turbogears
 from cherrypy import HTTPRedirect, session
 
-from loggerhead.history import History
 from loggerhead import util
 
 
@@ -42,7 +42,9 @@ class AnnotateUI (object):
 
     @turbogears.expose(html='loggerhead.templates.annotate')
     def default(self, *args, **kw):
-        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
+        z = time.time()
+        h = util.get_history()
+        
         if len(args) > 0:
             revid = args[0]
         else:
@@ -76,6 +78,8 @@ class AnnotateUI (object):
             'history': h,
             'navigation': navigation,
             'change': h.get_change(revid),
-            'contents': h.annotate_file(file_id, revid),
+            'contents': list(h.annotate_file(file_id, revid)),
         }
+        h.flush_cache()
+        log.info('/annotate: %r secs' % (time.time() - z,))
         return vals

@@ -26,13 +26,17 @@ ${navbar()}
         <tr py:if="len(change.merge_points) > 0">
             <th class="children"> merged in: </th>
             <td class="children">
-                <span py:for="child in change.merge_points"> ${revlink(child.revid, '(' + child.revno + ')')} &nbsp; </span>
+                <span py:for="child in change.merge_points">
+                    ${revlink_path(child.revid, child.revid, '(' + child.revno + ')', None)} &nbsp; 
+                </span>
             </td>
         </tr>
         <tr py:if="len(change.parents) > 1">
         	<th class="parents"> merged from: </th>
         	<td class="parents">
-        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid"> ${revlink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
+        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
+        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + ')', None)} &nbsp;
+        	    </span></span>
         	</td>
         </tr>
 

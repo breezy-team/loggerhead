@@ -21,11 +21,11 @@ import logging
 import os
 import posixpath
 import textwrap
+import time
 
 import turbogears
 from cherrypy import HTTPRedirect, session
 
-from loggerhead.history import History
 from loggerhead import util
 
 
@@ -42,7 +42,9 @@ class InventoryUI (object):
 
     @turbogears.expose(html='loggerhead.templates.inventory')
     def default(self, *args, **kw):
-        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
+        z = time.time()
+        h = util.get_history()
+        
         if len(args) > 0:
             revid = args[0]
         else:
@@ -87,4 +89,6 @@ class InventoryUI (object):
             'posixpath': posixpath,
             'navigation': navigation,
         }
+        h.flush_cache()
+        log.info('/inventory %r: %r secs' % (revid, time.time() - z))
         return vals

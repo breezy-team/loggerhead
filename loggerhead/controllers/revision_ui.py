@@ -20,11 +20,11 @@ import datetime
 import logging
 import os
 import textwrap
+import time
 
 import turbogears
 from cherrypy import HTTPRedirect, session
 
-from loggerhead.history import History
 from loggerhead import util
 
 log = logging.getLogger("loggerhead.controllers")
@@ -34,7 +34,9 @@ class RevisionUI (object):
 
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
-        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
+        z = time.time()
+        h = util.get_history()
+        
         if len(args) > 0:
             revid = args[0]
         else:
@@ -54,7 +56,7 @@ class RevisionUI (object):
         buttons = [
             ('top', turbogears.url('/changes')),
             ('files', turbogears.url([ '/files', revid ])),
-            ('history', turbogears.url('/changes', start_revid=revid, path=path)),
+            ('history', turbogears.url('/changes', start_revid=revid)),
         ]
         
         navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, start_revid=start_revid, path=path,
@@ -68,4 +70,6 @@ class RevisionUI (object):
             'history': h,
             'navigation': navigation,
         }
+        h.flush_cache()
+        log.info('/revision: %r seconds' % (time.time() - z,))
         return vals

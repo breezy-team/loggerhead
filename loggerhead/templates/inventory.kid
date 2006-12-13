@@ -44,7 +44,7 @@ ${navbar()}
     </table>
 </div>
 
-folder: <span class="folder"> ${path} </span>
+<b>folder:</b> <span class="folder"> ${path} </span>
 
 <table class="inventory" width="100%">
     <tr class="header">

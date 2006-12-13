@@ -18,15 +18,15 @@
 
 import turbogears
 
-from loggerhead.history import History
 from loggerhead import util
 
 
 class AtomUI (object):
-
+    
     @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
     def default(self, *args):
-        h = History.from_folder(turbogears.config.get('loggerhead.folder'))
+        h = util.get_history()
+        
         if len(args) > 0:
             revid = args[0]
         else:
@@ -43,4 +43,5 @@ class AtomUI (object):
             'scan_url': '/changes',
             'updated': entries[0].date.isoformat() + 'Z',
         }
+        h.flush_cache()
         return vals

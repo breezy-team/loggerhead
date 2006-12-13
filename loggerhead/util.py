@@ -17,8 +17,12 @@
 #
 
 import cgi
+import datetime
 import re
 import sha
+import threading
+
+import turbogears
 
 
 def timespan(delta):
@@ -50,6 +54,11 @@ def timespan(delta):
             seg.append('less than a minute')
     return ', '.join(seg)
 
+
+def ago(timestamp):
+    now = datetime.datetime.now()
+    return timespan(now - timestamp) + ' ago'
+    
 
 class Container (object):
     """
@@ -157,4 +166,22 @@ def fake_permissions(kind, executable):
         return '-rwxr-xr-x'
     return '-rw-r--r--'
 
-        
+
+# global branch history & cache
+
+_history = None
+_history_lock = threading.Lock()
+
+def get_history():
+    global _history
+    from loggerhead.history import History
+    
+    _history_lock.acquire()
+    try:
+        if _history is None:
+            _history = History.from_folder(turbogears.config.get('loggerhead.folder'))
+            _history.use_cache(turbogears.config.get('loggerhead.cachepath'))
+        return _history
+    finally:
+        _history_lock.release()
+

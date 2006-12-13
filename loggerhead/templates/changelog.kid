@@ -83,7 +83,7 @@ ${navbar()}
 			        </tr>
 			        <tr>
 			            <th class="date">date:</th>
-			            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${entry.age}) </td>
+			            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
 			        </tr>
 			    </table>
 			</div>

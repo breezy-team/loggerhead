@@ -55,8 +55,8 @@ ${navbar()}
         <tr py:for="line in contents" class="parity${line.parity}">
             <td class="lineno ${line.status}"> ${line.lineno} </td>
             <td class="revno ${line.status}">
-                <a py:if="line.status=='changed'" href="${tg.url([ '/revision', line.change.revid ], path=path)}"
-                    title="${line.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${line.change.age})">${line.trunc_revno}</a>
+                <a py:if="line.status=='changed'" href="${tg.url('/revision', start_revid=line.change.revid, path=path)}"
+                    title="${line.change.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${util.ago(line.change.date)})">${line.trunc_revno}</a>
             </td>
             <!--td class="author"> ${util.hide_email(line.author)} </td-->
             <td class="text ${line.status}"> ${XML(line.text)} </td>
