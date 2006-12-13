@@ -364,32 +364,16 @@ class History (object):
                     lines = [int(x.split(',')[0][1:]) for x in line.split(' ')[1:3]]
                     old_lineno = lines[0]
                     new_lineno = lines[1]
-                elif line.startswith('  '):
-                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                     type='context', line=util.html_clean(line[2:])))
-                    old_lineno += 1
-                    new_lineno += 1
-                elif line.startswith('+ '):
-                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                     type='insert', line=util.html_clean(line[2:])))
-                    new_lineno += 1
-                elif line.startswith('- '):
-                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                     type='delete', line=util.html_clean(line[2:])))
-                    old_lineno += 1
                 elif line.startswith(' '):
-                    # why does this happen?
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
                                                      type='context', line=util.html_clean(line[1:])))
                     old_lineno += 1
                     new_lineno += 1
                 elif line.startswith('+'):
-                    # why does this happen?
                     chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
                                                      type='insert', line=util.html_clean(line[1:])))
                     new_lineno += 1
                 elif line.startswith('-'):
-                    # why does this happen?
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
                                                      type='delete', line=util.html_clean(line[1:])))
                     old_lineno += 1
@@ -460,23 +444,29 @@ class History (object):
         
         file_revid = self.get_inventory(revid)[file_id].revision
         oldvalues = None
+        revision_cache = {}
         
         for revno_str, author, date_str, line_rev_id, text in bzrlib.annotate._annotate_file(self._branch, file_revid, file_id):
             # remember which lines have a new revno and which don't
             if revno_str == '':
-                revno, author, line_rev_id = oldvalues
+                revno, author, line_rev_id, change = oldvalues
                 status = 'same'
             else:
                 revno = self.get_revno(line_rev_id)
-                oldvalues = (revno, author, line_rev_id)
+                change = revision_cache.get(line_rev_id, None)
+                if change is None:
+                    change = self.get_change(line_rev_id)
+                    revision_cache[line_rev_id] = change
+                oldvalues = (revno, author, line_rev_id, change)
                 status = 'changed'
                 parity ^= 1
+                
             
             trunc_revno = revno
             if len(revno) > 10:
                 trunc_revno = revno[:9] + '...'
                 
             yield util.Container(parity=parity, lineno=lineno, revno=revno, author=author, status=status,
-                                 trunc_revno=trunc_revno, revid=line_rev_id, text=util.html_clean(text))
+                                 trunc_revno=trunc_revno, change=change, text=util.html_clean(text))
             lineno += 1
 

@@ -425,7 +425,7 @@ table.inventory th.permissions {
 .annotate td.revno {
 	font-family: monospace;
 	text-align: right;
-	width: 5em;
+	width: 8em;
 	padding-right: 5px;
 	border-right: 1px solid #8cacbb;
 }
@@ -448,6 +448,7 @@ table.inventory th.permissions {
 
 .annotate th.revision {
     text-align: right;
+    padding-right: 5px;
 }
 
 .annotate th.text {

@@ -51,7 +51,7 @@ class RevisionUI (object):
         buttons = [
             ('top', turbogears.url('/changes')),
             ('files', turbogears.url([ '/files', revid ])),
-            ('history', turbogears.url([ '/changes', revid ])),
+            ('history', turbogears.url([ '/changes', revid ], path=path)),
         ]
         
         navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, path=path,

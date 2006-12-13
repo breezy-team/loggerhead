@@ -61,8 +61,8 @@ class AnnotateUI (object):
             
         buttons = [
             ('top', turbogears.url('/changes')),
-            ('revision', turbogears.url([ '/revision', revid ])),
-            ('history', turbogears.url([ '/changes', revid ])),
+            ('revision', turbogears.url([ '/revision', revid ], path=path)),
+            ('history', turbogears.url([ '/changes', revid ], path=path)),
         ]
         
         # no navbar for revisions
