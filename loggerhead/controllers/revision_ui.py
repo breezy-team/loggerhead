@@ -65,5 +65,4 @@ class RevisionUI (object):
             'history': h,
             'navigation': navigation,
         }
-        import sys; sys.stderr.write('VALS: %r\n' % (vals,))
         return vals
