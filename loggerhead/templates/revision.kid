@@ -27,7 +27,7 @@ ${navbar()}
             <th class="children"> merged in: </th>
             <td class="children">
                 <span py:for="child in change.merge_points">
-                    ${revlink_path(child.revid, child.revid, '(' + child.revno + ')', None)} &nbsp; 
+                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} &nbsp; 
                 </span>
             </td>
         </tr>
@@ -35,7 +35,7 @@ ${navbar()}
         	<th class="parents"> merged from: </th>
         	<td class="parents">
         	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + ')', None)} &nbsp;
+        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} &nbsp;
         	    </span></span>
         	</td>
         </tr>
@@ -80,6 +80,19 @@ ${navbar()}
             </table>
         </td></tr>
     </table>
+</div>
+
+<div class="bar">
+    <table>
+        <tr>
+        	<td class="buttons">
+            	<a py:if="prev_revid != revid" href="${tg.url([ '/changes', prev_revid ], start_revid=start_revid, path=path)}"> &lt;&lt; revision ${history.get_revno(prev_revid)} </a>
+	 		</td>
+ 			<td class="rbuttons" align="right">
+            	<a py:if="next_revid != revid" href="${tg.url([ '/changes', next_revid ], start_revid=start_revid, path=path)}"> revision ${history.get_revno(next_revid)} &gt;&gt; </a>
+ 			</td>
+ 		</tr>
+ 	</table>
 </div>
 
 </body>

@@ -18,11 +18,15 @@
 
 import cgi
 import datetime
+import logging
 import re
 import sha
 import threading
 
 import turbogears
+
+
+log = logging.getLogger("loggerhead.controllers")
 
 
 def timespan(delta):
@@ -167,6 +171,15 @@ def fake_permissions(kind, executable):
     return '-rw-r--r--'
 
 
+def if_present(format, value):
+    """
+    format a value using a format string, if the value exists and is not None.
+    """
+    if value is None:
+        return ''
+    return format % value
+
+
 # global branch history & cache
 
 _history = None
@@ -178,7 +191,10 @@ def get_history():
     
     _history_lock.acquire()
     try:
-        if _history is None:
+        if (_history is None) or _history.out_of_date():
+            log.debug('Reload branch history...')
+            if _history is not None:
+                _history.dont_use_cache()
             _history = History.from_folder(turbogears.config.get('loggerhead.folder'))
             _history.use_cache(turbogears.config.get('loggerhead.cachepath'))
         return _history

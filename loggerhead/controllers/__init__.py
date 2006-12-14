@@ -17,6 +17,7 @@
 #
 
 import logging
+import time
 
 import turbogears
 from turbogears import controllers
@@ -47,3 +48,27 @@ class Root (controllers.RootController):
 
 # force history to be read:
 util.get_history()
+
+def rebuild_cache():
+    log.info('Rebuilding revision cache...')
+    last_update = time.time()
+    h = util.get_history()
+    count = 0
+    
+    work = h.get_revision_history()
+    for r in work:
+        h.get_change(r)
+        if h.out_of_date():
+            return
+        count += 1
+        if time.time() - last_update > 60:
+            log.info('Revision cache rebuilding continues: %d/%d' % (count, len(work)))
+            last_update = time.time()
+            h.flush_cache()
+    log.info('Revision cache rebuild completed.')
+
+
+# re-index every hour (for now -- maybe should be even longer?)
+index_freq = 3600
+
+turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)

@@ -92,13 +92,17 @@ ${navbar()}
 			        <tr py:if="len(entry.merge_points) > 0">
 			            <th class="children"> merged in: </th>
 			            <td class="children">
-			                <span py:for="child in entry.merge_points"> ${loglink(child.revid, '(' + child.revno + ')')} &nbsp; </span>
+			                <span py:for="child in entry.merge_points">
+			                    ${loglink(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} &nbsp; 
+			                </span>
 			            </td>
 			        </tr>
 			        <tr py:if="len(entry.parents) > 1">
 			        	<th class="parents"> merged from: </th>
 			        	<td class="parents">
-			        	    <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid"> ${loglink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
+			        	    <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid">
+			        	        ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} &nbsp;
+			        	    </span></span>
 			        	</td>
 			        </tr>
 
@@ -132,10 +136,10 @@ ${navbar()}
     <table>
         <tr>
         	<td class="buttons">
-            	<a py:if="prev_page_revid != revid" href="${tg.url([ '/changes', prev_page_revid ], path=path)}"> &lt;&lt; page </a>
+            	<a py:if="prev_page_revid != revid" href="${tg.url([ '/changes', prev_page_revid ], start_revid=start_revid, path=path)}"> &lt;&lt; page </a>
 	 		</td>
  			<td class="rbuttons" align="right">
-            	<a py:if="next_page_revid != revid" href="${tg.url([ '/changes', next_page_revid ], path=path)}"> page &gt;&gt; </a>
+            	<a py:if="next_page_revid != revid" href="${tg.url([ '/changes', next_page_revid ], start_revid=start_revid, path=path)}"> page &gt;&gt; </a>
  			</td>
  		</tr>
  	</table>

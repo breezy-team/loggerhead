@@ -61,11 +61,25 @@ class RevisionUI (object):
         
         navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, start_revid=start_revid, path=path,
                                     pagesize=1, scan_url='/revision')
+        change = h.get_change(revid, get_diffs=True)
+        
+        next_revid = h.get_revlist_offset(revlist, revid, 1)
+        prev_revid = h.get_revlist_offset(revlist, revid, -1)
+
+        # add parent & merge-point branch-nick info, in case it's useful
+        for p in change.parents:
+            p.branch_nick = h.get_change(p.revid).branch_nick
+        for p in change.merge_points:
+            p.branch_nick = h.get_change(p.revid).branch_nick
         
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'revid': revid,
-            'change': h.get_change(revid, get_diffs=True),
+            'change': change,
+            'prev_revid': prev_revid,
+            'next_revid': next_revid,
+            'start_revid': start_revid,
+            'path': path,
             'util': util,
             'history': h,
             'navigation': navigation,

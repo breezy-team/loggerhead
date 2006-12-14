@@ -83,6 +83,14 @@ class ChangeLogUI (object):
         next_page_revid = h.get_revlist_offset(revlist, revid, pagesize)
         prev_page_revid = h.get_revlist_offset(revlist, revid, -pagesize)
         
+        entries = list(entries)
+        # add parent & merge-point branch-nick info, in case it's useful
+        for change in entries:
+            for p in change.parents:
+                p.branch_nick = h.get_change(p.revid).branch_nick
+            for p in change.merge_points:
+                p.branch_nick = h.get_change(p.revid).branch_nick
+
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'changes': list(entries),

@@ -44,6 +44,15 @@ class History (object):
     
     def __init__(self):
         self._change_cache = None
+        log.error('new history: %r' % (self,))
+        self.log = log
+    
+    def __del__(self):
+        if self._change_cache is not None:
+            self._change_cache.close()
+            self._change_cache_diffs.close()
+            self._change_cache = None
+            self._change_cache_diffs = None
 
     @classmethod
     def from_branch(cls, branch):
@@ -75,13 +84,18 @@ class History (object):
             for parent in self._revision_graph[revid]:
                 self._where_merged.setdefault(parent, set()).add(revid)
 
-        log.info('build cache: %r' % (time.time() - z,))
+        log.info('built revision graph cache: %r secs' % (time.time() - z,))
         return self
     
     @classmethod
     def from_folder(cls, path):
         b = bzrlib.branch.Branch.open(path)
         return cls.from_branch(b)
+
+    def out_of_date(self):
+        if self._branch.revision_history()[-1] != self._last_revid:
+            return True
+        return False
 
     def use_cache(self, path):
         if not os.path.exists(path):
@@ -106,14 +120,29 @@ class History (object):
         self._change_cache_filename = cachefile
         self._change_cache_diffs_filename = cachefile_diffs
     
+    def dont_use_cache(self):
+        # called when a new history object needs to be created.  we can't use
+        # the cache files anymore; they belong to the new history object.
+        self._cache_lock.acquire()
+        try:
+            if self._change_cache is None:
+                return
+            self._change_cache.close()
+            self._change_cache_diffs.close()
+            self._change_cache = None
+            self._change_cache_diffs = None
+        finally:
+            self._cache_lock.release()
+    
     def flush_cache(self):
         # shelve seems to need the file to be closed to save anything :(
         self._cache_lock.acquire()
         try:
-            self._change_cache.close()
-            self._change_cache_diffs.close()
-            self._change_cache = shelve.open(self._change_cache_filename, 'w', protocol=2)
-            self._change_cache_diffs = shelve.open(self._change_cache_diffs_filename, 'w', protocol=2)
+            log.info('flush cache: %r (from %r)' % (len(self._change_cache), threading.currentThread()))
+            if self._change_cache is None:
+                return
+            self._change_cache.sync()
+            self._change_cache_diffs.sync()
         finally:
             self._cache_lock.release()
     
@@ -274,9 +303,19 @@ class History (object):
             if srevid in cache:
                 c = cache[srevid]
             else:
-                log.debug('Entry cache miss: %r' % (revid,))
-                c = self._get_change(revid, get_diffs=get_diffs)
-                cache[srevid] = c
+                if get_diffs and (srevid in self._change_cache):
+                    # salvage the non-diff entry for a jump-start
+                    c = self._change_cache[srevid]
+                    if len(change.parents) == 0:
+                        left_parent = None
+                    else:
+                        left_parent = change.parents[0].revid
+                    c.changes = self.diff_revisions(revid, left_parent, get_diffs=True)
+                    cache[srevid] = c
+                else:
+                    #log.debug('Entry cache miss: %r' % (revid,))
+                    c = self._get_change(revid, get_diffs=get_diffs)
+                    cache[srevid] = c
             
             # some data needs to be recalculated each time, because it may
             # change as new revisions are added.
