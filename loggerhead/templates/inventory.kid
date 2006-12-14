@@ -27,13 +27,17 @@ ${navbar()}
         <tr py:if="len(change.merge_points) > 0">
             <th class="children"> merged in: </th>
             <td class="children">
-                <span py:for="child in change.merge_points"> ${revlink(child.revid, '(' + child.revno + ')')} &nbsp; </span>
+                <span py:for="child in change.merge_points">
+                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} &nbsp; 
+                </span>
             </td>
         </tr>
         <tr py:if="len(change.parents) > 1">
         	<th class="parents"> merged from: </th>
         	<td class="parents">
-        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid"> ${revlink(parent.revid, '(' + parent.revno + ')')} &nbsp; </span></span>
+        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
+        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} &nbsp;
+        	    </span></span>
         	</td>
         </tr>
 
@@ -67,10 +71,9 @@ ${navbar()}
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
             <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}</a>
         </td>
-        <td class="revision"> ${revlink(file.revid, file.revno)} </td>
-        <td class="changes-link"> <a href="${tg.url([ '/changes', file.revid ], path=posixpath.join(path, file.pathname))}"> (changes) </a></td>
+        <td class="revision"> ${revlink_path(file.revid, file.revid, file.revno, posixpath.join(path, file.pathname))} </td>
+        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, path=posixpath.join(path, file.pathname))}"> (changes) </a></td>
     </tr>
-    <!-- #entries# -->
 </table>
 
 </body>

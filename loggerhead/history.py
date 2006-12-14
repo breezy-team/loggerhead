@@ -22,30 +22,73 @@ import logging
 import os
 import posixpath
 import shelve
+import sys
 import textwrap
 import threading
 import time
 from StringIO import StringIO
+
+import turbogears
+sys.path.insert(0, turbogears.config.get('loggerhead.bzrpath', ''))
 
 import bzrlib
 import bzrlib.annotate
 import bzrlib.branch
 import bzrlib.diff
 import bzrlib.errors
+import bzrlib.progress
 import bzrlib.textfile
 import bzrlib.tsort
+import bzrlib.ui
 
 from loggerhead import util
 
 log = logging.getLogger("loggerhead.controllers")
 
 
+# cache lock binds tighter than branch lock
+def with_cache_lock(unbound):
+    def cache_locked(self, *args, **kw):
+        self._cache_lock.acquire()
+        try:
+            return unbound(self, *args, **kw)
+        finally:
+            self._cache_lock.release()
+    cache_locked.__doc__ = unbound.__doc__
+    cache_locked.__name__ = unbound.__name__
+    return cache_locked
+
+
+def with_branch_lock(unbound):
+    def branch_locked(self, *args, **kw):
+        self._lock.acquire()
+        try:
+            return unbound(self, *args, **kw)
+        finally:
+            self._lock.release()
+    branch_locked.__doc__ = unbound.__doc__
+    branch_locked.__name__ = unbound.__name__
+    return branch_locked
+
+
+# bzrlib's UIFactory is not thread-safe
+uihack = threading.local()
+
+class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
+    def nested_progress_bar(self):
+        if getattr(uihack, '_progress_bar_stack', None) is None:
+            uihack._progress_bar_stack = bzrlib.progress.ProgressBarStack(klass=bzrlib.progress.DummyProgress)
+        return uihack._progress_bar_stack.get_nested()
+
+bzrlib.ui.ui_factory = ThreadSafeUIFactory()
+
+
 class History (object):
     
     def __init__(self):
         self._change_cache = None
-        log.error('new history: %r' % (self,))
-        self.log = log
+        self._cache_lock = threading.Lock()
+        self._lock = threading.RLock()
     
     def __del__(self):
         if self._change_cache is not None:
@@ -92,11 +135,13 @@ class History (object):
         b = bzrlib.branch.Branch.open(path)
         return cls.from_branch(b)
 
+    @with_branch_lock
     def out_of_date(self):
         if self._branch.revision_history()[-1] != self._last_revid:
             return True
         return False
 
+    @with_cache_lock
     def use_cache(self, path):
         if not os.path.exists(path):
             os.mkdir(path)
@@ -116,40 +161,32 @@ class History (object):
             
         # once we process a change (revision), it should be the same forever.
         log.info('Using change cache %s; %d, %d entries.' % (path, len(self._change_cache), len(self._change_cache_diffs)))
-        self._cache_lock = threading.Lock()
         self._change_cache_filename = cachefile
         self._change_cache_diffs_filename = cachefile_diffs
-    
+
+    @with_cache_lock
     def dont_use_cache(self):
         # called when a new history object needs to be created.  we can't use
         # the cache files anymore; they belong to the new history object.
-        self._cache_lock.acquire()
-        try:
-            if self._change_cache is None:
-                return
-            self._change_cache.close()
-            self._change_cache_diffs.close()
-            self._change_cache = None
-            self._change_cache_diffs = None
-        finally:
-            self._cache_lock.release()
-    
+        if self._change_cache is None:
+            return
+        self._change_cache.close()
+        self._change_cache_diffs.close()
+        self._change_cache = None
+        self._change_cache_diffs = None
+
+    @with_cache_lock
     def flush_cache(self):
-        # shelve seems to need the file to be closed to save anything :(
-        self._cache_lock.acquire()
-        try:
-            log.info('flush cache: %r (from %r)' % (len(self._change_cache), threading.currentThread()))
-            if self._change_cache is None:
-                return
-            self._change_cache.sync()
-            self._change_cache_diffs.sync()
-        finally:
-            self._cache_lock.release()
+        if self._change_cache is None:
+            return
+        self._change_cache.sync()
+        self._change_cache_diffs.sync()
     
     last_revid = property(lambda self: self._last_revid, None, None)
     
     count = property(lambda self: self._count, None, None)
-    
+
+    @with_branch_lock
     def get_revision(self, revid):
         return self._branch.repository.get_revision(revid)
     
@@ -193,7 +230,8 @@ class History (object):
             if len(parents) == 0:
                 return
             revid = parents[0]
-        
+
+    @with_branch_lock
     def get_short_revision_history_by_fileid(self, file_id):
         # wow.  is this really the only way we can get this list?  by
         # man-handling the weave store directly? :-0
@@ -204,6 +242,7 @@ class History (object):
         revids = [r for r in self._full_history if r in w_revids]
         return revids
 
+    @with_branch_lock
     def get_navigation(self, revid, path):
         """
         Given an optional revid and optional path, return a (revlist, revid)
@@ -225,6 +264,7 @@ class History (object):
             revid = revlist[0]
         return revlist, revid
 
+    @with_branch_lock
     def get_inventory(self, revid):
         return self._branch.repository.get_revision_inventory(revid)
 
@@ -285,6 +325,7 @@ class History (object):
         for revid in revid_list:
             yield self.get_change(revid)
     
+    @with_branch_lock
     def get_change(self, revid, get_diffs=False):
         if self._change_cache is None:
             return self._get_change(revid, get_diffs)
@@ -293,38 +334,38 @@ class History (object):
         srevid = revid
         if isinstance(revid, unicode):
             srevid = revid.encode('utf-8')
-        self._cache_lock.acquire()
-        try:
-            if get_diffs:
-                cache = self._change_cache_diffs
-            else:
-                cache = self._change_cache
+        return self._get_change_from_cache(revid, srevid, get_diffs)
+
+    @with_cache_lock
+    def _get_change_from_cache(self, revid, srevid, get_diffs):
+        if get_diffs:
+            cache = self._change_cache_diffs
+        else:
+            cache = self._change_cache
             
-            if srevid in cache:
-                c = cache[srevid]
-            else:
-                if get_diffs and (srevid in self._change_cache):
-                    # salvage the non-diff entry for a jump-start
-                    c = self._change_cache[srevid]
-                    if len(change.parents) == 0:
-                        left_parent = None
-                    else:
-                        left_parent = change.parents[0].revid
-                    c.changes = self.diff_revisions(revid, left_parent, get_diffs=True)
-                    cache[srevid] = c
+        if srevid in cache:
+            c = cache[srevid]
+        else:
+            if get_diffs and (srevid in self._change_cache):
+                # salvage the non-diff entry for a jump-start
+                c = self._change_cache[srevid]
+                if len(c.parents) == 0:
+                    left_parent = None
                 else:
-                    #log.debug('Entry cache miss: %r' % (revid,))
-                    c = self._get_change(revid, get_diffs=get_diffs)
-                    cache[srevid] = c
+                    left_parent = c.parents[0].revid
+                c.changes = self.diff_revisions(revid, left_parent, get_diffs=True)
+                cache[srevid] = c
+            else:
+                #log.debug('Entry cache miss: %r' % (revid,))
+                c = self._get_change(revid, get_diffs=get_diffs)
+                cache[srevid] = c
             
-            # some data needs to be recalculated each time, because it may
-            # change as new revisions are added.
-            merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
-            c.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
-            
-            return c
-        finally:
-            self._cache_lock.release()
+        # some data needs to be recalculated each time, because it may
+        # change as new revisions are added.
+        merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
+        c.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+        
+        return c
     
     def _get_change(self, revid, get_diffs=False):
         try:
@@ -416,6 +457,7 @@ class History (object):
             return revlist[max(0, pos + offset)]
         return revlist[min(count - 1, pos + offset)]
     
+    @with_branch_lock
     def diff_revisions(self, revid, otherrevid, get_diffs=True):
         """
         Return a nested data structure containing the changes between two
@@ -525,6 +567,7 @@ class History (object):
         
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
 
+    @with_branch_lock
     def get_filelist(self, inv, path):
         """
         return the list of all files (and their attributes) within a given
@@ -552,6 +595,7 @@ class History (object):
             parity ^= 1
         pass
 
+    @with_branch_lock
     def annotate_file(self, file_id, revid):
         z = time.time()
         lineno = 1

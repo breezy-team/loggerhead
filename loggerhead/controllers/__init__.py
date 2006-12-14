@@ -72,3 +72,4 @@ def rebuild_cache():
 index_freq = 3600
 
 turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
+

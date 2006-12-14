@@ -73,7 +73,7 @@ class ChangeLogUI (object):
             raise HTTPRedirect(turbogears.url('/changes'))
 
         buttons = [
-            ('top', turbogears.url('/changes')),
+            ('home', turbogears.url('/changes')),
             ('files', turbogears.url([ '/files', revid ])),
             ('feed', turbogears.url('/atom')),
         ]

@@ -77,11 +77,18 @@ class InventoryUI (object):
         # no navbar for revisions
         navigation = util.Container(buttons=buttons)
 
+        # add parent & merge-point branch-nick info, in case it's useful
+        change = h.get_change(revid)
+        for p in change.parents:
+            p.branch_nick = h.get_change(p.revid).branch_nick
+        for p in change.merge_points:
+            p.branch_nick = h.get_change(p.revid).branch_nick
+
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'util': util,
             'revid': revid,
-            'change': h.get_change(revid),
+            'change': change,
             'path': path,
             'updir': dirname(path),
             'filelist': h.get_filelist(inv, path),

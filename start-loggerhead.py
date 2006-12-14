@@ -23,9 +23,6 @@ else:
     turbogears.update_config(configfile="prod.cfg",
         modulename="loggerhead.config")
 
-# robey FIXME
-sys.path.insert(0, '/Users/robey/code/bzr/bzr.dev')
-
 from loggerhead.controllers import Root
 
 turbogears.start_server(Root())

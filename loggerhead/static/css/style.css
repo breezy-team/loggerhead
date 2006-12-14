@@ -402,6 +402,7 @@ table.inventory th.permissions {
 
 .inventory td.revision {
     width: 8em;
+    padding-right: 1em;
 }
 
 .inventory td.changes-link {

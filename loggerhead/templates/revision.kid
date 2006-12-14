@@ -4,6 +4,10 @@
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
     <title> ${branch_name} : revision ${change.revno} </title>
+    
+    <span py:def="file_link(filename)">
+        <a href="${tg.url([ '/annotate', revid ], path=filename)}">${filename}</a>
+    </span>
 </head>
 
 <body>
@@ -49,19 +53,21 @@ ${navbar()}
         
         <tr py:if="change.changes.added">
             <th class="files"> files added: </th>
-            <td class="files"> <span py:for="filename in change.changes.added">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.added">${file_link(filename)} <br /></span> </td>
         </tr>
         <tr py:if="change.changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename in change.changes.removed">${filename} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.removed">${file_link(filename)} <br /></span> </td>
         </tr>
         <tr py:if="change.changes.renamed">
             <th class="files"> files renamed: </th>
-            <td class="files"> <span py:for="old_filename, new_filename in change.changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
+            <td class="files"> <span py:for="old_filename, new_filename in change.changes.renamed">${file_link(old_filename)} => ${file_link(new_filename)}<br /></span> </td>
         </tr>
         <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
-            <td class="files"> <span py:for="item in change.changes.modified">${item.filename} <br /></span> </td>
+            <td class="files">
+                <span py:for="item in change.changes.modified">${file_link(item.filename)} <br /></span>
+            </td>
         </tr>
     </table>
 </div>
