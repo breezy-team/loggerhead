@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +47,7 @@ class AnnotateUI (object):
         h = util.get_history()
         
         if len(args) > 0:
-            revid = args[0]
+            revid = h.fix_revid(args[0])
         else:
             revid = None
         
@@ -61,14 +62,8 @@ class AnnotateUI (object):
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
             
-        buttons = [
-            ('top', turbogears.url('/changes')),
-            ('revision', turbogears.url([ '/revision', revid ], path=path)),
-            ('history', turbogears.url([ '/changes', revid ], path=path)),
-        ]
-        
         # no navbar for revisions
-        navigation = util.Container(buttons=buttons)
+        navigation = util.Container()
 
         vals = {
             'branch_name': turbogears.config.get('loggerhead.branch_name'),

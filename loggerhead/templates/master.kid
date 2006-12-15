@@ -23,27 +23,17 @@
                         <a href="${tg.url('/files')}"> files </a>
                     </span>
                 </td><td align="right" py:if="hasattr(navigation, 'revlist')">
-                        <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
-                            <a href="${tg.url('/atom')}"><img src="/static/images/feed-icon-16x16.gif" /></a>
-                        </span>
+                    <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
+                        <a href="${tg.url('/atom')}"><img src="/static/images/feed-icon-16x16.gif" /></a>
+                    </span>
                     <span class="navbuttons">
-                    	revisions:
-                        <span py:for="label, l_title, l_revid in history.scan_range(navigation.revlist, navigation.revid, navigation.pagesize)">
-                            <a py:if="l_revid" href="${tg.url([ navigation.scan_url, l_revid ], path=navigation.path, start_revid=navigation.start_revid)}" title="${l_title}"> ${label} </a>
-                            <span py:if="not l_revid"> ${label} </span>
-                        </span>
+                    	<span py:if="navigation.prev_page_revid"> <a href="${navigation.prev_page_url}" title="Previous page"> &#171; </a>	</span>
+                    	<span py:if="not navigation.prev_page_revid"> &#171; </span>
+                        	revision ${history.get_revno(revid)} (<span py:if="navigation.pagesize > 1">page </span>${navigation.page_position} / ${navigation.page_count})
+                    	<span py:if="navigation.next_page_revid"> <a href="${navigation.next_page_url}" title="Next page"> &#187; </a>	</span>
+                    	<span py:if="not navigation.next_page_revid"> &#187; </span>
                     </span>
                 </td></tr>
-            </table>
-        </div>
-        <div class="navposition">
-            <table>
-                <tr>
-                    <td> </td>
-                    <td class="navposition" align="right" py:if="hasattr(navigation, 'revlist')">
-                        viewing ${len(navigation.revlist) - history.get_revid_sequence(navigation.revlist, navigation.revid)} / ${len(navigation.revlist)}
-                    </td>
-                </tr>
             </table>
         </div>
     </div>

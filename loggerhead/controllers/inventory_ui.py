@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -46,7 +47,7 @@ class InventoryUI (object):
         h = util.get_history()
         
         if len(args) > 0:
-            revid = args[0]
+            revid = h.fix_revid(args[0])
         else:
             revid = None
         
@@ -68,14 +69,8 @@ class InventoryUI (object):
         else:
             file_id = inv.path2id(path)
             
-        buttons = [
-            ('top', turbogears.url('/changes')),
-            ('revision', turbogears.url([ '/revision', revid ])),
-            ('history', turbogears.url([ '/changes', revid ])),
-        ]
-        
         # no navbar for revisions
-        navigation = util.Container(buttons=buttons)
+        navigation = util.Container()
 
         # add parent & merge-point branch-nick info, in case it's useful
         change = h.get_change(revid)

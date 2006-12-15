@@ -10,7 +10,12 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : ${path} (revision ${change.revno}) </h1>
+<h1> <span class="branch-name">${branch_name}</span> : <span class="annotate-path">${path}</span> (revision ${change.revno})
+	<div class="links">
+	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}"> browse files </a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
+	</div>
+</h1>
 
 <!-- !FIXME: this is just copied verbatim from revision.kid -->
 <!--div class="revision-info">

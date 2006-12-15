@@ -136,6 +136,19 @@ h1 .filename {
 }
 
 
+/* ---- sub-links underneath the headline on some pages ----- */
+
+div.links {
+	padding-top: 0.5em;
+	padding-left: 3em;
+	font-size: 50%;
+}
+
+div.links div {
+	margin-bottom: 3px;
+}
+
+
 /* ----- list of merge points for a revision ----- */
 
 .info-entry {
@@ -231,9 +244,17 @@ h1 .filename {
 .log-entries .revision-details th.files {
 	padding-top: 1em;
 }
+
 .log-entries .revision-details td.files {
-	font-family: monospace;
 	padding-top: 1em;
+}
+
+.log-entries .revision-details td.files .filename {
+	font-family: monospace;
+}
+
+.log-entries .revision-details td.files a.jump {
+    font-size: smaller;
 }
 
 .log-entries .revision-details th.description {
@@ -251,12 +272,6 @@ h1 .filename {
 
 
 /* ----- revision page ----- */
-
-div.links {
-	padding-top: 0.5em;
-	padding-left: 3em;
-	font-size: 50%;
-}
 
 .revision-info {
     border: none;
@@ -302,10 +317,14 @@ div.links {
 	font-family: monospace;
 }
 
-.revision-info table td.files {
+.revision-info table td.files .filename {
 	font-family: monospace;
 }
 
+.revision-info table td.files a.jump {
+	font-size: smaller;
+}
+	
 .revision-info table tr.divider {
     border-top: 1px solid #8cacbb;
 }
@@ -377,6 +396,10 @@ div.links {
 
 /* ----- file inventory ----- */
 
+.inventory-path {
+	margin-top: 2em;
+}
+
 table.inventory {
 	border-collapse: collapse;
     width: 80%;
@@ -397,6 +420,7 @@ table.inventory th {
     padding-bottom: 3px;
 	text-align: left;
 }
+
 table.inventory th.permissions {
 	padding-left: 0.5em;
 }
@@ -416,11 +440,19 @@ table.inventory th.permissions {
 
 .inventory td.revision {
     width: 8em;
-    padding-right: 1em;
+    padding-right: 1.5em;
+}
+
+.inventory td.date {
+	font-family: monospace;
+	font-size: smaller;
+	width: 10em;
+	padding-right: 1.5em;
 }
 
 .inventory td.changes-link {
     width: 6em;
+    font-size: smaller;
 }
 
 span.folder {
@@ -429,6 +461,10 @@ span.folder {
 
 
 /* ----- file annotation ----- */
+
+.annotate-path {
+	font-family: monospace;
+}
 
 .annotate table {
 	border-collapse: collapse;

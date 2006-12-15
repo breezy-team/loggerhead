@@ -6,7 +6,7 @@
     <title> ${branch_name} : revision ${change.revno} </title>
     
     <span py:def="file_link(filename)">
-        <a href="${tg.url([ '/annotate', revid ], path=filename)}">${filename}</a>
+        <a href="${tg.url([ '/annotate', revid ], path=filename)}" title="Annotate ${filename}">${filename}</a>
     </span>
 </head>
 
@@ -15,12 +15,11 @@
 ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno}
-
-<div class="links">
-    <div> <b>&#8594;</b> <a href="%{tg.url([ '/files', revid ])}">browse files</a> </div>
-    <div> <b>&#8594;</b> <a href="%{tg.url('/changes', start_revid=revid)}">view branch changes</a> </div>
-</div>
- </h1>
+	<div class="links">
+	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}">browse files</a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid)}">view branch changes</a> </div>
+	</div>
+</h1>
  
 <div class="revision-info">
     <table>
@@ -59,20 +58,22 @@ ${navbar()}
         
         <tr py:if="change.changes.added">
             <th class="files"> files added: </th>
-            <td class="files"> <span py:for="filename in change.changes.added">${file_link(filename)} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.added" class="filename">${file_link(filename)} <br /></span> </td>
         </tr>
         <tr py:if="change.changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename in change.changes.removed">${file_link(filename)} <br /></span> </td>
+            <td class="files"> <span py:for="filename in change.changes.removed" class="filename">${file_link(filename)} <br /></span> </td>
         </tr>
         <tr py:if="change.changes.renamed">
             <th class="files"> files renamed: </th>
-            <td class="files"> <span py:for="old_filename, new_filename in change.changes.renamed">${file_link(old_filename)} => ${file_link(new_filename)}<br /></span> </td>
+            <td class="files"> <span py:for="old_filename, new_filename in change.changes.renamed" class="filename">${file_link(old_filename)} => ${file_link(new_filename)}<br /></span> </td>
         </tr>
         <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
             <td class="files">
-                <span py:for="item in change.changes.modified">${file_link(item.filename)} <br /></span>
+                <span py:for="item in change.changes.modified">
+                    <span class="filename">${file_link(item.filename)}</span> &nbsp; <a href="#${item.filename}" class="jump">(jump to diff)</a><br />
+                </span>
             </td>
         </tr>
     </table>
@@ -80,7 +81,7 @@ ${navbar()}
 
 <div class="diff" py:if="change.changes.modified">
     <table py:for="item in change.changes.modified" class="diff-block">
-        <tr><th class="filename"> <a href="${tg.url([ '/annotate', change.revid ], path=item.filename)}">${item.filename}</a> </th></tr>
+        <tr><th class="filename"> <a href="${tg.url([ '/annotate', change.revid ], path=item.filename)}" name="${item.filename}">${item.filename}</a> </th></tr>
         <tr><td>
             <table py:for="chunk in item.chunks" class="diff-chunk">
                 <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>
@@ -98,10 +99,10 @@ ${navbar()}
     <table>
         <tr>
         	<td class="buttons">
-            	<a py:if="prev_revid != revid" href="${tg.url([ '/changes', prev_revid ], start_revid=start_revid, path=path)}"> &lt; revision ${history.get_revno(prev_revid)} </a>
+            	<a py:if="navigation.prev_page_revid" href="${navigation.prev_page_url}"> &lt; revision ${history.get_revno(navigation.prev_page_revid)} </a>
 	 		</td>
  			<td class="rbuttons" align="right">
-            	<a py:if="next_revid != revid" href="${tg.url([ '/changes', next_revid ], start_revid=start_revid, path=path)}"> revision ${history.get_revno(next_revid)} &gt; </a>
+            	<a py:if="navigation.next_page_revid" href="${navigation.next_page_url}"> revision ${history.get_revno(navigation.next_page_revid)} &gt; </a>
  			</td>
  		</tr>
  	</table>

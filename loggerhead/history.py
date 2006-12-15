@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +22,7 @@ import datetime
 import logging
 import os
 import posixpath
+import re
 import shelve
 import sys
 import textwrap
@@ -242,6 +244,16 @@ class History (object):
         revids = [r for r in self._full_history if r in w_revids]
         return revids
 
+    revno_re = re.compile(r'^[\d\.]+$')
+
+    def fix_revid(self, revid):
+        # if a "revid" is actually a dotted revno, convert it to a revid
+        if revid is None:
+            return revid
+        if self.revno_re.match(revid):
+            revid = self._revno_revid[revid]
+        return revid
+    
     @with_branch_lock
     def get_navigation(self, revid, path):
         """
@@ -469,13 +481,6 @@ class History (object):
         else:
             yield (u'\xbb', None, None)
     
-    def get_revlist_offset(self, revlist, revid, offset):
-        count = len(revlist)
-        pos = self.get_revid_sequence(revlist, revid)
-        if offset < 0:
-            return revlist[max(0, pos + offset)]
-        return revlist[min(count - 1, pos + offset)]
-    
     @with_branch_lock
     def diff_revisions(self, revid, otherrevid, get_diffs=True):
         """
@@ -608,9 +613,10 @@ class History (object):
             
             # last change:
             revid = entry.revision
+            change = self.get_change(revid)
             
             yield util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
-                                 pathname=pathname, revid=revid, revno=self.get_revno(revid), parity=parity)
+                                 pathname=pathname, revid=revid, change=change, parity=parity)
             parity ^= 1
         pass
 

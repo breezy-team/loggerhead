@@ -9,7 +9,11 @@
     <span py:def="loglink(revid, text)">
         <a title="Show history" href="${tg.url('/changes', start_revid=revid)}" class="revlink"> ${text} </a>
     </span>
-    
+
+    <span py:def="file_link(filename, revid)">
+        <a href="${tg.url([ '/annotate', revid ], path=filename)}" title="Annotate ${filename}">${filename}</a>
+    </span>
+
     <!-- this is totally matty's fault.  i don't like javacsript. ;) -->
     <script type="text/javascript"> // <!--
     function displayDetails(name, hide, show) {
@@ -59,7 +63,7 @@ ${navbar()}
         <div class="revision-header">
             <table>
                 <tr>
-                    <td class="revision-number"> ${revlink_path(revid, start_revid, entry.revno, path)} </td>
+                    <td class="revision-number"> ${revlink_path(entry.revid, start_revid, entry.revno, path)} </td>
                     <td class="expand-button">
                         <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
                             <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" />
@@ -69,7 +73,7 @@ ${navbar()}
                         </a>
                     </td>
 					<td class="summary"> ${revlink_path(entry.revid, start_revid, entry.short_comment, path)} </td>
-					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">(files)</a> </td>
+					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
 			</table>
         </div>
@@ -108,19 +112,25 @@ ${navbar()}
 
 			        <tr py:if="entry.changes.added">
 			            <th class="files"> files added: </th>
-			            <td class="files"> <span py:for="filename in entry.changes.added">${filename} <br /></span> </td>
+			            <td class="files"> <span py:for="filename in entry.changes.added" class="filename">${file_link(filename, entry.revid)} <br /></span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.removed">
 			            <th class="files"> files removed: </th>
-			            <td class="files"> <span py:for="filename in entry.changes.removed">${filename} <br /></span> </td>
+			            <td class="files"> <span py:for="filename in entry.changes.removed" class="filename">${file_link(filename, entry.revid)} <br /></span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.renamed">
 			            <th class="files"> files renamed: </th>
-			            <td class="files"> <span py:for="old_filename, new_filename in entry.changes.renamed">${old_filename} => ${new_filename}<br /></span> </td>
+			            <td class="files"> <span py:for="old_filename, new_filename in entry.changes.renamed" class="filename">
+			                ${file_link(old_filename, entry.revid)} => ${file_link(new_filename, entry.revid)}<br />
+			            </span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.modified">
 			            <th class="files"> files modified: </th>
-			            <td class="files"> <span py:for="item in entry.changes.modified">${item.filename} <br /></span> </td>
+			            <td class="files"> <span py:for="item in entry.changes.modified">
+			                <span class="filename">${file_link(item.filename, entry.revid)}</span> &nbsp;
+			                <a href="${tg.url([ '/revision', entry.revid ], start_revid=start_revid, path=path) + '#' + item.filename}" class="jump">(jump to diff)</a>
+			                <br />
+			            </span> </td>
 			        </tr>
 			        <tr>
 			            <th class="description">description:</th>
@@ -136,10 +146,10 @@ ${navbar()}
     <table>
         <tr>
         	<td class="buttons">
-            	<a py:if="prev_page_revid != revid" href="${tg.url([ '/changes', prev_page_revid ], start_revid=start_revid, path=path)}"> &lt;&lt; page </a>
+            	<a py:if="navigation.prev_page_revid" href="${navigation.prev_page_url}"> &lt;&lt; page </a>
 	 		</td>
  			<td class="rbuttons" align="right">
-            	<a py:if="next_page_revid != revid" href="${tg.url([ '/changes', next_page_revid ], start_revid=start_revid, path=path)}"> page &gt;&gt; </a>
+            	<a py:if="navigation.next_page_revid" href="${navigation.next_page_url}"> page &gt;&gt; </a>
  			</td>
  		</tr>
  	</table>

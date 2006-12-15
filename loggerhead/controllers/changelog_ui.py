@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,12 +55,12 @@ class ChangeLogUI (object):
         h = util.get_history()
         
         if len(args) > 0:
-            revid = args[0]
+            revid = h.fix_revid(args[0])
         else:
             revid = None
 
         path = kw.get('path', None)
-        start_revid = kw.get('start_revid', None)
+        start_revid = h.fix_revid(kw.get('start_revid', None))
         pagesize = int(turbogears.config.get('loggerhead.pagesize', '20'))
         
         try:
@@ -78,8 +79,7 @@ class ChangeLogUI (object):
 
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revlist=revlist,
                                     path=path, scan_url='/changes', feed=True)
-        next_page_revid = h.get_revlist_offset(revlist, revid, pagesize)
-        prev_page_revid = h.get_revlist_offset(revlist, revid, -pagesize)
+        util.fill_in_navigation(h, navigation)
         
         entries = list(entries)
         # add parent & merge-point branch-nick info, in case it's useful
@@ -97,8 +97,6 @@ class ChangeLogUI (object):
             'revid': revid,
             'navigation': navigation,
             'path': path,
-            'next_page_revid': next_page_revid,
-            'prev_page_revid': prev_page_revid,
             'last_revid': h.last_revid,
             'start_revid': start_revid,
         }

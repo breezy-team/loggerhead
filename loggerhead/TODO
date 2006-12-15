@@ -1,20 +1,4 @@
 
-=== BEFORE POSTING TO BZR.DEV ===
-* copy credits over from webserve/hgweb plugin.
-
-* in changelog view, "files modified" etc should be links
-
-* in revision view, "files modified" etc should have #-links "(jump to diff)"
-  next to them
-
-* put files/etc "buttons" links back in the page
-    inventory
-    annotate
-    atom
-
-
-=== other ===
-
 * maybe put this at the footer of each page:
     paramiko-dev, 419 revisions, 1133 days old
     first revision: Tue 2003-11-04 08:34:24 +0000
@@ -25,4 +9,9 @@
 * add back the search bar.
     -- should notice dotted-revnos and use that to jump.
 	-- also search by date should be simple.
+
+* problem: given a folder, find all revisions where items inside that
+  folder have changed.
+    -- stumper.  maybe ask on bazaar-dev ML?
+
 	

@@ -10,7 +10,12 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : files for revision ${change.revno} </h1>
+<h1> <span class="branch-name">${branch_name}</span> : files for revision ${change.revno}
+	<div class="links">
+	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid)}"> view branch changes </a> </div>
+	</div>
+</h1>
 
 <!-- !FIXME: this is just copied verbatim from revision.kid -->
 <div class="revision-info">
@@ -48,20 +53,23 @@ ${navbar()}
     </table>
 </div>
 
-<b>folder:</b> <span class="folder"> ${path} </span>
+<div class="inventory-path">
+    <b>folder:</b> <span class="folder"> ${path} </span>
+</div>
 
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
         <th> Filename </th>
         <th> Last change </th>
+        <th> When </th>
         <th> History </th>
     </tr>
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
         <td class="filename directory"><a href="${tg.url([ '/files', revid ], path=updir)}"> (up) </a></td>
-        <td> </td> <td> </td>
+        <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
@@ -71,8 +79,9 @@ ${navbar()}
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
             <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}</a>
         </td>
-        <td class="revision"> ${revlink_path(file.revid, file.revid, file.revno, posixpath.join(path, file.pathname))} </td>
-        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, path=posixpath.join(path, file.pathname))}"> (changes) </a></td>
+        <td class="revision"> ${revlink_path(file.revid, file.revid, util.trunc(file.change.revno, 15), posixpath.join(path, file.pathname))} </td>
+        <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
+        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, path=posixpath.join(path, file.pathname))}"> &#8594; changes </a></td>
     </tr>
 </table>
 

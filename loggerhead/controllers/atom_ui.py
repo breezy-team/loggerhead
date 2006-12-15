@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +27,8 @@ class AtomUI (object):
     @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
     def default(self, *args):
         h = util.get_history()
-        
+
+        # really, there is no point giving a revid here...
         if len(args) > 0:
             revid = args[0]
         else:

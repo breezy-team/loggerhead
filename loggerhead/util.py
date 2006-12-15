@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -95,6 +96,12 @@ def obfuscate(text):
     return ''.join([ '&#%d;' % ord(c) for c in text ])
 
 
+def trunc(text, limit=10):
+    if len(text) <= limit:
+        return text
+    return text[:limit] + '...'
+
+
 STANDARD_PATTERN = re.compile(r'^(.*?)\s*<(.*?)>\s*$')
 EMAIL_PATTERN = re.compile(r'[-\w\d\+_!%\.]+@[-\w\d\+_!%\.]+')
 
@@ -178,6 +185,29 @@ def if_present(format, value):
     if value is None:
         return ''
     return format % value
+
+
+def fill_in_navigation(history, navigation):
+    """
+    given a navigation block (used by the template for the page header), fill
+    in useful calculated values.
+    """
+    navigation.position = history.get_revid_sequence(navigation.revlist, navigation.revid)
+    navigation.count = len(navigation.revlist)
+    navigation.page_position = navigation.position // navigation.pagesize + 1
+    navigation.page_count = (len(navigation.revlist) + (navigation.pagesize - 1)) // navigation.pagesize
+    
+    def get_offset(offset):
+        if (navigation.position + offset < 0) or (navigation.position > navigation.count - 1):
+            return None
+        return navigation.revlist[navigation.position + offset]
+    
+    navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
+    navigation.next_page_revid = get_offset(1 * navigation.pagesize)
+    if navigation.prev_page_revid:
+        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], path=navigation.path, start_revid=navigation.start_revid)
+    if navigation.next_page_revid:
+        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], path=navigation.path, start_revid=navigation.start_revid)
 
 
 # global branch history & cache

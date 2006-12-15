@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,12 +39,12 @@ class RevisionUI (object):
         h = util.get_history()
         
         if len(args) > 0:
-            revid = args[0]
+            revid = h.fix_revid(args[0])
         else:
             revid = None
         
         path = kw.get('path', None)
-        start_revid = kw.get('start_revid', None)
+        start_revid = h.fix_revid(kw.get('start_revid', None))
         
         try:
             revlist, start_revid = h.get_navigation(start_revid, path)
@@ -55,11 +56,10 @@ class RevisionUI (object):
         
         navigation = util.Container(revlist=revlist, revid=revid, start_revid=start_revid, path=path,
                                     pagesize=1, scan_url='/revision', feed=1)
+        util.fill_in_navigation(h, navigation)
+
         change = h.get_change(revid, get_diffs=True)
         
-        next_revid = h.get_revlist_offset(revlist, revid, 1)
-        prev_revid = h.get_revlist_offset(revlist, revid, -1)
-
         # add parent & merge-point branch-nick info, in case it's useful
         for p in change.parents:
             p.branch_nick = h.get_change(p.revid).branch_nick
@@ -70,8 +70,6 @@ class RevisionUI (object):
             'branch_name': turbogears.config.get('loggerhead.branch_name'),
             'revid': revid,
             'change': change,
-            'prev_revid': prev_revid,
-            'next_revid': next_revid,
             'start_revid': start_revid,
             'path': path,
             'util': util,

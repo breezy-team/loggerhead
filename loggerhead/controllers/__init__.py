@@ -1,5 +1,6 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
+# Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -71,7 +72,7 @@ def rebuild_cache():
 # re-index every hour (for now -- maybe should be even longer?)
 index_freq = 3600
 
-#turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
+turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
 
 # for use in profiling the very-slow get_change() method:
 #h = util.get_history()
