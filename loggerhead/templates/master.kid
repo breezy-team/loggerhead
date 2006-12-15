@@ -24,7 +24,7 @@
                     </span>
                 </td><td align="right" py:if="hasattr(navigation, 'revlist')">
                     <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
-                        <a href="${tg.url('/atom')}"><img src="/static/images/feed-icon-16x16.gif" /></a>
+                        <a href="${tg.url('/atom')}"><img src="${tg.url('/static/images/feed-icon-16x16.gif')}" /></a>
                     </span>
                     <span class="navbuttons">
                     	<span py:if="navigation.prev_page_revid"> <a href="${navigation.prev_page_url}" title="Previous page"> &#171; </a>	</span>
