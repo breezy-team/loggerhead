@@ -17,6 +17,10 @@ a:hover {
 	color: black;
 }
 
+img {
+	border: none;
+}
+
 h1 {
     color: #708a96;
 	font-weight: normal;
@@ -82,7 +86,7 @@ h1 .filename {
     font-size: smaller;
 }
 
-/* navigation button in the pages (the ones at the top left) */
+/* navigation button in the pages (the ones at the top left, and bottom) */
 .buttons {
 }
 
@@ -100,12 +104,16 @@ h1 .filename {
     color: blue;
 }
 
+.feed img {
+	vertical-align: text-top;
+}
+
 .rbuttons a {
     font-weight: normal;
     color: #000088;
     font-size: 12pt;
-    padding-right: 10px;
-    padding-left: 7px;
+    padding-right: 7px;
+    padding-left: 10px;
     border-left: 1px dotted #8cacbb;
     text-align: right;
     width: auto;
@@ -243,6 +251,12 @@ h1 .filename {
 
 
 /* ----- revision page ----- */
+
+div.links {
+	padding-top: 0.5em;
+	padding-left: 3em;
+	font-size: 50%;
+}
 
 .revision-info {
     border: none;
@@ -469,9 +483,3 @@ span.folder {
 .annotate th.text {
 	padding-left: 1em;
 }
-
-.annotate td.changed {
-	xxborder-top: 1px solid #8cacbb;
-}
-
-

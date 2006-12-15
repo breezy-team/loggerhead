@@ -14,8 +14,14 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno} </h1>
+<h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno}
 
+<div class="links">
+    <div> <b>&#8594;</b> <a href="%{tg.url([ '/files', revid ])}">browse files</a> </div>
+    <div> <b>&#8594;</b> <a href="%{tg.url('/changes', start_revid=revid)}">view branch changes</a> </div>
+</div>
+ </h1>
+ 
 <div class="revision-info">
     <table>
         <tr>
@@ -92,10 +98,10 @@ ${navbar()}
     <table>
         <tr>
         	<td class="buttons">
-            	<a py:if="prev_revid != revid" href="${tg.url([ '/changes', prev_revid ], start_revid=start_revid, path=path)}"> &lt;&lt; revision ${history.get_revno(prev_revid)} </a>
+            	<a py:if="prev_revid != revid" href="${tg.url([ '/changes', prev_revid ], start_revid=start_revid, path=path)}"> &lt; revision ${history.get_revno(prev_revid)} </a>
 	 		</td>
  			<td class="rbuttons" align="right">
-            	<a py:if="next_revid != revid" href="${tg.url([ '/changes', next_revid ], start_revid=start_revid, path=path)}"> revision ${history.get_revno(next_revid)} &gt;&gt; </a>
+            	<a py:if="next_revid != revid" href="${tg.url([ '/changes', next_revid ], start_revid=start_revid, path=path)}"> revision ${history.get_revno(next_revid)} &gt; </a>
  			</td>
  		</tr>
  	</table>

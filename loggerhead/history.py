@@ -367,6 +367,16 @@ class History (object):
         
         return c
     
+    # alright, let's profile this sucka.
+    def _get_change_profiled(self, revid, get_diffs=False):
+        from loggerhead.lsprof import profile
+        import cPickle
+        ret, stats = profile(self._get_change, revid, get_diffs)
+        stats.sort()
+        stats.freeze()
+        cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
+        return ret
+
     def _get_change(self, revid, get_diffs=False):
         try:
             rev = self._branch.repository.get_revision(revid)
@@ -426,29 +436,38 @@ class History (object):
         yield a list of (label, title, revid) for a scan range through the full
         branch history, centered around the given revid.
         
-        example: [ ('(425)', 'Latest', 'rrrr'), ('+1', 'Forward 1', 'rrrr'), ...
-                   ('-300', 'Back 300', 'rrrr'), ('(1)', 'Oldest', 'first-revid') ]
+        example: [ ('<<', 'Previous page', 'rrr'), ('-10', 'Forward 10', 'rrr'),
+                   ('*', None, None), ('+10', 'Back 10', 'rrr'),
+                   ('+30', 'Back 30', 'rrr'), ('>>', 'Next page', 'rrr') ]
+        
+        next/prev page are always using the pagesize.
         """
         count = len(revlist)
         pos = self.get_revid_sequence(revlist, revid)
-        if pos < count - 1:
-            yield ('<', 'Back %d' % (pagesize,),
-                   revlist[min(count - 1, pos + pagesize)])
+
+        if pos > 0:
+            yield (u'\xab', 'Previous page', revlist[max(0, pos - pagesize)])
         else:
-            yield ('<', None, None)
-        yield ('(1)', 'Oldest', revlist[-1])
-        for offset in reversed([-x for x in util.scan_range(pos, count)]):
+            yield (u'\xab', None, None)
+        
+        offset_sign = -1
+        for offset in util.scan_range(pos, count, pagesize):
+            if (offset > 0) and (offset_sign < 0):
+                offset_sign = 0
+                # show current position
+#                yield ('[%s]' % (self.get_revno(revlist[pos]),), None, None)
+#                yield (u'\u2022', None, None)
+                yield (u'\u00b7', None, None)
             if offset < 0:
                 title = 'Back %d' % (-offset,)
             else:
                 title = 'Forward %d' % (offset,)
-            yield ('%+d' % (offset,), title, revlist[pos - offset])
-        yield ('(%d)' % (len(revlist),) , 'Latest', revlist[0])
-        if pos > 0:
-            yield ('>', 'Forward %d' % (pagesize,),
-                   revlist[max(0, pos - pagesize)])
+            yield ('%+d' % (offset,), title, revlist[pos + offset])
+        
+        if pos < count - 1:
+            yield (u'\xbb', 'Next page', revlist[min(count - 1, pos + pagesize)])
         else:
-            yield ('>', None, None)
+            yield (u'\xbb', None, None)
     
     def get_revlist_offset(self, revlist, revid, offset):
         count = len(revlist)

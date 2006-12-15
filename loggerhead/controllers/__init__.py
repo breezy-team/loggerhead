@@ -71,5 +71,9 @@ def rebuild_cache():
 # re-index every hour (for now -- maybe should be even longer?)
 index_freq = 3600
 
-turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
+#turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
+
+# for use in profiling the very-slow get_change() method:
+#h = util.get_history()
+#h._get_change_profiled(h.last_revid)
 

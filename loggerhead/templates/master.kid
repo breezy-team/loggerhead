@@ -12,18 +12,22 @@
 
 <!-- !define common navbar -->
 <span py:def="navbar()">
-    <!-- !requires: ${navigation: revid, revlist, pagesize, buttons, scan_url}, ${history} -->
+    <!-- !requires: ${navigation: start_revid, revid, revlist, pagesize, buttons, scan_url}, ${history} -->
     <div class="navbar">
         <div class="bar">
             <table>
                 <tr><td>
                     <span class="buttons">
-                        <span py:for="label, url in navigation.buttons">
-                            <a href="${url}"> ${label} </a>
-                        </span>
+                        <!-- ! navbar buttons never change, from now on.  i decree it! -->
+                        <a href="${tg.url('/changes')}"> changes </a>
+                        <a href="${tg.url('/files')}"> files </a>
                     </span>
                 </td><td align="right" py:if="hasattr(navigation, 'revlist')">
+                        <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
+                            <a href="${tg.url('/atom')}"><img src="/static/images/feed-icon-16x16.gif" /></a>
+                        </span>
                     <span class="navbuttons">
+                    	revisions:
                         <span py:for="label, l_title, l_revid in history.scan_range(navigation.revlist, navigation.revid, navigation.pagesize)">
                             <a py:if="l_revid" href="${tg.url([ navigation.scan_url, l_revid ], path=navigation.path, start_revid=navigation.start_revid)}" title="${l_title}"> ${label} </a>
                             <span py:if="not l_revid"> ${label} </span>
@@ -37,7 +41,7 @@
                 <tr>
                     <td> </td>
                     <td class="navposition" align="right" py:if="hasattr(navigation, 'revlist')">
-                        changes: ${len(navigation.revlist) - history.get_revid_sequence(navigation.revlist, navigation.revid)} / ${len(navigation.revlist)}
+                        viewing ${len(navigation.revlist) - history.get_revid_sequence(navigation.revlist, navigation.revid)} / ${len(navigation.revlist)}
                     </td>
                 </tr>
             </table>

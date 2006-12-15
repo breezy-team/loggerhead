@@ -118,12 +118,12 @@ def hide_email(email):
     return '%s at %s' % (username, domains[0])
 
     
-def triple_factors():
+def triple_factors(min_value=1):
     factors = (1, 3)
     index = 0
     n = 1
     while True:
-        if n >= 10:
+        if n >= min_value:
             yield n * factors[index]
         index += 1
         if index >= len(factors):
@@ -131,7 +131,7 @@ def triple_factors():
             n *= 10
 
 
-def scan_range(pos, max):
+def scan_range(pos, max, pagesize=1):
     """
     given a position in a maximum range, return a list of negative and positive
     jump factors for an hgweb-style triple-factor geometric scan.
@@ -143,7 +143,7 @@ def scan_range(pos, max):
     invent it. :)
     """
     out = []
-    for n in triple_factors():
+    for n in triple_factors(pagesize + 1):
         if n > max:
             return out
         if pos + n < max:

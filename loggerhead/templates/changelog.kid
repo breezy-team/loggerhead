@@ -62,10 +62,10 @@ ${navbar()}
                     <td class="revision-number"> ${revlink_path(revid, start_revid, entry.revno, path)} </td>
                     <td class="expand-button">
                         <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
-                            <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" border="0" />
+                            <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" />
                         </a>
                         <a href="javascript:displayDetails('${entry.revno}', '', 'none')" id="show-${entry.revno}" class="hide-button">
-                        	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" border="0" />
+                        	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" />
                         </a>
                     </td>
 					<td class="summary"> ${revlink_path(entry.revid, start_revid, entry.short_comment, path)} </td>

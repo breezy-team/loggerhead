@@ -52,15 +52,9 @@ class RevisionUI (object):
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
-
-        buttons = [
-            ('top', turbogears.url('/changes')),
-            ('files', turbogears.url([ '/files', revid ])),
-            ('history', turbogears.url('/changes', start_revid=revid)),
-        ]
         
-        navigation = util.Container(buttons=buttons, revlist=revlist, revid=revid, start_revid=start_revid, path=path,
-                                    pagesize=1, scan_url='/revision')
+        navigation = util.Container(revlist=revlist, revid=revid, start_revid=start_revid, path=path,
+                                    pagesize=1, scan_url='/revision', feed=1)
         change = h.get_change(revid, get_diffs=True)
         
         next_revid = h.get_revlist_offset(revlist, revid, 1)

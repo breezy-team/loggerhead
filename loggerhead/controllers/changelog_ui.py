@@ -66,20 +66,18 @@ class ChangeLogUI (object):
             revlist, start_revid = h.get_navigation(start_revid, path)
             if revid is None:
                 revid = start_revid
+            if revid not in revlist:
+                # if the given revid is not in the revlist, use a revlist that
+                # starts at the given revid.
+                revlist, start_revid = h.get_navigation(revid, path)
             entry_list = list(h.get_revids_from(revlist, revid))[:pagesize]
             entries = h.get_changelist(entry_list)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
 
-        buttons = [
-            ('home', turbogears.url('/changes')),
-            ('files', turbogears.url([ '/files', revid ])),
-            ('feed', turbogears.url('/atom')),
-        ]
-
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revlist=revlist,
-                                    path=path, buttons=buttons, scan_url='/changes')
+                                    path=path, scan_url='/changes', feed=True)
         next_page_revid = h.get_revlist_offset(revlist, revid, pagesize)
         prev_page_revid = h.get_revlist_offset(revlist, revid, -pagesize)
         
