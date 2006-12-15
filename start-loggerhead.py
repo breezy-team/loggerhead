@@ -1,4 +1,4 @@
-#!/Library/Frameworks/Python.framework/Versions/2.4/Resources/Python.app/Contents/MacOS/Python
+#!/usr/bin/env python2.4
 import pkg_resources
 pkg_resources.require("TurboGears")
 
