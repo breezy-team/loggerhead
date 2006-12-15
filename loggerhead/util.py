@@ -219,15 +219,27 @@ def get_history():
     global _history
     from loggerhead.history import History
     
+    config = get_config()
+    
     _history_lock.acquire()
     try:
         if (_history is None) or _history.out_of_date():
             log.debug('Reload branch history...')
             if _history is not None:
                 _history.dont_use_cache()
-            _history = History.from_folder(turbogears.config.get('loggerhead.folder'))
-            _history.use_cache(turbogears.config.get('loggerhead.cachepath'))
+            _history = History.from_folder(config.get('folder'))
+            _history.use_cache(config.get('cachepath'))
         return _history
     finally:
         _history_lock.release()
+
+
+_config = None
+
+def set_config(config):
+    global _config
+    _config = config
+
+def get_config():
+    return _config
 

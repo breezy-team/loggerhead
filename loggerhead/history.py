@@ -30,8 +30,10 @@ import threading
 import time
 from StringIO import StringIO
 
-import turbogears
-sys.path.insert(0, turbogears.config.get('loggerhead.bzrpath', ''))
+from loggerhead import util
+extra_path = util.get_config().get('bzrpath', None)
+if extra_path:
+    sys.path.insert(0, extra_path)
 
 import bzrlib
 import bzrlib.annotate
@@ -43,7 +45,6 @@ import bzrlib.textfile
 import bzrlib.tsort
 import bzrlib.ui
 
-from loggerhead import util
 
 log = logging.getLogger("loggerhead.controllers")
 

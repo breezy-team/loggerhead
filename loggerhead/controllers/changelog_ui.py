@@ -61,7 +61,7 @@ class ChangeLogUI (object):
 
         path = kw.get('path', None)
         start_revid = h.fix_revid(kw.get('start_revid', None))
-        pagesize = int(turbogears.config.get('loggerhead.pagesize', '20'))
+        pagesize = int(util.get_config().get('pagesize', '20'))
         
         try:
             revlist, start_revid = h.get_navigation(start_revid, path)
@@ -90,7 +90,7 @@ class ChangeLogUI (object):
                 p.branch_nick = h.get_change(p.revid).branch_nick
 
         vals = {
-            'branch_name': turbogears.config.get('loggerhead.branch_name'),
+            'branch_name': util.get_config().get('branch_name'),
             'changes': list(entries),
             'util': util,
             'history': h,

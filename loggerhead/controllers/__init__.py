@@ -20,9 +20,16 @@
 import logging
 import time
 
+from configobj import ConfigObj
+
 import turbogears
 from turbogears import controllers
 from cherrypy import HTTPRedirect, NotFound
+
+from loggerhead import util
+
+my_config = ConfigObj('loggerhead.conf', encoding='utf-8')
+util.set_config(my_config)
 
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.atom_ui import AtomUI
@@ -30,8 +37,6 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.history import History
-from loggerhead import util
-
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -49,6 +54,8 @@ class Root (controllers.RootController):
 
 # force history to be read:
 util.get_history()
+
+
 
 def rebuild_cache():
     log.info('Rebuilding revision cache...')

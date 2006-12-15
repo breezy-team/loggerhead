@@ -66,7 +66,7 @@ class AnnotateUI (object):
         navigation = util.Container()
 
         vals = {
-            'branch_name': turbogears.config.get('loggerhead.branch_name'),
+            'branch_name': util.get_config().get('branch_name'),
             'util': util,
             'revid': revid,
             'path': path,

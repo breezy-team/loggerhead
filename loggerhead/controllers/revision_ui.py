@@ -67,7 +67,7 @@ class RevisionUI (object):
             p.branch_nick = h.get_change(p.revid).branch_nick
         
         vals = {
-            'branch_name': turbogears.config.get('loggerhead.branch_name'),
+            'branch_name': util.get_config().get('branch_name'),
             'revid': revid,
             'change': change,
             'start_revid': start_revid,

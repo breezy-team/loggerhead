@@ -80,7 +80,7 @@ class InventoryUI (object):
             p.branch_nick = h.get_change(p.revid).branch_nick
 
         vals = {
-            'branch_name': turbogears.config.get('loggerhead.branch_name'),
+            'branch_name': util.get_config().get('branch_name'),
             'util': util,
             'revid': revid,
             'change': change,

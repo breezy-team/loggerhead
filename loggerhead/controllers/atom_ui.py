@@ -37,8 +37,8 @@ class AtomUI (object):
         entries = list(h.get_changelist(list(revlist)[:20]))
 
         vals = {
-            'external_url': turbogears.config.get('loggerhead.external_url'),
-            'branch_name': turboears.config.get('loggerhead.branch_name'),
+            'external_url': util.get_config().get('external_url'),
+            'branch_name': util.get_config().get('branch_name'),
             'changes': entries,
             'util': util,
             'history': h,
