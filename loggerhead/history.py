@@ -271,6 +271,7 @@ class History (object):
             # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
             inv = self._branch.repository.get_revision_inventory(revid)
             revlist = list(self.get_short_revision_history_by_fileid(inv.path2id(path)))
+            revlist = list(self.get_revids_from(revlist, revid))
         else:
             revlist = list(self.get_revids_from(None, revid))
         if revid is None:

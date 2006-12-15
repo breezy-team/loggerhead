@@ -198,7 +198,7 @@ def fill_in_navigation(history, navigation):
     navigation.page_count = (len(navigation.revlist) + (navigation.pagesize - 1)) // navigation.pagesize
     
     def get_offset(offset):
-        if (navigation.position + offset < 0) or (navigation.position > navigation.count - 1):
+        if (navigation.position + offset < 0) or (navigation.position + offset > navigation.count - 1):
             return None
         return navigation.revlist[navigation.position + offset]
     

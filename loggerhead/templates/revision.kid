@@ -36,7 +36,7 @@ ${navbar()}
             <th class="children"> merged in: </th>
             <td class="children">
                 <span py:for="child in change.merge_points">
-                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} &nbsp; 
+                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} <br /> 
                 </span>
             </td>
         </tr>
@@ -44,7 +44,7 @@ ${navbar()}
         	<th class="parents"> merged from: </th>
         	<td class="parents">
         	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} &nbsp;
+        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} <br />
         	    </span></span>
         	</td>
         </tr>
@@ -95,7 +95,7 @@ ${navbar()}
     </table>
 </div>
 
-<div class="bar">
+<div py:if="navigation.prev_page_revid or navigation.next_page_revid" class="bar">
     <table>
         <tr>
         	<td class="buttons">
