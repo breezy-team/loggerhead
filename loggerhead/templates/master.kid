@@ -7,7 +7,7 @@
     <title py:replace="''">Your title goes here</title>
     <meta py:replace="item[:]"/>
     <style type="text/css" media="screen">
-@import "/static/css/style.css";
+@import "${tg.url('/static/css/style.css')}";
     </style>
 
 <!-- !define common navbar -->
