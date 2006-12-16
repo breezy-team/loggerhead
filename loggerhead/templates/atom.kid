@@ -6,9 +6,9 @@
     <link rel="self" href="${tg.url([ external_url, 'atom' ])}" />
 
 	<entry py:for="entry in changes">
-	    <title> ${entry.short_comment} </title>
+	    <title> ${entry.revno}: ${entry.short_comment} </title>
 	    <updated> ${entry.date.isoformat() + 'Z'} </updated>
-	    <id>${tg.url([ external_url, 'atom', entry.revid ])}</id>
+	    <id>${tg.url([ external_url, 'revision', entry.revid ])}</id>
 	    <author> <name> ${util.hide_email(entry.author)} </name> </author>
 	    <content type="text">
             ${entry.comment}

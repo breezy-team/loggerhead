@@ -27,14 +27,10 @@ class AtomUI (object):
     @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
     def default(self, *args):
         h = util.get_history()
+        pagesize = int(util.get_config().get('pagesize', '20'))
 
-        # really, there is no point giving a revid here...
-        if len(args) > 0:
-            revid = args[0]
-        else:
-            revid = h.last_revid
-        revlist = h.get_short_revision_history_from(revid)
-        entries = list(h.get_changelist(list(revlist)[:20]))
+        revlist, start_revid = h.get_navigation(None, None)
+        entries = list(h.get_changelist(list(revlist)[:pagesize]))
 
         vals = {
             'external_url': util.get_config().get('external_url'),
