@@ -14,6 +14,7 @@ ${navbar()}
 	<div class="links">
 	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}"> browse files </a> </div>
 	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid, path=path)}"> view changes to this file </a> </div>
 	</div>
 </h1>
 
