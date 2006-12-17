@@ -7,7 +7,7 @@
 
 	<entry py:for="entry in changes">
 	    <title> ${entry.revno}: ${entry.short_comment} </title>
-	    <updated> ${entry.date.isoformat() + 'Z'} </updated>
+	    <updated>${entry.date.isoformat() + 'Z'}</updated>
 	    <id>${tg.url([ external_url, 'revision', entry.revid ])}</id>
 	    <author> <name> ${util.hide_email(entry.author)} </name> </author>
 	    <content type="text">
