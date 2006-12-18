@@ -59,25 +59,35 @@ util.get_history()
 
 def rebuild_cache():
     log.info('Rebuilding revision cache...')
+    start_time = time.time()
     last_update = time.time()
     h = util.get_history()
     count = 0
     
-    work = h.get_revision_history()
-    for r in work:
-        h.get_change(r)
+    work = list(h.get_revision_history())
+    jump = 100
+    for i in xrange(0, len(work), jump):
+        r = work[i:i + jump]
+        list(h.get_changes(r))
         if h.out_of_date():
             return
-        count += 1
-        if time.time() - last_update > 60:
-            log.info('Revision cache rebuilding continues: %d/%d' % (count, len(work)))
+        count += jump
+        now = time.time()
+        if now - start_time > 3600:
+            # there's no point working for hours.  eventually we might even
+            # hit the next re-index interval, which would suck mightily.
+            log.info('Cache rebuilding has worked for an hour; giving up for now.')
+            h.flush_cache()
+            return
+        if now - last_update > 60:
+            log.info('Revision cache rebuilding continues: %d/%d' % (min(count, len(work)), len(work)))
             last_update = time.time()
             h.flush_cache()
     log.info('Revision cache rebuild completed.')
 
 
-# re-index every hour (for now -- maybe should be even longer?)
-index_freq = 3600
+# re-index every 6 hours
+index_freq = 6 * 3600
 
 turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=rebuild_cache)
 

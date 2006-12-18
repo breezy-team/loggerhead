@@ -72,7 +72,7 @@ class ChangeLogUI (object):
                 # starts at the given revid.
                 revlist, start_revid = h.get_navigation(revid, path)
             entry_list = list(h.get_revids_from(revlist, revid))[:pagesize]
-            entries = h.get_changelist(entry_list)
+            entries = h.get_changes(entry_list)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
@@ -83,11 +83,7 @@ class ChangeLogUI (object):
         
         entries = list(entries)
         # add parent & merge-point branch-nick info, in case it's useful
-        for change in entries:
-            for p in change.parents:
-                p.branch_nick = h.get_change(p.revid).branch_nick
-            for p in change.merge_points:
-                p.branch_nick = h.get_change(p.revid).branch_nick
+        h.get_branch_nicks(entries)
 
         vals = {
             'branch_name': util.get_config().get('branch_name'),

@@ -58,13 +58,9 @@ class RevisionUI (object):
                                     pagesize=1, scan_url='/revision', feed=1)
         util.fill_in_navigation(h, navigation)
 
-        change = h.get_change(revid, get_diffs=True)
-        
+        change = h.get_changes([ revid ], get_diffs=True)[0]
         # add parent & merge-point branch-nick info, in case it's useful
-        for p in change.parents:
-            p.branch_nick = h.get_change(p.revid).branch_nick
-        for p in change.merge_points:
-            p.branch_nick = h.get_change(p.revid).branch_nick
+        h.get_branch_nicks([ change ])
         
         vals = {
             'branch_name': util.get_config().get('branch_name'),

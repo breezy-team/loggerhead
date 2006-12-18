@@ -49,7 +49,21 @@ import bzrlib.ui
 log = logging.getLogger("loggerhead.controllers")
 
 
+def decorator(unbound):
+    def new_decorator(f):
+        g = unbound(f)
+        g.__name__ = f.__name__
+        g.__doc__ = f.__doc__
+        g.__dict__.update(f.__dict__)
+        return g
+    new_decorator.__name__ = decorator.__name__
+    new_decorator.__doc__ = decorator.__doc__
+    new_decorator.__dict__.update(decorator.__dict__)
+    return new_decorator
+
+
 # cache lock binds tighter than branch lock
+@decorator
 def with_cache_lock(unbound):
     def cache_locked(self, *args, **kw):
         self._cache_lock.acquire()
@@ -57,11 +71,10 @@ def with_cache_lock(unbound):
             return unbound(self, *args, **kw)
         finally:
             self._cache_lock.release()
-    cache_locked.__doc__ = unbound.__doc__
-    cache_locked.__name__ = unbound.__name__
     return cache_locked
 
 
+@decorator
 def with_branch_lock(unbound):
     def branch_locked(self, *args, **kw):
         self._lock.acquire()
@@ -69,9 +82,18 @@ def with_branch_lock(unbound):
             return unbound(self, *args, **kw)
         finally:
             self._lock.release()
-    branch_locked.__doc__ = unbound.__doc__
-    branch_locked.__name__ = unbound.__name__
     return branch_locked
+
+
+@decorator
+def with_bzrlib_read_lock(unbound):
+    def bzrlib_read_locked(self, *args, **kw):
+        self._branch.repository.lock_read()
+        try:
+            return unbound(self, *args, **kw)
+        finally:
+            self._branch.repository.unlock()
+    return bzrlib_read_locked
 
 
 # bzrlib's UIFactory is not thread-safe
@@ -334,68 +356,93 @@ class History (object):
                 d[revnos] = ( revnolast, revid )
 
         return [ d[revnos][1] for revnos in d.keys() ]
-            
-    def get_changelist(self, revid_list):
-        for revid in revid_list:
-            yield self.get_change(revid)
-    
-    @with_branch_lock
-    def get_change(self, revid, get_diffs=False):
-        if self._change_cache is None:
-            return self._get_change(revid, get_diffs)
 
-        # if the revid is in unicode, use the utf-8 encoding as the key
-        srevid = revid
-        if isinstance(revid, unicode):
-            srevid = revid.encode('utf-8')
-        return self._get_change_from_cache(revid, srevid, get_diffs)
+    def get_branch_nicks(self, changes):
+        """
+        given a list of changes from L{get_changes}, fill in the branch nicks
+        on all parents and merge points.
+        """
+        fetch_set = set()
+        for change in changes:
+            for p in change.parents:
+                fetch_set.add(p.revid)
+            for p in change.merge_points:
+                fetch_set.add(p.revid)
+        p_changes = self.get_changes(list(fetch_set))
+        p_change_dict = dict([(c.revid, c) for c in p_changes])
+        for change in changes:
+            for p in change.parents:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+            for p in change.merge_points:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+        
+    @with_branch_lock
+    def get_changes(self, revid_list, get_diffs=False):
+        if self._change_cache is None:
+            changes = self._get_changes(revid_list, get_diffs)
+        else:
+            changes = self._get_changes_from_cache(revid_list, get_diffs)
+        
+        # some data needs to be recalculated each time, because it may
+        # change as new revisions are added.
+        for i in xrange(len(revid_list)):
+            revid = revid_list[i]
+            change = changes[i]
+            merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
+            change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+        
+        return changes
 
     @with_cache_lock
-    def _get_change_from_cache(self, revid, srevid, get_diffs):
+    def _get_changes_from_cache(self, revid_list, get_diffs):
         if get_diffs:
             cache = self._change_cache_diffs
         else:
             cache = self._change_cache
+
+        out = []
+        fetch_list = []
+        sfetch_list = []
+        for revid in revid_list:
+            # if the revid is in unicode, use the utf-8 encoding as the key
+            srevid = revid
+            if isinstance(revid, unicode):
+                srevid = revid.encode('utf-8')
             
-        if srevid in cache:
-            c = cache[srevid]
-        else:
-            if get_diffs and (srevid in self._change_cache):
-                # salvage the non-diff entry for a jump-start
-                c = self._change_cache[srevid]
-                if len(c.parents) == 0:
-                    left_parent = None
-                else:
-                    left_parent = c.parents[0].revid
-                c.changes = self.diff_revisions(revid, left_parent, get_diffs=True)
-                cache[srevid] = c
+            if srevid in cache:
+                out.append(cache[srevid])
             else:
                 #log.debug('Entry cache miss: %r' % (revid,))
-                c = self._get_change(revid, get_diffs=get_diffs)
-                cache[srevid] = c
-            
-        # some data needs to be recalculated each time, because it may
-        # change as new revisions are added.
-        merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
-        c.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+                out.append(None)
+                fetch_list.append(revid)
+                sfetch_list.append(srevid)
         
-        return c
+        if len(fetch_list) > 0:
+            # some revisions weren't in the cache; fetch them
+            changes = self._get_changes(fetch_list, get_diffs=get_diffs)
+            for i in xrange(len(revid_list)):
+                if out[i] is None:
+                    cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
+        
+        return out
     
     # alright, let's profile this sucka.
-    def _get_change_profiled(self, revid, get_diffs=False):
+    def _get_changes_profiled(self, revid_list, get_diffs=False):
         from loggerhead.lsprof import profile
         import cPickle
-        ret, stats = profile(self._get_change, revid, get_diffs)
+        ret, stats = profile(self._get_changes, revid_list, get_diffs)
         stats.sort()
         stats.freeze()
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
         return ret
 
-    def _get_change(self, revid, get_diffs=False):
+    @with_bzrlib_read_lock
+    def _get_changes(self, revid_list, get_diffs=False):
         try:
-            rev = self._branch.repository.get_revision(revid)
+            rev_list = self._branch.repository.get_revisions(revid_list)
         except (KeyError, bzrlib.errors.NoSuchRevision):
             # ghosted parent?
+            # FIXME: i dont think this ever happens.
             entry = {
                 'revid': 'missing',
                 'revno': '',
@@ -411,83 +458,75 @@ class History (object):
             }
             log.error('ghost entry: %r' % (revid,))
             return util.Container(entry)
+        
+        delta_list = self._branch.repository.get_deltas_for_revisions(rev_list)
+        combined_list = zip(rev_list, delta_list)
+        
+        tree_map = {}
+        if get_diffs:
+            # lookup the trees for each revision, so we can calculate diffs
+            lookup_set = set()
+            for rev in rev_list:
+                lookup_set.add(rev.revision_id)
+                if len(rev.parent_ids) > 0:
+                    lookup_set.add(rev.parent_ids[0])
+            tree_map = dict((t.get_revision_id(), t) for t in self._branch.repository.revision_trees(lookup_set))
+            # also the root tree, in case we hit the origin:
+            tree_map[None] = self._branch.repository.revision_tree(None)
+        
+        entries = []
+        for rev, delta in combined_list:
+            commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
             
-        commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
-        
-        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
-
-        if len(parents) == 0:
-            left_parent = None
-        else:
-            left_parent = rev.parent_ids[0]
-        
-        message = rev.message.splitlines()
-        if len(message) == 1:
-            # robey-style 1-line long message
-            message = textwrap.wrap(message[0])
-        
-        # make short form of commit message
-        short_message = message[0]
-        if len(short_message) > 60:
-            short_message = short_message[:60] + '...'
-
-        entry = {
-            'revid': revid,
-            'revno': self.get_revno(revid),
-            'date': commit_time,
-            'author': rev.committer,
-            'branch_nick': rev.properties.get('branch-nick', None),
-            'short_comment': short_message,
-            'comment': rev.message,
-            'comment_clean': [util.html_clean(s) for s in message],
-            'parents': parents,
-            'changes': self.diff_revisions(revid, left_parent, get_diffs=get_diffs),
-        }
-        return util.Container(entry)
+            parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
     
-    def scan_range(self, revlist, revid, pagesize=20):
-        """
-        yield a list of (label, title, revid) for a scan range through the full
-        branch history, centered around the given revid.
-        
-        example: [ ('<<', 'Previous page', 'rrr'), ('-10', 'Forward 10', 'rrr'),
-                   ('*', None, None), ('+10', 'Back 10', 'rrr'),
-                   ('+30', 'Back 30', 'rrr'), ('>>', 'Next page', 'rrr') ]
-        
-        next/prev page are always using the pagesize.
-        """
-        count = len(revlist)
-        pos = self.get_revid_sequence(revlist, revid)
-
-        if pos > 0:
-            yield (u'\xab', 'Previous page', revlist[max(0, pos - pagesize)])
-        else:
-            yield (u'\xab', None, None)
-        
-        offset_sign = -1
-        for offset in util.scan_range(pos, count, pagesize):
-            if (offset > 0) and (offset_sign < 0):
-                offset_sign = 0
-                # show current position
-#                yield ('[%s]' % (self.get_revno(revlist[pos]),), None, None)
-#                yield (u'\u2022', None, None)
-                yield (u'\u00b7', None, None)
-            if offset < 0:
-                title = 'Back %d' % (-offset,)
+            if len(parents) == 0:
+                left_parent = None
             else:
-                title = 'Forward %d' % (offset,)
-            yield ('%+d' % (offset,), title, revlist[pos + offset])
-        
-        if pos < count - 1:
-            yield (u'\xbb', 'Next page', revlist[min(count - 1, pos + pagesize)])
-        else:
-            yield (u'\xbb', None, None)
+                left_parent = rev.parent_ids[0]
+            
+            message = rev.message.splitlines()
+            if len(message) == 1:
+                # robey-style 1-line long message
+                message = textwrap.wrap(message[0])
+            
+            # make short form of commit message
+            short_message = message[0]
+            if len(short_message) > 60:
+                short_message = short_message[:60] + '...'
     
+            old_tree, new_tree = None, None
+            if get_diffs:
+                new_tree = tree_map[rev.revision_id]
+                old_tree = tree_map[left_parent]
+
+            entry = {
+                'revid': rev.revision_id,
+                'revno': self.get_revno(rev.revision_id),
+                'date': commit_time,
+                'author': rev.committer,
+                'branch_nick': rev.properties.get('branch-nick', None),
+                'short_comment': short_message,
+                'comment': rev.message,
+                'comment_clean': [util.html_clean(s) for s in message],
+                'parents': parents,
+                'changes': self.parse_delta(delta, get_diffs, old_tree, new_tree),
+            }
+            entries.append(util.Container(entry))
+        
+        return entries
+
     @with_branch_lock
     def diff_revisions(self, revid, otherrevid, get_diffs=True):
+        new_tree = self._branch.repository.revision_tree(revid)
+        old_tree = self._branch.repository.revision_tree(otherrevid)
+        delta = new_tree.changes_from(old_tree)
+
+    
+    @with_branch_lock
+    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
         """
-        Return a nested data structure containing the changes between two
-        revisions::
+        Return a nested data structure containing the changes in a delta::
         
             added: list(filename),
             renamed: list((old_filename, new_filename)),
@@ -506,11 +545,6 @@ class History (object):
         
         if C{get_diffs} is false, the C{chunks} will be omitted.
         """
-
-        new_tree = self._branch.repository.revision_tree(revid)
-        old_tree = self._branch.repository.revision_tree(otherrevid)
-        delta = new_tree.changes_from(old_tree)
-        
         added = []
         modified = []
         renamed = []
