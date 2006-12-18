@@ -72,7 +72,7 @@ class AnnotateUI (object):
             'path': path,
             'history': h,
             'navigation': navigation,
-            'change': h.get_change(revid),
+            'change': h.get_changes([ revid ])[0],
             'contents': list(h.annotate_file(file_id, revid)),
         }
         h.flush_cache()
