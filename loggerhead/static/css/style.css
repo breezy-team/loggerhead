@@ -253,7 +253,7 @@ div.links div {
     font-family: monospace;
 }
 
-.log-entries .revision-details td.files a.jump {
+.log-entries .revision-details td.files .jump {
     font-size: smaller;
 }
 

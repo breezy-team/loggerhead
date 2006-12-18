@@ -51,41 +51,45 @@ class InventoryUI (object):
         else:
             revid = None
         
-        path = kw.get('path', None)
-        if (path == '/') or (path == ''):
-            path = None
+        file_id = kw.get('file_id', None)
 
         try:
-            revlist, revid = h.get_navigation(revid, path)
+            revlist, revid = h.get_navigation(revid, file_id)
             rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
 
-        if path is None:
-            path = '/'
-            file_id = None
-        else:
-            file_id = inv.path2id(path)
-            
         # no navbar for revisions
         navigation = util.Container()
 
+        change = h.get_changes([ revid ])[0]
         # add parent & merge-point branch-nick info, in case it's useful
-        change = h.get_change(revid)
-        for p in change.parents:
-            p.branch_nick = h.get_change(p.revid).branch_nick
-        for p in change.merge_points:
-            p.branch_nick = h.get_change(p.revid).branch_nick
+        h.get_branch_nicks([ change ])
+        
+        path = inv.id2path(file_id)
+        if not path.startswith('/'):
+            path = '/' + path
+        idpath = inv.get_idpath(file_id)
+        if len(idpath) > 1:
+            updir = dirname(path)
+            updir_file_id = idpath[-2]
+        else:
+            updir = None
+            updir_file_id = None
+        if updir == '/':
+            updir_file_id = None
 
         vals = {
             'branch_name': util.get_config().get('branch_name'),
             'util': util,
             'revid': revid,
             'change': change,
+            'file_id': file_id,
             'path': path,
-            'updir': dirname(path),
+            'updir': updir,
+            'updir_file_id': updir_file_id,
             'filelist': h.get_filelist(inv, path),
             'history': h,
             'posixpath': posixpath,

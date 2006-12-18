@@ -51,25 +51,29 @@ class AnnotateUI (object):
         else:
             revid = None
         
-        path = kw.get('path', None)
-        if (path == '/') or (path == '') or (path is None):
+        file_id = kw.get('file_id', None)
+        if file_id is None:
             raise HTTPRedirect(turbogears.url('/changes'))
 
         try:
-            revlist, revid = h.get_navigation(revid, path)
-            file_id = h.get_inventory(revid).path2id(path)
+            revlist, revid = h.get_navigation(revid, file_id)
         except Exception, x:
             log.error('Exception fetching changes: %r, %s' % (x, x))
             raise HTTPRedirect(turbogears.url('/changes'))
             
         # no navbar for revisions
         navigation = util.Container()
+        
+        path = h.get_path(revid, file_id)
+        filename = os.path.basename(path)
 
         vals = {
             'branch_name': util.get_config().get('branch_name'),
             'util': util,
             'revid': revid,
+            'file_id': file_id,
             'path': path,
+            'filename': filename,
             'history': h,
             'navigation': navigation,
             'change': h.get_changes([ revid ])[0],

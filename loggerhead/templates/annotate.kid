@@ -14,45 +14,10 @@ ${navbar()}
 	<div class="links">
 	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}"> browse files </a> </div>
 	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid, path=path)}"> view changes to this file </a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid, file_id=file_id)}"> view changes to this file </a> </div>
+	    <div> <b>&#8594;</b> <a href="${tg.url([ '/download', revid, file_id, filename ])}"> view/download file </a> </div>
 	</div>
 </h1>
-
-<!-- !FIXME: this is just copied verbatim from revision.kid -->
-<!--div class="revision-info">
-    <table>
-        <tr>
-            <th class="author">committed by:</th>
-            <td class="author"> ${util.hide_email(change.author)} </td>
-        </tr>
-        <tr>
-            <th class="date">date:</th>
-            <td class="date"> ${change.date.strftime('%d %b %Y %H:%M')} </td>
-        </tr>
-
-        <tr py:if="len(change.merge_points) > 0">
-            <th class="children"> merged in: </th>
-            <td class="children">
-                <span py:for="child in change.merge_points">
-                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} <br />
-                </span>
-            </td>
-        </tr>
-        <tr py:if="len(change.parents) > 1">
-        	<th class="parents"> merged from: </th>
-        	<td class="parents">
-        	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-           	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} <br />
-                </span></span>
-        	</td>
-        </tr>
-
-        <tr>
-            <th class="description">description:</th>
-            <td class="description"><span py:for="line in change.comment_clean">${XML(line)} <br /></span></td>
-        </tr>
-    </table>
-</div-->
 
 <div class="annotate">
     <table>
@@ -65,10 +30,9 @@ ${navbar()}
         <tr py:for="line in contents" class="parity${line.parity}">
             <td class="lineno ${line.status}"> ${line.lineno} </td>
             <td class="revno ${line.status}">
-                <a py:if="line.status=='changed'" href="${tg.url('/revision', start_revid=line.change.revid, path=path)}"
-                    title="${line.change.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${util.ago(line.change.date)})">${line.trunc_revno}</a>
+                <a py:if="line.status=='changed'" href="${tg.url('/revision', start_revid=line.change.revid, file_id=file_id)}"
+                    title="${line.change.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${util.ago(line.change.date)})">${util.trunc(line.revno)}</a>
             </td>
-            <!--td class="author"> ${util.hide_email(line.author)} </td-->
             <td class="text ${line.status}"> ${XML(line.text)} </td>
         </tr>
     </table>

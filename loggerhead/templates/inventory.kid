@@ -33,7 +33,7 @@ ${navbar()}
             <th class="children"> merged in: </th>
             <td class="children">
                 <span py:for="child in change.merge_points">
-                    ${revlink_path(child.revid, child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', None)} <br />
+                    ${revlink(child.revid, child.revid, None, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
                 </span>
             </td>
         </tr>
@@ -41,7 +41,7 @@ ${navbar()}
         	<th class="parents"> merged from: </th>
         	<td class="parents">
         	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-        	        ${revlink_path(parent.revid, parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', None)} <br />
+        	        ${revlink(parent.revid, parent.revid, None, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
         	    </span></span>
         	</td>
         </tr>
@@ -68,20 +68,20 @@ ${navbar()}
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
-        <td class="filename directory"><a href="${tg.url([ '/files', revid ], path=updir)}"> (up) </a></td>
+        <td class="filename directory"><a href="${tg.url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
         <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
         <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
         <td class="filename ${file.kind}">
-            <a py:if="file.kind=='directory'" href="${tg.url([ '/files', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}/</a>
+            <a py:if="file.kind=='directory'" href="${tg.url([ '/files', revid ], file_id=file.file_id)}">${file.filename}/</a>
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], path=posixpath.join(path, file.pathname))}">${file.filename}</a>
+            <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], file_id=file.file_id)}">${file.filename}</a>
         </td>
-        <td class="revision"> ${revlink_path(file.revid, file.revid, util.trunc(file.change.revno, 15), posixpath.join(path, file.pathname))} </td>
+        <td class="revision"> ${revlink(file.revid, file.revid, file.file_id, util.trunc(file.change.revno, 15))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
-        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, path=posixpath.join(path, file.pathname))}"> &#8594; changes </a></td>
+        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, file_id=file.file_id)}"> &#8594; changes </a></td>
     </tr>
 </table>
 

@@ -18,11 +18,9 @@
     # Copyright (C) 2005 Jake Edge <jake@edge2.net>
     # Copyright (C) 2005 Matt Mackall <mpm@selenic.com>
 
-* list color-key at the top of the revision page, when showing the diff
-    (red = removed, etc)
-
-* use file_id for path, not actual path
-
 * side by side diff?  matty says "overflow-x" css property for horiz scrollbar
 
-* for annotation view, a link to download/view the raw file
+* make equivalent of start page:
+    http://goffredo-baroncelli.homelinux.net/bazaar
+
+* add download link to revision, inventory pages too

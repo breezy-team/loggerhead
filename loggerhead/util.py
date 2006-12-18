@@ -159,13 +159,18 @@ def scan_range(pos, max, pagesize=1):
             out.insert(0, -n)
 
 
+# only do this if unicode turns out to be a problem
+#_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
+
 def html_clean(s):
     """
     clean up a string for html display.  expand any tabs, encode any html
     entities, and replace spaces with '&nbsp;'.  this is primarily for use
     in displaying monospace text.
     """
-    s = cgi.escape(s.expandtabs()).replace(' ', '&nbsp;')
+    s = cgi.escape(s.expandtabs())
+#    s = _BADCHARS_RE.sub(lambda x: '&#%d;' % (ord(x.group(0)),), s)
+    s = s.replace(' ', '&nbsp;')
     return s
 
 
@@ -205,9 +210,9 @@ def fill_in_navigation(history, navigation):
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
     if navigation.prev_page_revid:
-        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], path=navigation.path, start_revid=navigation.start_revid)
+        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], file_id=navigation.file_id, start_revid=navigation.start_revid)
     if navigation.next_page_revid:
-        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], path=navigation.path, start_revid=navigation.start_revid)
+        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], file_id=navigation.file_id, start_revid=navigation.start_revid)
 
 
 # global branch history & cache

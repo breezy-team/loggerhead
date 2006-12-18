@@ -278,21 +278,21 @@ class History (object):
         return revid
     
     @with_branch_lock
-    def get_navigation(self, revid, path):
+    def get_navigation(self, revid, file_id):
         """
         Given an optional revid and optional path, return a (revlist, revid)
         for navigation through the current scope: from the revid (or the
         latest revision) back to the original revision.
         
-        If path is None, the entire revision history is the list scope.
+        If file_id is None, the entire revision history is the list scope.
         If revid is None, the latest revision is used.
         """
         if revid is None:
             revid = self._last_revid
-        if path is not None:
+        if file_id is not None:
             # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
             inv = self._branch.repository.get_revision_inventory(revid)
-            revlist = list(self.get_short_revision_history_by_fileid(inv.path2id(path)))
+            revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
             revlist = list(self.get_revids_from(None, revid))
@@ -304,6 +304,15 @@ class History (object):
     def get_inventory(self, revid):
         return self._branch.repository.get_revision_inventory(revid)
 
+    @with_branch_lock
+    def get_path(self, revid, file_id):
+        if (file_id is None) or (file_id == ''):
+            return ''
+        path = self._branch.repository.get_revision_inventory(revid).id2path(file_id)
+        if (len(path) > 0) and not path.startswith('/'):
+            path = '/' + path
+        return path
+    
     def get_where_merged(self, revid):
         try:
             return self._where_merged[revid]
@@ -525,7 +534,7 @@ class History (object):
         return entries
 
     @with_branch_lock
-    def get_file(self, file_id, revision_id):
+    def get_file(self, file_id, revid):
         "returns (filename, data)"
         inv_entry = self.get_inventory(revid)[file_id]
         rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
@@ -536,11 +545,12 @@ class History (object):
         """
         Return a nested data structure containing the changes in a delta::
         
-            added: list(filename),
-            renamed: list((old_filename, new_filename)),
-            deleted: list(filename),
+            added: list((filename, file_id)),
+            renamed: list((old_filename, new_filename, file_id)),
+            deleted: list((filename, file_id)),
             modified: list(
                 filename: str,
+                file_id: str,
                 chunks: list(
                     diff: list(
                         old_lineno: int,
@@ -604,28 +614,28 @@ class History (object):
                     
         def handle_modify(old_path, new_path, fid, kind):
             if not get_diffs:
-                modified.append(util.Container(filename=rich_filename(new_path, kind)))
+                modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid))
                 return
             old_lines = old_tree.get_file_lines(fid)
             new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
             bzrlib.diff.internal_diff(old_path, old_lines, new_path, new_lines, buffer)
             diff = buffer.getvalue()
-            modified.append(util.Container(filename=rich_filename(new_path, kind), chunks=process_diff(diff)))
+            modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff)))
 
         for path, fid, kind in delta.added:
-            added.append(rich_filename(path, kind))
+            added.append((rich_filename(path, kind), fid))
         
         for path, fid, kind, text_modified, meta_modified in delta.modified:
             handle_modify(path, path, fid, kind)
         
         for oldpath, newpath, fid, kind, text_modified, meta_modified in delta.renamed:
-            renamed.append((rich_filename(oldpath, kind), rich_filename(newpath, kind)))
+            renamed.append((rich_filename(oldpath, kind), rich_filename(newpath, kind), fid))
             if meta_modified or text_modified:
                 handle_modify(oldpath, newpath, fid, kind)
         
         for path, fid, kind in delta.removed:
-            removed.append(rich_filename(path, kind))
+            removed.append((rich_filename(path, kind), fid))
         
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
 
@@ -640,7 +650,15 @@ class History (object):
         if path.startswith('/'):
             path = path[1:]
         parity = 0
-        for filepath, entry in inv.entries():
+        
+        entries = inv.entries()
+        
+        fetch_set = set()
+        for filepath, entry in entries:
+            fetch_set.add(entry.revision)
+        change_dict = dict([(c.revid, c) for c in self.get_changes(list(fetch_set))])
+            
+        for filepath, entry in entries:
             if posixpath.dirname(filepath) != path:
                 continue
             filename = posixpath.basename(filepath)
@@ -651,12 +669,15 @@ class History (object):
             
             # last change:
             revid = entry.revision
-            change = self.get_change(revid)
+            change = change_dict[revid]
             
             yield util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
-                                 pathname=pathname, revid=revid, change=change, parity=parity)
+                                 pathname=pathname, file_id=entry.file_id, revid=revid, change=change, parity=parity)
             parity ^= 1
         pass
+
+
+    _BADCHARS_RE = re.compile(ur'[\x00-\x1f]')
 
     @with_branch_lock
     def annotate_file(self, file_id, revid):
@@ -675,6 +696,12 @@ class History (object):
         revid_set = set()
         for line_revid, text in w.annotate_iter(file_revid):
             revid_set.add(line_revid)
+            if self._BADCHARS_RE.match(text):
+                # bail out; this isn't displayable text
+                yield util.Container(parity=0, lineno=1, status='same',
+                                     text='<i>' + util.html_clean('(This is a binary file.)') + '</i>',
+                                     change=util.Container())
+                return
         change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
         
         last_line_revid = None
@@ -692,7 +719,7 @@ class History (object):
                     trunc_revno = trunc_revno[:9] + '...'
                 
             yield util.Container(parity=parity, lineno=lineno, status=status,
-                                 trunc_revno=trunc_revno, change=change, text=util.html_clean(text))
+                                 change=change, text=util.html_clean(text))
             lineno += 1
         
         log.debug('annotate: %r secs' % (time.time() - z,))

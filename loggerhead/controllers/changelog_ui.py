@@ -38,12 +38,12 @@ log = logging.getLogger("loggerhead.controllers")
 #         the current beginning of navigation (navigation continues back to
 #         the original revision) -- this may not be along the primary revision
 #         path since the user may have navigated into a branch
-#     - path
+#     - file_id
 #         if navigating the revisions that touched a file
 #     - current revid
 #         current location along the navigation path (while browsing)
 #
-# current revid is given on the url path.  'path' and 'starting revid' are
+# current revid is given on the url path.  'file_id' and 'starting revid' are
 # handed along as params.
 
 
@@ -59,18 +59,18 @@ class ChangeLogUI (object):
         else:
             revid = None
 
-        path = kw.get('path', None)
+        file_id = kw.get('file_id', None)
         start_revid = h.fix_revid(kw.get('start_revid', None))
         pagesize = int(util.get_config().get('pagesize', '20'))
         
         try:
-            revlist, start_revid = h.get_navigation(start_revid, path)
+            revlist, start_revid = h.get_navigation(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revlist:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revlist, start_revid = h.get_navigation(revid, path)
+                revlist, start_revid = h.get_navigation(revid, file_id)
             entry_list = list(h.get_revids_from(revlist, revid))[:pagesize]
             entries = h.get_changes(entry_list)
         except Exception, x:
@@ -78,7 +78,7 @@ class ChangeLogUI (object):
             raise HTTPRedirect(turbogears.url('/changes'))
 
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revlist=revlist,
-                                    path=path, scan_url='/changes', feed=True)
+                                    file_id=file_id, scan_url='/changes', feed=True)
         util.fill_in_navigation(h, navigation)
         
         entries = list(entries)
@@ -92,7 +92,7 @@ class ChangeLogUI (object):
             'history': h,
             'revid': revid,
             'navigation': navigation,
-            'path': path,
+            'file_id': file_id,
             'last_revid': h.last_revid,
             'start_revid': start_revid,
         }
