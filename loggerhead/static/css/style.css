@@ -10,29 +10,29 @@ body {
 }
 
 a {
-	text-decoration: none;
-	color: #000088;
+    text-decoration: none;
+    color: #000088;
 }
 a:hover {
-	color: black;
+    color: black;
 }
 
 img {
-	border: none;
+    border: none;
 }
 
 h1 {
     color: #708a96;
-	font-weight: normal;
-	font-size: 1.6em;
+    font-weight: normal;
+    font-size: 1.6em;
     margin-bottom: 1.5em;
 }
 h1 .filename {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .branch-name {
-	color: #47626e;
+    color: #47626e;
 }
 
 
@@ -42,7 +42,7 @@ h1 .filename {
 }
 
 .navbar table, .bar table {
-	width: 100%;
+    width: 100%;
 }
 
 .bar {
@@ -56,12 +56,12 @@ h1 .filename {
 /* revision navigation buttons (the ones at the top right) */
 .navbuttons {
     padding: 2px;
-	bottom: 0px;
-	text-align: right;
-	width: auto;
-	border-left: 1px dotted #8cacbb;
-	padding-left: 0.5em;
-	padding-right: 0.5em;
+    bottom: 0px;
+    text-align: right;
+    width: auto;
+    border-left: 1px dotted #8cacbb;
+    padding-left: 0.5em;
+    padding-right: 0.5em;
 }
 
 .navbuttons a {
@@ -77,7 +77,7 @@ h1 .filename {
 
 /* the "changes: 425 / 425" header at the top right */
 .navposition {
-	margin-bottom: 1.5em;
+    margin-bottom: 1.5em;
 }
 
 .navposition table tr td {
@@ -105,7 +105,7 @@ h1 .filename {
 }
 
 .feed img {
-	vertical-align: text-top;
+    vertical-align: text-top;
 }
 
 .rbuttons a {
@@ -122,7 +122,7 @@ h1 .filename {
 /* ----- revision display in various places ----- */
 
 .revision .revno {
-	font-weight: bold;
+    font-weight: bold;
 }
 
 .revision .revid {
@@ -139,13 +139,13 @@ h1 .filename {
 /* ---- sub-links underneath the headline on some pages ----- */
 
 div.links {
-	padding-top: 0.5em;
-	padding-left: 3em;
-	font-size: 50%;
+    padding-top: 0.5em;
+    padding-left: 3em;
+    font-size: 50%;
 }
 
 div.links div {
-	margin-bottom: 3px;
+    margin-bottom: 3px;
 }
 
 
@@ -168,28 +168,28 @@ div.links div {
     vertical-align: top;
 
     padding-left: 0.5em;
-	padding-right: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
+    padding-right: 0.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .info-entry td {
     font-weight: normal;
-  	padding-left: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
+      padding-left: 0.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 
 /* ----- changelog page ----- */
 
 .hide-all {
-	font-size: smaller;
+    font-size: smaller;
 }
 
 /* secret css-jutsu to make hidden margins vanish on a table */
 .log-entries table {
-	border-collapse: collapse;
+    border-collapse: collapse;
     width: 100%;
 }
 
@@ -197,8 +197,8 @@ div.links div {
     background-color: #dee7ec;
     padding: 3px;
     width: 80%;
-	margin-top: 1em;
-	margin-left: 1em;
+    margin-top: 1em;
+    margin-left: 1em;
 }
 
 .log-entries .revision-header td.expand-button {
@@ -206,51 +206,51 @@ div.links div {
 }
 
 .log-entries .revision-header .revision-number {
-	width: 6em;
-	padding-left: 0.5em;
+    width: 6em;
+    padding-left: 0.5em;
 }
 
 .log-entries .revision-header .inventory-link {
-	font-size: smaller;
-	vertical-align: middle;
-	width: 4em;
-	text-align: right;
-	padding-right: 0.5em;
+    font-size: smaller;
+    vertical-align: middle;
+    width: 4em;
+    text-align: right;
+    padding-right: 0.5em;
 }
 
 .log-entries .revision-details-block {
-	width: 80%;
-	border: none;
-	margin-left: 8em;
-	margin-bottom: 1.5em;
+    width: 80%;
+    border: none;
+    margin-left: 8em;
+    margin-bottom: 1.5em;
 }
 
 .log-entries .revision-details table {
-	font-size: smaller;
-	width: 100%;
+    font-size: smaller;
+    width: 100%;
 }
 
 .log-entries .revision-details th {
-	width: 8em;
-	text-align: right;
-	padding-right: 0.5em;
-	vertical-align: top;
+    width: 8em;
+    text-align: right;
+    padding-right: 0.5em;
+    vertical-align: top;
 }
 
 .log-entries .revision-details td.date {
-/*	font-family: monospace; */
+/*    font-family: monospace; */
 }
 
 .log-entries .revision-details th.files {
-	padding-top: 1em;
+    padding-top: 1em;
 }
 
 .log-entries .revision-details td.files {
-	padding-top: 1em;
+    padding-top: 1em;
 }
 
 .log-entries .revision-details td.files .filename {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .log-entries .revision-details td.files a.jump {
@@ -258,11 +258,11 @@ div.links div {
 }
 
 .log-entries .revision-details th.description {
-	padding-top: 1em;
+    padding-top: 1em;
 }
 .log-entries .revision-details td.description {
-	font-family: monospace;
-	padding-top: 1em;
+    font-family: monospace;
+    padding-top: 1em;
 }
 
 /* default state: hide all */
@@ -285,46 +285,46 @@ div.links div {
 
 /* secret css-jutsu to make hidden margins vanish on a table */
 .revision-info table {
-	border-collapse: collapse;
+    border-collapse: collapse;
     width: 100%;
 }
 
 .revision-info th {
-	background-color: #dee7ec;
+    background-color: #dee7ec;
     color: black;
-	font-weight: normal;
-	text-align: right;
-	vertical-align: top;
-	
-	padding-left: 0.5em;
-	padding-right: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
+    font-weight: normal;
+    text-align: right;
+    vertical-align: top;
+    
+    padding-left: 0.5em;
+    padding-right: 0.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .revision-info td {
-	font-weight: normal;
-  	padding-left: 0.5em;
-	padding-top: 2px;
-	padding-bottom: 2px;
+    font-weight: normal;
+      padding-left: 0.5em;
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .revision-info table td.date {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .revision-info table td.description {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .revision-info table td.files .filename {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .revision-info table td.files a.jump {
-	font-size: smaller;
+    font-size: smaller;
 }
-	
+    
 .revision-info table tr.divider {
     border-top: 1px solid #8cacbb;
 }
@@ -342,88 +342,88 @@ div.links div {
 
 
 .diff-block,.diff-chunk {
-	border-collapse: collapse;
+    border-collapse: collapse;
     width: 100%;
-	margin-bottom: 1em;
+    margin-bottom: 1em;
 }
 
 .diff-block th.filename {
-	font-family: monospace;
-	font-weight: normal;
-	font-size: smaller;
-	padding-left: 1em;
-	padding-top: 1em;
-	padding-bottom: 1em;
-	text-align: left;
-	background-color: #dee7ec;
+    font-family: monospace;
+    font-weight: normal;
+    font-size: smaller;
+    padding-left: 1em;
+    padding-top: 1em;
+    padding-bottom: 1em;
+    text-align: left;
+    background-color: #dee7ec;
 }
 
 .diff-chunk {
     font-size: 66%;
     margin-top: 0px;
-	margin-bottom: 2em;
+    margin-bottom: 2em;
 }
 
 .diff-chunk th.lineno {
-	font-weight: bold;
+    font-weight: bold;
     border-bottom: 1px solid #8cacbb;
     border-top: 1px solid #dee7ec;
     border-left: 1px solid #dee7ec;
 }
 .diff-insert {
-	background-color: #b0efb0;
+    background-color: #b0efb0;
 }
 .diff-delete {
-	background-color: #ffa0a0;
+    background-color: #ffa0a0;
 }
 .diff-chunk td.text {
-	padding-left: 1em;
+    padding-left: 1em;
 }
 
 .diff-key {
     margin-top: 20px;
     font-size: smaller;
-	line-height: 1em;
-	padding-left: 1em;
+    line-height: 1em;
+    padding-left: 1em;
 }
 
 .diff-key-block {
-	width: 0.7em;
-	height: 0.7em;
-	border: 1px solid #8cacbb;
-	margin-right: 5em;
+    width: 0.7em;
+    height: 0.7em;
+    border: 1px solid #8cacbb;
+    margin-right: 5em;
 }
 
 .diff-key .label {
-	position: relative;
-	left: 1.3em;
-	top: -1em;
-	line-height: 1em;
+    position: relative;
+    left: 1.3em;
+    top: -1em;
+    line-height: 1em;
 }
 
 .diff .lineno {
-	color: purple;
-	background-color: #dee7ec; 
-	width: 4em;
-	text-align: right;
-	padding-right: 3px;
-	border-bottom: 1px solid #8cacbb;
+    color: purple;
+    background-color: #dee7ec; 
+    width: 4em;
+    text-align: right;
+    padding-right: 3px;
+    border-bottom: 1px solid #8cacbb;
 }
 .diff .info {
-	color: blue;
-	background-color: #dee7ec;
-	margin-top: 15px;
+    color: blue;
+    background-color: #dee7ec;
+    margin-top: 15px;
 }
 
 
 /* ----- file inventory ----- */
 
 .inventory-path {
-	margin-top: 2em;
+    margin-top: 2em;
 }
 
 table.inventory {
-	border-collapse: collapse;
+    border-collapse: collapse;
     width: 80%;
     font-size: smaller;
     margin-top: 1em;
@@ -431,20 +431,20 @@ table.inventory {
 }
 
 table.inventory td {
-	padding-top: 3px;
-	padding-bottom: 3px;
-	vertical-align: middle;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    vertical-align: middle;
 }
 
 table.inventory th {
     background-color: #8cacbb;
     padding-top: 3px;
     padding-bottom: 3px;
-	text-align: left;
+    text-align: left;
 }
 
 table.inventory th.permissions {
-	padding-left: 0.5em;
+    padding-left: 0.5em;
 }
 
 .parity0 { background-color: #dee7ec; }
@@ -453,7 +453,7 @@ table.inventory th.permissions {
 .inventory td.permissions {
     font-family: monospace;
     width: 10em;
-	padding-left: 0.5em;
+    padding-left: 0.5em;
 }
 
 .inventory td.filename {
@@ -466,10 +466,10 @@ table.inventory th.permissions {
 }
 
 .inventory td.date {
-	font-family: monospace;
-	font-size: smaller;
-	width: 10em;
-	padding-right: 1.5em;
+    font-family: monospace;
+    font-size: smaller;
+    width: 10em;
+    padding-right: 1.5em;
 }
 
 .inventory td.changes-link {
@@ -485,36 +485,36 @@ span.folder {
 /* ----- file annotation ----- */
 
 .annotate-path {
-	font-family: monospace;
+    font-family: monospace;
 }
 
 .annotate table {
-	border-collapse: collapse;
+    border-collapse: collapse;
     width: 100%;
     font-size: 66%;
 }
 
 .annotate td {
-	padding-top: 2px;
-	padding-bottom: 2px;
-	vertical-align: bottom;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    vertical-align: bottom;
 }
 
 .annotate td.lineno {
-	font-family: monospace;
-	text-align: right;
-	width: 4em;
-	padding-right: 5px;
-	font-weight: bold;
-	border-bottom: 1px solid #8cacbb;
+    font-family: monospace;
+    text-align: right;
+    width: 4em;
+    padding-right: 5px;
+    font-weight: bold;
+    border-bottom: 1px solid #8cacbb;
 }
 
 .annotate td.revno {
-	font-family: monospace;
-	text-align: right;
-	width: 8em;
-	padding-right: 5px;
-	border-right: 1px solid #8cacbb;
+    font-family: monospace;
+    text-align: right;
+    width: 8em;
+    padding-right: 5px;
+    border-right: 1px solid #8cacbb;
 }
 
 .annotate td.text {
@@ -526,7 +526,7 @@ span.folder {
     background-color: #8cacbb;
     padding-top: 3px;
     padding-bottom: 3px;
-	text-align: left;
+    text-align: left;
 }
 
 .annotate th.lineno {
@@ -539,5 +539,5 @@ span.folder {
 }
 
 .annotate th.text {
-	padding-left: 1em;
+    padding-left: 1em;
 }
