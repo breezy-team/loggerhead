@@ -335,7 +335,6 @@ div.links div {
 .diff {
     margin-bottom: 1em;
     padding-top: 10px;
-    margin-top: 20px;
     width: 100%;
     background-color: #fcfcfc;
     font-family: monospace;
@@ -369,14 +368,35 @@ div.links div {
     border-top: 1px solid #dee7ec;
     border-left: 1px solid #dee7ec;
 }
-.diff-chunk .insert {
+.diff-insert {
 	background-color: #b0efb0;
 }
-.diff-chunk .delete {
+.diff-delete {
 	background-color: #ffa0a0;
 }
 .diff-chunk td.text {
 	padding-left: 1em;
+}
+
+.diff-key {
+    margin-top: 20px;
+    font-size: smaller;
+	line-height: 1em;
+	padding-left: 1em;
+}
+
+.diff-key-block {
+	width: 0.7em;
+	height: 0.7em;
+	border: 1px solid #8cacbb;
+	margin-right: 5em;
+}
+
+.diff-key .label {
+	position: relative;
+	left: 1.3em;
+	top: -1em;
+	line-height: 1em;
 }
 
 .diff .lineno {

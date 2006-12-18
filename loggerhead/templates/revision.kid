@@ -72,12 +72,17 @@ ${navbar()}
             <th class="files"> files modified: </th>
             <td class="files">
                 <span py:for="item in change.changes.modified">
-                    <span class="filename">${file_link(item.filename)}</span> &nbsp; <a href="#${item.filename}" class="jump">(jump to diff)</a><br />
+                    <span class="filename">${file_link(item.filename)}</span> &nbsp; <a href="#${item.filename}" class="jump">&#8594; diff</a><br />
                 </span>
             </td>
         </tr>
     </table>
 </div>
+
+<table class="diff-key" py:if="change.changes.modified"><tr>
+    <td> <div class="diff-key-block diff-insert"></div> <span class="label"> added </span> </td>
+	<td> <div class="diff-key-block diff-delete"></div> <span class="label"> removed </span> </td>
+</tr></table>
 
 <div class="diff" py:if="change.changes.modified">
     <table py:for="item in change.changes.modified" class="diff-block">
@@ -88,7 +93,7 @@ ${navbar()}
                 <tr py:for="line in chunk.diff">
                     <td class="lineno">${line.old_lineno}</td>
                     <td class="lineno">${line.new_lineno}</td>
-                    <td class="${line.type} text">${XML(line.line)}</td>
+                    <td class="diff-${line.type} text">${XML(line.line)}</td>
                 </tr>
             </table>
         </td></tr>
