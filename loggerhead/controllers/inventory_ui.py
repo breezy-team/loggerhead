@@ -52,6 +52,7 @@ class InventoryUI (object):
             revid = None
         
         file_id = kw.get('file_id', None)
+        sort_type = kw.get('sort', None)
 
         try:
             revlist, revid = h.get_navigation(revid, file_id)
@@ -90,7 +91,7 @@ class InventoryUI (object):
             'path': path,
             'updir': updir,
             'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, path),
+            'filelist': h.get_filelist(inv, path, sort_type),
             'history': h,
             'posixpath': posixpath,
             'navigation': navigation,

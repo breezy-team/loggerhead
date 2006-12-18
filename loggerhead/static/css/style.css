@@ -175,7 +175,7 @@ div.links div {
 
 .info-entry td {
     font-weight: normal;
-      padding-left: 0.5em;
+    padding-left: 0.5em;
     padding-top: 2px;
     padding-bottom: 2px;
 }
@@ -304,7 +304,7 @@ div.links div {
 
 .revision-info td {
     font-weight: normal;
-      padding-left: 0.5em;
+    padding-left: 0.5em;
     padding-top: 2px;
     padding-bottom: 2px;
 }
@@ -452,12 +452,18 @@ table.inventory th.permissions {
 
 .inventory td.permissions {
     font-family: monospace;
-    width: 10em;
+    width: 9em;
     padding-left: 0.5em;
 }
 
 .inventory td.filename {
     font-family: monospace;
+}
+
+.inventory td.size {
+	font-family: monospace;
+	font-size: smaller;
+	width: 5em;
 }
 
 .inventory td.revision {
@@ -474,6 +480,11 @@ table.inventory th.permissions {
 
 .inventory td.changes-link {
     width: 6em;
+    font-size: smaller;
+}
+
+.inventory td.download-link {
+    width: 8em;
     font-size: smaller;
 }
 

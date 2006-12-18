@@ -60,16 +60,18 @@ ${navbar()}
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
-        <th> Filename </th>
+        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='filename')}">Filename</a> </th>
+        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='size')}">Size</a> </th>
         <th> Last change </th>
-        <th> When </th>
+        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='date')}">When</a> </th>
         <th> History </th>
+        <th> Download </th>
     </tr>
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
         <td class="filename directory"><a href="${tg.url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
-        <td> </td> <td> </td> <td> </td>
+        <td> </td> <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
@@ -79,9 +81,11 @@ ${navbar()}
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
             <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], file_id=file.file_id)}">${file.filename}</a>
         </td>
+        <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="revision"> ${revlink(file.revid, file.revid, file.file_id, util.trunc(file.change.revno, 15))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
         <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, file_id=file.file_id)}"> &#8594; changes </a></td>
+        <td class="download-link"> <a href="${tg.url([ '/download', file.revid, file.file_id, file.filename ])}"> &#8594; download </a></td>
     </tr>
 </table>
 

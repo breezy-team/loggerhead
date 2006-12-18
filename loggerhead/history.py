@@ -640,7 +640,7 @@ class History (object):
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
 
     @with_branch_lock
-    def get_filelist(self, inv, path):
+    def get_filelist(self, inv, path, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
@@ -649,7 +649,6 @@ class History (object):
             path = path[:-1]
         if path.startswith('/'):
             path = path[1:]
-        parity = 0
         
         entries = inv.entries()
         
@@ -657,7 +656,8 @@ class History (object):
         for filepath, entry in entries:
             fetch_set.add(entry.revision)
         change_dict = dict([(c.revid, c) for c in self.get_changes(list(fetch_set))])
-            
+        
+        file_list = []
         for filepath, entry in entries:
             if posixpath.dirname(filepath) != path:
                 continue
@@ -671,10 +671,23 @@ class History (object):
             revid = entry.revision
             change = change_dict[revid]
             
-            yield util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
-                                 pathname=pathname, file_id=entry.file_id, revid=revid, change=change, parity=parity)
+            file = util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
+                                  pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
+            file_list.append(file)
+        
+        if sort_type == 'filename':
+            file_list.sort(key=lambda x: x.filename)
+        elif sort_type == 'size':
+            file_list.sort(key=lambda x: x.size)
+        elif sort_type == 'date':
+            file_list.sort(key=lambda x: x.change.date)
+        
+        parity = 0
+        for file in file_list:
+            file.parity = parity
             parity ^= 1
-        pass
+
+        return file_list
 
 
     _BADCHARS_RE = re.compile(ur'[\x00-\x1f]')

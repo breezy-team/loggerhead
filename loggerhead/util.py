@@ -192,6 +192,46 @@ def if_present(format, value):
     return format % value
 
 
+KILO = 1024
+MEG = 1024 * KILO
+GIG = 1024 * MEG
+P95_MEG = int(0.9 * MEG)
+P95_GIG = int(0.9 * GIG)
+
+def human_size(size, min_divisor=0):
+    size = int(size)
+    if (size == 0) and (min_divisor == 0):
+        return '0'
+    if (size < 512) and (min_divisor == 0):
+        return str(size)
+
+    if (size >= P95_GIG) or (min_divisor >= GIG):
+        divisor = GIG
+    elif (size >= P95_MEG) or (min_divisor >= MEG):
+        divisor = MEG
+    else:
+        divisor = KILO
+    
+    dot = size % divisor
+    base = size - dot
+    dot = dot * 10 // divisor
+    base //= divisor
+    if dot >= 10:
+        base += 1
+        dot -= 10
+    
+    out = str(base)
+    if (base < 100) and (dot != 0):
+        out += '.%d' % (dot,)
+    if divisor == KILO:
+        out += 'K'
+    elif divisor == MEG:
+        out += 'M'
+    elif divisor == GIG:
+        out += 'G'
+    return out
+    
+
 def fill_in_navigation(history, navigation):
     """
     given a navigation block (used by the template for the page header), fill
