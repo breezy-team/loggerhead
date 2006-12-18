@@ -43,7 +43,7 @@
     <a title="Show revision" href="${tg.url([ '/revision', revid ])}" class="revlink"> ${text} </a>
 </span>
 <span py:def="revlink_path(revid, start_revid, text, path)">
-    <a title="Show revision" href="${tg.url([ '/revision', revid ], start_revid=start_revid, path=path)}" class="revlink"> ${text} </a>
+    <a title="Show revision ${history.get_revno(revid)}" href="${tg.url([ '/revision', revid ], start_revid=start_revid, path=path)}" class="revlink"> ${text} </a>
 </span>
 
 </head>
