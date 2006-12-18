@@ -340,9 +340,11 @@ div.links div {
     font-family: monospace;
 }
 
+
 .diff-block,.diff-chunk {
 	border-collapse: collapse;
     width: 100%;
+	margin-bottom: 1em;
 }
 
 .diff-block th.filename {
@@ -359,7 +361,7 @@ div.links div {
 .diff-chunk {
     font-size: 66%;
     margin-top: 0px;
-	margin-bottom: 1em;
+	margin-bottom: 2em;
 }
 
 .diff-chunk th.lineno {
