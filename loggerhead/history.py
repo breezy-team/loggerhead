@@ -375,7 +375,15 @@ class History (object):
                 p.branch_nick = p_change_dict[p.revid].branch_nick
             for p in change.merge_points:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
-        
+    
+    @with_cache_lock
+    def cache_full(self, get_diffs=False):
+        if get_diffs:
+            cache = self._change_cache_diffs
+        else:
+            cache = self._change_cache
+        return len(cache) == len(self._full_history)
+    
     @with_branch_lock
     def get_changes(self, revid_list, get_diffs=False):
         if self._change_cache is None:
@@ -517,11 +525,11 @@ class History (object):
         return entries
 
     @with_branch_lock
-    def diff_revisions(self, revid, otherrevid, get_diffs=True):
-        new_tree = self._branch.repository.revision_tree(revid)
-        old_tree = self._branch.repository.revision_tree(otherrevid)
-        delta = new_tree.changes_from(old_tree)
-
+    def get_file(self, file_id, revision_id):
+        "returns (filename, data)"
+        inv_entry = self.get_inventory(revid)[file_id]
+        rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
+        return inv_entry.name, rev_tree.get_file_text(file_id)
     
     @with_branch_lock
     def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
@@ -556,12 +564,6 @@ class History (object):
             if kind == 'symlink':
                 path += '@'
             return path
-        
-        def tree_lines(tree, fid):
-            if not fid in tree:
-                return []
-            tree_file = bzrlib.textfile.text_file(tree.get_file(fid))
-            return tree_file.readlines()
         
         def process_diff(diff):
             chunks = []
@@ -604,8 +606,8 @@ class History (object):
             if not get_diffs:
                 modified.append(util.Container(filename=rich_filename(new_path, kind)))
                 return
-            old_lines = tree_lines(old_tree, fid)
-            new_lines = tree_lines(new_tree, fid)
+            old_lines = old_tree.get_file_lines(fid)
+            new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
             bzrlib.diff.internal_diff(old_path, old_lines, new_path, new_lines, buffer)
             diff = buffer.getvalue()
@@ -664,12 +666,17 @@ class History (object):
         
         file_revid = self.get_inventory(revid)[file_id].revision
         oldvalues = None
-        revision_cache = {}
         
         # because we cache revision metadata ourselves, it's actually much
         # faster to call 'annotate_iter' on the weave directly than it is to
         # ask bzrlib to annotate for us.
         w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
+        
+        revid_set = set()
+        for line_revid, text in w.annotate_iter(file_revid):
+            revid_set.add(line_revid)
+        change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
+        
         last_line_revid = None
         for line_revid, text in w.annotate_iter(file_revid):
             if line_revid == last_line_revid:
@@ -679,10 +686,7 @@ class History (object):
                 status = 'changed'
                 parity ^= 1
                 last_line_revid = line_revid
-                change = revision_cache.get(line_revid, None)
-                if change is None:
-                    change = self.get_change(line_revid)
-                    revision_cache[line_revid] = change
+                change = change_cache[line_revid]
                 trunc_revno = change.revno
                 if len(trunc_revno) > 10:
                     trunc_revno = trunc_revno[:9] + '...'

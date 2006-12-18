@@ -58,10 +58,13 @@ util.get_history()
 
 
 def rebuild_cache():
-    log.info('Rebuilding revision cache...')
+    h = util.get_history()
+    if h.cache_full():
+        return
+    
+    log.info('Building revision cache...')
     start_time = time.time()
     last_update = time.time()
-    h = util.get_history()
     count = 0
     
     work = list(h.get_revision_history())
@@ -93,5 +96,6 @@ turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, acti
 
 # for use in profiling the very-slow get_change() method:
 #h = util.get_history()
-#h._get_change_profiled(h.last_revid)
+#w = list(h.get_revision_history())
+#h._get_changes_profiled(w[:100])
 
