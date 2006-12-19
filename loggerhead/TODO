@@ -6,10 +6,6 @@
     ...or somewhere.
     ... does this really matter?
 
-* add back the search bar.
-    -- should notice dotted-revnos and use that to jump.
-	-- also search by date should be simple.
-
 * problem: given a folder, find all revisions where items inside that
   folder have changed.
     -- stumper.  maybe ask on bazaar-dev ML?

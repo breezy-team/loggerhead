@@ -112,6 +112,12 @@ def trunc(text, limit=10):
     return text[:limit] + '...'
 
 
+def to_utf8(s):
+    if isinstance(s, unicode):
+        return s.encode('utf-8')
+    return s
+
+
 STANDARD_PATTERN = re.compile(r'^(.*?)\s*<(.*?)>\s*$')
 EMAIL_PATTERN = re.compile(r'[-\w\d\+_!%\.]+@[-\w\d\+_!%\.]+')
 
@@ -295,10 +301,11 @@ def decorator(unbound):
 # global branch history & cache
 
 _history = None
-_history_lock = threading.Lock()
+_history_lock = threading.RLock()
+_index = None
 
 def get_history():
-    global _history
+    global _history, _index
     from loggerhead.history import History
     
     config = get_config()
@@ -312,6 +319,22 @@ def get_history():
             _history = History.from_folder(config.get('folder'))
             _history.use_cache(config.get('cachepath'))
         return _history
+    finally:
+        _history_lock.release()
+
+def get_index():
+    global _index
+    from loggerhead.textindex import TextIndex
+
+    config = get_config()
+    cachepath = config.get('cachepath', None)
+    if cachepath is None:
+        return None
+    _history_lock.acquire()
+    try:
+        if _index is None:
+            _index = TextIndex(get_history(), config.get('cachepath'))
+        return _index
     finally:
         _history_lock.release()
 

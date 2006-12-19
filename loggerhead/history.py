@@ -295,6 +295,18 @@ class History (object):
                 out.append(revid)
         log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
         return out
+
+    def get_revision_history_matching_indexed(self, revid_list, text):
+        log.debug('searching %d revisions for %r', len(revid_list), text)
+        z = time.time()
+        index = util.get_index()
+        if index is None:
+            return self.get_revision_history_matching(revid_list, text)
+        out = index.find(text, revid_list)
+        log.debug('searched %d revisions for %r in %r secs: %d results', len(revid_list), text, time.time() - z, len(out))
+        # put them in some coherent order :)
+        out = [r for r in self._full_history if r in out]
+        return out
     
     @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
@@ -339,7 +351,7 @@ class History (object):
         # check comment fields.
         if revid_list is None:
             revid_list = self._full_history
-        return self.get_revision_history_matching(revid_list, query)
+        return self.get_revision_history_matching_indexed(revid_list, query)
     
     revno_re = re.compile(r'^[\d\.]+$')
     us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))$')
@@ -376,6 +388,60 @@ class History (object):
         if revid is None:
             revid = revlist[0]
         return revlist, revid
+    
+    _get_file_view = get_navigation
+    
+    @with_branch_lock
+    def get_view(self, revid, start_revid, file_id, query=None):
+        """
+        use the URL parameters (revid, start_revid, file_id, and query) to
+        determine the revision list we're viewing (start_revid, file_id, query)
+        and where we are in it (revid).
+        
+        if a query is given, we're viewing query results.
+        if a file_id is given, we're viewing revisions for a specific file.
+        if a start_revid is given, we're viewing the branch from a
+            specific revision up the tree.
+        (these may be combined to view revisions for a specific file, from
+            a specific revision, with a specific search query.)
+            
+        returns a new (revid, start_revid, revid_list) where:
+        
+            - revid: current position within the view
+            - start_revid: starting revision of this view
+            - revid_list: list of revision ids for this view
+        
+        file_id and query are never changed so aren't returned, but they may
+        contain vital context for future url navigation.
+        """
+        if query is None:
+            revid_list, start_revid = self._get_file_view(start_revid, file_id)
+            if revid is None:
+                revid = start_revid
+            if revid not in revid_list:
+                # if the given revid is not in the revlist, use a revlist that
+                # starts at the given revid.
+                revid_list, start_revid = self._get_file_view(revid, file_id)
+            # scanning in direct-parent order
+            scan_list = list(self.get_revids_from(revid_list, revid))
+            return revid, start_revid, scan_list
+        
+        # potentially limit the search
+        if (start_revid is not None) or (file_id is not None):
+            revid_list, start_revid = self._get_file_view(start_revid, file_id)
+        else:
+            revid_list = None
+
+        revid_list = self.get_search_revid_list(query, revid_list)
+        if len(revid_list) > 0:
+            start_revid = revid_list[0]
+            if revid not in revid_list:
+                revid = start_revid
+            scan_list = revid_list[self.get_revid_sequence(revid_list, revid):]
+            return revid, start_revid, scan_list
+        else:
+            # no results
+            return None, None, []
 
     @with_branch_lock
     def get_inventory(self, revid):
