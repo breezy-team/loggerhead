@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import bisect
 import cgi
 import datetime
 import logging
@@ -31,6 +32,8 @@ import time
 from StringIO import StringIO
 
 from loggerhead import util
+from loggerhead.util import decorator
+
 extra_path = util.get_config().get('bzrpath', None)
 if extra_path:
     sys.path.insert(0, extra_path)
@@ -47,19 +50,6 @@ import bzrlib.ui
 
 
 log = logging.getLogger("loggerhead.controllers")
-
-
-def decorator(unbound):
-    def new_decorator(f):
-        g = unbound(f)
-        g.__name__ = f.__name__
-        g.__doc__ = f.__doc__
-        g.__dict__.update(f.__dict__)
-        return g
-    new_decorator.__name__ = decorator.__name__
-    new_decorator.__doc__ = decorator.__doc__
-    new_decorator.__dict__.update(decorator.__dict__)
-    return new_decorator
 
 
 # cache lock binds tighter than branch lock
@@ -106,6 +96,24 @@ class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
         return uihack._progress_bar_stack.get_nested()
 
 bzrlib.ui.ui_factory = ThreadSafeUIFactory()
+
+
+# from bzrlib
+class _RevListToTimestamps(object):
+    """This takes a list of revisions, and allows you to bisect by date"""
+
+    __slots__ = ['revid_list', 'repository']
+
+    def __init__(self, revid_list, repository):
+        self.revid_list = revid_list
+        self.repository = repository
+
+    def __getitem__(self, index):
+        """Get the date of the index'd item"""
+        return datetime.datetime.fromtimestamp(self.repository.get_revision(self.revid_list[index]).timestamp)
+
+    def __len__(self):
+        return len(self.revid_list)
 
 
 class History (object):
@@ -174,15 +182,8 @@ class History (object):
         cachefile = os.path.join(path, 'changes')
         cachefile_diffs = os.path.join(path, 'changes-diffs')
         
-        # why can't shelve allow 'cw'?
-        if not os.path.exists(cachefile):
-            self._change_cache = shelve.open(cachefile, 'c', protocol=2)
-        else:
-            self._change_cache = shelve.open(cachefile, 'w', protocol=2)
-        if not os.path.exists(cachefile_diffs):
-            self._change_cache_diffs = shelve.open(cachefile_diffs, 'c', protocol=2)
-        else:
-            self._change_cache_diffs = shelve.open(cachefile_diffs, 'w', protocol=2)
+        self._change_cache = shelve.open(cachefile, 'c', protocol=2)
+        self._change_cache_diffs = shelve.open(cachefile_diffs, 'c', protocol=2)
             
         # once we process a change (revision), it should be the same forever.
         log.info('Using change cache %s; %d, %d entries.' % (path, len(self._change_cache), len(self._change_cache_diffs)))
@@ -255,7 +256,7 @@ class History (object):
             if len(parents) == 0:
                 return
             revid = parents[0]
-
+    
     @with_branch_lock
     def get_short_revision_history_by_fileid(self, file_id):
         # wow.  is this really the only way we can get this list?  by
@@ -267,7 +268,83 @@ class History (object):
         revids = [r for r in self._full_history if r in w_revids]
         return revids
 
+    @with_branch_lock
+    def get_revision_history_since(self, revid_list, date):
+        # if a user asks for revisions starting at 01-sep, they mean inclusive,
+        # so start at midnight on 02-sep.
+        date = date + datetime.timedelta(days=1)
+        # our revid list is sorted in REVERSE date order, so go thru some hoops here...
+        revid_list.reverse()
+        index = bisect.bisect(_RevListToTimestamps(revid_list, self._branch.repository), date)
+        if index == 0:
+            return []
+        revid_list.reverse()
+        index = -index
+        return revid_list[index:]
+    
+    @with_branch_lock
+    def get_revision_history_matching(self, revid_list, text):
+        log.debug('searching %d revisions for %r', len(revid_list), text)
+        z = time.time()
+        # this is going to be painfully slow. :(
+        out = []
+        text = text.lower()
+        for revid in revid_list:
+            change = self.get_changes([ revid ])[0]
+            if text in change.comment.lower():
+                out.append(revid)
+        log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
+        return out
+    
+    @with_branch_lock
+    def get_search_revid_list(self, query, revid_list):
+        """
+        given a "quick-search" query, try a few obvious possible meanings:
+        
+            - revision id or # ("128.1.3")
+            - date (US style "mm/dd/yy", earth style "dd-mm-yy", or iso style "yyyy-mm-dd")
+            - comment text as a fallback
+
+        and return a revid list that matches.
+        """
+        # FIXME: there is some silliness in this action.  we have to look up
+        # all the relevant changes (time-consuming) only to return a list of
+        # revids which will be used to fetch a set of changes again.
+        
+        # if they entered a revid, just jump straight there; ignore the passed-in revid_list
+        revid = self.fix_revid(query)
+        if revid is not None:
+            changes = self.get_changes([ revid ])
+            if (changes is not None) and (len(changes) > 0):
+                return [ revid ]
+        
+        date = None
+        m = self.us_date_re.match(query)
+        if m is not None:
+            date = datetime.datetime(util.fix_year(int(m.group(3))), int(m.group(1)), int(m.group(2)))
+        else:
+            m = self.earth_date_re.match(query)
+            if m is not None:
+                date = datetime.datetime(util.fix_year(int(m.group(3))), int(m.group(2)), int(m.group(1)))
+            else:
+                m = self.iso_date_re.match(query)
+                if m is not None:
+                    date = datetime.datetime(util.fix_year(int(m.group(1))), int(m.group(2)), int(m.group(3)))
+        if date is not None:
+            if revid_list is None:
+                # if no limit to the query was given, search only the direct-parent path.
+                revid_list = list(self.get_revids_from(None, self._last_revid))
+            return self.get_revision_history_since(revid_list, date)
+        
+        # check comment fields.
+        if revid_list is None:
+            revid_list = self._full_history
+        return self.get_revision_history_matching(revid_list, query)
+    
     revno_re = re.compile(r'^[\d\.]+$')
+    us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))$')
+    earth_date_re = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))$')
+    iso_date_re = re.compile(r'^(\d\d\d\d)-(\d\d)-(\d\d)$')
 
     def fix_revid(self, revid):
         # if a "revid" is actually a dotted revno, convert it to a revid
@@ -399,6 +476,8 @@ class History (object):
             changes = self._get_changes(revid_list, get_diffs)
         else:
             changes = self._get_changes_from_cache(revid_list, get_diffs)
+        if changes is None:
+            return changes
         
         # some data needs to be recalculated each time, because it may
         # change as new revisions are added.
@@ -437,6 +516,8 @@ class History (object):
         if len(fetch_list) > 0:
             # some revisions weren't in the cache; fetch them
             changes = self._get_changes(fetch_list, get_diffs=get_diffs)
+            if changes is None:
+                return changes
             for i in xrange(len(revid_list)):
                 if out[i] is None:
                     cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
@@ -458,6 +539,8 @@ class History (object):
         try:
             rev_list = self._branch.repository.get_revisions(revid_list)
         except (KeyError, bzrlib.errors.NoSuchRevision):
+            return None
+        """
             # ghosted parent?
             # FIXME: i dont think this ever happens.
             entry = {
@@ -474,7 +557,7 @@ class History (object):
                 'changes': [],
             }
             log.error('ghost entry: %r' % (revid,))
-            return util.Container(entry)
+            return util.Container(entry)"""
         
         delta_list = self._branch.repository.get_deltas_for_revisions(rev_list)
         combined_list = zip(rev_list, delta_list)

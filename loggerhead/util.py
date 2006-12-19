@@ -22,7 +22,9 @@ import datetime
 import logging
 import re
 import sha
+import sys
 import threading
+import traceback
 
 import turbogears
 
@@ -63,7 +65,15 @@ def timespan(delta):
 def ago(timestamp):
     now = datetime.datetime.now()
     return timespan(now - timestamp) + ' ago'
-    
+
+
+def fix_year(year):
+    if year < 70:
+        year += 2000
+    if year < 100:
+        year += 1900
+    return year
+
 
 class Container (object):
     """
@@ -238,6 +248,8 @@ def fill_in_navigation(history, navigation):
     in useful calculated values.
     """
     navigation.position = history.get_revid_sequence(navigation.revlist, navigation.revid)
+    if navigation.position is None:
+        navigation.position = 0
     navigation.count = len(navigation.revlist)
     navigation.page_position = navigation.position // navigation.pagesize + 1
     navigation.page_count = (len(navigation.revlist) + (navigation.pagesize - 1)) // navigation.pagesize
@@ -249,10 +261,35 @@ def fill_in_navigation(history, navigation):
     
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
+    
+    params = { 'file_id': navigation.file_id }
+    if getattr(navigation, 'query', None) is not None:
+        params['q'] = navigation.query
+    else:
+        params['start_revid'] = navigation.start_revid
+        
     if navigation.prev_page_revid:
-        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], file_id=navigation.file_id, start_revid=navigation.start_revid)
+        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], **params)
     if navigation.next_page_revid:
-        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], file_id=navigation.file_id, start_revid=navigation.start_revid)
+        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], **params)
+
+
+def log_exception(log):
+    for line in ''.join(traceback.format_exception(*sys.exc_info())).split('\n'):
+        log.debug(line)
+
+
+def decorator(unbound):
+    def new_decorator(f):
+        g = unbound(f)
+        g.__name__ = f.__name__
+        g.__doc__ = f.__doc__
+        g.__dict__.update(f.__dict__)
+        return g
+    new_decorator.__name__ = unbound.__name__
+    new_decorator.__doc__ = unbound.__doc__
+    new_decorator.__dict__.update(unbound.__dict__)
+    return new_decorator
 
 
 # global branch history & cache

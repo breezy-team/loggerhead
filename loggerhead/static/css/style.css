@@ -75,22 +75,11 @@ h1 .filename {
     color: blue;
 }
 
-/* the "changes: 425 / 425" header at the top right */
-.navposition {
-    margin-bottom: 1.5em;
-}
-
-.navposition table tr td {
-    margin-top: 0px;
-    font-weight: bold;
-    font-size: smaller;
-}
-
 /* navigation button in the pages (the ones at the top left, and bottom) */
 .buttons {
 }
 
-.buttons a {
+.buttons a,.buttons .search {
     font-weight: normal;
     color: #000088;
     font-size: 12pt;

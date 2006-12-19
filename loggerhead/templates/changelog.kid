@@ -51,11 +51,18 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes
 <span py:if="file_id"> to <span class="filename">${history.get_path(revid, file_id)}</span></span>
-<span py:if="last_revid != start_revid"> from ${history.get_revno(start_revid)} </span>
+<span py:if="(last_revid != start_revid) and not search_failed"> from ${history.get_revno(start_revid)} </span>
+<span py:if="query"> (search results)</span>
 </h1>
 
+<span py:if="search_failed">
+    Sorry, no results found for your search.
+</span>
+
+<span py:if="not search_failed">
 <a class="hide-all" id="hide-all" href="javascript:displayAll('none', '')"> (hide all) </a>
 <a class="hide-all" id="show-all" href="javascript:displayAll('', 'none')"> (show all) </a>
+</span>
 
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">

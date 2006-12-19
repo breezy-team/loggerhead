@@ -15,12 +15,15 @@
     <!-- !requires: ${navigation: start_revid, revid, revlist, pagesize, buttons, scan_url}, ${history} -->
     <div class="navbar">
         <div class="bar">
+            <!-- form must go OUTSIDE the table, or safari will add extra padding :( -->
+            <form action="${tg.url('/changes', start_revid=navigation.start_revid, file_id=navigation.file_id)}">
             <table>
                 <tr><td>
                     <span class="buttons">
                         <!-- ! navbar buttons never change, from now on.  i decree it! -->
                         <a href="${tg.url('/changes')}"> changes </a>
                         <a href="${tg.url('/files')}"> files </a>
+                        <span class="search"> search: <input type="text" name="q" /> </span>
                     </span>
                 </td><td align="right" py:if="hasattr(navigation, 'revlist')">
                     <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
@@ -35,6 +38,7 @@
                     </span>
                 </td></tr>
             </table>
+            </form>
         </div>
     </div>
 </span>
