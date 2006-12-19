@@ -253,17 +253,17 @@ def fill_in_navigation(history, navigation):
     given a navigation block (used by the template for the page header), fill
     in useful calculated values.
     """
-    navigation.position = history.get_revid_sequence(navigation.revlist, navigation.revid)
+    navigation.position = history.get_revid_sequence(navigation.revid_list, navigation.revid)
     if navigation.position is None:
         navigation.position = 0
-    navigation.count = len(navigation.revlist)
+    navigation.count = len(navigation.revid_list)
     navigation.page_position = navigation.position // navigation.pagesize + 1
-    navigation.page_count = (len(navigation.revlist) + (navigation.pagesize - 1)) // navigation.pagesize
+    navigation.page_count = (len(navigation.revid_list) + (navigation.pagesize - 1)) // navigation.pagesize
     
     def get_offset(offset):
         if (navigation.position + offset < 0) or (navigation.position + offset > navigation.count - 1):
             return None
-        return navigation.revlist[navigation.position + offset]
+        return navigation.revid_list[navigation.position + offset]
     
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)

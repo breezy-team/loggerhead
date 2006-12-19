@@ -62,40 +62,19 @@ class ChangeLogUI (object):
         file_id = kw.get('file_id', None)
         query = kw.get('q', None)
         start_revid = h.fix_revid(kw.get('start_revid', None))
+        orig_start_revid = start_revid
         pagesize = int(util.get_config().get('pagesize', '20'))
         search_failed = False
         
         try:
-            if query is None:
-                revlist, start_revid = h.get_navigation(start_revid, file_id)
-                if revid is None:
-                    revid = start_revid
-                if revid not in revlist:
-                    # if the given revid is not in the revlist, use a revlist that
-                    # starts at the given revid.
-                    revlist, start_revid = h.get_navigation(revid, file_id)
-                # scanning in direct-parent order
-                scan_list = list(h.get_revids_from(revlist, revid))
+            revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+            if (query is not None) and (len(revid_list) == 0):
+                search_failed = True
+
+            if len(revid_list) == 0:
+                scan_list = revid_list
             else:
-                # potentially limit the search
-                if (start_revid is not None) or (file_id is not None):
-                    revlist, start_revid = h.get_navigation(start_revid, file_id)
-                else:
-                    revlist = None
-
-                revlist = h.get_search_revid_list(query, revlist)
-                if len(revlist) > 0:
-                    start_revid = revlist[0]
-                    if revid not in revlist:
-                        revid = start_revid
-                    scan_list = revlist[h.get_revid_sequence(revlist, revid):]
-                else:
-                    # no results
-                    search_failed = True
-                    start_revid = None
-                    revid = None
-                    scan_list = []
-
+                scan_list = revid_list[h.get_revid_sequence(revid_list, revid):]
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except Exception, x:
@@ -103,7 +82,7 @@ class ChangeLogUI (object):
             util.log_exception(log)
             raise HTTPRedirect(turbogears.url('/changes'))
 
-        navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revlist=revlist,
+        navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
                                     file_id=file_id, scan_url='/changes', feed=True)
         if query is not None:
             navigation.query = query
@@ -121,8 +100,8 @@ class ChangeLogUI (object):
             'revid': revid,
             'navigation': navigation,
             'file_id': file_id,
-            'last_revid': h.last_revid,
             'start_revid': start_revid,
+            'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
             'query': query,
             'search_failed': search_failed,
         }

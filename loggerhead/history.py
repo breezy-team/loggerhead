@@ -367,7 +367,7 @@ class History (object):
         return revid
     
     @with_branch_lock
-    def get_navigation(self, revid, file_id):
+    def get_file_view(self, revid, file_id):
         """
         Given an optional revid and optional path, return a (revlist, revid)
         for navigation through the current scope: from the revid (or the
@@ -389,8 +389,6 @@ class History (object):
             revid = revlist[0]
         return revlist, revid
     
-    _get_file_view = get_navigation
-    
     @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
         """
@@ -405,7 +403,7 @@ class History (object):
         (these may be combined to view revisions for a specific file, from
             a specific revision, with a specific search query.)
             
-        returns a new (revid, start_revid, revid_list) where:
+        returns a new (revid, start_revid, revid_list, scan_list) where:
         
             - revid: current position within the view
             - start_revid: starting revision of this view
@@ -415,30 +413,26 @@ class History (object):
         contain vital context for future url navigation.
         """
         if query is None:
-            revid_list, start_revid = self._get_file_view(start_revid, file_id)
+            revid_list, start_revid = self.get_file_view(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list, start_revid = self._get_file_view(revid, file_id)
-            # scanning in direct-parent order
-            scan_list = list(self.get_revids_from(revid_list, revid))
-            return revid, start_revid, scan_list
+                revid_list, start_revid = self.get_file_view(revid, file_id)
+            return revid, start_revid, revid_list
         
         # potentially limit the search
         if (start_revid is not None) or (file_id is not None):
-            revid_list, start_revid = self._get_file_view(start_revid, file_id)
+            revid_list, start_revid = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
 
         revid_list = self.get_search_revid_list(query, revid_list)
         if len(revid_list) > 0:
-            start_revid = revid_list[0]
             if revid not in revid_list:
-                revid = start_revid
-            scan_list = revid_list[self.get_revid_sequence(revid_list, revid):]
-            return revid, start_revid, scan_list
+                revid = revid_list[0]
+            return revid, start_revid, revid_list
         else:
             # no results
             return None, None, []
@@ -839,7 +833,7 @@ class History (object):
         return file_list
 
 
-    _BADCHARS_RE = re.compile(ur'[\x00-\x1f]')
+    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b-\x0c\x0e-\x1f]')
 
     @with_branch_lock
     def annotate_file(self, file_id, revid):

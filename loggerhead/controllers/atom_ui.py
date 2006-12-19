@@ -29,7 +29,7 @@ class AtomUI (object):
         h = util.get_history()
         pagesize = int(util.get_config().get('pagesize', '20'))
 
-        revlist, start_revid = h.get_navigation(None, None)
+        revid_list, start_revid = h.get_file_view(None, None)
         entries = list(h.get_changelist(list(revlist)[:pagesize]))
 
         vals = {

@@ -12,11 +12,11 @@
 
 <!-- !define common navbar -->
 <span py:def="navbar()">
-    <!-- !requires: ${navigation: start_revid, revid, revlist, pagesize, buttons, scan_url}, ${history} -->
+    <!-- !requires: ${navigation: start_revid, revid, revid_list, pagesize, buttons, scan_url}, ${history} -->
     <div class="navbar">
         <div class="bar">
             <!-- form must go OUTSIDE the table, or safari will add extra padding :( -->
-            <form action="${tg.url('/changes', start_revid=navigation.start_revid, file_id=navigation.file_id)}">
+            <form action="${tg.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))}">
             <table>
                 <tr><td>
                     <span class="buttons">
@@ -25,7 +25,7 @@
                         <a href="${tg.url('/files')}"> files </a>
                         <span class="search"> search: <input type="text" name="q" /> </span>
                     </span>
-                </td><td align="right" py:if="hasattr(navigation, 'revlist')">
+                </td><td align="right" py:if="hasattr(navigation, 'revid_list')">
                     <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
                         <a href="${tg.url('/atom')}"><img src="${tg.url('/static/images/feed-icon-16x16.gif')}" /></a>
                     </span>
@@ -45,6 +45,9 @@
 
 <span py:def="revlink(revid, start_revid, file_id, text)">
     <a title="Show revision ${history.get_revno(revid)}" href="${tg.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id)}" class="revlink"> ${text} </a>
+</span>
+<span py:def="revlink_q(revid, start_revid, file_id, query, text)">
+    <a title="Show revision ${history.get_revno(revid)}" href="${tg.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, q=query)}" class="revlink"> ${text} </a>
 </span>
 
 </head>

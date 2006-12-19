@@ -55,11 +55,12 @@ class InventoryUI (object):
         sort_type = kw.get('sort', None)
 
         try:
-            revlist, revid = h.get_navigation(revid, file_id)
+            revid_list, revid = h.get_file_view(revid, file_id)
             rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
         except Exception, x:
-            log.error('Exception fetching changes: %r, %s' % (x, x))
+            log.error('Exception fetching changes: %s' % (x,))
+            util.log_exception(log)
             raise HTTPRedirect(turbogears.url('/changes'))
 
         # no navbar for revisions

@@ -51,8 +51,8 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch_name}</span> : changes
 <span py:if="file_id"> to <span class="filename">${history.get_path(revid, file_id)}</span></span>
-<span py:if="(last_revid != start_revid) and not search_failed"> from ${history.get_revno(start_revid)} </span>
-<span py:if="query"> (search results)</span>
+<span py:if="viewing_from"> from ${history.get_revno(start_revid)} </span>
+<span py:if="query"> matching "${query}"</span>
 </h1>
 
 <span py:if="search_failed">
@@ -70,7 +70,7 @@ ${navbar()}
         <div class="revision-header">
             <table>
                 <tr>
-                    <td class="revision-number"> ${revlink(entry.revid, start_revid, file_id, util.trunc(entry.revno))} </td>
+                    <td class="revision-number"> ${revlink_q(entry.revid, start_revid, file_id, query, util.trunc(entry.revno))} </td>
                     <td class="expand-button">
                         <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
                             <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" />
@@ -79,7 +79,7 @@ ${navbar()}
                         	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" />
                         </a>
                     </td>
-					<td class="summary"> ${revlink(entry.revid, start_revid, file_id, entry.short_comment)} </td>
+					<td class="summary"> ${revlink_q(entry.revid, start_revid, file_id, query, entry.short_comment)} </td>
 					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
 			</table>
@@ -119,23 +119,23 @@ ${navbar()}
 
 			        <tr py:if="entry.changes.added">
 			            <th class="files"> files added: </th>
-			            <td class="files"> <span py:for="filename, file_id in entry.changes.added" class="filename">${file_link(filename, file_id, entry.revid)} <br /></span> </td>
+			            <td class="files"> <span py:for="filename, fid in entry.changes.added" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.removed">
 			            <th class="files"> files removed: </th>
-			            <td class="files"> <span py:for="filename, file_id in entry.changes.removed" class="filename">${file_link(filename, file_id, entry.revid)} <br /></span> </td>
+			            <td class="files"> <span py:for="filename, fid in entry.changes.removed" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.renamed">
 			            <th class="files"> files renamed: </th>
-			            <td class="files"> <span py:for="old_filename, new_filename, file_id in entry.changes.renamed" class="filename">
-			                ${file_link(old_filename, file_id, entry.revid)} => ${file_link(new_filename, file_id, entry.revid)}<br />
+			            <td class="files"> <span py:for="old_filename, new_filename, fid in entry.changes.renamed" class="filename">
+			                ${file_link(old_filename, fid, entry.revid)} => ${file_link(new_filename, fid, entry.revid)}<br />
 			            </span> </td>
 			        </tr>
 			        <tr py:if="entry.changes.modified">
 			            <th class="files"> files modified: </th>
 			            <td class="files"> <span py:for="item in entry.changes.modified">
 			                <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
-			                <a href="${tg.url([ '/revision', entry.revid ], start_revid=start_revid, file_id=file_id) + '#' + item.filename}" class="jump">&#8594; diff</a>
+			                <a href="${tg.url([ '/revision', entry.revid ], start_revid=start_revid, file_id=file_id, query=query) + '#' + item.filename}" class="jump">&#8594; diff</a>
 			                <br />
 			            </span> </td>
 			        </tr>
