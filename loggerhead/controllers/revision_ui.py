@@ -49,7 +49,6 @@ class RevisionUI (object):
         
         try:
             revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
-            log.debug('revid_list = %d', len(revid_list))
         except Exception, x:
             log.error('Exception fetching changes: %s' % (x,))
             util.log_exception(log)
