@@ -57,6 +57,11 @@
     <div py:replace="[item.text]+item[:]"/>
 
 	<!-- End of main_content -->
+	
+	<div class="footer">
+	    <span class="banner"><a href="http://www.bazaar-vcs.org/"><img src="${tg.url('/static/images/bazaar-banner.png')}" /></a></span>
+	    <span class="banner"><a href="http://www.lag.net/loggerhead/"><img src="${tg.url('/static/images/loggerhead-banner.png')}" /></a></span>
+	</div>
 </body>
 
 </html>
