@@ -38,11 +38,12 @@ from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.download_ui import DownloadUI
 
 
-with_history_lock = util.with_lock('_history_lock')
+with_history_lock = util.with_lock('_history_lock', 'History')
 
 
 class BranchView (object):
-    def __init__(self, name, config):
+    def __init__(self, group_name, name, config):
+        self._group_name = group_name
         self._name = name
         self._config = config
         self.log = logging.getLogger('loggerhead.%s' % (name,))
@@ -64,8 +65,14 @@ class BranchView (object):
     config = property(lambda self: self._config)
     
     name = property(lambda self: self._name)
+
+    group_name = property(lambda self: self._group_name)
     
     friendly_name = property(lambda self: self._config.get('branch_name', self._name))
+
+    description = property(lambda self: self._config.get('description', ''))
+    
+    branch_url = property(lambda self: self._config.get('url', ''))
 
     @turbogears.expose()
     def index(self):
@@ -99,5 +106,9 @@ class BranchView (object):
             elements = [elements]
         if elements[0].startswith('/'):
             elements[0] = elements[0][1:]
-        return turbogears.url([ '/' + self.name ] + elements, **kw)
+        return turbogears.url([ '/' + self.group_name, self.name ] + elements, **kw)
 
+    def last_updated(self):
+        h = self.get_history()
+        change = h.get_changes([ h.last_revid ])[0]
+        return change.date

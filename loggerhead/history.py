@@ -54,25 +54,18 @@ import bzrlib.tsort
 import bzrlib.ui
 
 
-@decorator
-def with_branch_lock(unbound):
-    def branch_locked(self, *args, **kw):
-        self._lock.acquire()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._lock.release()
-    return branch_locked
-
+with_branch_lock = util.with_lock('_lock', 'branch')
 
 @decorator
 def with_bzrlib_read_lock(unbound):
     def bzrlib_read_locked(self, *args, **kw):
+        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
         self._branch.repository.lock_read()
         try:
             return unbound(self, *args, **kw)
         finally:
             self._branch.repository.unlock()
+            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
     return bzrlib_read_locked
 
 
@@ -537,6 +530,7 @@ class History (object):
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
         return ret
 
+    @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list, get_diffs=False):
         try:

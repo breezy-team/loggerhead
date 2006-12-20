@@ -552,3 +552,55 @@ span.folder {
 .annotate th.text {
     padding-left: 1em;
 }
+
+
+/* ----- top-level browse page ----- */
+
+.browse-group-name {
+    background-color: #dee7ec;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    margin-left: 1em;
+    margin-right: 1em;
+    padding-left: 1em;
+    width: 90%;
+    font-weight: bold;
+}
+
+.browse-view {
+	margin-top: 1em;
+	margin-bottom: 1em;
+	margin-left: 2em;
+}
+
+.browse-view table {
+    border-collapse: collapse;
+    width: 90%;
+    margin-bottom: 2em;
+}
+
+.browse-view table tr.heading {
+    xbackground-color: #8cacbb;
+    border-bottom: solid 1px #8cacbb;
+    font-size: smaller;
+}
+
+.browse-view td,.browse-view th {
+	padding: 0.25em 0.5em 0.25em 0.5em;
+}
+
+.browse-view td.name {
+	width: 25%;
+}
+
+.browse-view td.last-update {
+	font-size: smaller;
+	width: 20%;
+}
+
+.browse-view td.url {
+	font-family: monospace;
+	font-size: smaller;
+	padding-left: 3em;
+	padding-top: 0px;
+}

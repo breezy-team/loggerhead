@@ -39,24 +39,43 @@ from loggerhead.history import History
 log = logging.getLogger("loggerhead.controllers")
 
 
+class Group (object):
+    def __init__(self, name, config):
+        self.name = name
+        self.friendly_name = config.get('name', name)
+        self.description = config.get('description', '')
+        
+        self._views = []
+        for view_name in config.sections:
+            log.debug('Configuring (group %r) branch %r...', name, view_name)
+            view = BranchView(name, view_name, config[view_name])
+            setattr(self, view_name, view)
+            self._views.append(view)
+    
+    views = property(lambda self: self._views)
+
+
 class Root (controllers.RootController):
     def __init__(self):
         global my_config
-        self._views = []
-        for branch_name in my_config.sections:
-            log.debug('Configuring branch %r...', branch_name)
-            view = BranchView(branch_name, my_config[branch_name])
-            setattr(self, branch_name, view)
-            self._views.append(view)
+        self._groups = []
+        for group_name in my_config.sections:
+            group = Group(group_name, my_config[group_name])
+            self._groups.append(group)
+            setattr(self, group_name, group)
         
-    @turbogears.expose()
+    @turbogears.expose(template='loggerhead.templates.browse')
     def index(self):
-        # FIXME - display list of branches
-        raise HTTPRedirect(turbogears.url('/bazaar-dev/changes'))
+        return {
+            'groups': self._groups,
+            'util': util,
+            'title': my_config.get('title', ''),
+        }
 
     def check_rebuild(self):
-        for v in self._views:
-            v.check_rebuild()
+        for g in self._groups:
+            for v in g.views:
+                v.check_rebuild()
 
 
 # singleton:

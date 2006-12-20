@@ -35,7 +35,7 @@ from loggerhead import util
 from loggerhead.util import decorator
 
 
-with_lock = util.with_lock('_lock')
+with_lock = util.with_lock('_lock', 'ChangeCache')
 
 
 class ChangeCache (object):
@@ -139,7 +139,8 @@ class ChangeCache (object):
         jump = 100
         for i in xrange(0, len(work), jump):
             r = work[i:i + jump]
-            self.get_changes(r)
+            # must call into history so we grab the branch lock (otherwise, lock inversion)
+            self.history.get_changes(r)
             if self.closed():
                 return
             count += jump

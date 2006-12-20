@@ -13,7 +13,7 @@
 <!-- !define common navbar -->
 <span py:def="navbar()">
     <!-- !requires: ${navigation: start_revid, revid, revid_list, pagesize, buttons, scan_url}, ${branch}, ${history} -->
-    <div class="navbar">
+    <div class="navbar" py:if="navigation is not None">
         <div class="bar">
             <!-- form must go OUTSIDE the table, or safari will add extra padding :( -->
             <form action="${branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))}">

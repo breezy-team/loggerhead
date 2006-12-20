@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import cherrypy
 import turbogears
 
 from loggerhead import util
@@ -38,7 +39,7 @@ class AtomUI (object):
         entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
         vals = {
-            'external_url': self._branch.config.get('external_url'),
+            'external_url': cherrypy.request.base,
             'branch': self._branch,
             'changes': entries,
             'util': util,

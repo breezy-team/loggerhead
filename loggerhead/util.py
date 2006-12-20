@@ -299,15 +299,19 @@ def decorator(unbound):
 
 
 # common threading-lock decorator
-def with_lock(lockname):
+def with_lock(lockname, debug_name=None):
+    if debug_name is None:
+        debug_name = lockname
     @decorator
     def _decorator(unbound):
         def locked(self, *args, **kw):
+            #self.log.debug('-> %r lock %r', id(threading.currentThread()), debug_name)
             getattr(self, lockname).acquire()
             try:
                 return unbound(self, *args, **kw)
             finally:
                 getattr(self, lockname).release()
+                #self.log.debug('<- %r unlock %r', id(threading.currentThread()), debug_name)
         return locked
     return _decorator
 
