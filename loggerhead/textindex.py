@@ -30,11 +30,10 @@ import os
 import re
 import shelve
 import threading
+import time
 
 from loggerhead import util
 from loggerhead.util import decorator
-
-log = logging.getLogger("loggerhead.controllers")
 
 # if any substring index reaches this many revids, replace the entry with
 # an ALL marker -- it's not worth an explicit index.
@@ -72,6 +71,7 @@ def normalize_string(s):
 class TextIndex (object):
     def __init__(self, history, cache_path):
         self.history = history
+        self.log = history.log
         
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
@@ -84,7 +84,7 @@ class TextIndex (object):
         
         self._lock = threading.RLock()
         
-        log.info('Using search index; %d entries.', len(self._recorded))
+        self.log.info('Using search index; %d entries.', len(self._recorded))
     
     @with_lock
     def is_indexed(self, revid):
@@ -95,10 +95,19 @@ class TextIndex (object):
         return len(self._recorded)
 
     @with_lock
+    def close(self):
+        self._recorded.close()
+        self._index.close()
+    
+    @with_lock
     def flush(self):
         self._recorded.sync()
         self._index.sync()
     
+    @with_lock
+    def full(self):
+        return (len(self._index) == len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in self._recorded)
+
     @with_lock
     def index_change(self, change):
         """
@@ -160,4 +169,37 @@ class TextIndex (object):
         # we DON'T care, and if one of the substrings hit ALL, there's a small
         # chance that we'll give a few false positives, and we don't care.
         return total_set
-        
+    
+    def check_rebuild(self, max_time=3600):
+        """
+        check if there are any un-indexed revisions, and if so, index them.
+        but don't spend longer than C{max_time} on it.
+        """
+        if self.full():
+            # all done
+            return
+
+        self.log.info('Building search index...')
+        work = list(self.history.get_revision_history())
+        start_time = time.time()
+        last_update = time.time()
+        count = 0
+    
+        for revid in work:
+            if not self.is_indexed(revid):
+                self.index_change(self.history.get_changes([ revid ])[0])
+
+            count += 1
+            now = time.time()
+            if now - start_time > 3600:
+                # there's no point working for hours.  eventually we might even
+                # hit the next re-index interval, which would suck mightily.
+                self.log.info('Search indexing has worked for an hour; giving up for now.')
+                self.flush()
+                return
+            if now - last_update > 60:
+                self.log.info('Search indexing continues: %d/%d' % (min(count, len(work)), len(work)))
+                last_update = time.time()
+                self.flush()
+        self.log.info('Search index completed.')
+

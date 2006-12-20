@@ -16,3 +16,12 @@
 * make a loggerhead webpage
 
 * on revision page: view/download patch
+
+* move log -> self.log
+	changelog_ui
+	revision_ui
+	inventory_ui
+	annotate_ui
+	download_ui
+	atom_ui
+	

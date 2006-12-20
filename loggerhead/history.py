@@ -49,21 +49,6 @@ import bzrlib.tsort
 import bzrlib.ui
 
 
-log = logging.getLogger("loggerhead.controllers")
-
-
-# cache lock binds tighter than branch lock
-@decorator
-def with_cache_lock(unbound):
-    def cache_locked(self, *args, **kw):
-        self._cache_lock.acquire()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._cache_lock.release()
-    return cache_locked
-
-
 @decorator
 def with_branch_lock(unbound):
     def branch_locked(self, *args, **kw):
@@ -120,24 +105,22 @@ class History (object):
     
     def __init__(self):
         self._change_cache = None
-        self._cache_lock = threading.Lock()
+        self._index = None
         self._lock = threading.RLock()
     
-    def __del__(self):
-        if self._change_cache is not None:
-            self._change_cache.close()
-            self._change_cache_diffs.close()
-            self._change_cache = None
-            self._change_cache_diffs = None
-
     @classmethod
-    def from_branch(cls, branch):
+    def from_branch(cls, branch, name=None):
         z = time.time()
         self = cls()
         self._branch = branch
         self._history = branch.revision_history()
         self._revision_graph = branch.repository.get_revision_graph()
         self._last_revid = self._history[-1]
+        
+        if name is None:
+            name = self._branch.nick
+        self._name = name
+        self.log = logging.getLogger('loggerhead.%s' % (name,))
         
         self._full_history = []
         self._revision_info = {}
@@ -160,13 +143,13 @@ class History (object):
             for parent in self._revision_graph[revid]:
                 self._where_merged.setdefault(parent, set()).add(revid)
 
-        log.info('built revision graph cache: %r secs' % (time.time() - z,))
+        self.log.info('built revision graph cache: %r secs' % (time.time() - z,))
         return self
     
     @classmethod
-    def from_folder(cls, path):
+    def from_folder(cls, path, name=None):
         b = bzrlib.branch.Branch.open(path)
-        return cls.from_branch(b)
+        return cls.from_branch(b, name)
 
     @with_branch_lock
     def out_of_date(self):
@@ -174,39 +157,35 @@ class History (object):
             return True
         return False
 
-    @with_cache_lock
-    def use_cache(self, path):
-        if not os.path.exists(path):
-            os.mkdir(path)
-        # keep a separate cache for the diffs, because they're very time-consuming to fetch.
-        cachefile = os.path.join(path, 'changes')
-        cachefile_diffs = os.path.join(path, 'changes-diffs')
-        
-        self._change_cache = shelve.open(cachefile, 'c', protocol=2)
-        self._change_cache_diffs = shelve.open(cachefile_diffs, 'c', protocol=2)
-            
-        # once we process a change (revision), it should be the same forever.
-        log.info('Using change cache %s; %d, %d entries.' % (path, len(self._change_cache), len(self._change_cache_diffs)))
-        self._change_cache_filename = cachefile
-        self._change_cache_diffs_filename = cachefile_diffs
+    def use_cache(self, cache):
+        self._change_cache = cache
+    
+    def use_search_index(self, index):
+        self._index = index
 
-    @with_cache_lock
-    def dont_use_cache(self):
-        # called when a new history object needs to be created.  we can't use
-        # the cache files anymore; they belong to the new history object.
-        if self._change_cache is None:
-            return
-        self._change_cache.close()
-        self._change_cache_diffs.close()
-        self._change_cache = None
-        self._change_cache_diffs = None
+    @with_branch_lock
+    def detach(self):
+        # called when a new history object needs to be created, because the
+        # branch history has changed.  we need to immediately close and stop
+        # using our caches, because a new history object will be created to
+        # replace us, using the same cache files.
+        if self._change_cache is not None:
+            self._change_cache.close()
+            self._change_cache = None
+        if self._index is not None:
+            self._index.close()
+            self._index = None
 
-    @with_cache_lock
     def flush_cache(self):
         if self._change_cache is None:
             return
-        self._change_cache.sync()
-        self._change_cache_diffs.sync()
+        self._change_cache.flush()
+    
+    def check_rebuild(self):
+        if self._change_cache:
+            self._change_cache.check_rebuild()
+        if self._index:
+            self._index.check_rebuild()
     
     last_revid = property(lambda self: self._last_revid, None, None)
     
@@ -284,7 +263,7 @@ class History (object):
     
     @with_branch_lock
     def get_revision_history_matching(self, revid_list, text):
-        log.debug('searching %d revisions for %r', len(revid_list), text)
+        self.log.debug('searching %d revisions for %r', len(revid_list), text)
         z = time.time()
         # this is going to be painfully slow. :(
         out = []
@@ -293,17 +272,16 @@ class History (object):
             change = self.get_changes([ revid ])[0]
             if text in change.comment.lower():
                 out.append(revid)
-        log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
+        self.log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
         return out
 
     def get_revision_history_matching_indexed(self, revid_list, text):
-        log.debug('searching %d revisions for %r', len(revid_list), text)
+        self.log.debug('searching %d revisions for %r', len(revid_list), text)
         z = time.time()
-        index = util.get_index()
-        if index is None:
+        if self._index is None:
             return self.get_revision_history_matching(revid_list, text)
-        out = index.find(text, revid_list)
-        log.debug('searched %d revisions for %r in %r secs: %d results', len(revid_list), text, time.time() - z, len(out))
+        out = self._index.find(text, revid_list)
+        self.log.debug('searched %d revisions for %r in %r secs: %d results', len(revid_list), text, time.time() - z, len(out))
         # put them in some coherent order :)
         out = [r for r in self._full_history if r in out]
         return out
@@ -354,9 +332,12 @@ class History (object):
         return self.get_revision_history_matching_indexed(revid_list, query)
     
     revno_re = re.compile(r'^[\d\.]+$')
-    us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))$')
-    earth_date_re = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))$')
-    iso_date_re = re.compile(r'^(\d\d\d\d)-(\d\d)-(\d\d)$')
+    # the date regex are without a final '$' so that queries like
+    # "2006-11-30 12:15" still mostly work.  (i think it's better to give
+    # them 90% of what they want instead of nothing at all.)
+    us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))')
+    earth_date_re = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))')
+    iso_date_re = re.compile(r'^(\d\d\d\d)-(\d\d)-(\d\d)')
 
     def fix_revid(self, revid):
         # if a "revid" is actually a dotted revno, convert it to a revid
@@ -522,20 +503,12 @@ class History (object):
             for p in change.merge_points:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
     
-    @with_cache_lock
-    def cache_full(self, get_diffs=False):
-        if get_diffs:
-            cache = self._change_cache_diffs
-        else:
-            cache = self._change_cache
-        return len(cache) == len(self._full_history)
-    
     @with_branch_lock
     def get_changes(self, revid_list, get_diffs=False):
         if self._change_cache is None:
-            changes = self._get_changes(revid_list, get_diffs)
+            changes = self.get_changes_uncached(revid_list, get_diffs)
         else:
-            changes = self._get_changes_from_cache(revid_list, get_diffs)
+            changes = self._change_cache.get_changes(revid_list, get_diffs)
         if changes is None:
             return changes
         
@@ -549,75 +522,22 @@ class History (object):
         
         return changes
 
-    @with_cache_lock
-    def _get_changes_from_cache(self, revid_list, get_diffs):
-        if get_diffs:
-            cache = self._change_cache_diffs
-        else:
-            cache = self._change_cache
-
-        out = []
-        fetch_list = []
-        sfetch_list = []
-        for revid in revid_list:
-            # if the revid is in unicode, use the utf-8 encoding as the key
-            srevid = revid
-            if isinstance(revid, unicode):
-                srevid = revid.encode('utf-8')
-            
-            if srevid in cache:
-                out.append(cache[srevid])
-            else:
-                #log.debug('Entry cache miss: %r' % (revid,))
-                out.append(None)
-                fetch_list.append(revid)
-                sfetch_list.append(srevid)
-        
-        if len(fetch_list) > 0:
-            # some revisions weren't in the cache; fetch them
-            changes = self._get_changes(fetch_list, get_diffs=get_diffs)
-            if changes is None:
-                return changes
-            for i in xrange(len(revid_list)):
-                if out[i] is None:
-                    cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
-        
-        return out
-    
     # alright, let's profile this sucka.
     def _get_changes_profiled(self, revid_list, get_diffs=False):
         from loggerhead.lsprof import profile
         import cPickle
-        ret, stats = profile(self._get_changes, revid_list, get_diffs)
+        ret, stats = profile(self.get_changes_uncached, revid_list, get_diffs)
         stats.sort()
         stats.freeze()
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
         return ret
 
     @with_bzrlib_read_lock
-    def _get_changes(self, revid_list, get_diffs=False):
+    def get_changes_uncached(self, revid_list, get_diffs=False):
         try:
             rev_list = self._branch.repository.get_revisions(revid_list)
         except (KeyError, bzrlib.errors.NoSuchRevision):
             return None
-        """
-            # ghosted parent?
-            # FIXME: i dont think this ever happens.
-            entry = {
-                'revid': 'missing',
-                'revno': '',
-                'date': datetime.datetime.fromtimestamp(0),
-                'author': 'missing',
-                'branch_nick': None,
-                'short_comment': 'missing',
-                'comment': 'missing',
-                'comment_clean': 'missing',
-                'parents': [],
-                'merge_points': [],
-                'changes': [],
-            }
-            log.error('ghost entry: %r' % (revid,))
-            return util.Container(entry)"""
         
         delta_list = self._branch.repository.get_deltas_for_revisions(rev_list)
         combined_list = zip(rev_list, delta_list)
@@ -878,4 +798,4 @@ class History (object):
                                  change=change, text=util.html_clean(text))
             lineno += 1
         
-        log.debug('annotate: %r secs' % (time.time() - z,))
+        self.log.debug('annotate: %r secs' % (time.time() - z,))
