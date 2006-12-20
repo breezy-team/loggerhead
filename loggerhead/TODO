@@ -5,12 +5,10 @@
 
 * side by side diff?  matty says "overflow-x" css property for horiz scrollbar
 
-* make equivalent of start page:
-    http://goffredo-baroncelli.homelinux.net/bazaar
-
-* on revision page: view/download patch
-
 * potentially do a 'bzr pull' on a branch on an interval timer
 
 * give this thing a version # or something
 * make a loggerhead webpage
+
+* it would be cool to view 1 revision relative to another base, and view the
+  diff & download the bundle for that

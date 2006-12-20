@@ -28,8 +28,6 @@ from cherrypy import HTTPRedirect, session
 
 from loggerhead import util
 
-log = logging.getLogger("loggerhead.controllers")
-
 
 class RevisionUI (object):
 

@@ -46,6 +46,7 @@ from loggerhead.util import decorator
 import bzrlib
 import bzrlib.annotate
 import bzrlib.branch
+import bzrlib.bundle.serializer
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
@@ -798,3 +799,16 @@ class History (object):
             lineno += 1
         
         self.log.debug('annotate: %r secs' % (time.time() - z,))
+
+    @with_branch_lock
+    @with_bzrlib_read_lock
+    def get_bundle(self, revid):
+        parents = self._revision_graph[revid]
+        if len(parents) > 0:
+            parent_revid = parents[0]
+        else:
+            parent_revid = None
+        s = StringIO()
+        bzrlib.bundle.serializer.write_bundle(self._branch.repository, revid, parent_revid, s)
+        return s.getvalue()
+

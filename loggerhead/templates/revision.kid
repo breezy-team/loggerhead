@@ -18,6 +18,7 @@ ${navbar()}
 	<div class="links">
 	    <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}">browse files</a> </div>
 	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}">view branch changes</a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">view/download patch</a> </div>
 	</div>
 </h1>
  

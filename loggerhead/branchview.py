@@ -36,6 +36,7 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.bundle_ui import BundleUI
 
 
 with_history_lock = util.with_lock('_history_lock', 'History')
@@ -58,6 +59,7 @@ class BranchView (object):
         self.annotate = AnnotateUI(self)
         self.download = DownloadUI(self)
         self.atom = AtomUI(self)
+        self.bundle = BundleUI(self)
         
         # force history object to be loaded:
         self.get_history()
