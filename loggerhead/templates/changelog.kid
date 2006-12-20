@@ -3,8 +3,8 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : changes </title>
-    <link rel="alternate" type="application/atom+xml" href="${tg.url('/atom')}" title="RSS feed for ${branch_name}" />
+    <title> ${branch.friendly_name} : changes </title>
+    <link rel="alternate" type="application/atom+xml" href="${branch.url('/atom')}" title="RSS feed for ${branch.friendly_name}" />
     
     <span py:def="loglink(revid, text)">
         <a title="Show history" href="${tg.url('/changes', start_revid=revid)}" class="revlink"> ${text} </a>
@@ -49,7 +49,7 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : changes
+<h1> <span class="branch-name">${branch.friendly_name}</span> : changes
 <span py:if="file_id"> to <span class="filename">${history.get_path(revid, file_id)}</span></span>
 <span py:if="viewing_from"> from ${history.get_revno(start_revid)} </span>
 <span py:if="query"> matching "${query}"</span>

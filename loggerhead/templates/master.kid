@@ -12,22 +12,22 @@
 
 <!-- !define common navbar -->
 <span py:def="navbar()">
-    <!-- !requires: ${navigation: start_revid, revid, revid_list, pagesize, buttons, scan_url}, ${history} -->
+    <!-- !requires: ${navigation: start_revid, revid, revid_list, pagesize, buttons, scan_url}, ${branch}, ${history} -->
     <div class="navbar">
         <div class="bar">
             <!-- form must go OUTSIDE the table, or safari will add extra padding :( -->
-            <form action="${tg.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))}">
+            <form action="${branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))}">
             <table>
                 <tr><td>
                     <span class="buttons">
                         <!-- ! navbar buttons never change, from now on.  i decree it! -->
-                        <a href="${tg.url('/changes')}"> changes </a>
-                        <a href="${tg.url('/files')}"> files </a>
+                        <a href="${branch.url('/changes')}"> changes </a>
+                        <a href="${branch.url('/files')}"> files </a>
                         <span class="search"> search: <input type="text" name="q" /> </span>
                     </span>
                 </td><td align="right" py:if="hasattr(navigation, 'revid_list')">
                     <span py:if="hasattr(navigation, 'feed')" class="rbuttons feed">
-                        <a href="${tg.url('/atom')}"><img src="${tg.url('/static/images/feed-icon-16x16.gif')}" /></a>
+                        <a href="${branch.url('/atom')}"><img src="${tg.url('/static/images/feed-icon-16x16.gif')}" /></a>
                     </span>
                     <span class="navbuttons">
                     	<span py:if="navigation.prev_page_revid"> <a href="${navigation.prev_page_url}" title="Previous page"> &#171; </a>	</span>
@@ -44,10 +44,10 @@
 </span>
 
 <span py:def="revlink(revid, start_revid, file_id, text)">
-    <a title="Show revision ${history.get_revno(revid)}" href="${tg.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id)}" class="revlink"> ${text} </a>
+    <a title="Show revision ${history.get_revno(revid)}" href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id)}" class="revlink"> ${text} </a>
 </span>
 <span py:def="revlink_q(revid, start_revid, file_id, query, text)">
-    <a title="Show revision ${history.get_revno(revid)}" href="${tg.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, q=query)}" class="revlink"> ${text} </a>
+    <a title="Show revision ${history.get_revno(revid)}" href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, q=query)}" class="revlink"> ${text} </a>
 </span>
 
 </head>

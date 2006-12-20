@@ -35,16 +35,7 @@ from loggerhead import util
 from loggerhead.util import decorator
 
 
-# cache lock binds tighter than branch lock
-@decorator
-def with_lock(unbound):
-    def cache_locked(self, *args, **kw):
-        self._lock.acquire()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._lock.release()
-    return cache_locked
+with_lock = util.with_lock('_lock')
 
 
 class ChangeCache (object):
@@ -128,7 +119,7 @@ class ChangeCache (object):
             cache = self._cache_diffs
         else:
             cache = self._cache
-        return (len(cache) == len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in cache)
+        return (len(cache) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in cache)
 
     def check_rebuild(self, max_time=3600):
         """
@@ -162,6 +153,6 @@ class ChangeCache (object):
                 last_update = time.time()
                 self.flush()
         self.log.info('Revision cache rebuild completed.')
-    
+        self.flush()
 
 

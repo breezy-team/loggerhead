@@ -1,6 +1,8 @@
 #
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
+# Copyright (C) 2005  Jake Edge <jake@edge2.net>
+# Copyright (C) 2005  Matt Mackall <mpm@selenic.com>
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -16,6 +18,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+
+#
+# This file (and many of the web templates) contains work based on the
+# "bazaar-webserve" project by Goffredo Baroncelli, which is in turn based
+# on "hgweb" by Jake Edge and Matt Mackall.
+#
+
 
 import bisect
 import cgi
@@ -33,10 +42,6 @@ from StringIO import StringIO
 
 from loggerhead import util
 from loggerhead.util import decorator
-
-extra_path = util.get_config().get('bzrpath', None)
-if extra_path:
-    sys.path.insert(0, extra_path)
 
 import bzrlib
 import bzrlib.annotate
@@ -114,8 +119,8 @@ class History (object):
         self = cls()
         self._branch = branch
         self._history = branch.revision_history()
-        self._revision_graph = branch.repository.get_revision_graph()
         self._last_revid = self._history[-1]
+        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
         
         if name is None:
             name = self._branch.nick
@@ -182,9 +187,9 @@ class History (object):
         self._change_cache.flush()
     
     def check_rebuild(self):
-        if self._change_cache:
+        if self._change_cache is not None:
             self._change_cache.check_rebuild()
-        if self._index:
+        if self._index is not None:
             self._index.check_rebuild()
     
     last_revid = property(lambda self: self._last_revid, None, None)
@@ -684,7 +689,7 @@ class History (object):
             buffer = StringIO()
             bzrlib.diff.internal_diff(old_path, old_lines, new_path, new_lines, buffer)
             diff = buffer.getvalue()
-            modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff)))
+            modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff), raw_diff=diff))
 
         for path, fid, kind in delta.added:
             added.append((rich_filename(path, kind), fid))

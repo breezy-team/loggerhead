@@ -33,10 +33,15 @@ log = logging.getLogger("loggerhead.controllers")
 
 class RevisionUI (object):
 
+    def __init__(self, branch):
+        # BranchView object
+        self._branch = branch
+        self.log = branch.log
+
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
         z = time.time()
-        h = util.get_history()
+        h = self._branch.get_history()
         
         if len(args) > 0:
             revid = h.fix_revid(args[0])
@@ -50,9 +55,9 @@ class RevisionUI (object):
         try:
             revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
         except Exception, x:
-            log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(log)
-            raise HTTPRedirect(turbogears.url('/changes'))
+            self.log.error('Exception fetching changes: %s' % (x,))
+            util.log_exception(self.log)
+            raise HTTPRedirect(self._branch.url('/changes'))
         
         navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
                                     pagesize=1, scan_url='/revision', feed=True)
@@ -65,7 +70,7 @@ class RevisionUI (object):
         h.get_branch_nicks([ change ])
         
         vals = {
-            'branch_name': util.get_config().get('branch_name'),
+            'branch': self._branch,
             'revid': revid,
             'change': change,
             'start_revid': start_revid,
@@ -76,5 +81,5 @@ class RevisionUI (object):
             'query': query,
         }
         h.flush_cache()
-        log.info('/revision: %r seconds' % (time.time() - z,))
+        self.log.info('/revision: %r seconds' % (time.time() - z,))
         return vals

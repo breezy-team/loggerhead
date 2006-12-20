@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:py="http://purl.org/kid/ns#">
-    <title> bazaar changes for ${branch_name} </title>
+    <title> bazaar changes for ${branch.friendly_name} </title>
     <updated>${updated}</updated>
-    <id>${tg.url([ external_url, 'atom' ])}</id>
-    <link rel="self" href="${tg.url([ external_url, 'atom' ])}" />
+    <id>${tg.url([ external_url, branch.name, 'atom' ])}</id>
+    <link rel="self" href="${tg.url([ external_url, branch.name, 'atom' ])}" />
 
 	<entry py:for="entry in changes">
 	    <title> ${entry.revno}: ${entry.short_comment} </title>
@@ -13,6 +13,6 @@
 	    <content type="text">
             ${entry.comment}
 	    </content>
-	    <link rel="alternate" href="${tg.url([ external_url, 'revision', entry.revid ])}" />
+	    <link rel="alternate" href="${tg.url([ external_url, branch.name, 'revision', entry.revid ])}" />
 	</entry>
 </feed>

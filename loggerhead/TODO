@@ -1,27 +1,18 @@
 
-
 * problem: given a folder, find all revisions where items inside that
   folder have changed.
     -- stumper.  maybe ask on bazaar-dev ML?
-
-* two more copyrights to add, from hgweb:
-    # Copyright (C) 2005 Jake Edge <jake@edge2.net>
-    # Copyright (C) 2005 Matt Mackall <mpm@selenic.com>
 
 * side by side diff?  matty says "overflow-x" css property for horiz scrollbar
 
 * make equivalent of start page:
     http://goffredo-baroncelli.homelinux.net/bazaar
 
-* make a loggerhead webpage
-
 * on revision page: view/download patch
 
-* move log -> self.log
-	changelog_ui
-	revision_ui
-	inventory_ui
-	annotate_ui
-	download_ui
-	atom_ui
-	
+* potentially do a 'bzr pull' on a branch on an interval timer
+
+* give this thing a version # or something
+* make a loggerhead webpage
+
+* primary / page listing branches

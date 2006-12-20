@@ -24,17 +24,22 @@ from loggerhead import util
 
 class AtomUI (object):
     
+    def __init__(self, branch):
+        # BranchView object
+        self._branch = branch
+        self.log = branch.log
+
     @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
     def default(self, *args):
-        h = util.get_history()
-        pagesize = int(util.get_config().get('pagesize', '20'))
+        h = self._branch.get_history()
+        pagesize = int(self._branch.config.get('pagesize', '20'))
 
         revid_list, start_revid = h.get_file_view(None, None)
-        entries = list(h.get_changelist(list(revlist)[:pagesize]))
+        entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
         vals = {
-            'external_url': util.get_config().get('external_url'),
-            'branch_name': util.get_config().get('branch_name'),
+            'external_url': self._branch.config.get('external_url'),
+            'branch': self._branch,
             'changes': entries,
             'util': util,
             'history': h,

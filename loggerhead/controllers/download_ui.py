@@ -36,14 +36,19 @@ log = logging.getLogger("loggerhead.controllers")
 
 class DownloadUI (object):
 
+    def __init__(self, branch):
+        # BranchView object
+        self._branch = branch
+        self.log = branch.log
+
     @turbogears.expose()
     def default(self, *args, **kw):
         # /download/<rev_id>/<file_id>/[filename]
         z = time.time()
-        h = util.get_history()
+        h = self._branch.get_history()
         
         if len(args) < 2:
-            raise HTTPRedirect(turbogears.url('/changes'))
+            raise HTTPRedirect(self._branch.url('/changes'))
         
         revid = h.fix_revid(args[0])
         file_id = args[1]

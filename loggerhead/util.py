@@ -298,45 +298,16 @@ def decorator(unbound):
     return new_decorator
 
 
-# global branch history
-
-_history = None
-_history_lock = threading.RLock()
-
-def get_history():
-    global _history, _index
-    from loggerhead.history import History
-    from loggerhead.changecache import ChangeCache
-    from loggerhead.textindex import TextIndex
-    
-    config = get_config()
-    
-    _history_lock.acquire()
-    try:
-        if (_history is None) or _history.out_of_date():
-            log.debug('Reload branch history...')
-            if _history is not None:
-                _history.detach()
-            _history = History.from_folder(config.get('folder'))
-            cache_path = config.get('cachepath', None)
-            if cache_path is not None:
-                _history.use_cache(ChangeCache(_history, cache_path))
-                _history.use_search_index(TextIndex(_history, cache_path))
-        return _history
-    finally:
-        _history_lock.release()
-
-def check_rebuild():
-    h = get_history()
-    h.check_rebuild()
-    
-
-_config = None
-
-def set_config(config):
-    global _config
-    _config = config
-
-def get_config():
-    return _config
+# common threading-lock decorator
+def with_lock(lockname):
+    @decorator
+    def _decorator(unbound):
+        def locked(self, *args, **kw):
+            getattr(self, lockname).acquire()
+            try:
+                return unbound(self, *args, **kw)
+            finally:
+                getattr(self, lockname).release()
+        return locked
+    return _decorator
 

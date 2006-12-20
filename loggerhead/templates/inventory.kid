@@ -3,17 +3,17 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : files for revision ${change.revno} </title>
+    <title> ${branch.friendly_name} : files for revision ${change.revno} </title>
 </head>
 
 <body>
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : files for revision ${change.revno}
+<h1> <span class="branch-name">${branch.friendly_name}</span> : files for revision ${change.revno}
 	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid)}"> view branch changes </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', start_revid=revid)}"> view revision </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}"> view branch changes </a> </div>
 	</div>
 </h1>
 
@@ -60,32 +60,32 @@ ${navbar()}
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
-        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='filename')}">Filename</a> </th>
-        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='size')}">Size</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='filename')}">Filename</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='size')}">Size</a> </th>
         <th> Last change </th>
-        <th> <a href="${tg.url([ '/files', revid ], file_id=file_id, sort='date')}">When</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='date')}">When</a> </th>
         <th> History </th>
         <th> Download </th>
     </tr>
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
-        <td class="filename directory"><a href="${tg.url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
+        <td class="filename directory"><a href="${branch.url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
         <td> </td> <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
         <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
         <td class="filename ${file.kind}">
-            <a py:if="file.kind=='directory'" href="${tg.url([ '/files', revid ], file_id=file.file_id)}">${file.filename}/</a>
+            <a py:if="file.kind=='directory'" href="${branch.url([ '/files', revid ], file_id=file.file_id)}">${file.filename}/</a>
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${tg.url([ '/annotate', revid ], file_id=file.file_id)}">${file.filename}</a>
+            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ], file_id=file.file_id)}">${file.filename}</a>
         </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="revision"> ${revlink(file.revid, file.revid, file.file_id, util.trunc(file.change.revno, 15))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
-        <td class="changes-link"> <a href="${tg.url('/changes', start_revid=file.revid, file_id=file.file_id)}"> &#8594; changes </a></td>
-        <td class="download-link"> <a href="${tg.url([ '/download', file.revid, file.file_id, file.filename ])}"> &#8594; download </a></td>
+        <td class="changes-link"> <a href="${branch.url('/changes', start_revid=file.revid, file_id=file.file_id)}"> &#8594; changes </a></td>
+        <td class="download-link"> <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"> &#8594; download </a></td>
     </tr>
 </table>
 

@@ -17,18 +17,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import base64
-import logging
 import os
-import posixpath
 import time
 
 import turbogears
 from cherrypy import HTTPRedirect, session
 
 from loggerhead import util
-
-log = logging.getLogger("loggerhead.controllers")
 
 
 # just thinking out loud here...
@@ -49,10 +44,16 @@ log = logging.getLogger("loggerhead.controllers")
 
 class ChangeLogUI (object):
     
+    def __init__(self, branch):
+        # BranchView object
+        self._branch = branch
+        self.log = branch.log
+        
     @turbogears.expose(html='loggerhead.templates.changelog')
     def default(self, *args, **kw):
         z = time.time()
-        h = util.get_history()
+        h = self._branch.get_history()
+        config = self._branch.config
         
         if len(args) > 0:
             revid = h.fix_revid(args[0])
@@ -63,7 +64,7 @@ class ChangeLogUI (object):
         query = kw.get('q', None)
         start_revid = h.fix_revid(kw.get('start_revid', None))
         orig_start_revid = start_revid
-        pagesize = int(util.get_config().get('pagesize', '20'))
+        pagesize = int(config.get('pagesize', '20'))
         search_failed = False
         
         try:
@@ -78,9 +79,9 @@ class ChangeLogUI (object):
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except Exception, x:
-            log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(log)
-            raise HTTPRedirect(turbogears.url('/changes'))
+            self.log.error('Exception fetching changes: %s' % (x,))
+            util.log_exception(self.log)
+            raise HTTPRedirect(self._branch.url('/changes'))
 
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
                                     file_id=file_id, scan_url='/changes', feed=True)
@@ -93,7 +94,7 @@ class ChangeLogUI (object):
         h.get_branch_nicks(entries)
 
         vals = {
-            'branch_name': util.get_config().get('branch_name'),
+            'branch': self._branch,
             'changes': list(entries),
             'util': util,
             'history': h,
@@ -106,5 +107,5 @@ class ChangeLogUI (object):
             'search_failed': search_failed,
         }
         h.flush_cache()
-        log.info('/changes %r: %r secs' % (revid, time.time() - z))
+        self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
         return vals

@@ -3,10 +3,10 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : revision ${change.revno} </title>
+    <title> ${branch.friendly_name} : revision ${change.revno} </title>
     
     <span py:def="file_link(filename, file_id)">
-        <a href="${tg.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
+        <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
 </head>
 
@@ -14,10 +14,10 @@
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : revision ${change.revno}
+<h1> <span class="branch-name">${branch.friendly_name}</span> : revision ${change.revno}
 	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}">browse files</a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid)}">view branch changes</a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}">browse files</a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}">view branch changes</a> </div>
 	</div>
 </h1>
  
@@ -88,7 +88,7 @@ ${navbar()}
 
 <div class="diff" py:if="change.changes.modified">
     <table py:for="item in change.changes.modified" class="diff-block">
-        <tr><th class="filename"> <a href="${tg.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
+        <tr><th class="filename"> <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
         <tr><td>
             <table py:for="chunk in item.chunks" class="diff-chunk">
                 <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>

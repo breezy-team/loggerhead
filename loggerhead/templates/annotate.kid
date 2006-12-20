@@ -3,19 +3,19 @@
     py:extends="'master.kid'">
 <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
-    <title> ${branch_name} : contents of ${path} at revision ${change.revno} </title>
+    <title> ${branch.friendly_name} : contents of ${path} at revision ${change.revno} </title>
 </head>
 
 <body>
 
 ${navbar()}
 
-<h1> <span class="branch-name">${branch_name}</span> : <span class="annotate-path">${path}</span> (revision ${change.revno})
+<h1> <span class="branch-name">${branch.friendly_name}</span> : <span class="annotate-path">${path}</span> (revision ${change.revno})
 	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${tg.url([ '/files', revid ])}"> browse files </a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url('/revision', start_revid=revid)}"> view revision </a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url('/changes', start_revid=revid, file_id=file_id)}"> view changes to this file </a> </div>
-	    <div> <b>&#8594;</b> <a href="${tg.url([ '/download', revid, file_id, filename ])}"> view/download file </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}"> browse files </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', start_revid=revid)}"> view revision </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid, file_id=file_id)}"> view changes to this file </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url([ '/download', revid, file_id, filename ])}"> view/download file </a> </div>
 	</div>
 </h1>
 
@@ -30,7 +30,7 @@ ${navbar()}
         <tr py:for="line in contents" class="parity${line.parity}">
             <td class="lineno ${line.status}"> ${line.lineno} </td>
             <td class="revno ${line.status}">
-                <a py:if="line.status=='changed'" href="${tg.url('/revision', start_revid=line.change.revid, file_id=file_id)}"
+                <a py:if="line.status=='changed'" href="${branch.url('/revision', start_revid=line.change.revid, file_id=file_id)}"
                     title="${line.change.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${util.ago(line.change.date)})">${util.trunc(line.change.revno)}</a>
             </td>
             <td class="text ${line.status}"> ${XML(line.text)} </td>

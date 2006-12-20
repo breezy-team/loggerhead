@@ -18,6 +18,7 @@
 #
 
 import logging
+import sys
 import time
 
 from configobj import ConfigObj
@@ -26,42 +27,45 @@ import turbogears
 from turbogears import controllers
 from cherrypy import HTTPRedirect, NotFound
 
-from loggerhead import util
-
 my_config = ConfigObj('loggerhead.conf', encoding='utf-8')
-util.set_config(my_config)
+extra_path = my_config.get('bzrpath', None)
+if extra_path:
+    sys.path.insert(0, extra_path)
 
-from loggerhead.controllers.changelog_ui import ChangeLogUI
-from loggerhead.controllers.atom_ui import AtomUI
-from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead import util
+from loggerhead.branchview import BranchView
 from loggerhead.history import History
 
 log = logging.getLogger("loggerhead.controllers")
 
+
 class Root (controllers.RootController):
-    changes = ChangeLogUI()
-    atom = AtomUI()
-    revision = RevisionUI()
-    files = InventoryUI()
-    annotate = AnnotateUI()
-    download = DownloadUI()
-    
+    def __init__(self):
+        global my_config
+        self._views = []
+        for branch_name in my_config.sections:
+            log.debug('Configuring branch %r...', branch_name)
+            view = BranchView(branch_name, my_config[branch_name])
+            setattr(self, branch_name, view)
+            self._views.append(view)
+        
     @turbogears.expose()
     def index(self):
-        raise HTTPRedirect(turbogears.url('/changes'))
+        # FIXME - display list of branches
+        raise HTTPRedirect(turbogears.url('/bazaar-dev/changes'))
+
+    def check_rebuild(self):
+        for v in self._views:
+            v.check_rebuild()
 
 
-# force history to be read:
-util.get_history()
-
+# singleton:
+Root = Root()
 
 # re-index every 6 hours
 index_freq = 6 * 3600
 
-turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=util.check_rebuild)
+turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root.check_rebuild)
 
 # for use in profiling the very-slow get_change() method:
 #h = util.get_history()

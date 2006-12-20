@@ -41,10 +41,15 @@ def dirname(path):
         
 class InventoryUI (object):
 
+    def __init__(self, branch):
+        # BranchView object
+        self._branch = branch
+        self.log = branch.log
+
     @turbogears.expose(html='loggerhead.templates.inventory')
     def default(self, *args, **kw):
         z = time.time()
-        h = util.get_history()
+        h = self._branch.get_history()
         
         if len(args) > 0:
             revid = h.fix_revid(args[0])
@@ -59,9 +64,9 @@ class InventoryUI (object):
             rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
         except Exception, x:
-            log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(log)
-            raise HTTPRedirect(turbogears.url('/changes'))
+            self.log.error('Exception fetching changes: %s' % (x,))
+            util.log_exception(self.log)
+            raise HTTPRedirect(self._branch.url('/changes'))
 
         # no navbar for revisions
         navigation = util.Container()
@@ -84,7 +89,7 @@ class InventoryUI (object):
             updir_file_id = None
 
         vals = {
-            'branch_name': util.get_config().get('branch_name'),
+            'branch': self._branch,
             'util': util,
             'revid': revid,
             'change': change,
@@ -98,5 +103,5 @@ class InventoryUI (object):
             'navigation': navigation,
         }
         h.flush_cache()
-        log.info('/inventory %r: %r secs' % (revid, time.time() - z))
+        self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
         return vals

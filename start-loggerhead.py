@@ -25,4 +25,4 @@ else:
 
 from loggerhead.controllers import Root
 
-turbogears.start_server(Root())
+turbogears.start_server(Root)

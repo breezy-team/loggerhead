@@ -41,15 +41,7 @@ ALL_THRESHOLD = 1000
 ALL = 'ALL'
 
 
-@decorator
-def with_lock(unbound):
-    def locked(self, *args, **kw):
-        self._lock.acquire()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._lock.release()
-    return locked
+with_lock = util.with_lock('_lock')
 
 
 def normalize_string(s):
@@ -106,7 +98,7 @@ class TextIndex (object):
     
     @with_lock
     def full(self):
-        return (len(self._index) == len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in self._recorded)
+        return (len(self._recorded) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in self._recorded)
 
     @with_lock
     def index_change(self, change):
@@ -202,4 +194,5 @@ class TextIndex (object):
                 last_update = time.time()
                 self.flush()
         self.log.info('Search index completed.')
+        self.flush()
 
