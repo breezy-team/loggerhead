@@ -14,23 +14,24 @@ started is to run it via::
     
 and add the following lines to your apache configuration::
 
-    <Location "/bzr.dev/">
+    <Location "/branches/">
         ProxyPass http://127.0.0.1:8080/
         ProxyPassReverse http://127.0.0.1:8080/
     </Location>
     
 The port configuration is in "dev.cfg".
 
-The config file is "loggerhead.conf".  Currently it can only serve one
-branch at a time, but in the future I plan to add support for serving
-multiple branches at once.
+The config file is "loggerhead.conf".  In there, you can configure projects,
+and branches per project.  The idea is that you could be publishing several
+(possibly unrelated) projects through the same loggerhead instance, and 
+several branches for the same project.
 
 
 CACHES
 ------
 
-To speed up most operations, loggerhead will start creating two caches
-when it first launches:
+To speed up most operations, loggerhead will start creating two caches per
+branch when it first launches:
 
     - a revision data cache
     - a text searching cache
@@ -40,8 +41,8 @@ the branch's .bzr/ folder is the simplest place.
 
 The caches for a branch with 10,000 revisions take about 15 minutes each
 on my machine, but YMMV.  Once they are built, they update every six hours
-or so but usually finish quickly (or instantly).  Until the revision cache
-is built, all operations will be slow.
+or so but usually finish quickly (or instantly) after the initial creation.
+Until the revision cache is built, all operations will be slow.
 
 You may update the bazaar branch at any time (for example, from a cron).
 Loggerhead will notice and refresh, and bazaar uses its own branch locking
