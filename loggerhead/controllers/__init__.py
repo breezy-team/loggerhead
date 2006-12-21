@@ -18,6 +18,7 @@
 #
 
 import logging
+import re
 import sys
 import time
 
@@ -39,6 +40,13 @@ from loggerhead.history import History
 log = logging.getLogger("loggerhead.controllers")
 
 
+def cherrypy_friendly(s):
+    """
+    convert a config section name into a name that pleases cherrypy.
+    """
+    return re.sub(r'[^\w\d_]', '_', s)
+
+
 class Group (object):
     def __init__(self, name, config):
         self.name = name
@@ -48,9 +56,10 @@ class Group (object):
         self._views = []
         for view_name in config.sections:
             log.debug('Configuring (group %r) branch %r...', name, view_name)
-            view = BranchView(name, view_name, config[view_name])
-            setattr(self, view_name, view)
+            c_view_name = cherrypy_friendly(view_name)
+            view = BranchView(name, c_view_name, config[view_name])
             self._views.append(view)
+            setattr(self, c_view_name, view)
     
     views = property(lambda self: self._views)
 
@@ -60,9 +69,11 @@ class Root (controllers.RootController):
         global my_config
         self._groups = []
         for group_name in my_config.sections:
-            group = Group(group_name, my_config[group_name])
+            # FIXME: clean out any non-python chars
+            c_group_name = cherrypy_friendly(group_name)
+            group = Group(c_group_name, my_config[group_name])
             self._groups.append(group)
-            setattr(self, group_name, group)
+            setattr(self, c_group_name, group)
         
     @turbogears.expose(template='loggerhead.templates.browse')
     def index(self):
@@ -72,7 +83,7 @@ class Root (controllers.RootController):
             'title': my_config.get('title', ''),
         }
 
-    def check_rebuild(self):
+    def _check_rebuild(self):
         for g in self._groups:
             for v in g.views:
                 v.check_rebuild()
@@ -84,7 +95,7 @@ Root = Root()
 # re-index every 6 hours
 index_freq = 6 * 3600
 
-turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root.check_rebuild)
+turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root._check_rebuild)
 
 # for use in profiling the very-slow get_change() method:
 #h = util.get_history()
