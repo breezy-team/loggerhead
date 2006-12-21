@@ -7,11 +7,11 @@
     <link rel="alternate" type="application/atom+xml" href="${branch.url('/atom')}" title="RSS feed for ${branch.friendly_name}" />
     
     <span py:def="loglink(revid, text)">
-        <a title="Show history" href="${tg.url('/changes', start_revid=revid)}" class="revlink"> ${text} </a>
+        <a title="Show history" href="${branch.url('/changes', start_revid=revid)}" class="revlink"> ${text} </a>
     </span>
 
     <span py:def="file_link(filename, file_id, revid)">
-        <a href="${tg.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
+        <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
 
     <!-- this is totally matty's fault.  i don't like javacsript. ;) -->
@@ -80,7 +80,7 @@ ${navbar()}
                         </a>
                     </td>
 					<td class="summary"> ${revlink_q(entry.revid, start_revid, file_id, query, entry.short_comment)} </td>
-					<td class="inventory-link"> <a href="${tg.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
+					<td class="inventory-link"> <a href="${branch.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
 			</table>
         </div>
@@ -135,7 +135,7 @@ ${navbar()}
 			            <th class="files"> files modified: </th>
 			            <td class="files"> <span py:for="item in entry.changes.modified">
 			                <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
-			                <a href="${tg.url([ '/revision', entry.revid ], start_revid=start_revid, file_id=file_id, query=query) + '#' + item.filename}" class="jump">&#8594; diff</a>
+			                <a href="${branch.url([ '/revision', entry.revid ], start_revid=start_revid, file_id=file_id, query=query) + '#' + item.filename}" class="jump">&#8594; diff</a>
 			                <br />
 			            </span> </td>
 			        </tr>
