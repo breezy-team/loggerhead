@@ -33,7 +33,7 @@
             </tr>
             <tr py:if="view.url">
                 <td class="name"> </td>
-                <td class="description url" colspan="2"> <a href="${view.url}">${view.branch_url}</a> </td>
+                <td class="description url" colspan="2"> <a href="${view.branch_url}">${view.branch_url}</a> </td>
             </tr>
         </span>
         </table>
