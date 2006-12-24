@@ -1,0 +1,4 @@
+include dev.cfg loggerhead.conf
+recursive-include loggerhead/templates *.kid
+recursive-include loggerhead/config *.cfg
+recursive-include loggerhead/static *
