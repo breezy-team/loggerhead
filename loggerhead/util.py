@@ -275,9 +275,9 @@ def fill_in_navigation(history, navigation):
         params['start_revid'] = navigation.start_revid
         
     if navigation.prev_page_revid:
-        navigation.prev_page_url = turbogears.url([ navigation.scan_url, navigation.prev_page_revid ], **params)
+        navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **params)
     if navigation.next_page_revid:
-        navigation.next_page_url = turbogears.url([ navigation.scan_url, navigation.next_page_revid ], **params)
+        navigation.next_page_url = navigation.branch.url([ navigation.scan_url, navigation.next_page_revid ], **params)
 
 
 def log_exception(log):

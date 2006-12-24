@@ -58,7 +58,7 @@ class RevisionUI (object):
             raise HTTPRedirect(self._branch.url('/changes'))
         
         navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
-                                    pagesize=1, scan_url='/revision', feed=True)
+                                    pagesize=1, scan_url='/revision', branch=self._branch, feed=True)
         if query is not None:
             navigation.query = query
         util.fill_in_navigation(h, navigation)

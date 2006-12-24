@@ -84,7 +84,7 @@ class ChangeLogUI (object):
             raise HTTPRedirect(self._branch.url('/changes'))
 
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
-                                    file_id=file_id, scan_url='/changes', feed=True)
+                                    file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
         if query is not None:
             navigation.query = query
         util.fill_in_navigation(h, navigation)
