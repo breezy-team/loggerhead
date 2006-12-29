@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+# this is only useful for robey.  it updates the public website.
+#
+
+rsync -avr homepage/ robey@tavi.lag.net:/web/loggerhead
+
