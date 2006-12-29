@@ -87,16 +87,33 @@ ${navbar()}
 	<td> <div class="diff-key-block diff-delete"></div> <span class="label"> removed </span> </td>
 </tr></table>
 
+<!-- ! nobody is going to care about this...
+<div class="diff-link"> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, unified=1)}">view as unified diff</a> </div>
+-->
+
 <div class="diff" py:if="change.changes.modified">
     <table py:for="item in change.changes.modified" class="diff-block">
         <tr><th class="filename"> <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
         <tr><td>
-            <table py:for="chunk in item.chunks" class="diff-chunk">
+            <!-- ! unified diff -->
+            <table py:if="not side_by_side" py:for="chunk in item.chunks" class="diff-chunk">
                 <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>
                 <tr py:for="line in chunk.diff">
                     <td class="lineno">${line.old_lineno}</td>
                     <td class="lineno">${line.new_lineno}</td>
                     <td class="diff-${line.type} text">${XML(line.line)}</td>
+                </tr>
+            </table>
+            <!-- ! side-by-side diff -->
+            <table py:if="side_by_side" py:for="chunk in item.chunks" class="diff-chunk">
+                <tr> <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th> </tr>
+                <tr py:for="line in chunk.diff">
+                    <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
+                    <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
+                    <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
+                    <td py:if="line.new_lineno" class="lineno">${line.new_lineno}</td>
+                    <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
+                    <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
                 </tr>
             </table>
         </td></tr>

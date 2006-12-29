@@ -148,6 +148,11 @@ div.links div {
     margin-bottom: 3px;
 }
 
+div.diff-link {
+	font-size: smaller;
+	margin-bottom: 3px;
+}
+
 
 /* ----- list of merge points for a revision ----- */
 
@@ -408,6 +413,10 @@ div.links div {
     text-align: right;
     padding-right: 3px;
     border-bottom: 1px solid #8cacbb;
+}
+.diff .lineno-skip {
+    width: 4em;
+    background-color: #dee7ec; 
 }
 .diff .info {
     color: blue;

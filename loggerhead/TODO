@@ -3,8 +3,6 @@
   folder have changed.
     -- stumper.  maybe ask on bazaar-dev ML?
 
-* side by side diff?  matty says "overflow-x" css property for horiz scrollbar
-
 * potentially do a 'bzr pull' on a branch on an interval timer
 
 * give this thing a version # or something
@@ -12,3 +10,8 @@
 
 * it would be cool to view 1 revision relative to another base, and view the
   diff & download the bundle for that
+
+* maybe change "changes" to "history"?  -- asked on bazaar-dev@ for opinions.
+
+* flag to tell loggerhead that all branches discovered under a certain folder
+  should be auto-published

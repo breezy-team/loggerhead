@@ -82,6 +82,56 @@ class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
 bzrlib.ui.ui_factory = ThreadSafeUIFactory()
 
 
+def _process_side_by_side_buffers(line_list, delete_list, insert_list):
+    while len(delete_list) < len(insert_list):
+        delete_list.append((None, '', 'context'))
+    while len(insert_list) < len(delete_list):
+        insert_list.append((None, '', 'context'))
+    while len(delete_list) > 0:
+        d = delete_list.pop(0)
+        i = insert_list.pop(0)
+        line_list.append(util.Container(old_lineno=d[0], new_lineno=i[0],
+                                        old_line=d[1], new_line=i[1],
+                                        old_type=d[2], new_type=i[2]))
+
+
+def _make_side_by_side(chunk_list):
+    """
+    turn a normal unified-style diff (post-processed by parse_delta) into a
+    side-by-side diff structure.  the new structure is::
+    
+        chunks: list(
+            diff: list(
+                old_lineno: int,
+                new_lineno: int,
+                old_line: str,
+                new_line: str,
+                type: str('context' or 'changed'),
+            )
+        )
+    """
+    out_chunk_list = []
+    for chunk in chunk_list:
+        line_list = []
+        delete_list, insert_list = [], []
+        for line in chunk.diff:
+            if line.type == 'context':
+                if len(delete_list) or len(insert_list):
+                    _process_side_by_side_buffers(line_list, delete_list, insert_list)
+                    delete_list, insert_list = [], []
+                line_list.append(util.Container(old_lineno=line.old_lineno, new_lineno=line.new_lineno,
+                                                old_line=line.line, new_line=line.line,
+                                                old_type=line.type, new_type=line.type))
+            elif line.type == 'delete':
+                delete_list.append((line.old_lineno, line.line, line.type))
+            elif line.type == 'insert':
+                insert_list.append((line.new_lineno, line.line, line.type))
+        if len(delete_list) or len(insert_list):
+            _process_side_by_side_buffers(line_list, delete_list, insert_list)
+        out_chunk_list.append(util.Container(diff=line_list))
+    return out_chunk_list
+
+
 # from bzrlib
 class _RevListToTimestamps(object):
     """This takes a list of revisions, and allows you to bisect by date"""
@@ -702,6 +752,13 @@ class History (object):
         
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
 
+    @staticmethod
+    def make_side_by_side(changes):
+        # FIXME: this is a rotten API.
+        for change in changes:
+            for m in change.changes.modified:
+                m.chunks = _make_side_by_side(m.chunks)
+    
     @with_branch_lock
     def get_filelist(self, inv, path, sort_type=None):
         """

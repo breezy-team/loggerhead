@@ -79,13 +79,16 @@ ${navbar()}
         <td class="filename ${file.kind}">
             <a py:if="file.kind=='directory'" href="${branch.url([ '/files', revid ], file_id=file.file_id)}">${file.filename}/</a>
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ], file_id=file.file_id)}">${file.filename}</a>
+            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ], file_id=file.file_id)}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="revision"> ${revlink(file.revid, file.revid, file.file_id, util.trunc(file.change.revno, 15))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
-        <td class="changes-link"> <a href="${branch.url('/changes', start_revid=file.revid, file_id=file.file_id)}"> &#8594; changes </a></td>
-        <td class="download-link"> <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"> &#8594; download </a></td>
+        <td class="changes-link"> 
+            <a href="${branch.url('/changes', start_revid=file.revid, file_id=file.file_id)}" title="Changes from ${file.change.revno} affecting ${file.filename}"> &#8594; changes </a>
+        </td>
+        <td class="download-link">
+            <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}" title="Download ${file.filename} at revision ${file.change.revno}"> &#8594; download </a></td>
     </tr>
 </table>
 

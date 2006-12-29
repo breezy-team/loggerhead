@@ -66,6 +66,11 @@ class RevisionUI (object):
         change = h.get_changes([ revid ], get_diffs=True)[0]
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([ change ])
+
+        # let's make side-by-side diff be the default
+        side_by_side = not kw.get('unified', False)
+        if side_by_side:
+            h.make_side_by_side([ change ])
         
         vals = {
             'branch': self._branch,
@@ -77,6 +82,7 @@ class RevisionUI (object):
             'history': h,
             'navigation': navigation,
             'query': query,
+            'side_by_side': side_by_side,
         }
         h.flush_cache()
         self.log.info('/revision: %r seconds' % (time.time() - z,))
