@@ -92,22 +92,24 @@ ${navbar()}
 -->
 
 <div class="diff" py:if="change.changes.modified">
-    <table py:for="item in change.changes.modified" class="diff-block">
-        <tr><th class="filename"> <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
-        <tr><td>
+    <table class="diff-block">
+        <span py:for="item in change.changes.modified">
+            <tr><th class="filename" colspan="4"> <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
             <!-- ! unified diff -->
-            <table py:if="not side_by_side" py:for="chunk in item.chunks" class="diff-chunk">
-                <tr> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> </tr>
-                <tr py:for="line in chunk.diff">
+            <span py:if="not side_by_side" py:for="chunk in item.chunks">
+                <tr class="diff-chunk"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
+                <tr py:for="line in chunk.diff" class="diff-chunk">
                     <td class="lineno">${line.old_lineno}</td>
                     <td class="lineno">${line.new_lineno}</td>
                     <td class="diff-${line.type} text">${XML(line.line)}</td>
+                    <td> </td>
                 </tr>
-            </table>
+                <tr class="diff-chunk-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+            </span>
             <!-- ! side-by-side diff -->
-            <table py:if="side_by_side" py:for="chunk in item.chunks" class="diff-chunk">
-                <tr> <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th> </tr>
-                <tr py:for="line in chunk.diff">
+            <span py:if="side_by_side" py:for="chunk in item.chunks">
+                <tr class="diff-chunk"> <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th> </tr>
+                <tr py:for="line in chunk.diff" class="diff-chunk">
                     <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
                     <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
                     <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
@@ -115,8 +117,10 @@ ${navbar()}
                     <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
                     <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
                 </tr>
-            </table>
-        </td></tr>
+                <tr class="diff-chunk-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+            </span>
+            <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+        </span>
     </table>
 </div>
 

@@ -148,11 +148,6 @@ div.links div {
     margin-bottom: 3px;
 }
 
-div.diff-link {
-	font-size: smaller;
-	margin-bottom: 3px;
-}
-
 
 /* ----- list of merge points for a revision ----- */
 
@@ -346,7 +341,7 @@ div.diff-link {
 }
 
 
-.diff-block,.diff-chunk {
+.diff-block {
     border-collapse: collapse;
     width: 100%;
     margin-bottom: 1em;
@@ -363,18 +358,22 @@ div.diff-link {
     background-color: #dee7ec;
 }
 
-.diff-chunk {
+.diff-block .diff-chunk {
     font-size: 66%;
     margin-top: 0px;
     margin-bottom: 2em;
 }
 
-.diff-chunk th.lineno {
+.diff-block th.lineno {
     font-weight: bold;
     border-bottom: 1px solid #8cacbb;
     border-top: 1px solid #dee7ec;
-    border-left: 1px solid #dee7ec;
 }
+
+.diff-block .diff-spacing {
+	line-height: 1em;
+}
+
 .diff-insert {
     background-color: #b0efb0;
 }
