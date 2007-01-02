@@ -2,16 +2,11 @@
 * problem: given a folder, find all revisions where items inside that
   folder have changed.
     -- stumper.  maybe ask on bazaar-dev ML?
+    -- aaron bentley says this is a general problem.
 
 * potentially do a 'bzr pull' on a branch on an interval timer
-
-* give this thing a version # or something
-* make a loggerhead webpage
 
 * it would be cool to view 1 revision relative to another base, and view the
   diff & download the bundle for that
 
 * maybe change "changes" to "history"?  -- asked on bazaar-dev@ for opinions.
-
-* flag to tell loggerhead that all branches discovered under a certain folder
-  should be auto-published
