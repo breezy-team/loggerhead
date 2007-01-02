@@ -33,10 +33,11 @@ import time
 
 from loggerhead import util
 from loggerhead.util import decorator
+from loggerhead.lockfile import LockFile
 
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
-
+        
 
 class ChangeCache (object):
     
@@ -54,7 +55,8 @@ class ChangeCache (object):
         self._cache = shelve.open(changes_filename, 'c', protocol=2)
         self._cache_diffs = shelve.open(changes_diffs_filename, 'c', protocol=2)
         
-        self._lock = threading.RLock()
+        # use a lockfile since the cache folder could be shared across different processes.
+        self._lock = LockFile(os.path.join(cache_path, 'lock'))
         self._closed = False
         
         # once we process a change (revision), it should be the same forever.
@@ -62,6 +64,7 @@ class ChangeCache (object):
     
     @with_lock
     def close(self):
+        self.log.debug('Closing cache file.')
         self._cache.close()
         self._cache_diffs.close()
         self._closed = True
@@ -127,7 +130,7 @@ class ChangeCache (object):
         any missing changes, but don't work any longer than C{max_time}
         seconds.
         """
-        if self.full():
+        if self.closed() or self.full():
             return
         
         self.log.info('Building revision cache...')

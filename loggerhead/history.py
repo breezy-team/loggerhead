@@ -218,6 +218,7 @@ class History (object):
         # branch history has changed.  we need to immediately close and stop
         # using our caches, because a new history object will be created to
         # replace us, using the same cache files.
+        # (may also be called during server shutdown.)
         if self._change_cache is not None:
             self._change_cache.close()
             self._change_cache = None

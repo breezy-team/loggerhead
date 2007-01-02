@@ -63,7 +63,16 @@ class BranchView (object):
         
         # force history object to be loaded:
         self.get_history()
+        
+        turbogears.startup.call_on_shutdown.append(self.close)
     
+    def close(self):
+        # it's important that we cleanly detach the history, so the cache
+        # files can be closed correctly and hopefully remain uncorrupted.
+        # this should also stop any ongoing indexing.
+        self._history.detach()
+        self._history = None
+            
     config = property(lambda self: self._config)
     
     name = property(lambda self: self._name)

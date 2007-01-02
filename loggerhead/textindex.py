@@ -34,6 +34,7 @@ import time
 
 from loggerhead import util
 from loggerhead.util import decorator
+from loggerhead.lockfile import LockFile
 
 # if any substring index reaches this many revids, replace the entry with
 # an ALL marker -- it's not worth an explicit index.
@@ -74,7 +75,9 @@ class TextIndex (object):
         self._recorded = shelve.open(recorded_filename, 'c', protocol=2)
         self._index = shelve.open(index_filename, 'c', protocol=2)
         
-        self._lock = threading.RLock()
+        # use a lockfile since the cache folder could be shared across different processes.
+        self._lock = LockFile(os.path.join(cache_path, 'index-lock'))
+        self._closed = False
         
         self.log.info('Using search index; %d entries.', len(self._recorded))
     
@@ -90,6 +93,11 @@ class TextIndex (object):
     def close(self):
         self._recorded.close()
         self._index.close()
+        self._closed = True
+    
+    @with_lock
+    def closed(self):
+        return self._closed
     
     @with_lock
     def flush(self):
@@ -159,7 +167,7 @@ class TextIndex (object):
         # if we cared, we could do a direct match on the result set and cull
         # out any that aren't actually matches.  for now, i'm gonna say that
         # we DON'T care, and if one of the substrings hit ALL, there's a small
-        # chance that we'll give a few false positives, and we don't care.
+        # chance that we'll give a few false positives.
         return total_set
     
     def check_rebuild(self, max_time=3600):
@@ -167,7 +175,7 @@ class TextIndex (object):
         check if there are any un-indexed revisions, and if so, index them.
         but don't spend longer than C{max_time} on it.
         """
-        if self.full():
+        if self.closed() or self.full():
             # all done
             return
 
@@ -180,6 +188,8 @@ class TextIndex (object):
         for revid in work:
             if not self.is_indexed(revid):
                 self.index_change(self.history.get_changes([ revid ])[0])
+            if self.closed():
+                return
 
             count += 1
             now = time.time()
