@@ -21,6 +21,7 @@ collection of configuration and objects related to a bazaar branch.
 """
 
 import logging
+import posixpath
 import threading
 
 import turbogears
@@ -43,10 +44,12 @@ with_history_lock = util.with_lock('_history_lock', 'History')
 
 
 class BranchView (object):
-    def __init__(self, group_name, name, config):
+    def __init__(self, group_name, name, folder, config, project_config):
         self._group_name = group_name
         self._name = name
+        self._folder = folder
         self._config = config
+        self._project_config = project_config
         self.log = logging.getLogger('loggerhead.%s' % (name,))
         
         # branch history
@@ -83,7 +86,17 @@ class BranchView (object):
 
     description = property(lambda self: self._config.get('description', ''))
     
-    branch_url = property(lambda self: self._config.get('url', ''))
+    def _get_branch_url(self):
+        url = self._config.get('url', None)
+        if url is not None:
+            return url
+        # try to assemble one from the project, if an url_prefix was defined.
+        url = self._project_config.get('url_prefix', None)
+        if url is None:
+            return None
+        return posixpath.join(url, self._folder) + '/'
+        
+    branch_url = property(_get_branch_url)
 
     @turbogears.expose()
     def index(self):
@@ -103,6 +116,9 @@ class BranchView (object):
                 self._history.detach()
             self._history = History.from_folder(self._config.get('folder'), self._name)
             cache_path = self._config.get('cachepath', None)
+            if cache_path is None:
+                # try the project config
+                cache_path = self._project_config.get('cachepath', None)
             if cache_path is not None:
                 self._history.use_cache(ChangeCache(self._history, cache_path))
                 self._history.use_search_index(TextIndex(self._history, cache_path))

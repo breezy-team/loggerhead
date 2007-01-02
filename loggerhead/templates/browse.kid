@@ -35,7 +35,7 @@
             <td class="description"> ${view.description} </td>
             <td class="last-update"> <!--${view.last_updated().strftime('%d %b %Y')} &nbsp;--> ${util.ago(view.last_updated())} </td>
             </tr>
-            <tr py:if="view.url">
+            <tr py:if="view.branch_url is not None">
                 <td class="name"> </td>
                 <td class="description url" colspan="2"> <a href="${view.branch_url}">${view.branch_url}</a> </td>
             </tr>

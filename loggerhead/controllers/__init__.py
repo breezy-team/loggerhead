@@ -58,7 +58,7 @@ class Project (object):
         for view_name in config.sections:
             log.debug('Configuring (project %r) branch %r...', name, view_name)
             c_view_name = cherrypy_friendly(view_name)
-            view = BranchView(name, c_view_name, config[view_name])
+            view = BranchView(name, c_view_name, view_name, config[view_name], config)
             self._views.append(view)
             setattr(self, c_view_name, view)
     
