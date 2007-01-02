@@ -145,6 +145,7 @@ class ChangeCache (object):
             # must call into history so we grab the branch lock (otherwise, lock inversion)
             self.history.get_changes(r)
             if self.closed():
+                self.flush()
                 return
             count += jump
             now = time.time()
@@ -156,6 +157,8 @@ class ChangeCache (object):
                 self.log.info('Revision cache rebuilding continues: %d/%d' % (min(count, len(work)), len(work)))
                 last_update = time.time()
                 self.flush()
+            # give someone else a chance at the lock
+            time.sleep(1)
         self.log.info('Revision cache rebuild completed.')
         self.flush()
 

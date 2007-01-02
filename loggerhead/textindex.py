@@ -189,6 +189,7 @@ class TextIndex (object):
             if not self.is_indexed(revid):
                 self.index_change(self.history.get_changes([ revid ])[0])
             if self.closed():
+                self.flush()
                 return
 
             count += 1
@@ -203,6 +204,8 @@ class TextIndex (object):
                 self.log.info('Search indexing continues: %d/%d' % (min(count, len(work)), len(work)))
                 last_update = time.time()
                 self.flush()
+            # give someone else a chance at the lock
+            time.sleep(1)
         self.log.info('Search index completed.')
         self.flush()
 

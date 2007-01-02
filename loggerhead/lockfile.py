@@ -61,7 +61,8 @@ class LockFile (object):
     def acquire(self):
         # try over and over, sleeping on exponential backoff with an upper limit of about 5 seconds
         pause = 0.1
-        max_pause = 5.0
+        #max_pause = 5.0
+        max_pause = 0.1
         while True:
             if self._try_acquire():
                 return
