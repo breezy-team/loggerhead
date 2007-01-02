@@ -69,30 +69,36 @@ class TextIndex (object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
         
-        recorded_filename = os.path.join(cache_path, 'textindex-recorded')
-        index_filename = os.path.join(cache_path, 'textindex')
-        
-        self._recorded = shelve.open(recorded_filename, 'c', protocol=2)
-        self._index = shelve.open(index_filename, 'c', protocol=2)
+        self._recorded_filename = os.path.join(cache_path, 'textindex-recorded')
+        self._index_filename = os.path.join(cache_path, 'textindex')
         
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'index-lock'))
         self._closed = False
         
-        self.log.info('Using search index; %d entries.', len(self._recorded))
+        self.log.info('Using search index; %d entries.', len(self))
     
+    def _is_indexed(self, revid, recorded):
+        return recorded.get(util.to_utf8(revid), None) is not None
+        
     @with_lock
     def is_indexed(self, revid):
-        return self._recorded.get(util.to_utf8(revid), None) is not None
+        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        try:
+            return self._is_indexed(revid, recorded)
+        finally:
+            recorded.close()
     
     @with_lock
     def __len__(self):
-        return len(self._recorded)
+        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        try:
+            return len(recorded)
+        finally:
+            recorded.close()
 
     @with_lock
     def close(self):
-        self._recorded.close()
-        self._index.close()
         self._closed = True
     
     @with_lock
@@ -101,15 +107,17 @@ class TextIndex (object):
     
     @with_lock
     def flush(self):
-        self._recorded.sync()
-        self._index.sync()
+        pass
     
     @with_lock
     def full(self):
-        return (len(self._recorded) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in self._recorded)
+        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        try:
+            return (len(recorded) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in recorded)
+        finally:
+            recorded.close()
 
-    @with_lock
-    def index_change(self, change):
+    def _index_change(self, change, recorded, index):
         """
         currently, only indexes the 'comment' field.
         """
@@ -118,7 +126,7 @@ class TextIndex (object):
             return
         for i in xrange(len(comment) - 2):
             sub = comment[i:i + 3]
-            revid_set = self._index.get(sub, None)
+            revid_set = index.get(sub, None)
             if revid_set is None:
                 revid_set = set()
             elif revid_set == ALL:
@@ -127,38 +135,54 @@ class TextIndex (object):
             revid_set.add(change.revid)
             if len(revid_set) > ALL_THRESHOLD:
                 revid_set = ALL
-            self._index[sub] = revid_set
+            index[sub] = revid_set
         
-        self._recorded[util.to_utf8(change.revid)] = True
-        return
+        recorded[util.to_utf8(change.revid)] = True
+
+    @with_lock
+    def index_changes(self, revid_list):
+        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        index = shelve.open(self._index_filename, 'c', protocol=2)
+        try:
+            revid_list = [r for r in revid_list if not self._is_indexed(r, recorded)]
+            change_list = self.history.get_changes(revid_list)
+            for change in change_list:
+                self._index_change(change, recorded, index)
+        finally:
+            index.close()
+            recorded.close()
     
     @with_lock
     def find(self, text, revid_list=None):
-        text = normalize_string(text)
-        if len(text) < 3:
-            return []
-
-        total_set = None
-        if revid_list is not None:
-            total_set = set(revid_list)
-        seen_all = False
-        
-        for i in xrange(len(text) - 2):
-            sub = text[i:i + 3]
-            revid_set = self._index.get(sub, None)
-            if revid_set is None:
-                # zero matches, stop here.
+        index = shelve.open(self._index_filename, 'c', protocol=2)
+        try:
+            text = normalize_string(text)
+            if len(text) < 3:
                 return []
-            if revid_set == ALL:
-                # skip
-                seen_all = True
-                continue
-            if total_set is None:
-                total_set = revid_set
-            else:
-                total_set.intersection_update(revid_set)
-            if len(total_set) == 0:
-                return []
+    
+            total_set = None
+            if revid_list is not None:
+                total_set = set(revid_list)
+            seen_all = False
+            
+            for i in xrange(len(text) - 2):
+                sub = text[i:i + 3]
+                revid_set = index.get(sub, None)
+                if revid_set is None:
+                    # zero matches, stop here.
+                    return []
+                if revid_set == ALL:
+                    # skip
+                    seen_all = True
+                    continue
+                if total_set is None:
+                    total_set = revid_set
+                else:
+                    total_set.intersection_update(revid_set)
+                if len(total_set) == 0:
+                    return []
+        finally:
+            index.close()
         
         # tricky: if seen_all is True, one of the substring indices was ALL
         # (in other words, unindexed), so our results are actually a superset
@@ -184,26 +208,24 @@ class TextIndex (object):
         start_time = time.time()
         last_update = time.time()
         count = 0
-    
-        for revid in work:
-            if not self.is_indexed(revid):
-                self.index_change(self.history.get_changes([ revid ])[0])
+
+        jump = 100
+        for i in xrange(0, len(work), jump):
+            r = work[i:i + jump]
+            self.index_changes(r)
             if self.closed():
-                self.flush()
                 return
 
-            count += 1
+            count += jump
             now = time.time()
             if now - start_time > 3600:
                 # there's no point working for hours.  eventually we might even
                 # hit the next re-index interval, which would suck mightily.
                 self.log.info('Search indexing has worked for an hour; giving up for now.')
-                self.flush()
                 return
             if now - last_update > 60:
                 self.log.info('Search indexing continues: %d/%d' % (min(count, len(work)), len(work)))
                 last_update = time.time()
-                self.flush()
             # give someone else a chance at the lock
             time.sleep(1)
         self.log.info('Search index completed.')
