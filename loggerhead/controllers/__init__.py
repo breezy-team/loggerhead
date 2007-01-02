@@ -18,6 +18,7 @@
 #
 
 import logging
+import os
 import re
 import sys
 import time
@@ -35,7 +36,7 @@ if extra_path:
 
 from loggerhead import util
 from loggerhead.branchview import BranchView
-from loggerhead.history import History
+from loggerhead.history import History, is_branch
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -53,15 +54,33 @@ class Project (object):
         self.friendly_name = config.get('name', name)
         self.description = config.get('description', '')
         self.long_description = config.get('long_description', '')
+        self._config = config
         
         self._views = []
         for view_name in config.sections:
             log.debug('Configuring (project %r) branch %r...', name, view_name)
-            c_view_name = cherrypy_friendly(view_name)
-            view = BranchView(name, c_view_name, view_name, config[view_name], config)
-            self._views.append(view)
-            setattr(self, c_view_name, view)
+            self._add_view(view_name, config[view_name], config[view_name].get('folder'))
+        
+        auto_folder = config.get('auto_publish_folder', None)
+        if auto_folder is not None:
+            auto_list = []
+            # scan a folder for bazaar branches, and add them automatically
+            for path, folders, filenames in os.walk(auto_folder):
+                for folder in folders:
+                    folder = os.path.join(path, folder)
+                    if is_branch(folder):
+                        auto_list.append(folder)
+            for folder in auto_list:
+                view_name = os.path.basename(folder)
+                log.debug('Auto-configuring (project %r) branch %r...', name, view_name)
+                self._add_view(view_name, ConfigObj(), folder)
     
+    def _add_view(self, view_name, view_config, folder):
+        c_view_name = cherrypy_friendly(view_name)
+        view = BranchView(self.name, c_view_name, view_name, folder, view_config, self._config)
+        self._views.append(view)
+        setattr(self, c_view_name, view)
+        
     views = property(lambda self: self._views)
 
 

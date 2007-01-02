@@ -44,10 +44,11 @@ with_history_lock = util.with_lock('_history_lock', 'History')
 
 
 class BranchView (object):
-    def __init__(self, group_name, name, folder, config, project_config):
+    def __init__(self, group_name, name, subfolder, absfolder, config, project_config):
         self._group_name = group_name
         self._name = name
-        self._folder = folder
+        self._folder = subfolder
+        self._absfolder = absfolder
         self._config = config
         self._project_config = project_config
         self.log = logging.getLogger('loggerhead.%s' % (name,))
@@ -55,6 +56,7 @@ class BranchView (object):
         # branch history
         self._history_lock = threading.RLock()
         self._history = None
+        self._closed = False
         
         self.changes = ChangeLogUI(self)
         self.revision = RevisionUI(self)
@@ -69,12 +71,14 @@ class BranchView (object):
         
         turbogears.startup.call_on_shutdown.append(self.close)
     
+    @with_history_lock
     def close(self):
         # it's important that we cleanly detach the history, so the cache
         # files can be closed correctly and hopefully remain uncorrupted.
         # this should also stop any ongoing indexing.
         self._history.detach()
         self._history = None
+        self._closed = True
             
     config = property(lambda self: self._config)
     
@@ -82,9 +86,27 @@ class BranchView (object):
 
     group_name = property(lambda self: self._group_name)
     
-    friendly_name = property(lambda self: self._config.get('branch_name', self._name))
+    def _get_friendly_name(self):
+        name = self._config.get('branch_name', None)
+        if name is not None:
+            return name
+        # try branch-specific config?
+        name = self.get_history().get_config().get_nickname()
+        if name is not None:
+            return name
+        return self._name
 
-    description = property(lambda self: self._config.get('description', ''))
+    friendly_name = property(_get_friendly_name)
+
+    def _get_description(self):
+        description = self._config.get('description', None)
+        if description is not None:
+            return description
+        # try branch-specific config?
+        description = self.get_history().get_config().get_user_option('description')
+        return description
+        
+    description = property(_get_description)
     
     def _get_branch_url(self):
         url = self._config.get('url', None)
@@ -92,12 +114,14 @@ class BranchView (object):
             return url
         # try to assemble one from the project, if an url_prefix was defined.
         url = self._project_config.get('url_prefix', None)
-        if url is None:
-            return None
-        return posixpath.join(url, self._folder) + '/'
+        if url is not None:
+            return posixpath.join(url, self._folder) + '/'
+        # try branch-specific config?
+        url = self.get_history().get_config().get_user_option('public_url')
+        return url
         
     branch_url = property(_get_branch_url)
-
+    
     @turbogears.expose()
     def index(self):
         raise HTTPRedirect(self.url('/changes'))
@@ -110,11 +134,13 @@ class BranchView (object):
         calls.  but if the bazaar branch on-disk has been updated since this
         History was created, a new object will be created and returned.
         """
+        if self._closed:
+            return None
         if (self._history is None) or self._history.out_of_date():
             self.log.debug('Reload branch history...')
             if self._history is not None:
                 self._history.detach()
-            self._history = History.from_folder(self._config.get('folder'), self._name)
+            self._history = History.from_folder(self._absfolder, self._name)
             cache_path = self._config.get('cachepath', None)
             if cache_path is None:
                 # try the project config
@@ -126,7 +152,8 @@ class BranchView (object):
     
     def check_rebuild(self):
         h = self.get_history()
-        h.check_rebuild()
+        if h is not None:
+            h.check_rebuild()
     
     def url(self, elements, **kw):
         if not isinstance(elements, list):

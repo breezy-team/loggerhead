@@ -132,6 +132,14 @@ def _make_side_by_side(chunk_list):
     return out_chunk_list
 
 
+def is_branch(folder):
+    try:
+        bzrlib.branch.Branch.open(folder)
+        return True
+    except:
+        return False
+
+
 # from bzrlib
 class _RevListToTimestamps(object):
     """This takes a list of revisions, and allows you to bisect by date"""
@@ -241,6 +249,10 @@ class History (object):
     
     count = property(lambda self: self._count, None, None)
 
+    @with_branch_lock
+    def get_config(self):
+        return self._branch.get_config()
+    
     @with_branch_lock
     def get_revision(self, revid):
         return self._branch.repository.get_revision(revid)
