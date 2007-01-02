@@ -564,7 +564,7 @@ span.folder {
 
 /* ----- top-level browse page ----- */
 
-.browse-group-name {
+.browse-project-name {
     background-color: #dee7ec;
     padding-top: 5px;
     padding-bottom: 5px;
@@ -575,6 +575,13 @@ span.folder {
     font-weight: bold;
 }
 
+.browse-project-description {
+	padding-top: 1em;
+	padding-bottom: 1em;
+	margin-left: 2em;
+    width: 90%;
+}
+	
 .browse-view {
 	margin-top: 1em;
 	margin-bottom: 1em;

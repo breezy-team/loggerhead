@@ -47,15 +47,16 @@ def cherrypy_friendly(s):
     return re.sub(r'[^\w\d_]', '_', s)
 
 
-class Group (object):
+class Project (object):
     def __init__(self, name, config):
         self.name = name
         self.friendly_name = config.get('name', name)
         self.description = config.get('description', '')
+        self.long_description = config.get('long_description', '')
         
         self._views = []
         for view_name in config.sections:
-            log.debug('Configuring (group %r) branch %r...', name, view_name)
+            log.debug('Configuring (project %r) branch %r...', name, view_name)
             c_view_name = cherrypy_friendly(view_name)
             view = BranchView(name, c_view_name, config[view_name])
             self._views.append(view)
@@ -67,25 +68,24 @@ class Group (object):
 class Root (controllers.RootController):
     def __init__(self):
         global my_config
-        self._groups = []
-        for group_name in my_config.sections:
-            # FIXME: clean out any non-python chars
-            c_group_name = cherrypy_friendly(group_name)
-            group = Group(c_group_name, my_config[group_name])
-            self._groups.append(group)
-            setattr(self, c_group_name, group)
+        self._projects = []
+        for project_name in my_config.sections:
+            c_project_name = cherrypy_friendly(project_name)
+            project = Project(c_project_name, my_config[project_name])
+            self._projects.append(project)
+            setattr(self, c_project_name, project)
         
     @turbogears.expose(template='loggerhead.templates.browse')
     def index(self):
         return {
-            'groups': self._groups,
+            'projects': self._projects,
             'util': util,
             'title': my_config.get('title', ''),
         }
 
     def _check_rebuild(self):
-        for g in self._groups:
-            for v in g.views:
+        for p in self._projects:
+            for v in p.views:
                 v.check_rebuild()
 
 

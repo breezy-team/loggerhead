@@ -13,9 +13,13 @@
     <span py:if="not title"> bazaar branches in loggerhead </span>
 </h1>
 
-<div class="browse-group" py:for="group in groups">
-    <div class="browse-group-name">
-        ${group.friendly_name}
+<div class="browse-project" py:for="project in projects">
+    <div class="browse-project-name">
+        ${project.friendly_name}
+    </div>
+    
+    <div class="browse-project-description" py:if="len(project.long_description) > 0">
+    ${XML(project.long_description)}
     </div>
     
     <div class="browse-view">
@@ -25,9 +29,9 @@
             <th> Description </th>
             <th> Last change </th>
         </tr>
-        <span py:for="view in group.views">
+        <span py:for="view in project.views">
             <tr>
-            <td class="name"> <a href="${tg.url([ '/' + group.name, view.name ])}">${view.friendly_name}</a> </td>
+            <td class="name"> <a href="${tg.url([ '/' + project.name, view.name ])}">${view.friendly_name}</a> </td>
             <td class="description"> ${view.description} </td>
             <td class="last-update"> <!--${view.last_updated().strftime('%d %b %Y')} &nbsp;--> ${util.ago(view.last_updated())} </td>
             </tr>
