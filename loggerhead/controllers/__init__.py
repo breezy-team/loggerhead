@@ -70,6 +70,7 @@ class Project (object):
                     folder = os.path.join(path, folder)
                     if is_branch(folder):
                         auto_list.append(folder)
+            auto_list.sort()
             for folder in auto_list:
                 view_name = os.path.basename(folder)
                 log.debug('Auto-configuring (project %r) branch %r...', name, view_name)
