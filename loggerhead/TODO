@@ -10,3 +10,12 @@
   diff & download the bundle for that
 
 * maybe change "changes" to "history"?  -- asked on bazaar-dev@ for opinions.
+
+* browse view: sort by name, last change?
+
+* something is leaking on www.lag.net/branches
+
+* better logging
+
+* expand/collapse buttons on diff'd files on the revision page (start with all
+  expanded)
