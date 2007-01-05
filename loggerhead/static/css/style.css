@@ -605,12 +605,12 @@ span.folder {
 }
 
 .browse-view td.name {
-	width: 25%;
+	width: 15%;
 }
 
 .browse-view td.last-update {
 	font-size: smaller;
-	width: 20%;
+	width: 15%;
 }
 
 .browse-view td.url {
@@ -618,4 +618,8 @@ span.folder {
 	font-size: smaller;
 	padding-left: 3em;
 	padding-top: 0px;
+}
+
+.browse-view td.feed {
+	width: 1%;
 }
