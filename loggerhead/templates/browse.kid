@@ -28,12 +28,18 @@
             <th> Name </th>
             <th> Description </th>
             <th> Last change </th>
+            <th />
         </tr>
         <span py:for="view in project.views">
             <tr>
             <td class="name"> <a href="${tg.url([ '/' + project.name, view.name ])}">${view.friendly_name}</a> </td>
             <td class="description"> ${view.description} </td>
             <td class="last-update"> <!--${view.last_updated().strftime('%d %b %Y')} &nbsp;--> ${util.ago(view.last_updated())} </td>
+            <td class="feed">
+                <a href="${tg.url([ '/' + project.name, view.name, 'atom' ])}" title="atom feed">
+                    <img src="${tg.url('/static/images/feed-icon-16x16.gif')}" alt="atom feed" />
+                </a>
+            </td>
             </tr>
             <tr py:if="view.branch_url is not None">
                 <td class="name"> </td>
