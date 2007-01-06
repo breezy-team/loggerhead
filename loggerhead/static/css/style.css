@@ -46,6 +46,11 @@ h1 .filename {
 	border: 1px solid #8cacbb;
 }
 
+.hide-all {
+    font-size: smaller;
+}
+
+
 
 /* ----- navigation bar at the top ----- */
 
@@ -183,10 +188,6 @@ div.links div {
 
 /* ----- changelog page ----- */
 
-.hide-all {
-    font-size: smaller;
-}
-
 /* secret css-jutsu to make hidden margins vanish on a table */
 .log-entries table {
     border-collapse: collapse;
@@ -266,9 +267,9 @@ div.links div {
 }
 
 /* default state: hide all */
-.show-button { display: none; }
+.revision-header .hide-button { display: none; }
 .hidden-details { display: none; }
-.hide-all#hide-all { display: none; }
+.changelog .hide-all#hide-all { display: none; }
 
 
 /* ----- revision page ----- */
@@ -373,6 +374,9 @@ div.links div {
 .diff-block .diff-spacing {
 	line-height: 1em;
 }
+
+.diff-block .show-button { display: none; }
+.revision-page .hide-all#show-all { display: none; }
 
 .diff-insert {
     background-color: #b0efb0;

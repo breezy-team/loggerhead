@@ -8,6 +8,8 @@
     <span py:def="file_link(filename, file_id)">
         <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
+    
+    ${use_expand_buttons()}
 </head>
 
 <body>
@@ -91,12 +93,14 @@ ${navbar()}
 <div class="diff-link"> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, unified=1)}">view as unified diff</a> </div>
 -->
 
+<span class="revision-page"> ${expand_all_button('table-row')} </span>
+
 <div class="diff" py:if="change.changes.modified">
     <table class="diff-block">
-        <span py:for="item in change.changes.modified">
-            <tr><th class="filename" colspan="4"> <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
+        <span py:strip="True" py:for="item in change.changes.modified">
+            <tr><th class="filename" colspan="4"> ${expand_button(util.b64(item.file_id), 'table-row')} <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
             <!-- ! unified diff -->
-            <span py:if="not side_by_side" py:for="chunk in item.chunks">
+            <span py:strip="True" py:if="not side_by_side" py:for="chunk in item.chunks">
                 <tr class="diff-chunk"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
                 <tr py:for="line in chunk.diff" class="diff-chunk">
                     <td class="lineno">${line.old_lineno}</td>
@@ -107,9 +111,11 @@ ${navbar()}
                 <tr class="diff-chunk-spacing"> <td colspan="4"> &nbsp; </td> </tr>
             </span>
             <!-- ! side-by-side diff -->
-            <span py:if="side_by_side" py:for="chunk in item.chunks">
-                <tr class="diff-chunk"> <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th> </tr>
-                <tr py:for="line in chunk.diff" class="diff-chunk">
+            <span py:strip="True" py:if="side_by_side" py:for="chunk in item.chunks">
+                <tr class="diff-chunk details-${util.b64(item.file_id)}">
+                    <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th>
+                </tr>
+                <tr py:for="line in chunk.diff" class="diff-chunk details-${util.b64(item.file_id)}">
                     <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
                     <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
                     <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
@@ -117,7 +123,7 @@ ${navbar()}
                     <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
                     <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
                 </tr>
-                <tr class="diff-chunk-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+                <tr class="diff-chunk-spacing details-${util.b64(item.file_id)}"> <td colspan="4"> &nbsp; </td> </tr>
             </span>
             <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
         </span>

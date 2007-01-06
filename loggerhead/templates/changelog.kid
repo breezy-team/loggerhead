@@ -13,36 +13,8 @@
     <span py:def="file_link(filename, file_id, revid)">
         <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
-
-    <!-- this is totally matty's fault.  i don't like javacsript. ;) -->
-    <script type="text/javascript"> // <!--
-    function displayDetails(name, hide, show) {
-        if (show == '') { show = 'inline'; }
-        var bhide = hide, ihide = hide;
-        if (hide == '') { bhide = 'block'; ihide = 'inline'; }
-        document.getElementById('details-' + name).style.display = bhide;
-        document.getElementById('hide-' + name).style.display = ihide;
-        document.getElementById('show-' + name).style.display = show;
-    }
-    function displayAll(hide, show) {
-        if (show == '') { show = 'inline'; }
-        var bhide = hide, ihide = hide;
-        if (hide == '') { bhide = 'block'; ihide = 'inline'; }
-        var nodes = document.getElementsByTagName('div');
-        for (var i = 0; i < nodes.length; i++) {
-            var id = nodes[i].id;
-            if ((id.length > 8) && (id.substring(0, 8) == 'details-')) {
-                nodes[i].style.display = bhide;
-                var revno = id.substring(8);
-                document.getElementById('hide-' + revno).style.display = ihide;
-                document.getElementById('show-' + revno).style.display = show;
-            }
-        }
-        document.getElementById('hide-all').style.display = ihide;
-        document.getElementById('show-all').style.display = show;
-    }
-    // -->
-	</script>
+    
+    ${use_expand_buttons()}
 </head>
 
 <body>
@@ -59,10 +31,7 @@ ${navbar()}
     Sorry, no results found for your search.
 </span>
 
-<span py:if="not search_failed">
-<a class="hide-all" id="hide-all" href="javascript:displayAll('none', '')"> (hide all) </a>
-<a class="hide-all" id="show-all" href="javascript:displayAll('', 'none')"> (show all) </a>
-</span>
+<span py:if="not search_failed" class="changelog"> ${expand_all_button()} </span>
 
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
@@ -71,14 +40,7 @@ ${navbar()}
             <table>
                 <tr>
                     <td class="revision-number"> ${revlink_q(entry.revid, start_revid, file_id, query, util.trunc(entry.revno))} </td>
-                    <td class="expand-button">
-                        <a href="javascript:displayDetails('${entry.revno}', 'none', '')" id="hide-${entry.revno}" class="show-button">
-                            <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" />
-                        </a>
-                        <a href="javascript:displayDetails('${entry.revno}', '', 'none')" id="show-${entry.revno}" class="hide-button">
-                        	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" />
-                        </a>
-                    </td>
+                    <td class="expand-button"> ${expand_button(entry.revno)} </td>
 					<td class="summary"> ${revlink_q(entry.revid, start_revid, file_id, query, entry.short_comment)} </td>
 					<td class="inventory-link"> <a href="${branch.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
@@ -98,7 +60,7 @@ ${navbar()}
 			        </tr>
 			    </table>
 			</div>
-	        <div class="revision-details hidden-details" id="details-${entry.revno}">
+	        <div class="revision-details hidden-details details-${entry.revno}">
 		        <table>
 			        <tr py:if="len(entry.merge_points) > 0">
 			            <th class="children"> merged in: </th>

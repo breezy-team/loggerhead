@@ -50,6 +50,84 @@
     <a title="Show revision ${history.get_revno(revid)}" href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, q=query)}" class="revlink"> ${text} </a>
 </span>
 
+<span py:def="use_expand_buttons()">
+	<!-- this is totally matty's fault.  i don't like javacsript. ;) -->
+	<script type="text/javascript"> // <!--
+
+	function getElementsByClass(name) {
+	    var filter = function(node) {
+	        // cannot filter here.  treeWalker will skip the entire subtree if you reject. :(
+	        return NodeFilter.FILTER_ACCEPT;
+	    };
+	    var treeWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT, { acceptNode: filter }, false);
+	    
+	    var ret = new Array();
+	    while (treeWalker.nextNode()) {
+	        var classes = treeWalker.currentNode.className.split(' ');
+	        for (var i = 0; i < classes.length; i++) {
+	            // is the string either identical, or startsWith?
+	            if (classes[i].indexOf(name) == 0) { ret.push(treeWalker.currentNode); }
+	        }
+	    }
+	    return ret;
+	}
+
+	function displayDetails(name, display) {
+	    var dthide = 'inline', dtshow = 'none';
+	    if (display == 'none') { dthide = 'none'; dtshow = 'inline'; }
+	    document.getElementById('hide-' + name).style.display = dthide;
+	    document.getElementById('show-' + name).style.display = dtshow;
+	    var elem = document.getElementById('details-' + name);
+	    if (elem) { elem.style.display = display; }
+	    var nodes = getElementsByClass('details-' + name);
+	    for (var i = 0; i < nodes.length; i++) {
+	        nodes[i].style.display = display;
+	    }
+	}
+	
+	function contains(arr, item) { for (var i = 0; i < arr.length; i++) { if (arr[i] == item) { return true; } } return false; }
+	
+	function displayAll(display) {
+	    var dthide = 'inline', dtshow = 'none';
+	    if (display == 'none') { dthide = 'none'; dtshow = 'inline'; }
+	    
+	    var nodes = getElementsByClass('details-');
+	    var names = new Array();
+	    for (var i = 0; i < nodes.length; i++) {
+	        nodes[i].style.display = display;
+	        var classes = nodes[i].className.split(' ');
+	        for (var j = 0; j < classes.length; j++) {
+	            if (classes[j].indexOf('details-') == 0) {
+	                var name = classes[j].substring(8);
+	                if (! contains(names, name)) { names.push(name); }
+	            }
+	        }
+	    }
+	    for (var i = 0; i < names.length; i++) {
+            document.getElementById('hide-' + names[i]).style.display = dthide;
+            document.getElementById('show-' + names[i]).style.display = dtshow;
+        }
+	    document.getElementById('hide-all').style.display = dthide;
+	    document.getElementById('show-all').style.display = dtshow;
+	}
+	// -->
+	</script>
+</span>
+
+<span py:def="expand_all_button(normal='block')">
+    <a class="hide-all" id="hide-all" href="javascript:displayAll('none')"> (collapse all) </a>
+    <a class="hide-all" id="show-all" href="javascript:displayAll('${normal}')"> (expand all) </a>
+</span>
+
+<span py:def="expand_button(name, normal='block')">
+    <a href="javascript:displayDetails('${name}', 'none')" id="hide-${name}" class="hide-button" title="collapse">
+        <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" alt="collapse" />
+    </a>
+    <a href="javascript:displayDetails('${name}', '${normal}')" id="show-${name}" class="show-button" title="expand">
+    	<img src="${tg.url('/static/images/nav-small-right.gif')}" witdh="10" height="10" alt="expand" />
+    </a>
+</span>
+
 </head>
 
 <body py:match="item.tag=='{http://www.w3.org/1999/xhtml}body'" py:attrs="item.items()">

@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import base64
 import cgi
 import datetime
 import logging
@@ -206,6 +207,13 @@ def if_present(format, value):
     if value is None:
         return ''
     return format % value
+
+
+def b64(s):
+    s = base64.encodestring(s).replace('\n', '')
+    while (len(s) > 0) and (s[-1] == '='):
+        s = s[:-1]
+    return s
 
 
 KILO = 1024
