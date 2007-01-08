@@ -56,8 +56,11 @@ class ChangeCache (object):
         self._lock = LockFile(os.path.join(cache_path, 'lock'))
         self._closed = False
         
-        s1, s2 = self.sizes()
-        self.log.info('Using change cache %s; %d/%d entries.' % (cache_path, s1, s2))
+        # this is fluff; don't slow down startup time with it.
+        def log_sizes():
+            s1, s2 = self.sizes()
+            self.log.info('Using change cache %s; %d/%d entries.' % (cache_path, s1, s2))
+        threading.Thread(target=log_sizes).start()
     
     @with_lock
     def close(self):

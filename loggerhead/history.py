@@ -766,11 +766,11 @@ class History (object):
         return util.Container(added=added, renamed=renamed, removed=removed, modified=modified)
 
     @staticmethod
-    def make_side_by_side(changes):
+    def add_side_by_side(changes):
         # FIXME: this is a rotten API.
         for change in changes:
             for m in change.changes.modified:
-                m.chunks = _make_side_by_side(m.chunks)
+                m.sbs_chunks = _make_side_by_side(m.chunks)
     
     @with_branch_lock
     def get_filelist(self, inv, path, sort_type=None):

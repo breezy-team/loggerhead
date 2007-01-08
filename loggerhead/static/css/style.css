@@ -46,8 +46,13 @@ h1 .filename {
 	border: 1px solid #8cacbb;
 }
 
+.collapse-triangle {
+	padding-right: 0.5em;
+}
+
 .hide-all {
     font-size: smaller;
+    padding: 0.25em 0.75em 0.25em 0.75em;
 }
 
 
@@ -269,7 +274,7 @@ div.links div {
 /* default state: hide all */
 .revision-header .hide-button { display: none; }
 .hidden-details { display: none; }
-.changelog .hide-all#hide-all { display: none; }
+.changelog .collapse-cl-hideall { display: none; }
 
 
 /* ----- revision page ----- */
@@ -375,8 +380,14 @@ div.links div {
 	line-height: 1em;
 }
 
+.diff-option-buttons {
+	margin-bottom: 1.0em;
+}
+
 .diff-block .show-button { display: none; }
-.revision-page .hide-all#show-all { display: none; }
+.revision-page .collapse-file-showall { display: none; }
+.diff .collapse-style-unified-content { display: none; }
+.collapse-style-sbs-show { display: none; }
 
 .diff-insert {
     background-color: #b0efb0;
@@ -389,13 +400,14 @@ div.links div {
 }
 
 .diff-key {
-    margin-top: 20px;
-    font-size: smaller;
-    line-height: 1em;
-    padding-left: 1em;
+	display: inline;
+	font-size: smaller;
+    padding-left: 4em;
 }
 
 .diff-key-block {
+	position: relative;
+	top: 1.3em;
     width: 0.7em;
     height: 0.7em;
     border: 1px solid #8cacbb;
@@ -403,9 +415,9 @@ div.links div {
 }
 
 .diff-key .label {
-    position: relative;
+	position: relative;
     left: 1.3em;
-    top: -1em;
+    top: 0.3em;
     line-height: 1em;
 }
 

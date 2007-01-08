@@ -14,7 +14,7 @@
         <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
     
-    ${use_expand_buttons()}
+    ${use_collapse_buttons()}
 </head>
 
 <body>
@@ -31,7 +31,7 @@ ${navbar()}
     Sorry, no results found for your search.
 </span>
 
-<span py:if="not search_failed" class="changelog"> ${expand_all_button()} </span>
+<span py:if="not search_failed" class="changelog"> ${collapse_all_button('cl')} </span>
 
 <div class="log-entries">
     <div py:for="entry in changes" class="revision">
@@ -40,7 +40,7 @@ ${navbar()}
             <table>
                 <tr>
                     <td class="revision-number"> ${revlink_q(entry.revid, start_revid, file_id, query, util.trunc(entry.revno))} </td>
-                    <td class="expand-button"> ${expand_button(entry.revno)} </td>
+                    <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
 					<td class="summary"> ${revlink_q(entry.revid, start_revid, file_id, query, entry.short_comment)} </td>
 					<td class="inventory-link"> <a href="${branch.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
@@ -60,7 +60,7 @@ ${navbar()}
 			        </tr>
 			    </table>
 			</div>
-	        <div class="revision-details hidden-details details-${entry.revno}">
+	        <div class="revision-details hidden-details collapse-cl-${entry.revno}-content">
 		        <table>
 			        <tr py:if="len(entry.merge_points) > 0">
 			            <th class="children"> merged in: </th>

@@ -9,7 +9,12 @@
         <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
     
-    ${use_expand_buttons()}
+    ${use_collapse_buttons()}
+    
+    <script type="text/javascript"> <!--
+    function show_sbs() { collapseDisplay('style', 'sbs', 'table'); collapseDisplay('style', 'unified', 'none'); }
+    function show_unified() { collapseDisplay('style', 'unified', 'table'); collapseDisplay('style', 'sbs', 'none'); }
+    // --> </script>
 </head>
 
 <body>
@@ -84,38 +89,36 @@ ${navbar()}
     </table>
 </div>
 
+<div class="diff-option-buttons">
+    <span class="revision-page"> ${collapse_all_button('file', 'table-row')} </span>
+
+	<a href="javascript:show_sbs()" class="hide-all collapse-style-sbs-show" title="collapse">
+        <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />side by side
+	</a>
+	<a href="javascript:show_unified()" class="hide-all collapse-style-unified-show" title="expand">
+        <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />unified diff
+	</a>
+
 <table class="diff-key" py:if="change.changes.modified"><tr>
     <td> <div class="diff-key-block diff-insert"></div> <span class="label"> added </span> </td>
 	<td> <div class="diff-key-block diff-delete"></div> <span class="label"> removed </span> </td>
 </tr></table>
-
-<!-- ! nobody is going to care about this...
-<div class="diff-link"> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ], start_revid=start_revid, file_id=file_id, unified=1)}">view as unified diff</a> </div>
--->
-
-<span class="revision-page"> ${expand_all_button('table-row')} </span>
+</div>
 
 <div class="diff" py:if="change.changes.modified">
-    <table class="diff-block">
+    <!-- ! side-by-side diff -->
+    <table class="diff-block collapse-style-sbs-content">
         <span py:strip="True" py:for="item in change.changes.modified">
-            <tr><th class="filename" colspan="4"> ${expand_button(util.b64(item.file_id), 'table-row')} <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a> </th></tr>
-            <!-- ! unified diff -->
-            <span py:strip="True" py:if="not side_by_side" py:for="chunk in item.chunks">
-                <tr class="diff-chunk"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
-                <tr py:for="line in chunk.diff" class="diff-chunk">
-                    <td class="lineno">${line.old_lineno}</td>
-                    <td class="lineno">${line.new_lineno}</td>
-                    <td class="diff-${line.type} text">${XML(line.line)}</td>
-                    <td> </td>
-                </tr>
-                <tr class="diff-chunk-spacing"> <td colspan="4"> &nbsp; </td> </tr>
-            </span>
-            <!-- ! side-by-side diff -->
-            <span py:strip="True" py:if="side_by_side" py:for="chunk in item.chunks">
-                <tr class="diff-chunk details-${util.b64(item.file_id)}">
+            <tr><th class="filename" colspan="4">
+                ${collapse_button('file', util.b64(item.file_id), 'table-row')}
+                <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
+            </th></tr>
+
+            <span py:strip="True" py:for="chunk in item.sbs_chunks">
+                <tr class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
                     <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th>
                 </tr>
-                <tr py:for="line in chunk.diff" class="diff-chunk details-${util.b64(item.file_id)}">
+                <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
                     <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
                     <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
                     <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
@@ -123,11 +126,34 @@ ${navbar()}
                     <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
                     <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
                 </tr>
-                <tr class="diff-chunk-spacing details-${util.b64(item.file_id)}"> <td colspan="4"> &nbsp; </td> </tr>
+                <tr class="diff-chunk-spacing collapse-file-${util.b64(item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
             </span>
             <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
         </span>
     </table>
+    
+    <!-- ! unified diff -->
+    <table class="diff-block collapse-style-unified-content">
+	    <span py:strip="True" py:for="item in change.changes.modified">
+	        <tr><th class="filename" colspan="4">
+	            ${collapse_button('file', util.b64(item.file_id), 'table-row')}
+	            <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
+	        </th></tr>
+	
+	        <span py:strip="True" py:for="chunk in item.chunks">
+	            <tr class="diff-chunk collapse-file-${util.b64(item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
+	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
+	                <td class="lineno">${line.old_lineno}</td>
+	                <td class="lineno">${line.new_lineno}</td>
+	                <td class="diff-${line.type} text">${XML(line.line)}</td>
+	                <td> </td>
+	            </tr>
+	            <tr class="diff-chunk-spacing collapse-file-${util.b64(item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
+	        </span>
+	        <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+	    </span>
+    </table>
+
 </div>
 
 <div py:if="navigation.prev_page_revid or navigation.next_page_revid" class="bar">

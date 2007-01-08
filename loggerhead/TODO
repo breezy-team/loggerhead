@@ -17,5 +17,4 @@
 
 * better logging
 
-* expand/collapse buttons on diff'd files on the revision page (start with all
-  expanded)
+* button to switch between side-by-side and unified diff view

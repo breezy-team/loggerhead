@@ -70,7 +70,7 @@ class RevisionUI (object):
         # let's make side-by-side diff be the default
         side_by_side = not kw.get('unified', False)
         if side_by_side:
-            h.make_side_by_side([ change ])
+            h.add_side_by_side([ change ])
         
         vals = {
             'branch': self._branch,
