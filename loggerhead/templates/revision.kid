@@ -5,11 +5,11 @@
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
     <title> ${branch.friendly_name} : revision ${change.revno} </title>
     
-    <span py:def="file_link(filename, file_id)">
+    <span py:strip="True" py:def="file_link(filename, file_id)">
         <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
     
-    ${use_collapse_buttons()}
+    <span py:replace="use_collapse_buttons()"></span>
     
     <script type="text/javascript"> <!--
     function show_sbs() { collapseDisplay('style', 'sbs', 'table'); collapseDisplay('style', 'unified', 'none'); }
@@ -22,11 +22,11 @@
 ${navbar()}
 
 <h1> <span class="branch-name">${branch.friendly_name}</span> : revision ${change.revno}
-	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}">browse files</a> </div>
-	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}">view branch changes</a> </div>
-	    <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">view/download patch</a> </div>
-	</div>
+    <div class="links">
+        <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}">browse files</a> </div>
+        <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}">view branch changes</a> </div>
+        <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">view/download patch</a> </div>
+    </div>
 </h1>
  
 <div class="revision-info">
@@ -89,21 +89,27 @@ ${navbar()}
     </table>
 </div>
 
-<div class="diff-option-buttons">
-    <span class="revision-page"> ${collapse_all_button('file', 'table-row')} </span>
+<table class="diff-option-buttons">
+<tr>
+    <td> ${collapse_all_button('file', 'table-row')} </td>
 
-	<a href="javascript:show_sbs()" class="hide-all collapse-style-sbs-show" title="collapse">
-        <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />side by side
-	</a>
-	<a href="javascript:show_unified()" class="hide-all collapse-style-unified-show" title="expand">
-        <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />unified diff
-	</a>
+    <td class="spacey">
+        <a href="javascript:show_sbs()" class="hide-all collapse-style-sbs-show" title="collapse">
+            <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />side by side</a>
+        <a href="javascript:show_unified()" class="hide-all collapse-style-unified-show" title="expand">
+            <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />unified diff</a>
+    </td>
+    
+    <td class="diff-key-block diff-insert"></td>
+    <td class="label"> added </td>
+    <td class="diff-key-block diff-delete"></td>
+    <td class="label"> removed</td>
+</tr>
+</table>
 
-<table class="diff-key" py:if="change.changes.modified"><tr>
-    <td> <div class="diff-key-block diff-insert"></div> <span class="label"> added </span> </td>
-	<td> <div class="diff-key-block diff-delete"></div> <span class="label"> removed </span> </td>
+<!--  <table class="diff-key" py:if="change.changes.modified"><tr>
 </tr></table>
-</div>
+</div>-->
 
 <div class="diff" py:if="change.changes.modified">
     <!-- ! side-by-side diff -->
@@ -159,14 +165,14 @@ ${navbar()}
 <div py:if="navigation.prev_page_revid or navigation.next_page_revid" class="bar">
     <table>
         <tr>
-        	<td class="buttons">
-            	<a py:if="navigation.prev_page_revid" href="${navigation.prev_page_url}"> &lt; revision ${history.get_revno(navigation.prev_page_revid)} </a>
-	 		</td>
- 			<td class="rbuttons" align="right">
-            	<a py:if="navigation.next_page_revid" href="${navigation.next_page_url}"> revision ${history.get_revno(navigation.next_page_revid)} &gt; </a>
- 			</td>
- 		</tr>
- 	</table>
+        <td class="buttons">
+            <a py:if="navigation.prev_page_revid" href="${navigation.prev_page_url}"> &lt; revision ${history.get_revno(navigation.prev_page_revid)} </a>
+        </td>
+        <td class="rbuttons" align="right">
+            <a py:if="navigation.next_page_revid" href="${navigation.next_page_url}"> revision ${history.get_revno(navigation.next_page_revid)} &gt; </a>
+        </td>
+	</tr>
+    </table>
 </div>
 
 </body>

@@ -57,14 +57,14 @@
 		<script type="text/javascript" src="${tg.url('/static/javascript/collapse.js')}"></script>
 	</span>
 	
-	<span py:def="collapse_all_button(group, normal='block')">
+	<span py:strip="True" py:def="collapse_all_button(group, normal='block')">
 	    <a class="hide-all collapse-${group}-hideall" href="javascript:collapseAllDisplay('${group}','none')">
 	        <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" alt="collapse" class="collapse-triangle" />collapse all</a>
 	    <a class="hide-all collapse-${group}-showall" href="javascript:collapseAllDisplay('${group}','${normal}')">
-            <img src="${tg.url('/static/images/nav-small-right.gif')}" width="10" height="10" alt="expand" class="collapse-triangle" />expand all</a>
+	        <img src="${tg.url('/static/images/nav-small-right.gif')}" width="10" height="10" alt="expand" class="collapse-triangle" />expand all</a>
 	</span>
 	
-	<span py:def="collapse_button(group, name, normal='block')">
+	<span py:strip="True" py:def="collapse_button(group, name, normal='block')">
 	    <a href="javascript:collapseDisplay('${group}','${name}','none')" class="hide-button collapse-${group}-${name}-hide" title="collapse">
 	        <img src="${tg.url('/static/images/nav-small-down.gif')}" width="10" height="10" alt="collapse" class="collapse-triangle" />
 	    </a>

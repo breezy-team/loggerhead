@@ -17,4 +17,4 @@
 
 * better logging
 
-* button to switch between side-by-side and unified diff view
+* fix diff-key and buttons (look terrible)

@@ -36,18 +36,18 @@ h1 .filename {
 }
 
 .footer {
-	margin-top: 1em;
-	margin-bottom: 1em;
+    margin-top: 1em;
+    margin-bottom: 1em;
 }
 .footer .banner {
-	margin-right: 5px;
+    margin-right: 5px;
 }
 .footer .banner img {
-	border: 1px solid #8cacbb;
+    border: 1px solid #8cacbb;
 }
 
 .collapse-triangle {
-	padding-right: 0.5em;
+    padding-right: 0.5em;
 }
 
 .hide-all {
@@ -128,6 +128,7 @@ h1 .filename {
     text-align: right;
     width: auto;
 }
+
 
 /* ----- revision display in various places ----- */
 
@@ -377,15 +378,33 @@ div.links div {
 }
 
 .diff-block .diff-spacing {
-	line-height: 1em;
+    line-height: 1em;
 }
 
 .diff-option-buttons {
-	margin-bottom: 1.0em;
+    margin-top: 1.0em;
+    margin-bottom: 1.0em;
+    border-collapse: collapse;
+}
+.diff-option-buttons td {
+    line-height: 1em;
+    height: 1em;
+    vertical-align: middle;
+    padding: 0px;
+}
+.diff-option-buttons .label {
+    font-size: smaller;
+    padding-left: 0.75em;
+    padding-right: 2em;
+    line-height: 1em;
+}
+.diff-option-buttons .spacey {
+    padding-right: 5em;
 }
 
+.diff-option-buttons .collapse-file-showall { display: none; }
+
 .diff-block .show-button { display: none; }
-.revision-page .collapse-file-showall { display: none; }
 .diff .collapse-style-unified-content { display: none; }
 .collapse-style-sbs-show { display: none; }
 
@@ -400,25 +419,18 @@ div.links div {
 }
 
 .diff-key {
-	display: inline;
-	font-size: smaller;
-    padding-left: 4em;
+    display: inline;
+    font-size: smaller;
 }
 
 .diff-key-block {
-	position: relative;
-	top: 1.3em;
-    width: 0.7em;
-    height: 0.7em;
+    width: 1em;
+    height: 1em;
     border: 1px solid #8cacbb;
-    margin-right: 5em;
 }
 
 .diff-key .label {
-	position: relative;
-    left: 1.3em;
-    top: 0.3em;
-    line-height: 1em;
+    padding-right: 2em;
 }
 
 .diff .lineno {
