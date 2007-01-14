@@ -17,7 +17,7 @@
     // --> </script>
 </head>
 
-<body>
+<body onload="javascript:sortCollapseElements()">
 
 ${navbar()}
 
@@ -107,24 +107,23 @@ ${navbar()}
 </tr>
 </table>
 
-<!--  <table class="diff-key" py:if="change.changes.modified"><tr>
-</tr></table>
-</div>-->
+<!-- ! i'm not a big fan of embedding python code here, but the alternatives all seem to be worse -->
+<?python uniqs={}; ?>
 
 <div class="diff" py:if="change.changes.modified">
     <!-- ! side-by-side diff -->
     <table class="diff-block collapse-style-sbs-content">
         <span py:strip="True" py:for="item in change.changes.modified">
             <tr><th class="filename" colspan="4">
-                ${collapse_button('file', util.b64(item.file_id), 'table-row')}
+                ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
                 <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
             </th></tr>
 
             <span py:strip="True" py:for="chunk in item.sbs_chunks">
-                <tr class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
+                <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
                     <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th>
                 </tr>
-                <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
+                <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
                     <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
                     <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
                     <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
@@ -132,7 +131,7 @@ ${navbar()}
                     <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
                     <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
                 </tr>
-                <tr class="diff-chunk-spacing collapse-file-${util.b64(item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
+                <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
             </span>
             <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
         </span>
@@ -142,19 +141,19 @@ ${navbar()}
     <table class="diff-block collapse-style-unified-content">
 	    <span py:strip="True" py:for="item in change.changes.modified">
 	        <tr><th class="filename" colspan="4">
-	            ${collapse_button('file', util.b64(item.file_id), 'table-row')}
+	            ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
 	            <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
 	        </th></tr>
 	
 	        <span py:strip="True" py:for="chunk in item.chunks">
-	            <tr class="diff-chunk collapse-file-${util.b64(item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
-	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.b64(item.file_id)}-content">
+	            <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
+	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
 	                <td class="lineno">${line.old_lineno}</td>
 	                <td class="lineno">${line.new_lineno}</td>
 	                <td class="diff-${line.type} text">${XML(line.line)}</td>
 	                <td> </td>
 	            </tr>
-	            <tr class="diff-chunk-spacing collapse-file-${util.b64(item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
+	            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
 	        </span>
 	        <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
 	    </span>
