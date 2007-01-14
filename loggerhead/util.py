@@ -23,6 +23,7 @@ import datetime
 import logging
 import re
 import sha
+import struct
 import sys
 import threading
 import traceback
@@ -214,6 +215,20 @@ def b64(s):
     while (len(s) > 0) and (s[-1] == '='):
         s = s[:-1]
     return s
+
+
+def uniq(uniqs, s):
+    """
+    turn a potentially long string into a unique smaller string.
+    """
+    if s in uniqs:
+        return uniqs[s]
+    uniqs[type(None)] = next = uniqs.get(type(None), 0) + 1
+    x = struct.pack('>I', next)
+    while (len(x) > 1) and (x[0] == '\x00'):
+        x = x[1:]
+    uniqs[s] = b64(x)
+    return uniqs[s]
 
 
 KILO = 1024
