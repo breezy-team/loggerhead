@@ -47,6 +47,7 @@ import bzrlib
 import bzrlib.annotate
 import bzrlib.branch
 import bzrlib.bundle.serializer
+import bzrlib.decorators
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
@@ -592,8 +593,36 @@ class History (object):
         stats.sort()
         stats.freeze()
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
+        self.log.info('lsprof complete!')
         return ret
 
+    def _get_deltas_for_revisions_with_trees(self, revisions):
+        """Produce a generator of revision deltas.
+        
+        Note that the input is a sequence of REVISIONS, not revision_ids.
+        Trees will be held in memory until the generator exits.
+        Each delta is relative to the revision's lefthand predecessor.
+        """
+        required_trees = set()
+        for revision in revisions:
+            required_trees.add(revision.revision_id)
+            required_trees.update(revision.parent_ids[:1])
+        trees = dict((t.get_revision_id(), t) for 
+                     t in self._branch.repository.revision_trees(required_trees))
+        ret = []
+        self._branch.repository.lock_read()
+        try:
+            for revision in revisions:
+                if not revision.parent_ids:
+                    old_tree = self._branch.repository.revision_tree(None)
+                else:
+                    old_tree = trees[revision.parent_ids[0]]
+                tree = trees[revision.revision_id]
+                ret.append((tree, old_tree, tree.changes_from(old_tree)))
+            return ret
+        finally:
+            self._branch.repository.unlock()
+    
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list, get_diffs=False):
@@ -602,23 +631,11 @@ class History (object):
         except (KeyError, bzrlib.errors.NoSuchRevision):
             return None
         
-        delta_list = self._branch.repository.get_deltas_for_revisions(rev_list)
+        delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
         combined_list = zip(rev_list, delta_list)
         
-        tree_map = {}
-        if get_diffs:
-            # lookup the trees for each revision, so we can calculate diffs
-            lookup_set = set()
-            for rev in rev_list:
-                lookup_set.add(rev.revision_id)
-                if len(rev.parent_ids) > 0:
-                    lookup_set.add(rev.parent_ids[0])
-            tree_map = dict((t.get_revision_id(), t) for t in self._branch.repository.revision_trees(lookup_set))
-            # also the root tree, in case we hit the origin:
-            tree_map[None] = self._branch.repository.revision_tree(None)
-        
         entries = []
-        for rev, delta in combined_list:
+        for rev, (new_tree, old_tree, delta) in combined_list:
             commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
             
             parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
@@ -638,11 +655,6 @@ class History (object):
             if len(short_message) > 60:
                 short_message = short_message[:60] + '...'
     
-            old_tree, new_tree = None, None
-            if get_diffs:
-                new_tree = tree_map[rev.revision_id]
-                old_tree = tree_map[left_parent]
-
             entry = {
                 'revid': rev.revision_id,
                 'revno': self.get_revno(rev.revision_id),
