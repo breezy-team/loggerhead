@@ -36,6 +36,7 @@ class RevisionUI (object):
         self._branch = branch
         self.log = branch.log
 
+    @util.strip_whitespace
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
         z = time.time()

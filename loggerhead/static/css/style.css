@@ -443,13 +443,17 @@ div.links div {
 }
 .diff .lineno-skip {
     width: 4em;
-    background-color: #dee7ec; 
+    background-color: #dee7ec;
 }
 .diff .info {
     color: blue;
     background-color: #dee7ec;
     margin-top: 15px;
 }
+/*
+.diff-context-skip {
+    background-color: #dee7ec;
+}*/
 
 
 /* ----- file inventory ----- */

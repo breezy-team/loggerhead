@@ -125,12 +125,22 @@ ${navbar()}
                     <th class="lineno">old</th> <th></th> <th class="lineno">new</th> <th></th>
                 </tr>
                 <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
-                    <td py:if="line.old_lineno" class="lineno">${line.old_lineno}</td>
-                    <td py:if="not line.old_lineno" class="lineno-skip">${line.old_lineno}</td>
-                    <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
-                    <td py:if="line.new_lineno" class="lineno">${line.new_lineno}</td>
-                    <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
-                    <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
+                    <span py:if="line.old_lineno" py:strip="True">
+                        <td class="lineno">${line.old_lineno}</td>
+                        <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
+                    </span>
+                    <span py:if="not line.old_lineno" py:strip="True">
+                        <td class="lineno-skip">${line.old_lineno}</td>
+                        <td class="diff-${line.old_type}-skip">${XML(line.old_line)}</td>
+                    </span>
+                    <span py:if="line.new_lineno" py:strip="True">
+                        <td py:if="line.new_lineno" class="lineno">${line.new_lineno}</td>
+                        <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
+                    </span>
+                    <span py:if="not line.new_lineno" py:strip="True">
+                        <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
+                        <td class="diff-${line.new_type}-skip">${XML(line.new_line)}</td>
+                    </span>
                 </tr>
                 <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
             </span>

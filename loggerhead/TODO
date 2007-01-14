@@ -14,7 +14,3 @@
 * browse view: sort by name, last change?
 
 * something is leaking on www.lag.net/branches
-
-* better logging
-
-* fix diff-key and buttons (look terrible)

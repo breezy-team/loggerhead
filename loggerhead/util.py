@@ -338,3 +338,18 @@ def with_lock(lockname, debug_name=None):
         return locked
     return _decorator
 
+
+@decorator
+def strip_whitespace(f):
+    def _f(*a, **kw):
+        out = f(*a, **kw)
+        orig_len = len(out)
+        out = re.sub(r'\n\s+', '\n', out)
+        out = re.sub(r'[ \t]+', ' ', out)
+        out = re.sub(r'\s+\n', '\n', out)
+        new_len = len(out)
+        log.debug('Saved %sB (%d%%) by stripping whitespace.',
+                  human_size(orig_len - new_len),
+                  round(100.0 - float(new_len) * 100.0 / float(orig_len)))
+        return out
+    return _f
