@@ -12,12 +12,13 @@
     <span py:replace="use_collapse_buttons()"></span>
     
     <script type="text/javascript"> <!--
-    function show_sbs() { collapseDisplay('style', 'sbs', 'table'); collapseDisplay('style', 'unified', 'none'); }
-    function show_unified() { collapseDisplay('style', 'unified', 'table'); collapseDisplay('style', 'sbs', 'none'); }
+    function show_sbs() { collapseDisplay('style', 'sbs', 'table'); collapseDisplay('style', 'unified', 'none'); document.cookie='diff=sbs'; }
+    function show_unified() { collapseDisplay('style', 'unified', 'table'); collapseDisplay('style', 'sbs', 'none'); document.cookie='diff=unified'; }
+    function load() { sortCollapseElements(); if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); } }
     // --> </script>
 </head>
 
-<body onload="javascript:sortCollapseElements()">
+<body onload="javascript:load()">
 
 ${navbar()}
 
@@ -95,9 +96,9 @@ ${navbar()}
 
     <td class="spacey">
         <a href="javascript:show_sbs()" class="hide-all collapse-style-sbs-show" title="collapse">
-            <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />side by side</a>
+            <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" class="collapse-triangle" />show side by side</a>
         <a href="javascript:show_unified()" class="hide-all collapse-style-unified-show" title="expand">
-            <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" alt="collapse" class="collapse-triangle" />unified diff</a>
+            <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" class="collapse-triangle" />show unified diff</a>
     </td>
     
     <td class="diff-key-block diff-insert"></td>
