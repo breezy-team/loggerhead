@@ -23,16 +23,10 @@ import re
 import sys
 import time
 
-from configobj import ConfigObj
-
 import turbogears
 from turbogears import controllers
 from cherrypy import HTTPRedirect, NotFound
-
-my_config = ConfigObj('loggerhead.conf', encoding='utf-8')
-extra_path = my_config.get('bzrpath', None)
-if extra_path:
-    sys.path.insert(0, extra_path)
+from configobj import ConfigObj
 
 from loggerhead import util
 from loggerhead.branchview import BranchView
@@ -87,11 +81,10 @@ class Project (object):
 
 class Root (controllers.RootController):
     def __init__(self):
-        global my_config
         self._projects = []
-        for project_name in my_config.sections:
+        for project_name in sys._loggerhead_config.sections:
             c_project_name = cherrypy_friendly(project_name)
-            project = Project(c_project_name, my_config[project_name])
+            project = Project(c_project_name, sys._loggerhead_config[project_name])
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
@@ -100,7 +93,7 @@ class Root (controllers.RootController):
         return {
             'projects': self._projects,
             'util': util,
-            'title': my_config.get('title', ''),
+            'title': sys._loggerhead_config.get('title', ''),
         }
 
     def _check_rebuild(self):
@@ -112,13 +105,9 @@ class Root (controllers.RootController):
 # singleton:
 Root = Root()
 
-# re-index every 6 hours
-index_freq = 6 * 3600
-
-turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root._check_rebuild)
 
 # for use in profiling the very-slow get_change() method:
-#h = util.get_history()
+#h = Root.bazaar.bzr_dev.get_history()
 #w = list(h.get_revision_history())
 #h._get_changes_profiled(w[:100])
 

@@ -1,4 +1,10 @@
 
+# use this to change the server's port
+#server.socket_port = 8080
+
+# use this if you're mapping loggerhead within apache via proxy
+#server.webpath = 'http://example.com/branches'
+
 # where's bzrlib?
 # (you only need this if you don't install bzr.)
 #bzrpath = '/Users/robey/code/bzr/bzr'

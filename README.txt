@@ -7,26 +7,31 @@ Loggerhead is a web viewer for bazaar branches.  It can be used to navigate
 a branch history, annotate files, perform searches... all the usual things.
 
 This is a TurboGears (http://www.turbogears.org) project.  It can be
-started by running the 'start-loggerhead.py' script.
+started by running::
 
-If you're not familiar with turbogears, the easiest way to get this script
-started is to run it via::
-
-    $ nohup ./start-loggerhead.py &
+    $ ./start-loggerhead.py
     
-and add the following lines to your apache configuration::
+This will run loggerhead in the background.  To stop it, run::
+
+    $ ./stop-loggerhead.py
+
+If you're not familiar with TurboGears, the simplest way to get running is
+to add the following lines to your apache configuration::
 
     <Location "/branches/">
         ProxyPass http://127.0.0.1:8080/
         ProxyPassReverse http://127.0.0.1:8080/
     </Location>
     
-The port configuration is in "dev.cfg".
-
 The config file is "loggerhead.conf".  In there, you can configure projects,
 and branches per project.  The idea is that you could be publishing several
 (possibly unrelated) projects through the same loggerhead instance, and 
 several branches for the same project.
+
+Don't bother with "dev.cfg" or any of the other TurboGears config files.
+Loggerhead overrides those values with its own.
+
+A debug and access log are stored in the logs/ folder.
 
 
 CACHES
