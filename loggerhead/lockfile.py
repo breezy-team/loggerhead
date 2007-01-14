@@ -25,6 +25,8 @@ from loggerhead import util
 
 with_lock = util.with_lock('_tlock', 'LockFile')
 
+MAX_STALE_TIME = 5 * 60
+
 
 class LockFile (object):
     """
@@ -44,6 +46,10 @@ class LockFile (object):
         # thread lock to maintain internal consistency
         self._tlock = threading.Lock()
         self._count = 0
+        if os.path.exists(filename):
+            # remove stale locks left over from a previous run
+            if time.time() - os.stat(filename).st_mtime > MAX_STALE_TIME:
+                os.remove(filename)
     
     @with_lock
     def _try_acquire(self):
