@@ -17,7 +17,7 @@
     ${use_collapse_buttons()}
 </head>
 
-<body>
+<body onload="javascript:sortCollapseElements();">
 
 ${navbar()}
 
