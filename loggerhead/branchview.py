@@ -117,7 +117,7 @@ class BranchView (object):
         if url is not None:
             return posixpath.join(url, self._folder) + '/'
         # try branch-specific config?
-        url = self.get_history().get_config().get_user_option('public_url')
+        url = self.get_history().get_config().get_user_option('public_branch')
         return url
         
     branch_url = property(_get_branch_url)
