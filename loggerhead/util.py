@@ -298,9 +298,9 @@ def fill_in_navigation(history, navigation):
         params['start_revid'] = navigation.start_revid
         
     if navigation.prev_page_revid:
-        navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **params)
+        navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **get_context(**params))
     if navigation.next_page_revid:
-        navigation.next_page_url = navigation.branch.url([ navigation.scan_url, navigation.next_page_revid ], **params)
+        navigation.next_page_url = navigation.branch.url([ navigation.scan_url, navigation.next_page_revid ], **get_context(**params))
 
 
 def log_exception(log):
@@ -328,13 +328,11 @@ def with_lock(lockname, debug_name=None):
     @decorator
     def _decorator(unbound):
         def locked(self, *args, **kw):
-            #self.log.debug('-> %r lock %r', id(threading.currentThread()), debug_name)
             getattr(self, lockname).acquire()
             try:
                 return unbound(self, *args, **kw)
             finally:
                 getattr(self, lockname).release()
-                #self.log.debug('<- %r unlock %r', id(threading.currentThread()), debug_name)
         return locked
     return _decorator
 
@@ -353,3 +351,54 @@ def strip_whitespace(f):
                   round(100.0 - float(new_len) * 100.0 / float(orig_len)))
         return out
     return _f
+
+
+# just thinking out loud here...
+#
+# so, when browsing around, there are 5 pieces of context, most optional:
+#     - current revid
+#         current location along the navigation path (while browsing)
+#     - starting revid (start_revid)
+#         the current beginning of navigation (navigation continues back to
+#         the original revision) -- this may not be along the primary revision
+#         path since the user may have navigated into a branch
+#     - file_id
+#         if navigating the revisions that touched a file
+#     - q (query)
+#         if navigating the revisions that matched a search query
+#     - remember
+#         a previous revision to remember for future comparisons
+#
+# current revid is given on the url path.  the rest are optional components
+# in the url params.
+#
+# other transient things can be set:
+#     - compare_revid
+#         to compare one revision to another, on /revision only
+#     - sort
+#         for re-ordering an existing page by different sort
+
+t_context = threading.local()
+_valid = ('start_revid', 'file_id', 'q', 'remember', 'compare_revid', 'sort')
+
+
+def set_context(map):
+    t_context.map = dict((k, v) for (k, v) in map.iteritems() if k in _valid)
+
+
+def get_context(**overrides):
+    """
+    return a context map that may be overriden by specific values passed in,
+    but only contains keys from the list of valid context keys.
+    
+    if 'clear' is set, only the 'remember' context value will be added, and
+    all other context will be omitted.
+    """
+    map = dict()
+    if overrides.get('clear', False):
+        map['remember'] = t_context.map.get('remember', None)
+    else:
+        map.update(t_context.map)
+    overrides = dict((k, v) for (k, v) in overrides.iteritems() if k in _valid)
+    map.update(overrides)
+    return map

@@ -6,15 +6,27 @@
     <title> ${branch.friendly_name} : revision ${change.revno} </title>
     
     <span py:strip="True" py:def="file_link(filename, file_id)">
-        <a href="${branch.url([ '/annotate', revid ], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
+        <a href="${branch.url([ '/annotate', revid ],
+            **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
     </span>
     
     <span py:replace="use_collapse_buttons()"></span>
     
     <script type="text/javascript"> <!--
-    function show_sbs() { collapseDisplay('style', 'sbs', 'table'); collapseDisplay('style', 'unified', 'none'); document.cookie='diff=sbs'; }
-    function show_unified() { collapseDisplay('style', 'unified', 'table'); collapseDisplay('style', 'sbs', 'none'); document.cookie='diff=unified'; }
-    function load() { sortCollapseElements(); if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); } }
+    function show_sbs() {
+        collapseDisplay('style', 'sbs', 'table');
+        collapseDisplay('style', 'unified', 'none');
+        document.cookie='diff=sbs';
+    }
+    function show_unified() {
+        collapseDisplay('style', 'unified', 'table');
+        collapseDisplay('style', 'sbs', 'none');
+        document.cookie='diff=unified'; 
+    }
+    function load() {
+        sortCollapseElements();
+        if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); }
+    }
     // --> </script>
 </head>
 
@@ -23,10 +35,36 @@
 ${navbar()}
 
 <h1> <span class="branch-name">${branch.friendly_name}</span> : revision ${change.revno}
+    <span py:if="compare_revid is not None"> (compared to revision ${history.get_revno(compare_revid)}) </span>
+    
     <div class="links">
-        <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ])}">browse files</a> </div>
-        <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}">view branch changes</a> </div>
-        <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">view/download patch</a> </div>
+        <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ], **util.get_context())}">
+            browse files</a> </div>
+        <div> <b>&#8594;</b> <a href="${branch.url('/changes', **util.get_context(start_revid=revid))}">
+            view branch changes</a> </div>
+        <span py:if="compare_revid is None" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">
+                view/download patch</a> </div>
+        </span>
+        <span py:if="compare_revid is not None" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, compare_revid, 'bundle.txt' ])}">
+                view/download patch</a> </div>
+        </span>
+        <span py:if="(remember is not None) and (compare_revid is None)" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
+                **util.get_context(compare_revid=remember))}">
+                compare with revision ${history.get_revno(remember)} </a></div>
+        </span>
+        <span py:if="remember != revid" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
+                **util.get_context(remember=revid, compare_revid=None))}">
+                compare with another revision </a></div>
+        </span>
+        <span py:if="compare_revid is not None" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
+                **util.get_context(remember=None, compare_revid=None))}">
+                stop comparing to revision ${history.get_revno(compare_revid)} </a></div>
+        </span>
     </div>
 </h1>
  
@@ -45,7 +83,8 @@ ${navbar()}
             <th class="children"> merged in: </th>
             <td class="children">
                 <span py:for="child in change.merge_points">
-                    ${revlink(child.revid, child.revid, None, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br /> 
+                    ${revision_link(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')',
+                        clear=1, start_revid=child.revid)} <br /> 
                 </span>
             </td>
         </tr>
@@ -53,7 +92,8 @@ ${navbar()}
         	<th class="parents"> merged from: </th>
         	<td class="parents">
         	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-        	        ${revlink(parent.revid, parent.revid, None, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
+        	        ${revision_link(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')',
+        	            clear=1, start_revid=parent.revid)} <br />
         	    </span></span>
         	</td>
         </tr>
@@ -117,7 +157,7 @@ ${navbar()}
         <span py:strip="True" py:for="item in change.changes.modified">
             <tr><th class="filename" colspan="4">
                 ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-                <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
+                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
             </th></tr>
 
             <span py:strip="True" py:for="chunk in item.sbs_chunks">
@@ -153,7 +193,7 @@ ${navbar()}
 	    <span py:strip="True" py:for="item in change.changes.modified">
 	        <tr><th class="filename" colspan="4">
 	            ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-	            <a href="${branch.url([ '/annotate', change.revid ], file_id=item.file_id)}" name="${item.filename}">${item.filename}</a>
+	            <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
 	        </th></tr>
 	
 	        <span py:strip="True" py:for="chunk in item.chunks">

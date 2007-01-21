@@ -37,13 +37,17 @@ class BundleUI (object):
         # /bundle/<rev_id>/filename
         z = time.time()
         h = self._branch.get_history()
+        compare_revid = kw.get('compare_revid', None)
 
         if len(args) < 1:
             raise HTTPRedirect(self._branch.url('/changes'))
         revid = h.fix_revid(args[0])
+        compare_revid = None
+        if len(args) >= 3:
+            compare_revid = h.fix_revid(args[1])
 
         try:
-            bundle_data = h.get_bundle(revid)
+            bundle_data = h.get_bundle(revid, compare_revid)
         except Exception, x:
             self.log.error('Exception fetching bundle: %s' % (x,))
             util.log_exception(self.log)

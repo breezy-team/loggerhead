@@ -51,6 +51,7 @@ class InventoryUI (object):
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
+        util.set_context(kw)
         
         if len(args) > 0:
             revid = h.fix_revid(args[0])

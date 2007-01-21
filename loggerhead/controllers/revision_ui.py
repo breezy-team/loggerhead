@@ -35,12 +35,13 @@ class RevisionUI (object):
         # BranchView object
         self._branch = branch
         self.log = branch.log
-
+        
     @util.strip_whitespace
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
+        util.set_context(kw)
         
         if len(args) > 0:
             revid = h.fix_revid(args[0])
@@ -50,6 +51,8 @@ class RevisionUI (object):
         file_id = kw.get('file_id', None)
         start_revid = h.fix_revid(kw.get('start_revid', None))
         query = kw.get('q', None)
+        remember = kw.get('remember', None)
+        compare_revid = kw.get('compare_revid', None)
         
         try:
             revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
@@ -64,7 +67,10 @@ class RevisionUI (object):
             navigation.query = query
         util.fill_in_navigation(h, navigation)
 
-        change = h.get_changes([ revid ], get_diffs=True)[0]
+        if compare_revid is not None:
+            change = h.get_diff(compare_revid, revid)
+        else:
+            change = h.get_changes([ revid ], get_diffs=True)[0]
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([ change ])
 
@@ -83,6 +89,8 @@ class RevisionUI (object):
             'history': h,
             'navigation': navigation,
             'query': query,
+            'remember': remember,
+            'compare_revid': compare_revid,
             'side_by_side': side_by_side,
         }
         h.flush_cache()

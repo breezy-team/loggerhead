@@ -26,20 +26,6 @@ from cherrypy import HTTPRedirect, session
 from loggerhead import util
 
 
-# just thinking out loud here...
-#
-# so, when browsing around, there are 3 pieces of context:
-#     - starting revid 
-#         the current beginning of navigation (navigation continues back to
-#         the original revision) -- this may not be along the primary revision
-#         path since the user may have navigated into a branch
-#     - file_id
-#         if navigating the revisions that touched a file
-#     - current revid
-#         current location along the navigation path (while browsing)
-#
-# current revid is given on the url path.  'file_id' and 'starting revid' are
-# handed along as params.
 
 
 class ChangeLogUI (object):
@@ -70,6 +56,9 @@ class ChangeLogUI (object):
         
         try:
             revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+            kw['start_revid'] = start_revid
+            util.set_context(kw)
+            
             if (query is not None) and (len(revid_list) == 0):
                 search_failed = True
 

@@ -141,6 +141,21 @@ def is_branch(folder):
         return False
 
 
+def clean_message(message):
+    # clean up a commit message and return it and a short (1-line) version
+    message = message.splitlines()
+    if len(message) == 1:
+        # robey-style 1-line long message
+        message = textwrap.wrap(message[0])
+        
+    # make short form of commit message
+    short_message = message[0]
+    if len(short_message) > 60:
+        short_message = short_message[:60] + '...'
+    
+    return message, short_message
+
+
 # from bzrlib
 class _RevListToTimestamps(object):
     """This takes a list of revisions, and allows you to bisect by date"""
@@ -623,6 +638,31 @@ class History (object):
         finally:
             self._branch.repository.unlock()
     
+    def entry_from_revision(self, revision):
+        commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
+        
+        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
+
+        if len(parents) == 0:
+            left_parent = None
+        else:
+            left_parent = revision.parent_ids[0]
+        
+        message, short_message = clean_message(revision.message)
+
+        entry = {
+            'revid': revision.revision_id,
+            'revno': self.get_revno(revision.revision_id),
+            'date': commit_time,
+            'author': revision.committer,
+            'branch_nick': revision.properties.get('branch-nick', None),
+            'short_comment': short_message,
+            'comment': revision.message,
+            'comment_clean': [util.html_clean(s) for s in message],
+            'parents': parents,
+        }
+        return util.Container(entry)
+
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list, get_diffs=False):
@@ -636,41 +676,25 @@ class History (object):
         
         entries = []
         for rev, (new_tree, old_tree, delta) in combined_list:
-            commit_time = datetime.datetime.fromtimestamp(rev.timestamp)
-            
-            parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in rev.parent_ids]
-    
-            if len(parents) == 0:
-                left_parent = None
-            else:
-                left_parent = rev.parent_ids[0]
-            
-            message = rev.message.splitlines()
-            if len(message) == 1:
-                # robey-style 1-line long message
-                message = textwrap.wrap(message[0])
-            
-            # make short form of commit message
-            short_message = message[0]
-            if len(short_message) > 60:
-                short_message = short_message[:60] + '...'
-    
-            entry = {
-                'revid': rev.revision_id,
-                'revno': self.get_revno(rev.revision_id),
-                'date': commit_time,
-                'author': rev.committer,
-                'branch_nick': rev.properties.get('branch-nick', None),
-                'short_comment': short_message,
-                'comment': rev.message,
-                'comment_clean': [util.html_clean(s) for s in message],
-                'parents': parents,
-                'changes': self.parse_delta(delta, get_diffs, old_tree, new_tree),
-            }
-            entries.append(util.Container(entry))
+            entry = self.entry_from_revision(rev)
+            entry.changes = self.parse_delta(delta, get_diffs, old_tree, new_tree)
+            entries.append(entry)
         
         return entries
 
+    @with_bzrlib_read_lock
+    def _get_diff(self, revid1, revid2):
+        rev_tree1 = self._branch.repository.revision_tree(revid1)
+        rev_tree2 = self._branch.repository.revision_tree(revid2)
+        delta = rev_tree2.changes_from(rev_tree1)
+        return rev_tree1, rev_tree2, delta
+    
+    def get_diff(self, revid1, revid2):
+        rev_tree1, rev_tree2, delta = self._get_diff(revid1, revid2)
+        entry = self.get_changes([ revid2 ], False)[0]
+        entry.changes = self.parse_delta(delta, True, rev_tree1, rev_tree2)
+        return entry
+    
     @with_branch_lock
     def get_file(self, file_id, revid):
         "returns (filename, data)"
@@ -884,13 +908,14 @@ class History (object):
 
     @with_branch_lock
     @with_bzrlib_read_lock
-    def get_bundle(self, revid):
-        parents = self._revision_graph[revid]
-        if len(parents) > 0:
-            parent_revid = parents[0]
-        else:
-            parent_revid = None
+    def get_bundle(self, revid, compare_revid=None):
+        if compare_revid is None:
+            parents = self._revision_graph[revid]
+            if len(parents) > 0:
+                compare_revid = parents[0]
+            else:
+                compare_revid = None
         s = StringIO()
-        bzrlib.bundle.serializer.write_bundle(self._branch.repository, revid, parent_revid, s)
+        bzrlib.bundle.serializer.write_bundle(self._branch.repository, revid, compare_revid, s)
         return s.getvalue()
 

@@ -12,8 +12,10 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch.friendly_name}</span> : files for revision ${change.revno}
 	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', start_revid=revid)}"> view revision </a> </div>
-	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', start_revid=revid)}"> view branch changes </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', **util.get_context(clear=1, start_revid=revid))}">
+	        view revision </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', **util.get_context(clear=1, start_revid=revid))}">
+	        view branch changes </a> </div>
 	</div>
 </h1>
 
@@ -33,7 +35,8 @@ ${navbar()}
             <th class="children"> merged in: </th>
             <td class="children">
                 <span py:for="child in change.merge_points">
-                    ${revlink(child.revid, child.revid, None, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
+                    ${revision_link(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')',
+                                    clear=1, start_revid=child.revid)} <br />
                 </span>
             </td>
         </tr>
@@ -41,7 +44,8 @@ ${navbar()}
         	<th class="parents"> merged from: </th>
         	<td class="parents">
         	    <span py:for="parent in change.parents"><span py:if="parent.revid != change.parents[0].revid">
-        	        ${revlink(parent.revid, parent.revid, None, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
+        	        ${revision_link(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')',
+        	                        clear=1, start_revid=parent.revid)} <br />
         	    </span></span>
         	</td>
         </tr>
@@ -60,35 +64,41 @@ ${navbar()}
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
-        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='filename')}">Filename</a> </th>
-        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='size')}">Size</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], **util_get_context(sort='filename'))}">Filename</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='size'))}">Size</a> </th>
         <th> Last change </th>
-        <th> <a href="${branch.url([ '/files', revid ], file_id=file_id, sort='date')}">When</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='date'))}">When</a> </th>
         <th> History </th>
         <th> Download </th>
     </tr>
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
-        <td class="filename directory"><a href="${branch.url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
+        <td class="filename directory"><a href="${branch.url([ '/files', revid ],
+            **util.get_context(file_id=updir_file_id))}"> (up) </a></td>
         <td> </td> <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
         <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
         <td class="filename ${file.kind}">
-            <a py:if="file.kind=='directory'" href="${branch.url([ '/files', revid ], file_id=file.file_id)}">${file.filename}/</a>
+            <a py:if="file.kind=='directory'" href="${branch.url([ '/files', revid ],
+                **util.get_context(file_id=file.file_id))}">${file.filename}/</a>
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ], file_id=file.file_id)}" title="Annotate ${file.filename}">${file.filename}</a>
+            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ],
+                **util.get_context(file_id=file.file_id))}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
-        <td class="revision"> ${revlink(file.revid, file.revid, file.file_id, util.trunc(file.change.revno, 15))} </td>
+        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15),
+            **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
         <td class="changes-link"> 
-            <a href="${branch.url('/changes', start_revid=file.revid, file_id=file.file_id)}" title="Changes from ${file.change.revno} affecting ${file.filename}"> &#8594; changes </a>
+            <a href="${branch.url('/changes', **util._get_context(start_revid=file.revid, file_id=file.file_id))}"
+               title="Changes from ${file.change.revno} affecting ${file.filename}"> &#8594; changes </a>
         </td>
         <td class="download-link">
-            <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}" title="Download ${file.filename} at revision ${file.change.revno}"> &#8594; download </a></td>
+            <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"
+               title="Download ${file.filename} at revision ${file.change.revno}"> &#8594; download </a></td>
     </tr>
 </table>
 
