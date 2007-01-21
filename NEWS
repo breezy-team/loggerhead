@@ -1,0 +1,34 @@
+
+1.1  [20jan2006]
+
+    - new feature to compare two revisions to each other
+    
+    - inserted text in diffs is now blue instead of green
+    
+    - fixed to start and stop as a daemon now (use "-f" to run in the
+      foreground), and all config is in loggerhead.conf (no need to mess with
+      dev.cfg)
+      
+    - renamed show/hide javascript buttons to expand/collapse, and made them
+      much faster
+      
+    - added an atom-feed link to each branch on the browse page [elliot
+      murphy]
+      
+    - auto-publish feature for multiple branches under a single folder (see
+      loggerhead.conf.example)
+      
+    - added the ability to share cache files per-project instead of just
+      per-branch
+    
+    - added side-by-side diff display for the revision page (which is the
+      default), with a button to switch between side-by-side and unified diff
+      format
+
+    - made caching use file locking, and close cleanly on shutdown
+    
+    - miscellaneous speed and page-size improvements
+    
+1.0  [23dec2006]
+
+    - initial release

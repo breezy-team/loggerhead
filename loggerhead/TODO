@@ -6,13 +6,11 @@
 
 * potentially do a 'bzr pull' on a branch on an interval timer
 
-* it would be cool to view 1 revision relative to another base, and view the
-  diff & download the bundle for that
-
 * maybe change "changes" to "history"?  -- asked on bazaar-dev@ for opinions.
+    -- nobody seems to care.
 
 * browse view: sort by name, last change?
 
 * something is leaking on www.lag.net/branches
 
- * download tar archive of revision?
+* download tar archive of revision?
