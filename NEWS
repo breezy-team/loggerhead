@@ -1,5 +1,17 @@
 
+What's changed in loggerhead?
+=============================
+
+1.1.1  [24jan2006]
+------------------
+
+    - fix broken inventory page (oops!)
+    
+    - fix a few rendering problems with kid and safari
+
+
 1.1  [20jan2006]
+----------------
 
     - new feature to compare two revisions to each other
     
@@ -28,7 +40,9 @@
     - made caching use file locking, and close cleanly on shutdown
     
     - miscellaneous speed and page-size improvements
-    
+
+
 1.0  [23dec2006]
+----------------
 
     - initial release
