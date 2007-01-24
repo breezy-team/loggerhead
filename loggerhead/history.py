@@ -697,10 +697,14 @@ class History (object):
     
     @with_branch_lock
     def get_file(self, file_id, revid):
-        "returns (filename, data)"
-        inv_entry = self.get_inventory(revid)[file_id]
+        "returns (path, filename, data)"
+        inv = self.get_inventory(revid)
+        inv_entry = inv[file_id]
         rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
-        return inv_entry.name, rev_tree.get_file_text(file_id)
+        path = inv.id2path(file_id)
+        if not path.startswith('/'):
+            path = '/' + path
+        return path, inv_entry.name, rev_tree.get_file_text(file_id)
     
     @with_branch_lock
     def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
