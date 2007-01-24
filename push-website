@@ -3,5 +3,5 @@
 # this is only useful for robey.  it updates the public website.
 #
 
-rsync -avr homepage/ robey@tavi.lag.net:/web/loggerhead
+rsync -avr homepage/ robey@green.lag.net:/web/loggerhead
 
