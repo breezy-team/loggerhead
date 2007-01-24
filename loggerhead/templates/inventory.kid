@@ -64,7 +64,7 @@ ${navbar()}
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
-        <th> <a href="${branch.url([ '/files', revid ], **util_get_context(sort='filename'))}">Filename</a> </th>
+        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='filename'))}">Filename</a> </th>
         <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='size'))}">Size</a> </th>
         <th> Last change </th>
         <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='date'))}">When</a> </th>
@@ -89,11 +89,10 @@ ${navbar()}
                 **util.get_context(file_id=file.file_id))}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
-        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15),
-            **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
+        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
         <td class="date"> ${file.change.date.strftime('%d %b %Y %H:%M')} </td>
         <td class="changes-link"> 
-            <a href="${branch.url('/changes', **util._get_context(start_revid=file.revid, file_id=file.file_id))}"
+            <a href="${branch.url('/changes', **util.get_context(start_revid=file.revid, file_id=file.file_id))}"
                title="Changes from ${file.change.revno} affecting ${file.filename}"> &#8594; changes </a>
         </td>
         <td class="download-link">
