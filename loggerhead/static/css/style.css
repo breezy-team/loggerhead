@@ -62,8 +62,14 @@ h1 .filename {
 .navbar {
 }
 
-.navbar table, .bar table {
+.bar table {
     width: 100%;
+    border-collapse: collapse;
+}
+
+/* safari gives forms a big default margin, to vex me */
+.bar form {
+    margin: 0px;
 }
 
 .bar {
