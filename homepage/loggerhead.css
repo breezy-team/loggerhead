@@ -42,3 +42,9 @@ li {
 .link {
 	margin-left: 1em;
 }
+
+.date {
+    font-weight: bold;
+    font-size: smaller;
+    text-decoration: underline;
+}
