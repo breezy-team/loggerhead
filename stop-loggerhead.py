@@ -24,7 +24,7 @@ except OSError, e:
     sys.exit(1)
 
 print
-print 'Shutting down previus server @ pid %d.' % (pid,)
+print 'Shutting down previous server @ pid %d.' % (pid,)
 print
 
 import signal
