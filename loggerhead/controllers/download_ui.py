@@ -57,6 +57,11 @@ class DownloadUI (object):
         if mime_type is None:
             mime_type = 'application/octet-stream'
         
+        path = inv.id2path(file_id)
+        if not path.startswith('/'):
+            path = '/' + path
+
+        self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
         response.headers['Content-Type'] = mime_type
         response.headers['Content-Length'] = len(content)
         response.body = content
