@@ -2,7 +2,7 @@
 What's changed in loggerhead?
 =============================
 
-1.1.1  [24jan2006]
+1.1.1  [24jan2007]
 ------------------
 
     - fix broken inventory page (oops!)
@@ -10,7 +10,7 @@ What's changed in loggerhead?
     - fix a few rendering problems with kid and safari
 
 
-1.1  [20jan2006]
+1.1  [20jan2007]
 ----------------
 
     - new feature to compare two revisions to each other
@@ -42,7 +42,7 @@ What's changed in loggerhead?
     - miscellaneous speed and page-size improvements
 
 
-1.0  [23dec2006]
+1.0  [23dec2007]
 ----------------
 
     - initial release
