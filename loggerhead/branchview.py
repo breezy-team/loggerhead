@@ -23,6 +23,7 @@ collection of configuration and objects related to a bazaar branch.
 import logging
 import posixpath
 import threading
+import urllib
 
 import turbogears
 from cherrypy import HTTPRedirect
@@ -160,6 +161,7 @@ class BranchView (object):
             elements = [elements]
         if elements[0].startswith('/'):
             elements[0] = elements[0][1:]
+        elements = [urllib.quote(x) for x in elements]
         return turbogears.url([ '/' + self.group_name, self.name ] + elements, **kw)
 
     def last_updated(self):
