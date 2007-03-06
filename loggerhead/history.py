@@ -576,10 +576,17 @@ class History (object):
         p_changes = self.get_changes(list(fetch_set))
         p_change_dict = dict([(c.revid, c) for c in p_changes])
         for change in changes:
+            # arch-converted branches may not have merged branch info :(
             for p in change.parents:
-                p.branch_nick = p_change_dict[p.revid].branch_nick
+                if p.revid in p_change_dict:
+                    p.branch_nick = p_change_dict[p.revid].branch_nick
+                else:
+                    p.branch_nick = '(missing)'
             for p in change.merge_points:
-                p.branch_nick = p_change_dict[p.revid].branch_nick
+                if p.revid in p_change_dict:
+                    p.branch_nick = p_change_dict[p.revid].branch_nick
+                else:
+                    p.branch_nick = '(missing)'
     
     @with_branch_lock
     def get_changes(self, revid_list, get_diffs=False):
@@ -666,10 +673,16 @@ class History (object):
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list, get_diffs=False):
-        try:
-            rev_list = self._branch.repository.get_revisions(revid_list)
-        except (KeyError, bzrlib.errors.NoSuchRevision):
-            return None
+        done = False
+        while not done:
+            try:
+                rev_list = self._branch.repository.get_revisions(revid_list)
+                done = True
+            except (KeyError, bzrlib.errors.NoSuchRevision), e:
+                # this sometimes happens with arch-converted branches.
+                # i don't know why. :(
+                self.log.debug('No such revision (skipping): %s', e)
+                revid_list.remove(e.revision)
         
         delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
         combined_list = zip(rev_list, delta_list)
