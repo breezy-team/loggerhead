@@ -26,6 +26,7 @@ import sha
 import struct
 import sys
 import threading
+import time
 import traceback
 
 import turbogears
@@ -188,7 +189,7 @@ def html_clean(s):
     """
     s = cgi.escape(s.expandtabs())
 #    s = _BADCHARS_RE.sub(lambda x: '&#%d;' % (ord(x.group(0)),), s)
-    s = s.replace(' ', '&nbsp;')
+#    s = s.replace(' ', '&nbsp;')
     return s
 
 
@@ -350,6 +351,25 @@ def strip_whitespace(f):
                   human_size(orig_len - new_len),
                   round(100.0 - float(new_len) * 100.0 / float(orig_len)))
         return out
+    return _f
+
+
+@decorator
+def lsprof(f):
+    def _f(*a, **kw):
+        from loggerhead.lsprof import profile
+        import cPickle
+        z = time.time()
+        ret, stats = profile(f, *a, **kw)
+        log.debug('Finished profiled %s in %d msec.' % (f.__name__, int((time.time() - z) * 1000)))
+        stats.sort()
+        stats.freeze()
+        now = time.time()
+        msec = int(now * 1000) % 1000
+        timestr = time.strftime('%Y%m%d%H%M%S', time.localtime(now)) + ('%03d' % msec)
+        filename = f.__name__ + '-' + timestr + '.lsprof'
+        cPickle.dump(stats, open(filename, 'w'), 2)
+        return ret
     return _f
 
 
