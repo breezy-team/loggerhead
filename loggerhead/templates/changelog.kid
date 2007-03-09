@@ -34,6 +34,17 @@ ${navbar()}
 <span py:if="not search_failed" class="changelog"> ${collapse_all_button('cl')} </span>
 
 <div class="log-entries">
+    <div class="revision-header">
+        <table>
+            <tr>
+                <td class="revision-number">Rev</td>
+                <td class="expand-button"></td>
+                <td class="summary">Summary</td>
+                <td class="date">Date</td>
+                <td class="inventory-link"></td>
+            </tr>
+        </table>
+    </div>
     <div py:for="entry in changes" class="revision">
         <a name="entry-${entry.revno}" />
         <div class="revision-header">
@@ -42,6 +53,7 @@ ${navbar()}
                     <td class="revision-number"> ${revision_link(entry.revid, util.trunc(entry.revno))} </td>
                     <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
 					<td class="summary"> ${revision_link(entry.revid, entry.short_comment)} </td>
+			        <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
 					<td class="inventory-link"> <a href="${branch.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
 				</tr>
 			</table>
@@ -50,18 +62,14 @@ ${navbar()}
         <div class="revision-details-block">
             <div class="revision-details">
 			    <table>
-			        <tr>
-			            <th class="author">committed by:</th>
-			            <td class="author"> ${util.hide_email(entry.author)} </td>
-			        </tr>
-			        <tr>
-			            <th class="date">date:</th>
-			            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
-			        </tr>
 			    </table>
 			</div>
 	        <div class="revision-details hidden-details collapse-cl-${entry.revno}-content">
 		        <table>
+			        <tr>
+			            <th class="author">committed by:</th>
+			            <td class="author"> ${util.hide_email(entry.author)} </td>
+			        </tr>
 			        <tr py:if="len(entry.merge_points) > 0">
 			            <th class="children"> merged in: </th>
 			            <td class="children">
@@ -78,6 +86,10 @@ ${navbar()}
 			        	    </span></span>
 			        	</td>
 			        </tr>
+			        <tr>
+			            <th class="description">description:</th>
+		                <td class="description"><span py:for="line in entry.comment_clean">${XML(line)} <br /></span> </td>
+		            </tr>
 
 			        <tr py:if="entry.changes.added">
 			            <th class="files"> files added: </th>
@@ -101,10 +113,6 @@ ${navbar()}
 			                <br />
 			            </span> </td>
 			        </tr>
-			        <tr>
-			            <th class="description">description:</th>
-		                <td class="description"><span py:for="line in entry.comment_clean">${XML(line)} <br /></span> </td>
-		            </tr>
 		        </table>
 	    	</div>
         </div>
