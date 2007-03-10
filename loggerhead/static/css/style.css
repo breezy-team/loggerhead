@@ -201,14 +201,23 @@ div.links div {
 /* ----- changelog page ----- */
 
 /* secret css-jutsu to make hidden margins vanish on a table */
-.log-entries table {
+.log-entries {
     border-collapse: collapse;
-    width: 100%;
+    width: 98%;
+    margin-top: 0.5em;
+    margin-left: 1em;
 }
 
+.log-entries .log-header {
+    background-color: #8cacbb;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    text-align: left;
+}
+
+
 .log-entries .revision-header {
-    background-color: #dee7ec;
-    padding: 3px;
+    font-size: normal;
     width: 98%;
     margin-top: 0.5em;
     margin-left: 1em;
@@ -218,49 +227,42 @@ div.links div {
     width: 20px;
 }
 
-.log-entries .revision-header .revision-number {
+.log-entries .revision-number {
     width: 3em;
     padding-left: 0.5em;
 }
 
-.log-entries .revision-header td.author {
-    font-size: smaller;
-    width: 20%;
-}
 .log-entries .revision-header td.date {
     font-size: smaller;
-    width: 25%;
+    width: 16em;
 }
 
 .log-entries .revision-header .inventory-link {
     font-size: smaller;
     vertical-align: middle;
-    width: 4em;
-    text-align: right;
-    padding-right: 2.5em;
+    width: 2em;
+    text-align: left;
+    padding-right: 0.5em;
 }
 
 .log-entries .revision-details-block {
-    width: 80%;
     border: none;
     margin-left: 8em;
     margin-bottom: 0.5em;
 }
 
-.log-entries .revision-details table {
+.log-entries table.revision-details {
     font-size: smaller;
-    width: 100%;
 }
 
-.log-entries .revision-details th {
-    width: 8em;
+.log-entries table.revision-details th {
     text-align: right;
     padding-right: 0.5em;
     vertical-align: top;
 }
 
 
-.log-entries .revision-details td.files .filename {
+.log-entries table.revision-details td.files .filename {
     font-family: monospace;
 }
 
@@ -508,24 +510,24 @@ table.inventory th.permissions {
 
 .inventory td.revision {
     width: 5em;
-    padding-right: 1.5em;
-    text-align: right;
+    padding-right: 1em;
+    text-align: left;
 }
 
 .inventory td.date {
     font-family: monospace;
     font-size: smaller;
     width: 12em;
-    padding-right: 1.5em;
+    padding-right: 1em;
 }
 
 .inventory td.changes-link {
-    width: 6em;
+    width: 5em;
     font-size: smaller;
 }
 
 .inventory td.download-link {
-    width: 8em;
+    width: 6em;
     font-size: smaller;
 }
 

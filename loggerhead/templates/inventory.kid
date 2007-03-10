@@ -63,7 +63,7 @@ ${navbar()}
     <tr class="header">
         <th class="permissions"> Permissions </th>
         <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='filename'))}">Filename</a> </th>
-        <th> Lastest Rev </th>
+        <th> Latest Rev </th>
         <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='date'))}">Last Changed</a> </th>
         <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='size'))}">Size</a> </th>
         <th> History </th>
@@ -91,11 +91,11 @@ ${navbar()}
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="changes-link"> 
             <a href="${branch.url('/changes', **util.get_context(start_revid=file.revid, file_id=file.file_id))}"
-               title="Changes affecting ${file.filename} up to revision ${file.change.revno}"> &#8594; changes </a>
+               title="Changes affecting ${file.filename} up to revision ${file.change.revno}"> changes </a>
         </td>
         <td class="download-link">
             <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"
-               title="Download ${file.filename} at revision ${file.change.revno}"> &#8594; download </a></td>
+               title="Download ${file.filename} at revision ${file.change.revno}">  download </a></td>
     </tr>
 </table>
 

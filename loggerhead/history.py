@@ -150,8 +150,8 @@ def clean_message(message):
         
     # make short form of commit message
     short_message = message[0]
-    if len(short_message) > 60:
-        short_message = short_message[:60] + '...'
+    if len(short_message) > 80:
+        short_message = short_message[:80] + '...'
     
     return message, short_message
 
@@ -604,6 +604,11 @@ class History (object):
             change = changes[i]
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+
+        parity = 0
+        for change in changes:
+            change.parity = parity
+            parity ^= 1
         
         return changes
 
