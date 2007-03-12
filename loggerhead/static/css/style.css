@@ -25,7 +25,7 @@ h1 {
     color: #708a96;
     font-weight: normal;
     font-size: 1.6em;
-    margin-bottom: 1.5em;
+    margin-bottom: 1em;
 }
 h1 .filename {
     font-family: monospace;
@@ -228,19 +228,16 @@ div.links div {
 }
 
 .log-entries .revision-number {
-    width: 3em;
     padding-left: 0.5em;
 }
 
 .log-entries .revision-header td.date {
     font-size: smaller;
-    width: 16em;
 }
 
 .log-entries .revision-header .inventory-link {
     font-size: smaller;
     vertical-align: middle;
-    width: 2em;
     text-align: left;
     padding-right: 0.5em;
 }
@@ -494,7 +491,6 @@ table.inventory th.permissions {
 
 .inventory td.permissions {
     font-family: monospace;
-    width: 9em;
     padding-left: 0.5em;
 }
 
@@ -505,11 +501,9 @@ table.inventory th.permissions {
 .inventory td.size {
 	font-family: monospace;
 	font-size: smaller;
-	width: 5em;
 }
 
 .inventory td.revision {
-    width: 5em;
     padding-right: 1em;
     text-align: left;
 }
@@ -517,17 +511,14 @@ table.inventory th.permissions {
 .inventory td.date {
     font-family: monospace;
     font-size: smaller;
-    width: 12em;
     padding-right: 1em;
 }
 
 .inventory td.changes-link {
-    width: 5em;
     font-size: smaller;
 }
 
 .inventory td.download-link {
-    width: 6em;
     font-size: smaller;
 }
 
@@ -645,7 +636,6 @@ span.folder {
 
 .browse-view td.last-update {
 	font-size: smaller;
-	width: 15%;
 }
 
 .browse-view td.url {
