@@ -189,7 +189,7 @@ def html_clean(s):
     """
     s = cgi.escape(s.expandtabs())
 #    s = _BADCHARS_RE.sub(lambda x: '&#%d;' % (ord(x.group(0)),), s)
-#    s = s.replace(' ', '&nbsp;')
+    s = s.replace(' ', '&nbsp;')
     return s
 
 
