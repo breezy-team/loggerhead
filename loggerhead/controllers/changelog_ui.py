@@ -21,11 +21,9 @@ import os
 import time
 
 import turbogears
-from cherrypy import HTTPRedirect, session
+from cherrypy import InternalError, session
 
 from loggerhead import util
-
-
 
 
 class ChangeLogUI (object):
@@ -68,10 +66,9 @@ class ChangeLogUI (object):
                 scan_list = revid_list[h.get_revid_sequence(revid_list, revid):]
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
-        except Exception, x:
-            self.log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(self.log)
-            raise HTTPRedirect(self._branch.url('/changes'))
+        except:
+            self.log.exception('Exception fetching changes')
+            raise InternalError('Could not fetch changes')
 
         navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
                                     file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
