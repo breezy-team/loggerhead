@@ -802,7 +802,7 @@ class History (object):
                 bzrlib.diff.internal_diff(old_path, old_lines,
                                           new_path, new_lines, buffer)
             except bzrlib.errors.BinaryFile:
-                diff = 'Binary files differ'
+                diff = ''
             else:
                 diff = buffer.getvalue()
             modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff), raw_diff=diff))
