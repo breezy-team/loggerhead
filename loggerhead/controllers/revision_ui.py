@@ -35,7 +35,8 @@ class RevisionUI (object):
         # BranchView object
         self._branch = branch
         self.log = branch.log
-        
+    
+#    @util.lsprof
     @util.strip_whitespace
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
