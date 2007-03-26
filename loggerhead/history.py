@@ -147,6 +147,9 @@ def clean_message(message):
     if len(message) == 1:
         # robey-style 1-line long message
         message = textwrap.wrap(message[0])
+    elif len(message) == 0:
+        # sometimes a commit may have NO message!
+        message = ['']
         
     # make short form of commit message
     short_message = message[0]
