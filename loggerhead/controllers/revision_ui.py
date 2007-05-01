@@ -24,7 +24,7 @@ import textwrap
 import time
 
 import turbogears
-from cherrypy import HTTPRedirect, session
+from cherrypy import InternalError, session
 
 from loggerhead import util
 
@@ -35,7 +35,8 @@ class RevisionUI (object):
         # BranchView object
         self._branch = branch
         self.log = branch.log
-        
+    
+#    @util.lsprof
     @util.strip_whitespace
     @turbogears.expose(html='loggerhead.templates.revision')
     def default(self, *args, **kw):
@@ -56,10 +57,9 @@ class RevisionUI (object):
         
         try:
             revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
-        except Exception, x:
-            self.log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(self.log)
-            raise HTTPRedirect(self._branch.url('/changes'))
+        except:
+            self.log.exception('Exception fetching changes')
+            raise InternalError('Could not fetch changes')
         
         navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
                                     pagesize=1, scan_url='/revision', branch=self._branch, feed=True)

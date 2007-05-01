@@ -147,6 +147,9 @@ def clean_message(message):
     if len(message) == 1:
         # robey-style 1-line long message
         message = textwrap.wrap(message[0])
+    elif len(message) == 0:
+        # sometimes a commit may have NO message!
+        message = ['']
         
     # make short form of commit message
     short_message = message[0]
@@ -803,8 +806,13 @@ class History (object):
             old_lines = old_tree.get_file_lines(fid)
             new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
-            bzrlib.diff.internal_diff(old_path, old_lines, new_path, new_lines, buffer)
-            diff = buffer.getvalue()
+            try:
+                bzrlib.diff.internal_diff(old_path, old_lines,
+                                          new_path, new_lines, buffer)
+            except bzrlib.errors.BinaryFile:
+                diff = ''
+            else:
+                diff = buffer.getvalue()
             modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff), raw_diff=diff))
 
         for path, fid, kind in delta.added:

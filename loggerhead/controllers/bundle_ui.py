@@ -20,7 +20,7 @@ import os
 import time
 
 import turbogears
-from cherrypy import HTTPRedirect, response
+from cherrypy import HTTPRedirect, InternalError, response
 
 from loggerhead import util
 
@@ -48,10 +48,9 @@ class BundleUI (object):
 
         try:
             bundle_data = h.get_bundle(revid, compare_revid)
-        except Exception, x:
-            self.log.error('Exception fetching bundle: %s' % (x,))
-            util.log_exception(self.log)
-            raise HTTPRedirect(self._branch.url('/changes'))
+        except:
+            self.log.exception('Exception fetching bundle')
+            raise InternalError('Could not fetch bundle')
             
         response.headers['Content-Type'] = 'text/plain'
         response.headers['Content-Length'] = len(bundle_data)

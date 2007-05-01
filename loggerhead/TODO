@@ -14,3 +14,7 @@
 * something is leaking on www.lag.net/branches
 
 * download tar archive of revision?
+
+* the 'branches' page doesn't auto-update when inner branches are added
+  or removed, but for auto_publish it should.
+

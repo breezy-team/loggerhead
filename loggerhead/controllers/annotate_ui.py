@@ -25,7 +25,7 @@ import textwrap
 import time
 
 import turbogears
-from cherrypy import HTTPRedirect, session
+from cherrypy import HTTPError, InternalError, session
 
 from loggerhead import util
 
@@ -60,14 +60,13 @@ class AnnotateUI (object):
         
         file_id = kw.get('file_id', None)
         if file_id is None:
-            raise HTTPRedirect(self._branch.url('/changes'))
+            raise HTTPError(400, 'No file_id provided to annotate')
 
         try:
             revid_list, revid = h.get_file_view(revid, file_id)
-        except Exception, x:
-            self.log.error('Exception fetching changes: %s' % (x,))
-            util.log_exception(self.log)
-            raise HTTPRedirect(self._branch.url('/changes'))
+        except:
+            self.log.exception('Exception fetching changes')
+            raise InternalError('Could not fetch changes')
             
         # no navbar for revisions
         navigation = util.Container()

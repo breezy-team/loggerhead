@@ -25,7 +25,7 @@ import time
 
 import turbogears
 from turbogears import controllers
-from cherrypy import HTTPRedirect, NotFound
+from cherrypy import NotFound
 from configobj import ConfigObj
 
 from loggerhead import util
