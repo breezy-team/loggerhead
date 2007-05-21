@@ -424,6 +424,8 @@ class History (object):
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
+        if revid == 'head:':
+            return self._last_revid
         if self.revno_re.match(revid):
             revid = self._revno_revid[revid]
         return revid
