@@ -512,6 +512,12 @@ class History (object):
             path = '/' + path
         return path
     
+    @with_branch_lock
+    def get_file_id(self, revid, path):
+        if (len(path) > 0) and not path.startswith('/'):
+            path = '/' + path
+        return self._branch.repository.get_revision_inventory(revid).path2id(path)
+    
     def get_where_merged(self, revid):
         try:
             return self._where_merged[revid]
