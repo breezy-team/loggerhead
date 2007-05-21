@@ -892,7 +892,7 @@ class History (object):
         return file_list
 
 
-    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b-\x0c\x0e-\x1f]')
+    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b\x0e-\x1f]')
 
     @with_branch_lock
     def annotate_file(self, file_id, revid):
