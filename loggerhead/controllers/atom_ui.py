@@ -39,12 +39,10 @@ class AtomUI (object):
         entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
         vals = {
-            'external_url': cherrypy.request.base,
             'branch': self._branch,
             'changes': entries,
             'util': util,
             'history': h,
-            'scan_url': '/changes',
             'updated': entries[0].date.isoformat() + 'Z',
         }
         h.flush_cache()
