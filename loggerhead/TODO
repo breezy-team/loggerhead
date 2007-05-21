@@ -6,15 +6,15 @@
 
 * potentially do a 'bzr pull' on a branch on an interval timer
 
-* maybe change "changes" to "history"?  -- asked on bazaar-dev@ for opinions.
-    -- nobody seems to care.
-
 * browse view: sort by name, last change?
 
 * something is leaking on www.lag.net/branches
 
 * download tar archive of revision?
 
-* the 'branches' page doesn't auto-update when inner branches are added
-  or removed, but for auto_publish it should.
+* nicholas allen suggested the ability to change the # of context lines
+  in diffs (probably something inside bzrlib) and also the ability to see
+  an entire file in diff format
+
+* setup.py install doesn't work
 
