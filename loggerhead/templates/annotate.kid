@@ -28,7 +28,7 @@ ${navbar()}
         </tr>
 
         <tr py:for="line in contents" class="parity${line.parity}">
-            <td class="lineno ${line.status}"> ${line.lineno} </td>
+            <td class="lineno ${line.status}"><a name="L${line.lineno}"> ${line.lineno} </a></td>
             <td class="revno ${line.status}">
                 <a py:if="line.status=='changed'" href="${branch.url('/revision', **util.get_context(clear=1, start_revid=line.change.revid, file_id=file_id))}"
                     title="${line.change.revno} by ${util.hide_email(line.change.author)}, on ${line.change.date.strftime('%d %b %Y %H:%M')} (${util.ago(line.change.date)})">${util.trunc(line.change.revno)}</a>
