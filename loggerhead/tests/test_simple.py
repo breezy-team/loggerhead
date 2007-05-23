@@ -21,6 +21,7 @@ def test_simple():
 config_template = """
 [project]
     [[branch]]
+        branch_name = 'branch'
         folder = '%s'
 """
 
@@ -40,7 +41,9 @@ class TestWithSimpleTree(object):
         tree.add('file')
         tree.commit(message='.')
 
-        config = ConfigObj(config_template%self.bzrbranch)
+        ini = config_template%self.bzrbranch
+
+        config = ConfigObj(ini.splitlines())
         cherrypy.root = Root(config)
 
     def tearDown(self):
@@ -49,4 +52,5 @@ class TestWithSimpleTree(object):
 
     def test_index(self):
         testutil.create_request('/')
-        assert 'loggerhead branches' in cherrypy.response.body[0]
+        link = '<a href="/project/branch">branch</a>'
+        assert link in cherrypy.response.body[0]
