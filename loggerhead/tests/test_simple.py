@@ -39,7 +39,8 @@ class TestWithSimpleTree(object):
         finally:
             f.close()
         tree.add('file')
-        tree.commit(message='.')
+        self.msg = 'a very exciting commit message'
+        tree.commit(message=self.msg)
 
         ini = config_template%self.bzrbranch
 
@@ -50,7 +51,19 @@ class TestWithSimpleTree(object):
         shutil.rmtree(self.bzrbranch)
         bzrlib.osutils.set_or_unset_env('BZR_HOME', self.old_bzrhome)
 
+    # there are so i can run it with py.test and take advantage of the
+    # error reporting...
+    def setup_method(self, meth):
+        self.setUp()
+
+    def teardown_method(self, meth):
+        self.tearDown()
+
     def test_index(self):
         testutil.create_request('/')
         link = '<a href="/project/branch">branch</a>'
         assert link in cherrypy.response.body[0]
+
+    def test_changes(self):
+        testutil.create_request('/project/branch/changes')
+        assert self.msg in cherrypy.response.body[0]
