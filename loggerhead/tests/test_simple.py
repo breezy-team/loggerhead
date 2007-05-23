@@ -7,7 +7,7 @@ import shutil
 import cherrypy
 from turbogears import testutil
 
-from bzrlib.bzrdir import BzrDir
+import bzrlib
 
 from loggerhead.controllers import Root
 
@@ -27,15 +27,16 @@ config_template = """
 
 class TestWithSimpleTree(object):
     def setUp(self):
-        self.old_bzrhome = os.environ.get('BZR_HOME')
-        os.environ['BZR_HOME'] = ''
+        self.old_bzrhome = bzrlib.osutils.set_or_unset_env('BZR_HOME', '')
         self.bzrbranch = tempfile.mkdtemp()
-        branch = BzrDir.create_branch_convenience(
+        branch = bzrlib.bzrdir.BzrDir.create_branch_convenience(
             self.bzrbranch, force_new_tree=True)
         tree = branch.bzrdir.open_workingtree()
         f = open(os.path.join(self.bzrbranch, 'file'), 'w')
-        f.write('data')
-        f.close()
+        try:
+            f.write('data')
+        finally:
+            f.close()
         tree.add('file')
         tree.commit(message='.')
 
@@ -44,10 +45,7 @@ class TestWithSimpleTree(object):
 
     def tearDown(self):
         shutil.rmtree(self.bzrbranch)
-        if self.old_bzrhome is None:
-            del os.environ['BZR_HOME']
-        else:
-            os.environ['BZR_HOME'] = self.old_bzrhome
+        bzrlib.osutils.set_or_unset_env('BZR_HOME', self.old_bzrhome)
 
     def test_index(self):
         testutil.create_request('/')
