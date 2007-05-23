@@ -55,7 +55,7 @@ pidfile = os.path.join(home, 'loggerhead.pid')
 # read loggerhead config
 
 from configobj import ConfigObj
-config = sys._loggerhead_config = ConfigObj(os.path.join(home, 'loggerhead.conf'), encoding='utf-8')
+config = ConfigObj(os.path.join(home, 'loggerhead.conf'), encoding='utf-8')
 extra_path = config.get('bzrpath', None)
 if extra_path:
     sys.path.insert(0, extra_path)
@@ -84,6 +84,8 @@ log = logging.getLogger('loggerhead')
 log.info('Starting up...')
 
 from loggerhead.controllers import Root
+
+Root = Root(config)
 
 # re-index every 6 hours
 
