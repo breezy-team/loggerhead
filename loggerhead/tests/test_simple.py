@@ -34,13 +34,15 @@ class TestWithSimpleTree(object):
             self.bzrbranch, force_new_tree=True)
         tree = branch.bzrdir.open_workingtree()
         f = open(os.path.join(self.bzrbranch, 'file'), 'w')
+        self.filecontents = 'some\nmultiline\ndata'
         try:
-            f.write('data')
+            f.write(self.filecontents)
         finally:
             f.close()
         tree.add('file')
+        self.fileid = tree.path2id('file')
         self.msg = 'a very exciting commit message'
-        tree.commit(message=self.msg)
+        self.revid = tree.commit(message=self.msg)
 
         ini = config_template%self.bzrbranch
 
@@ -67,3 +69,9 @@ class TestWithSimpleTree(object):
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
         assert self.msg in cherrypy.response.body[0]
+
+    def test_annotate(self):
+        testutil.create_request('/project/branch/annotate?'
+                                + 'file_id='+self.fileid)
+        for line in self.filecontents.splitlines():
+            assert line in cherrypy.response.body[0]
