@@ -60,5 +60,6 @@ class DownloadUI (object):
         self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
         response.headers['Content-Type'] = mime_type
         response.headers['Content-Length'] = len(content)
+        response.headers['Content-Disposition'] = 'attachment; filename=%s'%(filename,)
         response.body = content
         return response.body

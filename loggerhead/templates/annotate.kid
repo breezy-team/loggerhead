@@ -15,7 +15,7 @@ ${navbar()}
 	    <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ], **util.get_context(clear=1))}"> browse files </a> </div>
 	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', **util.get_context(clear=1, start_revid=revid))}"> view revision </a> </div>
 	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', **util.get_context(clear=1, start_revid=revid, file_id=file_id))}"> view changes to this file </a> </div>
-	    <div> <b>&#8594;</b> <a href="${branch.url([ '/download', revid, file_id, filename ])}"> view/download file </a> </div>
+	    <div> <b>&#8594;</b> <a href="${branch.url([ '/download', revid, file_id, filename ])}"> download file </a> </div>
 	</div>
 </h1>
 
