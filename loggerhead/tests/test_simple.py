@@ -33,14 +33,14 @@ class TestWithSimpleTree(object):
         branch = bzrlib.bzrdir.BzrDir.create_branch_convenience(
             self.bzrbranch, force_new_tree=True)
         tree = branch.bzrdir.open_workingtree()
-        f = open(os.path.join(self.bzrbranch, 'file'), 'w')
+        f = open(os.path.join(self.bzrbranch, 'myfilename'), 'w')
         self.filecontents = 'some\nmultiline\ndata'
         try:
             f.write(self.filecontents)
         finally:
             f.close()
-        tree.add('file')
-        self.fileid = tree.path2id('file')
+        tree.add('myfilename')
+        self.fileid = tree.path2id('myfilename')
         self.msg = 'a very exciting commit message'
         self.revid = tree.commit(message=self.msg)
 
@@ -75,3 +75,8 @@ class TestWithSimpleTree(object):
                                 + 'file_id='+self.fileid)
         for line in self.filecontents.splitlines():
             assert line in cherrypy.response.body[0]
+
+    def test_inventory(self):
+        testutil.create_request('/project/branch/files')
+        assert 'myfilename' in cherrypy.response.body[0]
+
