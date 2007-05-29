@@ -18,15 +18,14 @@ def test_simple():
     testutil.create_request('/')
     assert 'loggerhead branches' in cherrypy.response.body[0]
 
-config_template = """
-[project]
-    [[branch]]
-        branch_name = 'branch'
-        folder = '%s'
-"""
-
 
 class TestWithSimpleTree(object):
+    config_template = """
+    [project]
+        [[branch]]
+            branch_name = 'branch'
+            folder = '%(branch)s'
+    """
     def setUp(self):
         self.old_bzrhome = bzrlib.osutils.set_or_unset_env('BZR_HOME', '')
         self.bzrbranch = tempfile.mkdtemp()
@@ -44,7 +43,7 @@ class TestWithSimpleTree(object):
         self.msg = 'a very exciting commit message'
         self.revid = tree.commit(message=self.msg)
 
-        ini = config_template%self.bzrbranch
+        ini = self.config_template%dict(branch=self.bzrbranch)
 
         config = ConfigObj(ini.splitlines())
         cherrypy.root = Root(config)
@@ -84,3 +83,12 @@ class TestWithSimpleTree(object):
         testutil.create_request('/project/branch/files')
         assert 'myfilename' in cherrypy.response.body[0]
 
+class TestWithSimpleTreeAndCache(TestWithSimpleTree):
+    config_template = """
+    testing = True
+    [project]
+        [[branch]]
+            branch_name = 'branch'
+            folder = '%(branch)s'
+            cachepath = '%(branch)s/cache'
+    """
