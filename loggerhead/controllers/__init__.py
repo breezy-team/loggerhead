@@ -94,11 +94,12 @@ class Project (object):
 
 
 class Root (controllers.RootController):
-    def __init__(self):
+    def __init__(self, config):
         self._projects = []
-        for project_name in sys._loggerhead_config.sections:
+        self._config = config
+        for project_name in self._config.sections:
             c_project_name = cherrypy_friendly(project_name)
-            project = Project(c_project_name, sys._loggerhead_config[project_name])
+            project = Project(c_project_name, self._config[project_name])
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
@@ -109,7 +110,7 @@ class Root (controllers.RootController):
         return {
             'projects': self._projects,
             'util': util,
-            'title': sys._loggerhead_config.get('title', ''),
+            'title': self._config.get('title', ''),
         }
 
     def _check_rebuild(self):
@@ -117,9 +118,6 @@ class Root (controllers.RootController):
             for v in p.views:
                 v.check_rebuild()
 
-
-# singleton:
-Root = Root()
 
 
 # for use in profiling the very-slow get_change() method:

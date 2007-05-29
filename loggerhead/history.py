@@ -854,11 +854,6 @@ class History (object):
         
         entries = inv.entries()
         
-        fetch_set = set()
-        for filepath, entry in entries:
-            fetch_set.add(entry.revision)
-        change_dict = dict([(c.revid, c) for c in self.get_changes(list(fetch_set))])
-        
         file_list = []
         for filepath, entry in entries:
             if posixpath.dirname(filepath) != path:
@@ -868,10 +863,12 @@ class History (object):
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
-            
-            # last change:
+
             revid = entry.revision
-            change = change_dict[revid]
+            revision = self._branch.repository.get_revision(revid)
+
+            change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
+                                    revno=self.get_revno(revid))
             
             file = util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
                                   pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
