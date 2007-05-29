@@ -70,6 +70,10 @@ class TestWithSimpleTree(object):
         testutil.create_request('/project/branch/changes')
         assert self.msg in cherrypy.response.body[0]
 
+    def test_changes_search(self):
+        testutil.create_request('/project/branch/changes?q=foo')
+        assert 'Sorry, no results found for your search.' in cherrypy.response.body[0]
+
     def test_annotate(self):
         testutil.create_request('/project/branch/annotate?'
                                 + 'file_id='+self.fileid)
