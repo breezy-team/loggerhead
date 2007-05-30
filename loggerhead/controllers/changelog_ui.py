@@ -67,6 +67,9 @@ class ChangeLogUI (object):
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except:
+##             import sys
+##             print sys.exc_info()[2]
+##             import pdb; pdb.post_mortem(sys.exc_info()[2])
             self.log.exception('Exception fetching changes')
             raise InternalError('Could not fetch changes')
 

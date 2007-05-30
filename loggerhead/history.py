@@ -605,7 +605,7 @@ class History (object):
             changes = self.get_changes_uncached(revid_list, get_diffs)
         else:
             changes = self._change_cache.get_changes(revid_list, get_diffs)
-        if changes is None:
+        if len(changes) == 0:
             return changes
         
         # some data needs to be recalculated each time, because it may
@@ -694,6 +694,8 @@ class History (object):
                 # i don't know why. :(
                 self.log.debug('No such revision (skipping): %s', e)
                 revid_list.remove(e.revision)
+        if not revid_list:
+            return []
         
         delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
         combined_list = zip(rev_list, delta_list)
