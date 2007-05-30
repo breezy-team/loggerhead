@@ -3,6 +3,7 @@ import unittest
 import os
 import tempfile
 import shutil
+import logging
 
 import cherrypy
 from turbogears import testutil
@@ -27,6 +28,9 @@ class TestWithSimpleTree(object):
             folder = '%(branch)s'
     """
     def setUp(self):
+
+        logging.basicConfig(level=logging.DEBUG)
+
         self.old_bzrhome = bzrlib.osutils.set_or_unset_env('BZR_HOME', '')
         self.bzrbranch = tempfile.mkdtemp()
         branch = bzrlib.bzrdir.BzrDir.create_branch_convenience(
