@@ -87,32 +87,33 @@ class ChangeCache (object):
         else:
             cache = shelve.open(self._changes_filename, 'c', protocol=2)
 
-        out = []
-        fetch_list = []
-        sfetch_list = []
-        for revid in revid_list:
-            # if the revid is in unicode, use the utf-8 encoding as the key
-            srevid = util.to_utf8(revid)
+        try:
+            out = []
+            fetch_list = []
+            sfetch_list = []
+            for revid in revid_list:
+                # if the revid is in unicode, use the utf-8 encoding as the key
+                srevid = util.to_utf8(revid)
+                
+                if srevid in cache:
+                    out.append(cache[srevid])
+                else:
+                    #self.log.debug('Entry cache miss: %r' % (revid,))
+                    out.append(None)
+                    fetch_list.append(revid)
+                    sfetch_list.append(srevid)
             
-            if srevid in cache:
-                out.append(cache[srevid])
-            else:
-                #self.log.debug('Entry cache miss: %r' % (revid,))
-                out.append(None)
-                fetch_list.append(revid)
-                sfetch_list.append(srevid)
-        
-        if len(fetch_list) > 0:
-            # some revisions weren't in the cache; fetch them
-            changes = self.history.get_changes_uncached(fetch_list, get_diffs)
-            if changes is None:
-                return changes
-            for i in xrange(len(revid_list)):
-                if out[i] is None:
-                    cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
-        
-        cache.close()
-        return out
+            if len(fetch_list) > 0:
+                # some revisions weren't in the cache; fetch them
+                changes = self.history.get_changes_uncached(fetch_list, get_diffs)
+                if changes is None:
+                    return changes
+                for i in xrange(len(revid_list)):
+                    if out[i] is None:
+                        cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
+            return out
+        finally:
+            cache.close()
     
     @with_lock
     def full(self, get_diffs=False):
