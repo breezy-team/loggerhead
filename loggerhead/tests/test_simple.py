@@ -129,3 +129,13 @@ class TestEmptyBranch(BasicTests):
         testutil.create_request('/project/branch/changes')
         assert 'No revisions!' in cherrypy.response.body[0]
 
+class TestEmptyBranchWithCache(TestEmptyBranch):
+    config_template = """
+    testing = True
+    [project]
+        [[branch]]
+            branch_name = 'branch'
+            folder = '%(branch)s'
+            cachepath = '%(branch)s/cache'
+    """
+
