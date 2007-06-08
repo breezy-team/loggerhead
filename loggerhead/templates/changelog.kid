@@ -31,6 +31,10 @@ ${navbar()}
     Sorry, no results found for your search.
 </span>
 
+<span py:if="not changes">
+    No revisions!
+</span>
+
 <span py:if="not search_failed" class="changelog"> ${collapse_all_button('cl')} </span>
 
 <div class="log-entries">

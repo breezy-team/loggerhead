@@ -190,8 +190,12 @@ class History (object):
         self = cls()
         self._branch = branch
         self._history = branch.revision_history()
-        self._last_revid = self._history[-1]
-        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
+        if len(self._history) == 0:
+            self._last_revid = None
+            self._revision_graph = {}
+        else:
+            self._last_revid = self._history[-1]
+            self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
         
         if name is None:
             name = self._branch.nick
@@ -229,9 +233,11 @@ class History (object):
 
     @with_branch_lock
     def out_of_date(self):
-        if self._branch.revision_history()[-1] != self._last_revid:
-            return True
-        return False
+        revhistory = self._branch.revision_history()
+        if revhistory:
+            return revhistory[-1] != self._last_revid
+        else:
+            return self._last_revid is not None
 
     def use_cache(self, cache):
         self._change_cache = cache

@@ -120,6 +120,11 @@ class TestEmptyBranch(BasicTests):
         self.createBranch()
         self.setUpLoggerhead()
 
+    def test_index(self):
+        testutil.create_request('/')
+        link = '<a href="/project/branch">branch</a>'
+        assert link in cherrypy.response.body[0]
+
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
         assert 'No revisions!' in cherrypy.response.body[0]
