@@ -424,6 +424,8 @@ class History (object):
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
+        if revid == 'head:':
+            return self._last_revid
         if self.revno_re.match(revid):
             revid = self._revno_revid[revid]
         return revid
@@ -511,6 +513,12 @@ class History (object):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return path
+    
+    @with_branch_lock
+    def get_file_id(self, revid, path):
+        if (len(path) > 0) and not path.startswith('/'):
+            path = '/' + path
+        return self._branch.repository.get_revision_inventory(revid).path2id(path)
     
     def get_where_merged(self, revid):
         try:
@@ -851,11 +859,6 @@ class History (object):
         
         entries = inv.entries()
         
-        fetch_set = set()
-        for filepath, entry in entries:
-            fetch_set.add(entry.revision)
-        change_dict = dict([(c.revid, c) for c in self.get_changes(list(fetch_set))])
-        
         file_list = []
         for filepath, entry in entries:
             if posixpath.dirname(filepath) != path:
@@ -865,10 +868,12 @@ class History (object):
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
-            
-            # last change:
+
             revid = entry.revision
-            change = change_dict[revid]
+            revision = self._branch.repository.get_revision(revid)
+
+            change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
+                                    revno=self.get_revno(revid))
             
             file = util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
                                   pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
@@ -889,7 +894,7 @@ class History (object):
         return file_list
 
 
-    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b-\x0c\x0e-\x1f]')
+    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b\x0e-\x1f]')
 
     @with_branch_lock
     def annotate_file(self, file_id, revid):

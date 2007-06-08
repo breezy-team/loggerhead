@@ -57,10 +57,18 @@ class AnnotateUI (object):
             revid = h.fix_revid(args[0])
         else:
             revid = None
+        path = None
+        if len(args) > 1:
+            path = '/'.join(args[1:])
+            if not path.startswith('/'):
+                path = '/' + path
         
         file_id = kw.get('file_id', None)
+        if (file_id is None) and (path is None):
+            raise HTTPError(400, 'No file_id or filename provided to annotate')
+
         if file_id is None:
-            raise HTTPError(400, 'No file_id provided to annotate')
+            file_id = h.get_file_id(revid, path)
 
         try:
             revid_list, revid = h.get_file_view(revid, file_id)
@@ -71,7 +79,8 @@ class AnnotateUI (object):
         # no navbar for revisions
         navigation = util.Container()
         
-        path = h.get_path(revid, file_id)
+        if path is None:
+            path = h.get_path(revid, file_id)
         filename = os.path.basename(path)
 
         vals = {

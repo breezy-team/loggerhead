@@ -52,24 +52,38 @@ class Project (object):
         
         self._views = []
         for view_name in config.sections:
-            log.debug('Configuring (project %r) branch %r...', name, view_name)
+            log.debug('Configuring (project %s) branch %s...', name, view_name)
             self._add_view(view_name, config[view_name], config[view_name].get('folder'))
         
-        auto_folder = config.get('auto_publish_folder', None)
-        if auto_folder is not None:
-            auto_list = []
-            # scan a folder for bazaar branches, and add them automatically
-            for path, folders, filenames in os.walk(auto_folder):
-                for folder in folders:
-                    folder = os.path.join(path, folder)
-                    if is_branch(folder):
-                        auto_list.append(folder)
-            auto_list.sort()
-            for folder in auto_list:
-                view_name = os.path.basename(folder)
-                log.debug('Auto-configuring (project %r) branch %r...', name, view_name)
-                self._add_view(view_name, ConfigObj(), folder)
+        self._auto_folder = config.get('auto_publish_folder', None)
+        self._auto_list = []
+        if self._auto_folder is not None:
+            self._recheck_auto_folders()
     
+    def _recheck_auto_folders(self):
+        if self._auto_folder is None:
+            return
+        auto_list = []
+        # scan a folder for bazaar branches, and add them automatically
+        for path, folders, filenames in os.walk(self._auto_folder):
+            for folder in folders:
+                folder = os.path.join(path, folder)
+                if is_branch(folder):
+                    auto_list.append(folder)
+        auto_list.sort()
+        if auto_list == self._auto_list:
+            # nothing has changed; do nothing.
+            return
+
+        # rebuild views:
+        log.debug('Rescanning auto-folder for project %s ...', self.name)
+        self._views = []
+        for folder in auto_list:
+            view_name = os.path.basename(folder)
+            log.debug('Auto-configuring (project %s) branch %s...', self.name, view_name)
+            self._add_view(view_name, ConfigObj(), folder)
+        self._auto_list = auto_list
+        
     def _add_view(self, view_name, view_config, folder):
         c_view_name = cherrypy_friendly(view_name)
         view = BranchView(self.name, c_view_name, view_name, folder, view_config, self._config)
@@ -80,20 +94,23 @@ class Project (object):
 
 
 class Root (controllers.RootController):
-    def __init__(self):
+    def __init__(self, config):
         self._projects = []
-        for project_name in sys._loggerhead_config.sections:
+        self._config = config
+        for project_name in self._config.sections:
             c_project_name = cherrypy_friendly(project_name)
-            project = Project(c_project_name, sys._loggerhead_config[project_name])
+            project = Project(c_project_name, self._config[project_name])
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
     @turbogears.expose(template='loggerhead.templates.browse')
     def index(self):
+        for p in self._projects:
+            p._recheck_auto_folders()
         return {
             'projects': self._projects,
             'util': util,
-            'title': sys._loggerhead_config.get('title', ''),
+            'title': self._config.get('title', ''),
         }
 
     def _check_rebuild(self):
@@ -101,9 +118,6 @@ class Root (controllers.RootController):
             for v in p.views:
                 v.check_rebuild()
 
-
-# singleton:
-Root = Root()
 
 
 # for use in profiling the very-slow get_change() method:
