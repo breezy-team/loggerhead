@@ -296,17 +296,6 @@ class History (object):
     def get_revision_history(self):
         return self._full_history
     
-    def get_revid_sequence(self, revid_list, revid):
-        """
-        given a list of revision ids, return the sequence # of this revid in
-        the list.
-        """
-        seq = 0
-        for r in revid_list:
-            if revid == r:
-                return seq
-            seq += 1
-    
     def get_revids_from(self, revid_list, revid):
         """
         given a list of revision ids, yield revisions in graph order,

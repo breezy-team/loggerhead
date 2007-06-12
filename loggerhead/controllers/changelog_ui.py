@@ -63,7 +63,11 @@ class ChangeLogUI (object):
             if len(revid_list) == 0:
                 scan_list = revid_list
             else:
-                scan_list = revid_list[h.get_revid_sequence(revid_list, revid):]
+                if revid in revid_list: # XXX is this always true?
+                    i = revid_list.index(revid)
+                else:
+                    i = None
+                scan_list = revid_list[i:]
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except:
