@@ -206,14 +206,11 @@ class History (object):
         self._revision_info = {}
         self._revno_revid = {}
         self._merge_sort = bzrlib.tsort.merge_sort(self._revision_graph, self._last_revid, generate_revno=True)
-        count = 0
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
             self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
-            count += 1
-        self._count = count
 
         # cache merge info
         self._where_merged = {}
@@ -272,8 +269,6 @@ class History (object):
     
     last_revid = property(lambda self: self._last_revid, None, None)
     
-    count = property(lambda self: self._count, None, None)
-
     @with_branch_lock
     def get_config(self):
         return self._branch.get_config()
@@ -289,10 +284,6 @@ class History (object):
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return revno_str
 
-    def get_sequence(self, revid):
-        seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
-        return seq
-    
     def get_revision_history(self):
         return self._full_history
     

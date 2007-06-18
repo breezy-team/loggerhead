@@ -81,7 +81,7 @@ class ChangeLogUI (object):
                                     file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
         if query is not None:
             navigation.query = query
-        util.fill_in_navigation(h, navigation)
+        util.fill_in_navigation(navigation)
         
         entries = list(entries)
         # add parent & merge-point branch-nick info, in case it's useful
