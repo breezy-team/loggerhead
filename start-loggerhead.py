@@ -22,7 +22,7 @@ def make_handler(config, filename):
     elif roll == 'weekly':
         h = logging.handlers.TimedRotatingFileHandler(filename, 'W0', 0, 100)
     else:
-        h = logging.handlers.FileHandler(filename)
+        h = logging.FileHandler(filename)
     return h
 
         
