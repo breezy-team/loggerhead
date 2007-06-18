@@ -60,3 +60,18 @@ def daemonize(pidfile, home):
     f.write('%d\n' % (os.getpid(),))
     f.write('%s\n' % (home,))
     f.close()
+
+
+def is_running(pidfile):
+    try:
+        f = open(pidfile, 'r')
+    except IOError:
+        return False
+    pid = int(f.readline())
+    f.close()
+    try:
+        os.kill(pid, 0)
+    except OSError:
+        # no such process
+        return False
+    return True

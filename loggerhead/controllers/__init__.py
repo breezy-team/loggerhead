@@ -61,6 +61,7 @@ class Project (object):
             self._recheck_auto_folders()
     
     def _recheck_auto_folders(self):
+        log.debug('recheck...')
         if self._auto_folder is None:
             return
         auto_list = []
@@ -73,6 +74,7 @@ class Project (object):
         auto_list.sort()
         if auto_list == self._auto_list:
             # nothing has changed; do nothing.
+            log.debug('ok')
             return
 
         # rebuild views:
@@ -107,11 +109,12 @@ class Root (controllers.RootController):
     def index(self):
         for p in self._projects:
             p._recheck_auto_folders()
-        return {
+        log.debug('%r' % {
             'projects': self._projects,
             'util': util,
             'title': self._config.get('title', ''),
-        }
+        })
+        return {}
 
     def _check_rebuild(self):
         for p in self._projects:
