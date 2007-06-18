@@ -189,13 +189,11 @@ class History (object):
         z = time.time()
         self = cls()
         self._branch = branch
-        self._history = branch.revision_history()
-        if len(self._history) == 0:
-            self._last_revid = None
-            self._revision_graph = {}
-        else:
-            self._last_revid = self._history[-1]
+        self._last_revid = self._branch.last_revision()
+        if self._last_revid is not None:
             self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
+        else:
+            self._revision_graph = {}
         
         if name is None:
             name = self._branch.nick
@@ -516,7 +514,7 @@ class History (object):
         """
         Return the list of revids that have merged this node.
         """
-        if revid in self._history:
+        if '.' not in self.get_revno(revid):
             return []
         
         merge_point = []
