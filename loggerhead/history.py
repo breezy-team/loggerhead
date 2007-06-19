@@ -189,9 +189,11 @@ class History (object):
         z = time.time()
         self = cls()
         self._branch = branch
-        self._history = branch.revision_history()
-        self._last_revid = self._history[-1]
-        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
+        self._last_revid = self._branch.last_revision()
+        if self._last_revid is not None:
+            self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
+        else:
+            self._revision_graph = {}
         
         if name is None:
             name = self._branch.nick
@@ -202,14 +204,11 @@ class History (object):
         self._revision_info = {}
         self._revno_revid = {}
         self._merge_sort = bzrlib.tsort.merge_sort(self._revision_graph, self._last_revid, generate_revno=True)
-        count = 0
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
             self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
-            count += 1
-        self._count = count
 
         # cache merge info
         self._where_merged = {}
@@ -229,9 +228,10 @@ class History (object):
 
     @with_branch_lock
     def out_of_date(self):
-        if self._branch.revision_history()[-1] != self._last_revid:
-            return True
-        return False
+        if self._branch.__class__ is not \
+               bzrlib.branch.Branch.open(self._branch.base).__class__:
+            return False
+        return self._branch.last_revision() != self._last_revid
 
     def use_cache(self, cache):
         self._change_cache = cache
@@ -266,8 +266,6 @@ class History (object):
     
     last_revid = property(lambda self: self._last_revid, None, None)
     
-    count = property(lambda self: self._count, None, None)
-
     @with_branch_lock
     def get_config(self):
         return self._branch.get_config()
@@ -283,23 +281,8 @@ class History (object):
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return revno_str
 
-    def get_sequence(self, revid):
-        seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
-        return seq
-    
     def get_revision_history(self):
         return self._full_history
-    
-    def get_revid_sequence(self, revid_list, revid):
-        """
-        given a list of revision ids, return the sequence # of this revid in
-        the list.
-        """
-        seq = 0
-        for r in revid_list:
-            if revid == r:
-                return seq
-            seq += 1
     
     def get_revids_from(self, revid_list, revid):
         """
@@ -444,7 +427,6 @@ class History (object):
             revid = self._last_revid
         if file_id is not None:
             # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
-            inv = self._branch.repository.get_revision_inventory(revid)
             revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
@@ -520,22 +502,17 @@ class History (object):
             path = '/' + path
         return self._branch.repository.get_revision_inventory(revid).path2id(path)
     
-    def get_where_merged(self, revid):
-        try:
-            return self._where_merged[revid]
-        except:
-            return []
-    
+
     def get_merge_point_list(self, revid):
         """
         Return the list of revids that have merged this node.
         """
-        if revid in self._history:
+        if '.' not in self.get_revno(revid):
             return []
         
         merge_point = []
         while True:
-            children = self.get_where_merged(revid)
+            children = self._where_merged.get(revid, [])
             nexts = []
             for child in children:
                 child_parents = self._revision_graph[child]
@@ -861,7 +838,6 @@ class History (object):
             if posixpath.dirname(filepath) != path:
                 continue
             filename = posixpath.basename(filepath)
-            rich_filename = filename
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
@@ -872,7 +848,7 @@ class History (object):
             change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
                                     revno=self.get_revno(revid))
             
-            file = util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
+            file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
                                   pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
             file_list.append(file)
         

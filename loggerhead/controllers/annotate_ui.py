@@ -56,7 +56,8 @@ class AnnotateUI (object):
         if len(args) > 0:
             revid = h.fix_revid(args[0])
         else:
-            revid = None
+            revid = h.last_revid
+
         path = None
         if len(args) > 1:
             path = '/'.join(args[1:])
@@ -69,12 +70,6 @@ class AnnotateUI (object):
 
         if file_id is None:
             file_id = h.get_file_id(revid, path)
-
-        try:
-            revid_list, revid = h.get_file_view(revid, file_id)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise InternalError('Could not fetch changes')
             
         # no navbar for revisions
         navigation = util.Container()
