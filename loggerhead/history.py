@@ -503,12 +503,7 @@ class History (object):
             path = '/' + path
         return self._branch.repository.get_revision_inventory(revid).path2id(path)
     
-    def get_where_merged(self, revid):
-        try:
-            return self._where_merged[revid]
-        except:
-            return []
-    
+
     def get_merge_point_list(self, revid):
         """
         Return the list of revids that have merged this node.
@@ -518,7 +513,7 @@ class History (object):
         
         merge_point = []
         while True:
-            children = self.get_where_merged(revid)
+            children = self._where_merged.get(revid, [])
             nexts = []
             for child in children:
                 child_parents = self._revision_graph[child]
