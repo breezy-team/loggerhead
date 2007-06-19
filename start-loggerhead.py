@@ -74,7 +74,7 @@ def main():
     if options.check:
         if daemon.is_running(pidfile):
             sys.exit(0)
-        sys.stderr.write('Did not find okulo running in %r; restarting...\n' % (pidfile,))
+        sys.stderr.write('Did not find loggerhead running in %r; restarting...\n' % (pidfile,))
     
     # read loggerhead config
     
