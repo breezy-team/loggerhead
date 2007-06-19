@@ -428,7 +428,6 @@ class History (object):
             revid = self._last_revid
         if file_id is not None:
             # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
-            inv = self._branch.repository.get_revision_inventory(revid)
             revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
@@ -845,7 +844,6 @@ class History (object):
             if posixpath.dirname(filepath) != path:
                 continue
             filename = posixpath.basename(filepath)
-            rich_filename = filename
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
@@ -856,7 +854,7 @@ class History (object):
             change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
                                     revno=self.get_revno(revid))
             
-            file = util.Container(filename=filename, rich_filename=rich_filename, executable=entry.executable, kind=entry.kind,
+            file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
                                   pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
             file_list.append(file)
         
