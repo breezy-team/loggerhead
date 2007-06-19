@@ -228,11 +228,10 @@ class History (object):
 
     @with_branch_lock
     def out_of_date(self):
-        revhistory = self._branch.revision_history()
-        if revhistory:
-            return revhistory[-1] != self._last_revid
-        else:
-            return self._last_revid is not None
+        if self._branch.__class__ is not \
+               bzrlib.branch.Branch.open(self._branch.base).__class__:
+            return False
+        return self._branch.last_revision() != self._last_revid
 
     def use_cache(self, cache):
         self._change_cache = cache
