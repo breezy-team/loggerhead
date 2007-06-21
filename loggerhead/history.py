@@ -178,6 +178,16 @@ class _RevListToTimestamps(object):
 
 NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'.encode('utf-8')
 
+def prepare_for_kid(s):
+    """
+    XXX
+    
+    clean up a string for html display.  expand any tabs, encode any html
+    entities, and replace spaces with '&nbsp;'.  this is primarily for use
+    in displaying monospace text.
+    """
+    return s.expandtabs().replace(' ', NONBREAKING_SPACE)
+
 class History (object):
     
     def __init__(self):
@@ -764,20 +774,20 @@ class History (object):
                     new_lineno = lines[1]
                 elif line.startswith(' '):
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                     type='context', line=util.html_clean(line[1:])))
+                                                     type='context', line=prepare_for_kid(line[1:])))
                     old_lineno += 1
                     new_lineno += 1
                 elif line.startswith('+'):
                     chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                     type='insert', line=util.html_clean(line[1:])))
+                                                     type='insert', line=prepare_for_kid(line[1:])))
                     new_lineno += 1
                 elif line.startswith('-'):
                     chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                     type='delete', line=util.html_clean(line[1:])))
+                                                     type='delete', line=prepare_for_kid(line[1:])))
                     old_lineno += 1
                 else:
                     chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
-                                                     type='unknown', line=util.html_clean(repr(line))))
+                                                     type='unknown', line=prepare_for_kid(repr(line))))
             if chunk is not None:
                 chunks.append(chunk)
             return chunks
@@ -909,9 +919,8 @@ class History (object):
                 if len(trunc_revno) > 10:
                     trunc_revno = trunc_revno[:9] + '...'
 
-            text = text.expandtabs().replace(' ', NONBREAKING_SPACE)
             yield util.Container(parity=parity, lineno=lineno, status=status,
-                                 change=change, text=text)
+                                 change=change, text=prepare_for_kid(text))
             lineno += 1
         
         self.log.debug('annotate: %r secs' % (time.time() - z,))
