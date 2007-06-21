@@ -176,6 +176,7 @@ class _RevListToTimestamps(object):
     def __len__(self):
         return len(self.revid_list)
 
+NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'.encode('utf-8')
 
 class History (object):
     
@@ -889,7 +890,7 @@ class History (object):
             if self._BADCHARS_RE.match(text):
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
-                                     text='<i>' + util.html_clean('(This is a binary file.)') + '</i>',
+                                     text='<i>' + '(This is a binary file.)' + '</i>',
                                      change=util.Container())
                 return
         change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
@@ -907,9 +908,10 @@ class History (object):
                 trunc_revno = change.revno
                 if len(trunc_revno) > 10:
                     trunc_revno = trunc_revno[:9] + '...'
-                
+
+            text = text.expandtabs().replace(' ', NONBREAKING_SPACE)
             yield util.Container(parity=parity, lineno=lineno, status=status,
-                                 change=change, text=util.html_clean(text))
+                                 change=change, text=text)
             lineno += 1
         
         self.log.debug('annotate: %r secs' % (time.time() - z,))
