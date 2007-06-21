@@ -854,9 +854,14 @@ class History (object):
                 pathname += '/'
 
             revid = entry.revision
-            revision = self._branch.repository.get_revision(revid)
+            y = time.time()
+            if self._change_cache:
+                timestamp = self.get_changes([revid])[0].date
+            else:
+                revision = self._branch.repository.get_revision(revid)
+                timestamp = datetime.datetime.fromtimestamp(revision.timestamp)
 
-            change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
+            change = util.Container(date=timestamp,
                                     revno=self.get_revno(revid))
             
             file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
