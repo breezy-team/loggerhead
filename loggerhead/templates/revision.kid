@@ -199,7 +199,7 @@ ${navbar()}
 	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
 	                <td class="lineno">${line.old_lineno}</td>
 	                <td class="lineno">${line.new_lineno}</td>
-	                <td class="diff-${line.type} text">${XML(line.line)}</td>
+	                <td class="diff-${line.type} text">${line.line}</td>
 	                <td> </td>
 	            </tr>
 	            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
