@@ -1,4 +1,5 @@
 from configobj import ConfigObj
+import cgi
 import unittest
 import os
 import tempfile
@@ -68,14 +69,15 @@ class TestWithSimpleTree(BasicTests):
         self.createBranch()
 
         f = open(os.path.join(self.bzrbranch, 'myfilename'), 'w')
-        self.filecontents = 'some\nmultiline\ndata'
+        self.filecontents = ('some\nmultiline\ndata\n'
+                             'with<htmlspecialchars\n')
         try:
             f.write(self.filecontents)
         finally:
             f.close()
         self.tree.add('myfilename')
         self.fileid = self.tree.path2id('myfilename')
-        self.msg = 'a very exciting commit message'
+        self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
 
         self.setUpLoggerhead()
@@ -97,7 +99,7 @@ class TestWithSimpleTree(BasicTests):
         testutil.create_request('/project/branch/annotate?'
                                 + 'file_id='+self.fileid)
         for line in self.filecontents.splitlines():
-            assert line in cherrypy.response.body[0]
+            assert cgi.escape(line) in cherrypy.response.body[0]
 
     def test_inventory(self):
         testutil.create_request('/project/branch/files')
