@@ -801,20 +801,20 @@ class History (object):
                 new_lineno = lines[1]
             elif line.startswith(' '):
                 chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                 type='context', line=util.html_clean(line[1:])))
+                                                 type='context', line=util.fixed_width(line[1:])))
                 old_lineno += 1
                 new_lineno += 1
             elif line.startswith('+'):
                 chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                 type='insert', line=util.html_clean(line[1:])))
+                                                 type='insert', line=util.fixed_width(line[1:])))
                 new_lineno += 1
             elif line.startswith('-'):
                 chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                 type='delete', line=util.html_clean(line[1:])))
+                                                 type='delete', line=util.fixed_width(line[1:])))
                 old_lineno += 1
             else:
                 chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
-                                                 type='unknown', line=util.html_clean(repr(line))))
+                                                 type='unknown', line=util.fixed_width(repr(line))))
         if chunk is not None:
             chunks.append(chunk)
         return chunks

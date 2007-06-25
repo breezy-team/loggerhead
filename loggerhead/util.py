@@ -181,6 +181,7 @@ def scan_range(pos, max, pagesize=1):
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
+# FIXME: get rid of this method; use fixed_width() and avoid XML().
 def html_clean(s):
     """
     clean up a string for html display.  expand any tabs, encode any html
@@ -188,9 +189,16 @@ def html_clean(s):
     in displaying monospace text.
     """
     s = cgi.escape(s.expandtabs())
-#    s = _BADCHARS_RE.sub(lambda x: '&#%d;' % (ord(x.group(0)),), s)
     s = s.replace(' ', '&nbsp;')
     return s
+
+
+def fixed_width(s):
+    """
+    expand tabs and turn spaces into "non-breaking spaces", so browsers won't
+    chop up the string.
+    """
+    return s.expandtabs().replace(' ', '\xc2\xa0')
 
 
 def fake_permissions(kind, executable):

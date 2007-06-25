@@ -165,19 +165,19 @@ ${navbar()}
                 <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
                     <span py:if="line.old_lineno" py:strip="True">
                         <td class="lineno">${line.old_lineno}</td>
-                        <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
+                        <td class="diff-${line.old_type}">${line.old_line}</td>
                     </span>
                     <span py:if="not line.old_lineno" py:strip="True">
                         <td class="lineno-skip">${line.old_lineno}</td>
-                        <td class="diff-${line.old_type}-skip">${XML(line.old_line)}</td>
+                        <td class="diff-${line.old_type}-skip">${line.old_line}</td>
                     </span>
                     <span py:if="line.new_lineno" py:strip="True">
                         <td py:if="line.new_lineno" class="lineno">${line.new_lineno}</td>
-                        <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
+                        <td class="diff-${line.new_type}">${line.new_line}</td>
                     </span>
                     <span py:if="not line.new_lineno" py:strip="True">
                         <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
-                        <td class="diff-${line.new_type}-skip">${XML(line.new_line)}</td>
+                        <td class="diff-${line.new_type}-skip">${line.new_line}</td>
                     </span>
                 </tr>
                 <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
@@ -199,7 +199,7 @@ ${navbar()}
 	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
 	                <td class="lineno">${line.old_lineno}</td>
 	                <td class="lineno">${line.new_lineno}</td>
-	                <td class="diff-${line.type} text">${XML(line.line)}</td>
+	                <td class="diff-${line.type} text">${line.line}</td>
 	                <td> </td>
 	            </tr>
 	            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
