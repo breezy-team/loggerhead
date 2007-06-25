@@ -215,12 +215,13 @@ div.links div {
     text-align: left;
 }
 
-
 .log-entries .revision-header {
     font-size: normal;
-    width: 98%;
-    margin-top: 0.5em;
-    margin-left: 1em;
+}
+
+.log-entries .revision-header td {
+    padding-top: 2px;
+    padding-bottom: 2px;
 }
 
 .log-entries .revision-header td.expand-button {
@@ -235,6 +236,11 @@ div.links div {
     font-size: smaller;
 }
 
+.log-entries .revision-header td.author {
+    font-size: smaller;
+    padding-right: 0.5em;
+}
+
 .log-entries .revision-header .inventory-link {
     font-size: smaller;
     vertical-align: middle;
@@ -242,14 +248,9 @@ div.links div {
     padding-right: 0.5em;
 }
 
-.log-entries .revision-details-block {
-    border: none;
-    margin-left: 8em;
-    margin-bottom: 0.5em;
-}
-
 .log-entries table.revision-details {
     font-size: smaller;
+    margin-bottom: 1.0em;
 }
 
 .log-entries table.revision-details th {
@@ -257,7 +258,6 @@ div.links div {
     padding-right: 0.5em;
     vertical-align: top;
 }
-
 
 .log-entries table.revision-details td.files .filename {
     font-family: monospace;

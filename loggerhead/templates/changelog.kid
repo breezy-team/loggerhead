@@ -42,6 +42,7 @@ ${navbar()}
         <th class="revision-number">Rev</th>
         <th></th>
         <th class="summary">Summary</th>
+        <th class="author">Author</th>
         <th class="date" colspan="2">Date</th>
     </tr>
     <div py:for="entry in changes" class="revision">
@@ -50,6 +51,7 @@ ${navbar()}
             <td class="revision-number"> ${revision_link(entry.revid, util.trunc(entry.revno))} </td>
             <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
             <td class="summary"> ${revision_link(entry.revid, entry.short_comment)} </td>
+            <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
             <td class="date"> ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
             <td class="inventory-link"> 
                 <a href="${branch.url([ '/files', entry.revid ])}"
@@ -57,11 +59,7 @@ ${navbar()}
         </tr>
         <tr class="revision-details-block parity${entry.parity}">
             <td colspan="2"></td>
-            <td colspan="3"><table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
-                <tr>
-                    <th class="author">committed by:</th>
-                    <td class="author"> ${util.hide_email(entry.author)} </td>
-                </tr>
+            <td colspan="4"><table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
                 <tr py:if="len(entry.merge_points) > 0">
                     <th class="children"> merged in: </th>
                     <td class="children">
