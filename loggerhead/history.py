@@ -600,6 +600,7 @@ class History (object):
         for change in changes:
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+            change.revno = self.get_revno(change.revid)
             if get_diffs:
                 # this may be time-consuming, but it only happens on the revision page, and only for one revision at a time.
                 if len(change.parents) > 0:
@@ -657,7 +658,6 @@ class History (object):
 
         entry = {
             'revid': revision.revision_id,
-            'revno': self.get_revno(revision.revision_id),
             'date': commit_time,
             'author': revision.committer,
             'branch_nick': revision.properties.get('branch-nick', None),
