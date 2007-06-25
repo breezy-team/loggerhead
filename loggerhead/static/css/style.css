@@ -25,7 +25,7 @@ h1 {
     color: #708a96;
     font-weight: normal;
     font-size: 1.6em;
-    margin-bottom: 1.5em;
+    margin-bottom: 1em;
 }
 h1 .filename {
     font-family: monospace;
@@ -201,16 +201,25 @@ div.links div {
 /* ----- changelog page ----- */
 
 /* secret css-jutsu to make hidden margins vanish on a table */
-.log-entries table {
+.log-entries {
     border-collapse: collapse;
-    width: 100%;
+    width: 98%;
+    margin-top: 0.5em;
+    margin-left: 1em;
 }
 
+.log-entries .log-header {
+    background-color: #8cacbb;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    text-align: left;
+}
+
+
 .log-entries .revision-header {
-    background-color: #dee7ec;
-    padding: 3px;
-    width: 80%;
-    margin-top: 1em;
+    font-size: normal;
+    width: 98%;
+    margin-top: 0.5em;
     margin-left: 1em;
 }
 
@@ -218,51 +227,39 @@ div.links div {
     width: 20px;
 }
 
-.log-entries .revision-header .revision-number {
-    width: 6em;
+.log-entries .revision-number {
     padding-left: 0.5em;
+}
+
+.log-entries .revision-header td.date {
+    font-size: smaller;
 }
 
 .log-entries .revision-header .inventory-link {
     font-size: smaller;
     vertical-align: middle;
-    width: 4em;
-    text-align: right;
+    text-align: left;
     padding-right: 0.5em;
 }
 
 .log-entries .revision-details-block {
-    width: 80%;
     border: none;
     margin-left: 8em;
-    margin-bottom: 1.5em;
+    margin-bottom: 0.5em;
 }
 
-.log-entries .revision-details table {
+.log-entries table.revision-details {
     font-size: smaller;
-    width: 100%;
 }
 
-.log-entries .revision-details th {
-    width: 8em;
+.log-entries table.revision-details th {
     text-align: right;
     padding-right: 0.5em;
     vertical-align: top;
 }
 
-.log-entries .revision-details td.date {
-/*    font-family: monospace; */
-}
 
-.log-entries .revision-details th.files {
-    padding-top: 1em;
-}
-
-.log-entries .revision-details td.files {
-    padding-top: 1em;
-}
-
-.log-entries .revision-details td.files .filename {
+.log-entries table.revision-details td.files .filename {
     font-family: monospace;
 }
 
@@ -270,12 +267,8 @@ div.links div {
     font-size: smaller;
 }
 
-.log-entries .revision-details th.description {
-    padding-top: 1em;
-}
 .log-entries .revision-details td.description {
     font-family: monospace;
-    padding-top: 1em;
 }
 
 /* default state: hide all */
@@ -470,7 +463,7 @@ div.links div {
 
 table.inventory {
     border-collapse: collapse;
-    width: 80%;
+    width: 100%;
     font-size: smaller;
     margin-top: 1em;
     border: 1px solid #8cacbb;
@@ -498,8 +491,8 @@ table.inventory th.permissions {
 
 .inventory td.permissions {
     font-family: monospace;
-    width: 9em;
     padding-left: 0.5em;
+    width: 9em;
 }
 
 .inventory td.filename {
@@ -507,31 +500,30 @@ table.inventory th.permissions {
 }
 
 .inventory td.size {
-	font-family: monospace;
-	font-size: smaller;
-	width: 5em;
+    font-family: monospace;
+    font-size: smaller;
+    width: 5em;
 }
 
 .inventory td.revision {
+    padding-right: 1em;
+    text-align: left;
     width: 8em;
-    padding-right: 1.5em;
 }
 
 .inventory td.date {
-    font-family: monospace;
-    font-size: smaller;
+    padding-right: 1em;
     width: 10em;
-    padding-right: 1.5em;
 }
 
 .inventory td.changes-link {
-    width: 6em;
     font-size: smaller;
+    width: 6em;
 }
 
 .inventory td.download-link {
-    width: 8em;
     font-size: smaller;
+    width: 8em;
 }
 
 span.folder {
@@ -639,23 +631,23 @@ span.folder {
 }
 
 .browse-view td,.browse-view th {
-	padding: 0.25em 0.5em 0.25em 0.5em;
+    padding: 0.25em 0.5em 0.25em 0.5em;
 }
 
 .browse-view td.name {
-	width: 20%;
+    width: 20%;
 }
 
 .browse-view td.last-update {
-	font-size: smaller;
-	width: 15%;
+    font-size: smaller;
+    width: 20em;
 }
 
 .browse-view td.url {
-	font-family: monospace;
-	font-size: smaller;
-	padding-left: 3em;
-	padding-top: 0px;
+    font-family: monospace;
+    font-size: smaller;
+    padding-left: 3em;
+    padding-top: 0px;
 }
 
 .browse-view td.feed {
