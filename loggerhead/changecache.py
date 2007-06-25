@@ -88,7 +88,7 @@ class ChangeCache (object):
             for revid in revid_list:
                 # if the revid is in unicode, use the utf-8 encoding as the key
                 srevid = util.to_utf8(revid)
-                
+
                 if srevid in cache:
                     out.append(cache[srevid])
                 else:
@@ -96,11 +96,11 @@ class ChangeCache (object):
                     out.append(None)
                     fetch_list.append(revid)
                     sfetch_list.append(srevid)
-            
+
             if len(fetch_list) > 0:
                 # some revisions weren't in the cache; fetch them
-                changes = self.history.get_changes_uncached(fetch_list, get_diffs)
-                if changes is None:
+                changes = self.history.get_changes_uncached(fetch_list)
+                if len(changes) == 0:
                     return changes
                 for i in xrange(len(revid_list)):
                     if out[i] is None:

@@ -63,10 +63,17 @@ class ChangeLogUI (object):
             if len(revid_list) == 0:
                 scan_list = revid_list
             else:
-                scan_list = revid_list[h.get_revid_sequence(revid_list, revid):]
+                if revid in revid_list: # XXX is this always true?
+                    i = revid_list.index(revid)
+                else:
+                    i = None
+                scan_list = revid_list[i:]
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except:
+##             import sys
+##             print sys.exc_info()[2]
+##             import pdb; pdb.post_mortem(sys.exc_info()[2])
             self.log.exception('Exception fetching changes')
             raise InternalError('Could not fetch changes')
 
@@ -74,7 +81,7 @@ class ChangeLogUI (object):
                                     file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
         if query is not None:
             navigation.query = query
-        util.fill_in_navigation(h, navigation)
+        util.fill_in_navigation(navigation)
         
         entries = list(entries)
         # add parent & merge-point branch-nick info, in case it's useful

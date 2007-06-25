@@ -65,7 +65,7 @@ class RevisionUI (object):
                                     pagesize=1, scan_url='/revision', branch=self._branch, feed=True)
         if query is not None:
             navigation.query = query
-        util.fill_in_navigation(h, navigation)
+        util.fill_in_navigation(navigation)
 
         if compare_revid is not None:
             change = h.get_diff(compare_revid, revid)

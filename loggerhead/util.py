@@ -193,12 +193,15 @@ def html_clean(s):
     return s
 
 
+
+NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'.encode('utf-8')
+
 def fixed_width(s):
     """
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
     chop up the string.
     """
-    return s.expandtabs().replace(' ', '\xc2\xa0')
+    return s.expandtabs().replace(' ', NONBREAKING_SPACE)
 
 
 def fake_permissions(kind, executable):
@@ -280,13 +283,14 @@ def human_size(size, min_divisor=0):
     return out
     
 
-def fill_in_navigation(history, navigation):
+def fill_in_navigation(navigation):
     """
     given a navigation block (used by the template for the page header), fill
     in useful calculated values.
     """
-    navigation.position = history.get_revid_sequence(navigation.revid_list, navigation.revid)
-    if navigation.position is None:
+    if navigation.revid in navigation.revid_list: # XXX is this always true?
+        navigation.position = navigation.revid_list.index(navigation.revid)
+    else:
         navigation.position = 0
     navigation.count = len(navigation.revid_list)
     navigation.page_position = navigation.position // navigation.pagesize + 1
