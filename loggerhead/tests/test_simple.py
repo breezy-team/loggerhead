@@ -89,7 +89,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
-        assert self.msg in cherrypy.response.body[0]
+        assert cgi.escape(self.msg) in cherrypy.response.body[0]
 
     def test_changes_search(self):
         testutil.create_request('/project/branch/changes?q=foo')
