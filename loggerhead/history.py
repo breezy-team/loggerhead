@@ -237,9 +237,10 @@ class History (object):
 
     @with_branch_lock
     def out_of_date(self):
+        # the branch may have been upgraded on disk, in which case we're stale.
         if self._branch.__class__ is not \
                bzrlib.branch.Branch.open(self._branch.base).__class__:
-            return False
+            return True
         return self._branch.last_revision() != self._last_revid
 
     def use_cache(self, cache):
@@ -862,7 +863,6 @@ class History (object):
                 pathname += '/'
 
             revid = entry.revision
-            y = time.time()
             if self._change_cache:
                 timestamp = self.get_changes([revid])[0].date
             else:
