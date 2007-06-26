@@ -105,6 +105,10 @@ class TestWithSimpleTree(BasicTests):
         testutil.create_request('/project/branch/files')
         assert 'myfilename' in cherrypy.response.body[0]
 
+    def test_revision(self):
+        testutil.create_request('/project/branch/revision/' + self.revid)
+        assert 'myfilename' in cherrypy.response.body[0]
+
 class TestWithSimpleTreeAndCache(TestWithSimpleTree):
     config_template = """
     testing = True
