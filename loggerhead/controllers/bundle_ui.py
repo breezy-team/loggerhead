@@ -34,18 +34,18 @@ class BundleUI (object):
 
     @turbogears.expose()
     def default(self, *args, **kw):
-        # /bundle/<rev_id>/filename
+        # /bundle/<rev_id>/[<compare_rev_id>/]filename
         z = time.time()
         h = self._branch.get_history()
-        compare_revid = kw.get('compare_revid', None)
 
         if len(args) < 1:
             raise HTTPRedirect(self._branch.url('/changes'))
         revid = h.fix_revid(args[0])
-        compare_revid = None
         if len(args) >= 3:
             compare_revid = h.fix_revid(args[1])
-
+        else:
+            compare_revid = None
+        
         try:
             bundle_data = h.get_bundle(revid, compare_revid)
         except:

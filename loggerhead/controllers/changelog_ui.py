@@ -71,9 +71,6 @@ class ChangeLogUI (object):
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
         except:
-##             import sys
-##             print sys.exc_info()[2]
-##             import pdb; pdb.post_mortem(sys.exc_info()[2])
             self.log.exception('Exception fetching changes')
             raise InternalError('Could not fetch changes')
 
@@ -86,10 +83,20 @@ class ChangeLogUI (object):
         entries = list(entries)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks(entries)
+        
+        # does every change on this page have the same committer?  if so,
+        # tell the template to show committer info in the "details block"
+        # instead of on each line.
+        all_same_author = True
+        author = entries[0].author
+        for e in entries[1:]:
+            if e.author != author:
+                all_same_author = False
+                break
 
         vals = {
             'branch': self._branch,
-            'changes': list(entries),
+            'changes': entries,
             'util': util,
             'history': h,
             'revid': revid,
@@ -99,6 +106,7 @@ class ChangeLogUI (object):
             'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
             'query': query,
             'search_failed': search_failed,
+            'all_same_author': all_same_author,
         }
         h.flush_cache()
         self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
