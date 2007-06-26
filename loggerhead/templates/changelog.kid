@@ -42,7 +42,12 @@ ${navbar()}
         <th class="revision-number">Rev</th>
         <th></th>
         <th class="summary">Summary</th>
-        <th class="author">Committer</th>
+        <span py:strip="True" py:if="all_same_author">
+            <th></th>
+        </span>
+        <span py:strip="True" py:if="not all_same_author">
+            <th class="author">Committer</th>
+        </span>
         <th class="date" colspan="2">Date</th>
     </tr>
     <div py:for="entry in changes" class="revision">
@@ -51,12 +56,19 @@ ${navbar()}
             <td class="revision-number"> ${revision_link(entry.revid, util.trunc(entry.revno))} </td>
             <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
             <td class="summary"> ${revision_link(entry.revid, entry.short_comment)} </td>
-            <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
+            <span py:strip="True" py:if="all_same_author">
+                <td></td>
+            </span>
+            <span py:strip="True" py:if="not all_same_author">
+                <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
+            </span>
             <td class="date"> ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
             <td class="inventory-link"> 
                 <a href="${branch.url([ '/files', entry.revid ])}"
-                    title="Files at revision ${entry.revno}"> files</a> </td>
+                    title="Files at revision ${entry.revno}"> files</a>
+            </td>
         </tr>
+        
         <tr class="revision-details-block parity${entry.parity}">
             <td colspan="2"></td>
             <td colspan="4"><table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
@@ -76,6 +88,12 @@ ${navbar()}
                         </span></span>
                     </td>
                 </tr>
+                <span py:strip="True" py:if="all_same_author">
+                    <tr>
+                        <th class="author">committed by:</th>
+                        <td class="author"> ${util.hide_email(entry.author)} </td>
+                    </tr>
+                </span>
                 <tr>
                     <th class="description">description:</th>
                     <td class="description"><span py:for="line in entry.comment_clean">${XML(line)} <br /></span> </td>
