@@ -42,7 +42,7 @@ ${navbar()}
         <th class="revision-number">Rev</th>
         <th></th>
         <th class="summary">Summary</th>
-        <th class="author">Author</th>
+        <th class="author">Committer</th>
         <th class="date" colspan="2">Date</th>
     </tr>
     <div py:for="entry in changes" class="revision">
