@@ -126,8 +126,11 @@ ${navbar()}
         <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
             <td class="files">
-                <span py:for="item in change.changes.modified">
-                    <a href="#${item.filename}" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
+                <span py:for="item in change.changes.modified" class="collapse-style-sbs-content">
+                    <a href="#${item.filename}-s" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
+                </span>
+                <span py:for="item in change.changes.modified" class="collapse-style-unified-content">
+                    <a href="#${item.filename}-u" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
                 </span>
             </td>
         </tr>
@@ -162,7 +165,7 @@ ${navbar()}
             <tr><th class="filename" colspan="4">
                 ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
                 <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
-                    name="${item.filename}" title="Annotate ${item.filename}">${item.filename}</a>
+                    name="${item.filename}-s" title="Annotate ${item.filename}">${item.filename}</a>
             </th></tr>
 
             <span py:strip="True" py:for="chunk in item.sbs_chunks">
@@ -195,24 +198,25 @@ ${navbar()}
     
     <!-- ! unified diff -->
     <table class="diff-block collapse-style-unified-content">
-	    <span py:strip="True" py:for="item in change.changes.modified">
-	        <tr><th class="filename" colspan="4">
-	            ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-	            <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
-	        </th></tr>
-	
-	        <span py:strip="True" py:for="chunk in item.chunks">
-	            <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
-	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
-	                <td class="lineno">${line.old_lineno}</td>
-	                <td class="lineno">${line.new_lineno}</td>
-	                <td class="diff-${line.type} text">${line.line}</td>
-	                <td> </td>
-	            </tr>
-	            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
-	        </span>
-	        <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
-	    </span>
+        <span py:strip="True" py:for="item in change.changes.modified">
+            <tr><th class="filename" colspan="4">
+                ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
+                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
+                    name="${item.filename}-u" title="Annotate ${item.filename}">${item.filename}</a>
+            </th></tr>
+
+            <span py:strip="True" py:for="chunk in item.chunks">
+                <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
+                <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
+                    <td class="lineno">${line.old_lineno}</td>
+                    <td class="lineno">${line.new_lineno}</td>
+                    <td class="diff-${line.type} text">${line.line}</td>
+                    <td> </td>
+                </tr>
+                <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
+            </span>
+            <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+        </span>
     </table>
 
 </div>
