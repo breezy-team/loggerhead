@@ -9,6 +9,10 @@
         <a href="${branch.url([ '/annotate', revid ],
             **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
     </span>
+    <span py:strip="True" py:def="file_link_rev(filename, file_id, revid)">
+        <a href="${branch.url([ '/annotate', revid ],
+            **util.get_context(file_id=file_id))}" title="Annotate ${filename} at revision ${history.get_revno(revid)}">${filename}</a>
+    </span>
     
     <span py:replace="use_collapse_buttons()"></span>
     
@@ -109,7 +113,9 @@ ${navbar()}
         </tr>
         <tr py:if="change.changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename, file_id in change.changes.removed" class="filename">${file_link(filename, file_id)} <br /></span> </td>
+            <td class="files"> <span py:for="filename, file_id in change.changes.removed" class="filename">
+                ${file_link_rev(filename, file_id, change.parents[0].revid)} <br /></span>
+            </td>
         </tr>
         <tr py:if="change.changes.renamed">
             <th class="files"> files renamed: </th>
@@ -121,7 +127,7 @@ ${navbar()}
             <th class="files"> files modified: </th>
             <td class="files">
                 <span py:for="item in change.changes.modified">
-                    <span class="filename">${file_link(item.filename, item.file_id)}</span> &nbsp; <a href="#${item.filename}" class="jump">&#8594; diff</a><br />
+                    <a href="#${item.filename}" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
                 </span>
             </td>
         </tr>
@@ -155,7 +161,8 @@ ${navbar()}
         <span py:strip="True" py:for="item in change.changes.modified">
             <tr><th class="filename" colspan="4">
                 ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
+                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
+                    name="${item.filename}" title="Annotate ${item.filename}">${item.filename}</a>
             </th></tr>
 
             <span py:strip="True" py:for="chunk in item.sbs_chunks">

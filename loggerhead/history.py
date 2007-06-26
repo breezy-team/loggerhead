@@ -153,8 +153,8 @@ def clean_message(message):
         
     # make short form of commit message
     short_message = message[0]
-    if len(short_message) > 60:
-        short_message = short_message[:60] + '...'
+    if len(short_message) > 80:
+        short_message = short_message[:80] + '...'
     
     return message, short_message
 
@@ -608,6 +608,11 @@ class History (object):
                 else:
                     parent_revid = None
                 change.changes.modified = self._parse_diffs(parent_revid, change.revid)
+
+        parity = 0
+        for change in changes:
+            change.parity = parity
+            parity ^= 1
         
         return changes
 
