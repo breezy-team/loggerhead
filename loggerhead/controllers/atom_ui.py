@@ -35,7 +35,7 @@ class AtomUI (object):
         h = self._branch.get_history()
         pagesize = int(self._branch.config.get('pagesize', '20'))
 
-        revid_list, start_revid = h.get_file_view(None, None)
+        revid_list = h.get_file_view(h.last_revid, None)
         entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
         vals = {

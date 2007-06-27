@@ -426,24 +426,22 @@ class History (object):
     @with_branch_lock
     def get_file_view(self, revid, file_id):
         """
-        Given an optional revid and optional path, return a (revlist, revid)
-        for navigation through the current scope: from the revid (or the
-        latest revision) back to the original revision.
+        Given a revid and optional path, return a (revlist, revid) for
+        navigation through the current scope: from the revid (or the latest
+        revision) back to the original revision.
         
         If file_id is None, the entire revision history is the list scope.
-        If revid is None, the latest revision is used.
         """
         if revid is None:
             revid = self._last_revid
         if file_id is not None:
-            # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
+            # since revid is 'start_revid', possibly should start the path
+            # tracing from revid... FIXME
             revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
             revlist = list(self.get_revids_from(None, revid))
-        if revid is None:
-            revid = revlist[0]
-        return revlist, revid
+        return revlist
     
     @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
@@ -468,19 +466,23 @@ class History (object):
         file_id and query are never changed so aren't returned, but they may
         contain vital context for future url navigation.
         """
+        if start_revid is None:
+            start_revid = self._last_revid
+
         if query is None:
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+            revid_list = self.get_file_view(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list, start_revid = self.get_file_view(revid, file_id)
+                revid_list= self.get_file_view(revid, file_id)
+                start_revid = revid
             return revid, start_revid, revid_list
         
         # potentially limit the search
-        if (start_revid is not None) or (file_id is not None):
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+        if file_id is not None:
+            revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
 
@@ -874,8 +876,10 @@ class History (object):
             change = util.Container(date=timestamp,
                                     revno=self.get_revno(revid))
 
-            file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
-                                  pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
+            file = util.Container(
+                filename=filename, executable=entry.executable, kind=entry.kind,
+                pathname=pathname, file_id=entry.file_id, size=entry.text_size,
+                revid=revid, change=change)
             file_list.append(file)
 
         if sort_type == 'filename' or sort_type is None:
