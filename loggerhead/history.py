@@ -849,23 +849,17 @@ class History (object):
                 m.sbs_chunks = _make_side_by_side(m.chunks)
     
     @with_branch_lock
-    def get_filelist(self, inv, path, sort_type=None):
+    def get_filelist(self, inv, file_id, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
         """
-        while path.endswith('/'):
-            path = path[:-1]
-        if path.startswith('/'):
-            path = path[1:]
-        
-        entries = inv.entries()
-        
+
+        dir_ie = inv[file_id]
+        path = inv.id2path(file_id)
         file_list = []
-        for filepath, entry in entries:
-            if posixpath.dirname(filepath) != path:
-                continue
-            filename = posixpath.basename(filepath)
+
+        for filename, entry in dir_ie.children.iteritems():
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
@@ -879,18 +873,18 @@ class History (object):
 
             change = util.Container(date=timestamp,
                                     revno=self.get_revno(revid))
-            
+
             file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
                                   pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
             file_list.append(file)
-        
-        if sort_type == 'filename':
+
+        if sort_type == 'filename' or sort_type is None:
             file_list.sort(key=lambda x: x.filename)
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
-        
+
         parity = 0
         for file in file_list:
             file.parity = parity
