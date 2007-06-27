@@ -755,13 +755,16 @@ class History (object):
             old_lines = old_tree.get_file_lines(fid)
             new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
-            try:
-                bzrlib.diff.internal_diff(old_path, old_lines,
-                                          new_path, new_lines, buffer)
-            except bzrlib.errors.BinaryFile:
-                diff = ''
+            if old_lines != new_lines:
+                try:
+                    bzrlib.diff.internal_diff(old_path, old_lines,
+                                              new_path, new_lines, buffer)
+                except bzrlib.errors.BinaryFile:
+                    diff = ''
+                else:
+                    diff = buffer.getvalue()
             else:
-                diff = buffer.getvalue()
+                diff = ''
             out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff)))
         
         return out
