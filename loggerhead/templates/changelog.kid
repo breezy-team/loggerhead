@@ -37,83 +37,94 @@ ${navbar()}
 
 <span py:if="not search_failed" class="changelog"> ${collapse_all_button('cl')} </span>
 
-<div class="log-entries">
+<table class="log-entries">
+    <tr class="log-header">
+        <th class="revision-number">Rev</th>
+        <th></th>
+        <th class="summary">Summary</th>
+        <span py:strip="True" py:if="all_same_author">
+            <th></th>
+        </span>
+        <span py:strip="True" py:if="not all_same_author">
+            <th class="author">Committer</th>
+        </span>
+        <th class="date" colspan="2">Date</th>
+    </tr>
     <div py:for="entry in changes" class="revision">
         <a name="entry-${entry.revno}" />
-        <div class="revision-header">
-            <table>
-                <tr>
-                    <td class="revision-number"> ${revision_link(entry.revid, util.trunc(entry.revno))} </td>
-                    <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
-					<td class="summary"> ${revision_link(entry.revid, entry.short_comment)} </td>
-					<td class="inventory-link"> <a href="${branch.url([ '/files', entry.revid ])}">&#8594; files</a> </td>
-				</tr>
-			</table>
-        </div>
+        <tr class="revision-header parity${entry.parity}">
+            <td class="revision-number"> ${revision_link(entry.revid, util.trunc(entry.revno))} </td>
+            <td class="expand-button"> ${collapse_button('cl', entry.revno)} </td>
+            <td class="summary"> ${revision_link(entry.revid, entry.short_comment)} </td>
+            <span py:strip="True" py:if="all_same_author">
+                <td></td>
+            </span>
+            <span py:strip="True" py:if="not all_same_author">
+                <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
+            </span>
+            <td class="date"> ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
+            <td class="inventory-link"> 
+                <a href="${branch.url([ '/files', entry.revid ])}"
+                    title="Files at revision ${entry.revno}"> files</a>
+            </td>
+        </tr>
         
-        <div class="revision-details-block">
-            <div class="revision-details">
-			    <table>
-			        <tr>
-			            <th class="author">committed by:</th>
-			            <td class="author"> ${util.hide_email(entry.author)} </td>
-			        </tr>
-			        <tr>
-			            <th class="date">date:</th>
-			            <td class="date"> ${entry.date.strftime('%d %b %Y %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
-			        </tr>
-			    </table>
-			</div>
-	        <div class="revision-details hidden-details collapse-cl-${entry.revno}-content">
-		        <table>
-			        <tr py:if="len(entry.merge_points) > 0">
-			            <th class="children"> merged in: </th>
-			            <td class="children">
-			                <span py:for="child in entry.merge_points">
-			                    ${loglink(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
-			                </span>
-			            </td>
-			        </tr>
-			        <tr py:if="len(entry.parents) > 1">
-			        	<th class="parents"> merged from: </th>
-			        	<td class="parents">
-			        	    <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid">
-			        	        ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
-			        	    </span></span>
-			        	</td>
-			        </tr>
-
-			        <tr py:if="entry.changes.added">
-			            <th class="files"> files added: </th>
-			            <td class="files"> <span py:for="filename, fid in entry.changes.added" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
-			        </tr>
-			        <tr py:if="entry.changes.removed">
-			            <th class="files"> files removed: </th>
-			            <td class="files"> <span py:for="filename, fid in entry.changes.removed" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
-			        </tr>
-			        <tr py:if="entry.changes.renamed">
-			            <th class="files"> files renamed: </th>
-			            <td class="files"> <span py:for="old_filename, new_filename, fid in entry.changes.renamed" class="filename">
-			                ${file_link(old_filename, fid, entry.revid)} => ${file_link(new_filename, fid, entry.revid)}<br />
-			            </span> </td>
-			        </tr>
-			        <tr py:if="entry.changes.modified">
-			            <th class="files"> files modified: </th>
-			            <td class="files"> <span py:for="item in entry.changes.modified">
-			                <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
-			                <a href="${branch.url([ '/revision', entry.revid ], **util.get_context()) + '#' + item.filename}" class="jump">&#8594; diff</a>
-			                <br />
-			            </span> </td>
-			        </tr>
-			        <tr>
-			            <th class="description">description:</th>
-		                <td class="description"><span py:for="line in entry.comment_clean">${XML(line)} <br /></span> </td>
-		            </tr>
-		        </table>
-	    	</div>
-        </div>
+        <tr class="revision-details-block parity${entry.parity}">
+            <td colspan="2"></td>
+            <td colspan="4"><table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
+                <tr py:if="len(entry.merge_points) > 0">
+                    <th class="children"> merged in: </th>
+                    <td class="children">
+                        <span py:for="child in entry.merge_points">
+                            ${loglink(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
+                        </span>
+                    </td>
+                </tr>
+                <tr py:if="len(entry.parents) > 1">
+                    <th class="parents"> merged from: </th>
+                    <td class="parents">
+                        <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid">
+                            ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
+                        </span></span>
+                    </td>
+                </tr>
+                <span py:strip="True" py:if="all_same_author">
+                    <tr>
+                        <th class="author">committed by:</th>
+                        <td class="author"> ${util.hide_email(entry.author)} </td>
+                    </tr>
+                </span>
+                <tr>
+                    <th class="description">description:</th>
+                    <td class="description"><span py:for="line in entry.comment_clean">${XML(line)} <br /></span> </td>
+                </tr>
+                <tr py:if="entry.changes.added">
+                    <th class="files"> files added: </th>
+                    <td class="files"> <span py:for="filename, fid in entry.changes.added" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
+                </tr>
+                <tr py:if="entry.changes.removed">
+                    <th class="files"> files removed: </th>
+                    <td class="files"> <span py:for="filename, fid in entry.changes.removed" class="filename">${file_link(filename, fid, entry.revid)} <br /></span> </td>
+                </tr>
+                <tr py:if="entry.changes.renamed">
+                    <th class="files"> files renamed: </th>
+                    <td class="files"> <span py:for="old_filename, new_filename, fid in entry.changes.renamed" class="filename">
+                        ${file_link(old_filename, fid, entry.revid)} => ${file_link(new_filename, fid, entry.revid)}<br />
+                    </span> </td>
+                </tr>
+                <tr py:if="entry.changes.modified">
+                    <th class="files"> files modified: </th>
+                    <td class="files"> <span py:for="item in entry.changes.modified">
+                        <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
+                        <a href="${branch.url([ '/revision', entry.revid ], **util.get_context()) + '#' + item.filename}" class="jump">&#8594; diff</a>
+                        <br />
+                    </span> </td>
+                </tr>
+                </table>
+            </td>
+        </tr>
     </div>
-</div>
+</table>
 
 <div py:if="navigation.prev_page_revid or navigation.next_page_revid" class="bar">
     <table>
