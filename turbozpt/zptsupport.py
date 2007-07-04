@@ -87,7 +87,7 @@ class TurboZpt:
 	if self.get_extra_vars:
 	    data.update(self.get_extra_vars())
 	data.update(info)
-        
+        print '!!!!', data.keys()
         return tinstance(**data)
 
     def transform(self, info, template):

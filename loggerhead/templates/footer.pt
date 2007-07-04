@@ -1,0 +1,12 @@
+<div class="footer">
+  <span class="banner">
+    <a href="http://www.bazaar-vcs.org/">
+      <img tal:attributes="src python:tg.url('/static/images/bazaar-banner.png')" />
+    </a>
+  </span>
+  <span class="banner">
+    <a href="http://www.lag.net/loggerhead/">
+      <img tal:attributes="src python:tg.url('/static/images/loggerhead-banner.png')" />
+    </a>
+  </span>
+</div>

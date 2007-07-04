@@ -8,12 +8,16 @@ import os.path
 import sys
 
 class Here(object):
-    def __init__(self, base):
+    def __init__(self, base, options):
         self.base = base
+        self.options = options
 
-    def __getattr__(self, name):
+    def __getattribute__(self, name):
         # import pdb; pdb.set_trace()
-        tpl = PageTemplate(os.path.join(self.base, name))
+        if name.startswith('_'):
+            return super(Here, self).__getattribute__(name)
+        tpl = PageTemplate(os.path.join(self.__dict__['base'], name))
+        tpl.add_context(object.__getattribute__(self, 'options'))
         return tpl
 
 class PageTemplate(pagetemplatefile.PageTemplateFile):
@@ -38,5 +42,5 @@ class PageTemplate(pagetemplatefile.PageTemplateFile):
         rval = pagetemplatefile.PageTemplateFile.pt_getContext(self, args, options, **ignored)
 	rval.update(options)
 	rval.update(self.extra_context)
-        rval.update({'here':Here(self.base), 'template':self})
+        rval.update({'here':Here(self.base, options), 'template':self})
         return rval
