@@ -181,6 +181,7 @@ def scan_range(pos, max, pagesize=1):
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
+# FIXME: get rid of this method; use fixed_width() and avoid XML().
 def html_clean(s):
     """
     clean up a string for html display.  expand any tabs, encode any html
@@ -188,9 +189,29 @@ def html_clean(s):
     in displaying monospace text.
     """
     s = cgi.escape(s.expandtabs())
-#    s = _BADCHARS_RE.sub(lambda x: '&#%d;' % (ord(x.group(0)),), s)
     s = s.replace(' ', '&nbsp;')
     return s
+
+
+
+NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'
+
+def fixed_width(s):
+    """
+    expand tabs and turn spaces into "non-breaking spaces", so browsers won't
+    chop up the string.
+    """
+    if not isinstance(s, unicode):
+        # this kinda sucks.  file contents are just binary data, and no
+        # encoding metadata is stored, so we need to guess.  this is probably
+        # okay for most code, but for people using things like KOI-8, this
+        # will display gibberish.  we have no way of detecting the correct
+        # encoding to use.
+        try:
+            s = s.decode('utf-8')
+        except UnicodeDecodeError:
+            s = s.decode('iso-8859-15')
+    return s.expandtabs().replace(' ', NONBREAKING_SPACE)
 
 
 def fake_permissions(kind, executable):

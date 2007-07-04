@@ -48,9 +48,7 @@ class ChangeCache (object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
-        # keep a separate cache for the diffs, because they're very time-consuming to fetch.
         self._changes_filename = os.path.join(cache_path, 'changes')
-        self._changes_diffs_filename = os.path.join(cache_path, 'changes-diffs')
         
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'lock'))
@@ -58,8 +56,7 @@ class ChangeCache (object):
         
         # this is fluff; don't slow down startup time with it.
         def log_sizes():
-            s1, s2 = self.sizes()
-            self.log.info('Using change cache %s; %d/%d entries.' % (cache_path, s1, s2))
+            self.log.info('Using change cache %s; %d entries.' % (cache_path, self.size()))
         threading.Thread(target=log_sizes).start()
     
     @with_lock
@@ -76,16 +73,13 @@ class ChangeCache (object):
         pass
     
     @with_lock
-    def get_changes(self, revid_list, get_diffs=False):
+    def get_changes(self, revid_list):
         """
         get a list of changes by their revision_ids.  any changes missing
         from the cache are fetched by calling L{History.get_change_uncached}
         and inserted into the cache before returning.
         """
-        if get_diffs:
-            cache = shelve.open(self._changes_diffs_filename, 'c', protocol=2)
-        else:
-            cache = shelve.open(self._changes_filename, 'c', protocol=2)
+        cache = shelve.open(self._changes_filename, 'c', protocol=2)
 
         try:
             out = []
@@ -105,7 +99,7 @@ class ChangeCache (object):
 
             if len(fetch_list) > 0:
                 # some revisions weren't in the cache; fetch them
-                changes = self.history.get_changes_uncached(fetch_list, get_diffs)
+                changes = self.history.get_changes_uncached(fetch_list)
                 if len(changes) == 0:
                     return changes
                 for i in xrange(len(revid_list)):
@@ -116,25 +110,19 @@ class ChangeCache (object):
             cache.close()
     
     @with_lock
-    def full(self, get_diffs=False):
-        if get_diffs:
-            cache = shelve.open(self._changes_diffs_filename, 'c', protocol=2)
-        else:
-            cache = shelve.open(self._changes_filename, 'c', protocol=2)
+    def full(self):
+        cache = shelve.open(self._changes_filename, 'c', protocol=2)
         try:
             return (len(cache) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in cache)
         finally:
             cache.close()
 
     @with_lock
-    def sizes(self):
+    def size(self):
         cache = shelve.open(self._changes_filename, 'c', protocol=2)
         s1 = len(cache)
         cache.close()
-        cache = shelve.open(self._changes_diffs_filename, 'c', protocol=2)
-        s2 = len(cache)
-        cache.close()
-        return s1, s2
+        return s1
         
     def check_rebuild(self, max_time=3600):
         """

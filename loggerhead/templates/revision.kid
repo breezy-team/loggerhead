@@ -9,6 +9,10 @@
         <a href="${branch.url([ '/annotate', revid ],
             **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
     </span>
+    <span py:strip="True" py:def="file_link_rev(filename, file_id, revid)">
+        <a href="${branch.url([ '/annotate', revid ],
+            **util.get_context(file_id=file_id))}" title="Annotate ${filename} at revision ${history.get_revno(revid)}">${filename}</a>
+    </span>
     
     <span py:replace="use_collapse_buttons()"></span>
     
@@ -109,7 +113,9 @@ ${navbar()}
         </tr>
         <tr py:if="change.changes.removed">
             <th class="files"> files removed: </th>
-            <td class="files"> <span py:for="filename, file_id in change.changes.removed" class="filename">${file_link(filename, file_id)} <br /></span> </td>
+            <td class="files"> <span py:for="filename, file_id in change.changes.removed" class="filename">
+                ${file_link_rev(filename, file_id, change.parents[0].revid)} <br /></span>
+            </td>
         </tr>
         <tr py:if="change.changes.renamed">
             <th class="files"> files renamed: </th>
@@ -120,8 +126,11 @@ ${navbar()}
         <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
             <td class="files">
-                <span py:for="item in change.changes.modified">
-                    <span class="filename">${file_link(item.filename, item.file_id)}</span> &nbsp; <a href="#${item.filename}" class="jump">&#8594; diff</a><br />
+                <span py:for="item in change.changes.modified" class="collapse-style-sbs-content">
+                    <a href="#${item.filename}-s" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
+                </span>
+                <span py:for="item in change.changes.modified" class="collapse-style-unified-content">
+                    <a href="#${item.filename}-u" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
                 </span>
             </td>
         </tr>
@@ -155,7 +164,8 @@ ${navbar()}
         <span py:strip="True" py:for="item in change.changes.modified">
             <tr><th class="filename" colspan="4">
                 ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
+                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
+                    name="${item.filename}-s" title="Annotate ${item.filename}">${item.filename}</a>
             </th></tr>
 
             <span py:strip="True" py:for="chunk in item.sbs_chunks">
@@ -165,19 +175,19 @@ ${navbar()}
                 <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
                     <span py:if="line.old_lineno" py:strip="True">
                         <td class="lineno">${line.old_lineno}</td>
-                        <td class="diff-${line.old_type}">${XML(line.old_line)}</td>
+                        <td class="diff-${line.old_type}">${line.old_line}</td>
                     </span>
                     <span py:if="not line.old_lineno" py:strip="True">
                         <td class="lineno-skip">${line.old_lineno}</td>
-                        <td class="diff-${line.old_type}-skip">${XML(line.old_line)}</td>
+                        <td class="diff-${line.old_type}-skip">${line.old_line}</td>
                     </span>
                     <span py:if="line.new_lineno" py:strip="True">
                         <td py:if="line.new_lineno" class="lineno">${line.new_lineno}</td>
-                        <td class="diff-${line.new_type}">${XML(line.new_line)}</td>
+                        <td class="diff-${line.new_type}">${line.new_line}</td>
                     </span>
                     <span py:if="not line.new_lineno" py:strip="True">
                         <td py:if="not line.new_lineno" class="lineno-skip">${line.new_lineno}</td>
-                        <td class="diff-${line.new_type}-skip">${XML(line.new_line)}</td>
+                        <td class="diff-${line.new_type}-skip">${line.new_line}</td>
                     </span>
                 </tr>
                 <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
@@ -188,24 +198,25 @@ ${navbar()}
     
     <!-- ! unified diff -->
     <table class="diff-block collapse-style-unified-content">
-	    <span py:strip="True" py:for="item in change.changes.modified">
-	        <tr><th class="filename" colspan="4">
-	            ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-	            <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}" name="${item.filename}">${item.filename}</a>
-	        </th></tr>
-	
-	        <span py:strip="True" py:for="chunk in item.chunks">
-	            <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
-	            <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
-	                <td class="lineno">${line.old_lineno}</td>
-	                <td class="lineno">${line.new_lineno}</td>
-	                <td class="diff-${line.type} text">${XML(line.line)}</td>
-	                <td> </td>
-	            </tr>
-	            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
-	        </span>
-	        <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
-	    </span>
+        <span py:strip="True" py:for="item in change.changes.modified">
+            <tr><th class="filename" colspan="4">
+                ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
+                <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
+                    name="${item.filename}-u" title="Annotate ${item.filename}">${item.filename}</a>
+            </th></tr>
+
+            <span py:strip="True" py:for="chunk in item.chunks">
+                <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <th class="lineno">old</th> <th class="lineno">new</th> <th></th> <th></th> </tr>
+                <tr py:for="line in chunk.diff" class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
+                    <td class="lineno">${line.old_lineno}</td>
+                    <td class="lineno">${line.new_lineno}</td>
+                    <td class="diff-${line.type} text">${line.line}</td>
+                    <td> </td>
+                </tr>
+                <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content"> <td colspan="4"> &nbsp; </td> </tr>
+            </span>
+            <tr class="diff-spacing"> <td colspan="4"> &nbsp; </td> </tr>
+        </span>
     </table>
 
 </div>

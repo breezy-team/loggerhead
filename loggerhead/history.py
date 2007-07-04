@@ -153,10 +153,19 @@ def clean_message(message):
         
     # make short form of commit message
     short_message = message[0]
-    if len(short_message) > 60:
-        short_message = short_message[:60] + '...'
+    if len(short_message) > 80:
+        short_message = short_message[:80] + '...'
     
     return message, short_message
+
+
+def rich_filename(path, kind):
+    if kind == 'directory':
+        path += '/'
+    if kind == 'symlink':
+        path += '@'
+    return path
+        
 
 
 # from bzrlib
@@ -228,9 +237,10 @@ class History (object):
 
     @with_branch_lock
     def out_of_date(self):
+        # the branch may have been upgraded on disk, in which case we're stale.
         if self._branch.__class__ is not \
                bzrlib.branch.Branch.open(self._branch.base).__class__:
-            return False
+            return True
         return self._branch.last_revision() != self._last_revid
 
     def use_cache(self, cache):
@@ -416,24 +426,22 @@ class History (object):
     @with_branch_lock
     def get_file_view(self, revid, file_id):
         """
-        Given an optional revid and optional path, return a (revlist, revid)
-        for navigation through the current scope: from the revid (or the
-        latest revision) back to the original revision.
+        Given a revid and optional path, return a (revlist, revid) for
+        navigation through the current scope: from the revid (or the latest
+        revision) back to the original revision.
         
         If file_id is None, the entire revision history is the list scope.
-        If revid is None, the latest revision is used.
         """
         if revid is None:
             revid = self._last_revid
         if file_id is not None:
-            # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
+            # since revid is 'start_revid', possibly should start the path
+            # tracing from revid... FIXME
             revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
             revlist = list(self.get_revids_from(None, revid))
-        if revid is None:
-            revid = revlist[0]
-        return revlist, revid
+        return revlist
     
     @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
@@ -458,19 +466,23 @@ class History (object):
         file_id and query are never changed so aren't returned, but they may
         contain vital context for future url navigation.
         """
+        if start_revid is None:
+            start_revid = self._last_revid
+
         if query is None:
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+            revid_list = self.get_file_view(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list, start_revid = self.get_file_view(revid, file_id)
+                revid_list= self.get_file_view(revid, file_id)
+                start_revid = revid
             return revid, start_revid, revid_list
         
         # potentially limit the search
-        if (start_revid is not None) or (file_id is not None):
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+        if file_id is not None:
+            revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
 
@@ -579,19 +591,30 @@ class History (object):
     @with_branch_lock
     def get_changes(self, revid_list, get_diffs=False):
         if self._change_cache is None:
-            changes = self.get_changes_uncached(revid_list, get_diffs)
+            changes = self.get_changes_uncached(revid_list)
         else:
-            changes = self._change_cache.get_changes(revid_list, get_diffs)
+            changes = self._change_cache.get_changes(revid_list)
         if len(changes) == 0:
             return changes
         
         # some data needs to be recalculated each time, because it may
         # change as new revisions are added.
-        for i in xrange(len(revid_list)):
-            revid = revid_list[i]
-            change = changes[i]
-            merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(revid))
+        for change in changes:
+            merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+            change.revno = self.get_revno(change.revid)
+            if get_diffs:
+                # this may be time-consuming, but it only happens on the revision page, and only for one revision at a time.
+                if len(change.parents) > 0:
+                    parent_revid = change.parents[0].revid
+                else:
+                    parent_revid = None
+                change.changes.modified = self._parse_diffs(parent_revid, change.revid)
+
+        parity = 0
+        for change in changes:
+            change.parity = parity
+            parity ^= 1
         
         return changes
 
@@ -638,16 +661,10 @@ class History (object):
         
         parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
 
-        if len(parents) == 0:
-            left_parent = None
-        else:
-            left_parent = revision.parent_ids[0]
-        
         message, short_message = clean_message(revision.message)
 
         entry = {
             'revid': revision.revision_id,
-            'revno': self.get_revno(revision.revision_id),
             'date': commit_time,
             'author': revision.committer,
             'branch_nick': revision.properties.get('branch-nick', None),
@@ -660,7 +677,7 @@ class History (object):
 
     @with_branch_lock
     @with_bzrlib_read_lock
-    def get_changes_uncached(self, revid_list, get_diffs=False):
+    def get_changes_uncached(self, revid_list):
         done = False
         while not done:
             try:
@@ -680,7 +697,7 @@ class History (object):
         entries = []
         for rev, (new_tree, old_tree, delta) in combined_list:
             entry = self.entry_from_revision(rev)
-            entry.changes = self.parse_delta(delta, get_diffs, old_tree, new_tree)
+            entry.changes = self.parse_delta(delta, old_tree, new_tree)
             entries.append(entry)
         
         return entries
@@ -709,15 +726,11 @@ class History (object):
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
     
-    @with_branch_lock
-    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
+    def _parse_diffs(self, revid1, revid2):
         """
-        Return a nested data structure containing the changes in a delta::
+        Return a list of processed diffs, in the format::
         
-            added: list((filename, file_id)),
-            renamed: list((old_filename, new_filename, file_id)),
-            deleted: list((filename, file_id)),
-            modified: list(
+            list(
                 filename: str,
                 file_id: str,
                 chunks: list(
@@ -729,84 +742,101 @@ class History (object):
                     ),
                 ),
             )
+        """
+        old_tree, new_tree, delta = self._get_diff(revid1, revid2)
+        process = []
+        out = []
         
-        if C{get_diffs} is false, the C{chunks} will be omitted.
+        for old_path, new_path, fid, kind, text_modified, meta_modified in delta.renamed:
+            if text_modified:
+                process.append((old_path, new_path, fid, kind))
+        for path, fid, kind, text_modified, meta_modified in delta.modified:
+            process.append((path, path, fid, kind))
+        
+        for old_path, new_path, fid, kind in process:
+            old_lines = old_tree.get_file_lines(fid)
+            new_lines = new_tree.get_file_lines(fid)
+            buffer = StringIO()
+            if old_lines != new_lines:
+                try:
+                    bzrlib.diff.internal_diff(old_path, old_lines,
+                                              new_path, new_lines, buffer)
+                except bzrlib.errors.BinaryFile:
+                    diff = ''
+                else:
+                    diff = buffer.getvalue()
+            else:
+                diff = ''
+            out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff)))
+        
+        return out
+
+    def _process_diff(self, diff):
+        # doesn't really need to be a method; could be static.
+        chunks = []
+        chunk = None
+        for line in diff.splitlines():
+            if len(line) == 0:
+                continue
+            if line.startswith('+++ ') or line.startswith('--- '):
+                continue
+            if line.startswith('@@ '):
+                # new chunk
+                if chunk is not None:
+                    chunks.append(chunk)
+                chunk = util.Container()
+                chunk.diff = []
+                lines = [int(x.split(',')[0][1:]) for x in line.split(' ')[1:3]]
+                old_lineno = lines[0]
+                new_lineno = lines[1]
+            elif line.startswith(' '):
+                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
+                                                 type='context', line=util.fixed_width(line[1:])))
+                old_lineno += 1
+                new_lineno += 1
+            elif line.startswith('+'):
+                chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
+                                                 type='insert', line=util.fixed_width(line[1:])))
+                new_lineno += 1
+            elif line.startswith('-'):
+                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
+                                                 type='delete', line=util.fixed_width(line[1:])))
+                old_lineno += 1
+            else:
+                chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
+                                                 type='unknown', line=util.fixed_width(repr(line))))
+        if chunk is not None:
+            chunks.append(chunk)
+        return chunks
+                
+    @with_branch_lock
+    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
+        """
+        Return a nested data structure containing the changes in a delta::
+        
+            added: list((filename, file_id)),
+            renamed: list((old_filename, new_filename, file_id)),
+            deleted: list((filename, file_id)),
+            modified: list(
+                filename: str,
+                file_id: str,
+            )
         """
         added = []
         modified = []
         renamed = []
         removed = []
         
-        def rich_filename(path, kind):
-            if kind == 'directory':
-                path += '/'
-            if kind == 'symlink':
-                path += '@'
-            return path
-        
-        def process_diff(diff):
-            chunks = []
-            chunk = None
-            for line in diff.splitlines():
-                if len(line) == 0:
-                    continue
-                if line.startswith('+++ ') or line.startswith('--- '):
-                    continue
-                if line.startswith('@@ '):
-                    # new chunk
-                    if chunk is not None:
-                        chunks.append(chunk)
-                    chunk = util.Container()
-                    chunk.diff = []
-                    lines = [int(x.split(',')[0][1:]) for x in line.split(' ')[1:3]]
-                    old_lineno = lines[0]
-                    new_lineno = lines[1]
-                elif line.startswith(' '):
-                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                     type='context', line=util.html_clean(line[1:])))
-                    old_lineno += 1
-                    new_lineno += 1
-                elif line.startswith('+'):
-                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                     type='insert', line=util.html_clean(line[1:])))
-                    new_lineno += 1
-                elif line.startswith('-'):
-                    chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                     type='delete', line=util.html_clean(line[1:])))
-                    old_lineno += 1
-                else:
-                    chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
-                                                     type='unknown', line=util.html_clean(repr(line))))
-            if chunk is not None:
-                chunks.append(chunk)
-            return chunks
-                    
-        def handle_modify(old_path, new_path, fid, kind):
-            if not get_diffs:
-                modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid))
-                return
-            old_lines = old_tree.get_file_lines(fid)
-            new_lines = new_tree.get_file_lines(fid)
-            buffer = StringIO()
-            try:
-                bzrlib.diff.internal_diff(old_path, old_lines,
-                                          new_path, new_lines, buffer)
-            except bzrlib.errors.BinaryFile:
-                diff = ''
-            else:
-                diff = buffer.getvalue()
-            modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=process_diff(diff), raw_diff=diff))
-
         for path, fid, kind in delta.added:
             added.append((rich_filename(path, kind), fid))
         
         for path, fid, kind, text_modified, meta_modified in delta.modified:
-            handle_modify(path, path, fid, kind)
+            modified.append(util.Container(filename=rich_filename(path, kind), file_id=fid))
         
-        for oldpath, newpath, fid, kind, text_modified, meta_modified in delta.renamed:
-            renamed.append((rich_filename(oldpath, kind), rich_filename(newpath, kind), fid))
+        for old_path, new_path, fid, kind, text_modified, meta_modified in delta.renamed:
+            renamed.append((rich_filename(old_path, kind), rich_filename(new_path, kind), fid))
             if meta_modified or text_modified:
-                handle_modify(oldpath, newpath, fid, kind)
+                modified.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid))
         
         for path, fid, kind in delta.removed:
             removed.append((rich_filename(path, kind), fid))
@@ -821,44 +851,44 @@ class History (object):
                 m.sbs_chunks = _make_side_by_side(m.chunks)
     
     @with_branch_lock
-    def get_filelist(self, inv, path, sort_type=None):
+    def get_filelist(self, inv, file_id, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
         """
-        while path.endswith('/'):
-            path = path[:-1]
-        if path.startswith('/'):
-            path = path[1:]
-        
-        entries = inv.entries()
-        
+
+        dir_ie = inv[file_id]
+        path = inv.id2path(file_id)
         file_list = []
-        for filepath, entry in entries:
-            if posixpath.dirname(filepath) != path:
-                continue
-            filename = posixpath.basename(filepath)
+
+        for filename, entry in dir_ie.children.iteritems():
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
 
             revid = entry.revision
-            revision = self._branch.repository.get_revision(revid)
+            if self._change_cache:
+                timestamp = self.get_changes([revid])[0].date
+            else:
+                revision = self._branch.repository.get_revision(revid)
+                timestamp = datetime.datetime.fromtimestamp(revision.timestamp)
 
-            change = util.Container(date=datetime.datetime.fromtimestamp(revision.timestamp),
+            change = util.Container(date=timestamp,
                                     revno=self.get_revno(revid))
-            
-            file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
-                                  pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
+
+            file = util.Container(
+                filename=filename, executable=entry.executable, kind=entry.kind,
+                pathname=pathname, file_id=entry.file_id, size=entry.text_size,
+                revid=revid, change=change)
             file_list.append(file)
-        
-        if sort_type == 'filename':
+
+        if sort_type == 'filename' or sort_type is None:
             file_list.sort(key=lambda x: x.filename)
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
-        
+
         parity = 0
         for file in file_list:
             file.parity = parity
@@ -889,7 +919,7 @@ class History (object):
             if self._BADCHARS_RE.match(text):
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
-                                     text='<i>' + util.html_clean('(This is a binary file.)') + '</i>',
+                                     text='(This is a binary file.)',
                                      change=util.Container())
                 return
         change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
@@ -907,9 +937,9 @@ class History (object):
                 trunc_revno = change.revno
                 if len(trunc_revno) > 10:
                     trunc_revno = trunc_revno[:9] + '...'
-                
+
             yield util.Container(parity=parity, lineno=lineno, status=status,
-                                 change=change, text=util.html_clean(text))
+                                 change=change, text=util.fixed_width(text))
             lineno += 1
         
         self.log.debug('annotate: %r secs' % (time.time() - z,))

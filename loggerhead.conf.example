@@ -12,6 +12,9 @@
 # if you want a special title on the front page, set it here:
 title = 'branches in loggerhead'
 
+# the access and debug logs can be set up to roll 'daily', 'weekly', or 'never':
+log.roll = 'weekly'
+
 # group branches by project:
 [bazaar]
 
