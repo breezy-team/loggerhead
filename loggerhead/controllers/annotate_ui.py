@@ -47,7 +47,8 @@ class AnnotateUI (object):
         self.log = branch.log
 
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.annotate')
+    @turbogears.expose(html='zpt:loggerhead.templates.annotate')
+    #@turbogears.expose(html='loggerhead.templates.annotate')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()

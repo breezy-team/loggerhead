@@ -88,7 +88,7 @@ class TurboZpt:
 	    data.update(self.get_extra_vars())
 	data.update(info)
         
-        return str(tinstance(**data))
+        return tinstance(**data)
 
     def transform(self, info, template):
 	"Render the output to Elements"
