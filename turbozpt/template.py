@@ -12,12 +12,9 @@ class Here(object):
         self.base = base
         self.options = options
 
-    def __getattribute__(self, name):
-        # import pdb; pdb.set_trace()
-        if name.startswith('_'):
-            return super(Here, self).__getattribute__(name)
-        tpl = PageTemplate(os.path.join(self.__dict__['base'], name))
-        tpl.add_context(object.__getattribute__(self, 'options'))
+    def __getitem__(self, name):
+        tpl = PageTemplate(os.path.join(self.base, name))
+        tpl.add_context(self.options)
         return tpl
 
 class PageTemplate(pagetemplatefile.PageTemplateFile):
