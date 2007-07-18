@@ -1,0 +1,227 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+    <title tal:content="string:${branch/friendly_name} : changes">
+      ${branch.friendly_name} : changes
+    </title>
+    <link rel="alternate" type="application/atom+xml"
+          tal:attributes="href python:branch.url('/atom');
+                          title string:RSS feed for ${branch/friendly_name}"
+          />
+    <link rel="stylesheet"
+          tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
+
+
+    <span py:def="loglink(revid, text)">
+        <a title="Show history" href="${branch.url('/changes', **util.get_context(start_revid=revid))}" class="revlink"> ${text} </a>
+    </span>
+
+    <span py:def="file_link(filename, file_id, revid)">
+        <a href="${branch.url([ '/annotate', revid ], **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
+    </span>
+
+    ${use_collapse_buttons()}
+  </head>
+
+  <body onload="javascript:sortCollapseElements();">
+
+    <tal:navigation content="structure here/navigation.pt" />
+
+    <h1>
+      <span class="branch-name" tal:content="branch/friendly_name">
+        ${branch.friendly_name}
+      </span>
+      : changes
+      <span tal:condition="file_id">
+        to
+        <span class="filename"
+              tal:content="python:history.get_path(revid, file_id)">
+          ${history.get_path(revid, file_id)}
+        </span>
+      </span>
+      <span tal:condition="viewing_from">
+        from <tal:block content="python:history.get_revno(start_revid)" />
+      </span>
+      <span tal:condition="query">
+        matching <tal:block content="query" />
+      </span>
+    </h1>
+
+    <span tal:condition="search_failed">
+      Sorry, no results found for your search.
+    </span>
+
+    <span tal:condition="not:changes">
+      No revisions!
+    </span>
+
+    <span tal:condition="not:search_failed"
+          class="changelog">
+      ${collapse_all_button('cl')}
+    </span>
+
+    <table class="log-entries"
+           tal:define="subcolspan python:4-bool(all_same_author)">
+      <tr class="log-header">
+        <th class="revision-number">
+          Rev
+        </th>
+        <th>
+        </th>
+        <th class="summary">
+          Summary
+        </th>
+        <th tal:condition="not:all_same_author"
+            class="author">
+          Committer
+        </th>
+        <th class="date" colspan="2">
+          Date
+        </th>
+      </tr>
+      <tal:block tal:repeat="entry changes">
+        <a name="entry-${entry.revno}" />
+        <tr class="revision-header parity${entry.parity}">
+          <td class="revision-number">
+            ${revision_link(entry.revid, util.trunc(entry.revno))}
+          </td>
+          <td class="expand-button">
+            ${collapse_button('cl', entry.revno)}
+          </td>
+          <td class="summary">
+            ${revision_link(entry.revid, entry.short_comment)}
+          </td>
+          <td tal:condition="not:all_same_author"
+              class="author">
+            ${util.trunc(util.hide_email(entry.author), 20)}
+          </td>
+          <td class="date">
+            ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)})
+          </td>
+          <td class="inventory-link">
+            <a href="${branch.url([ '/files', entry.revid ])}"
+               title="Files at revision ${entry.revno}">
+              files
+            </a>
+          </td>
+        </tr>
+
+        <tr class="revision-details-block parity${entry.parity}">
+          <td colspan="2">
+          </td>
+          <td colspan="4">
+            <table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
+              <tr tal:condition="python:len(entry.merge_points) > 0">
+                <th class="children">
+                  merged in:
+                </th>
+                <td class="children">
+                  <span tal:repeat="child entry/merge_points">
+                    ${loglink(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
+                  </span>
+                </td>
+              </tr>
+              <tr tal:condition="python:len(entry.parents) > 1">
+                <th class="parents">
+                  merged from:
+                </th>
+                <td class="parents">
+                  <span tal:repeat="parent entry/parents">
+                    <span tal:condition="python:parent.revid != entry.parents[0].revid">
+                      ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
+                    </span>
+                  </span>
+                </td>
+              </tr>
+              <tr tal:condition="all_same_author">
+                <th class="author">
+                  committed by:
+                </th>
+                <td class="author">
+                  ${util.hide_email(entry.author)}
+                </td>
+              </tr>
+              <tr>
+                <th class="description">
+                  description:
+                </th>
+                <td class="description">
+                  <span tal:repeat="line entry/comment_clean">${XML(line)} <br /></span>
+                </td>
+              </tr>
+              <tr tal:condition="entry/changes/added">
+                <th class="files">
+                  files added:
+                </th>
+                <td class="files">
+                  <span tal:repeat="added entry/changes/added" class="filename">
+                    ${file_link(added[0], added[1], entry.revid)} <br />
+                  </span>
+                </td>
+              </tr>
+              <tr tal:condition="entry/changes/removed">
+                <th class="files">
+                  files removed:
+                </th>
+                <td class="files">
+                  <span tal:repeat="removed entry/changes/removed" class="filename">
+                    ${file_link(removed[0], removed[1], entry.revid)} <br />
+                  </span>
+                </td>
+              </tr>
+              <tr tal:condition="entry/changes/renamed">
+                <th class="files">
+                  files renamed:
+                </th>
+                <td class="files">
+                  <span tal:repeat="renamed entry/changes/renamed" class="filename">
+                    ${file_link(renamed[0], renamed[2], entry.revid)} => ${file_link(renamed[1], renamed[2], entry.revid)}<br />
+                  </span>
+                </td>
+              </tr>
+              <tr tal:condition="entry/changes/modified">
+                <th class="files">
+                  files modified:
+                </th>
+                <td class="files">
+                  <span tal:repeat="item entry/changes/modified">
+                    <span class="filename">
+                      ${file_link(item.filename, item.file_id, entry.revid)}
+                    </span>
+                    &nbsp;
+                    <a href="${branch.url([ '/revision', entry.revid ], **util.get_context()) + '#' + item.filename}" class="jump">
+                      &#8594; diff
+                    </a>
+                    <br />
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </tal:block>
+    </table>
+
+    <div tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
+         class="bar">
+      <table>
+        <tr>
+          <td class="buttons">
+            <a tal:condition="navigation/prev_page_revid"
+               tal:attributes="href navigation/prev_page_url">
+              &lt;&lt; page
+            </a>
+	  </td>
+ 	  <td class="rbuttons" align="right">
+            <a tal:condition="navigation/next_page_revid"
+               tal:attributes="href navigation/next_page_url">
+              page &gt;&gt;
+            </a>
+ 	  </td>
+ 	</tr>
+      </table>
+    </div>
+
+  </body>
+</html>

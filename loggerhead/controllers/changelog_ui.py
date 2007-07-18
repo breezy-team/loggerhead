@@ -34,7 +34,8 @@ class ChangeLogUI (object):
         self.log = branch.log
         
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.changelog')
+    #@turbogears.expose(html='loggerhead.templates.changelog')
+    @turbogears.expose(html='zpt:loggerhead.templates.changelog')
     def default(self, *args, **kw):
         print args
         z = time.time()
@@ -97,6 +98,9 @@ class ChangeLogUI (object):
                     all_same_author = False
                     break
 
+        def url(pathargs, **kw):
+            return self._branch.url(pathargs, **util.get_context(**kw))
+
         vals = {
             'branch': self._branch,
             'changes': entries,
@@ -110,6 +114,7 @@ class ChangeLogUI (object):
             'query': query,
             'search_failed': search_failed,
             'all_same_author': all_same_author,
+            'url': url,
         }
         h.flush_cache()
         self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
