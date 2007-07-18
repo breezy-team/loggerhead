@@ -153,8 +153,8 @@ def clean_message(message):
         
     # make short form of commit message
     short_message = message[0]
-    if len(short_message) > 80:
-        short_message = short_message[:80] + '...'
+    if len(short_message) > 60:
+        short_message = short_message[:60] + '...'
     
     return message, short_message
 
