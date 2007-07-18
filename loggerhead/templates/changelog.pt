@@ -13,15 +13,11 @@
           tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
 
 
-    <span py:def="loglink(revid, text)">
-        <a title="Show history" href="${branch.url('/changes', **util.get_context(start_revid=revid))}" class="revlink"> ${text} </a>
-    </span>
-
     <span py:def="file_link(filename, file_id, revid)">
-        <a href="${branch.url([ '/annotate', revid ], **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
+      <a href="${url(['/annotate', revid], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
     </span>
 
-    ${use_collapse_buttons()}
+    <script type="text/javascript" tal:attributes="src python:tg.url('/static/javascript/collapse.js')"></script>
   </head>
 
   <body onload="javascript:sortCollapseElements();">
@@ -58,7 +54,16 @@
 
     <span tal:condition="not:search_failed"
           class="changelog">
-      ${collapse_all_button('cl')}
+      <a class="hide-all collapse-cl-hideall"
+	 href="javascript:collapseAllDisplay('cl','none')">
+	<img tal:attributes="src python:tg.url('/static/images/nav-small-down.gif')"
+	     width="10" height="10" alt="collapse"
+	     class="collapse-triangle" />collapse all</a>
+      <a class="hide-all collapse-cl-showall"
+	 href="javascript:collapseAllDisplay('cl','block')">
+	<img tal:attributes="src python:tg.url('/static/images/nav-small-right.gif')"
+	     width="10" height="10" alt="expand"
+	     class="collapse-triangle" />expand all</a>
     </span>
 
     <table class="log-entries"
@@ -81,44 +86,73 @@
         </th>
       </tr>
       <tal:block tal:repeat="entry changes">
-        <a name="entry-${entry.revno}" />
-        <tr class="revision-header parity${entry.parity}">
+        <a tal:attributes="name string:entry-${entry/revno}" />
+        <tr tal:attributes="class string:revision-header parity${entry/parity}">
           <td class="revision-number">
-            ${revision_link(entry.revid, util.trunc(entry.revno))}
-          </td>
-          <td class="expand-button">
-            ${collapse_button('cl', entry.revno)}
+            <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
+                               href  python:url([ '/revision', entry.revid ])"
+               tal:content="python:util.trunc(entry.revno)">
+              text
+            </a>
+          <td class="expand-button" tal:define="name entry/revno">
+	    <a tal:attributes="href  string:javascript:collapseDisplay('cl','${name}','none');
+                               class string:hide-button collapse-cl-${name}-hide"
+	        title="collapse">
+	      <img tal:attributes="src python:tg.url('/static/images/nav-small-down.gif')"
+	           width="10" height="10" alt="collapse"
+	           class="collapse-triangle" />
+	    </a>
+	    <a tal:attributes="href  string:javascript:collapseDisplay('cl','${name}','block');
+                               class string:show-button collapse-cl-${name}-show"
+	        title="collapse">
+	      <img tal:attributes="src python:tg.url('/static/images/nav-small-right.gif')"
+	           width="10" height="10" alt="expand"
+	           class="collapse-triangle" />
+	    </a>
           </td>
           <td class="summary">
-            ${revision_link(entry.revid, entry.short_comment)}
+            <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
+                               href  python:url([ '/revision', entry.revid ])"
+               tal:content="entry/short_comment">
+              text
+            </a>
           </td>
           <td tal:condition="not:all_same_author"
+              tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
               class="author">
             ${util.trunc(util.hide_email(entry.author), 20)}
           </td>
           <td class="date">
-            ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)})
+            <tal:b content="python:entry.date.strftime('%Y-%m-%d, %H:%M')" />
+            &nbsp;
+            (<tal:b content="python:util.ago(entry.date)" />)
           </td>
           <td class="inventory-link">
-            <a href="${branch.url([ '/files', entry.revid ])}"
-               title="Files at revision ${entry.revno}">
+            <a tal:attributes="href python:branch.url(['/files', entry.revid]);
+                               title string:Files at revision ${entry/revno}">
               files
             </a>
           </td>
         </tr>
 
-        <tr class="revision-details-block parity${entry.parity}">
+        <tr tal:attributes="class string:revision-details-block parity${entry/parity}">
           <td colspan="2">
           </td>
           <td colspan="4">
-            <table class="revision-details hidden-details collapse-cl-${entry.revno}-content">
+            <table tal:attributes="class string:revision-details hidden-details collapse-cl-${entry/revno}-content">
               <tr tal:condition="python:len(entry.merge_points) > 0">
                 <th class="children">
                   merged in:
                 </th>
                 <td class="children">
                   <span tal:repeat="child entry/merge_points">
-                    ${loglink(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')')} <br />
+                    <a title="Show history"
+                       tal:attributes="href python:url(['/changes'], start_revid=child.revid)"
+                       tal:content="python:'(' + child.revno + util.if_present(' %s', child.branch_nick) + ')'">
+                       class="revlink">
+                      ${text}
+                    </a>
+                    <br />
                   </span>
                 </td>
               </tr>
@@ -129,7 +163,13 @@
                 <td class="parents">
                   <span tal:repeat="parent entry/parents">
                     <span tal:condition="python:parent.revid != entry.parents[0].revid">
-                      ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
+                    <a title="Show history"
+                       tal:attributes="href python:url(['/changes'], start_revid=parent.revid)"
+                       tal:content="python:'(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')'">
+                       class="revlink">
+                      ${text}
+                    </a>
+                    <br />
                     </span>
                   </span>
                 </td>
@@ -138,7 +178,7 @@
                 <th class="author">
                   committed by:
                 </th>
-                <td class="author">
+                <td class="author" tal:content="python:util.hide_email(entry.author)">
                   ${util.hide_email(entry.author)}
                 </td>
               </tr>
@@ -147,7 +187,10 @@
                   description:
                 </th>
                 <td class="description">
-                  <span tal:repeat="line entry/comment_clean">${XML(line)} <br /></span>
+                  <tal:block tal:repeat="line entry/comment_clean">
+                    <tal:block content="structure line" />
+                    <br />
+                  </tal:block>
                 </td>
               </tr>
               <tr tal:condition="entry/changes/added">
@@ -156,7 +199,14 @@
                 </th>
                 <td class="files">
                   <span tal:repeat="added entry/changes/added" class="filename">
-                    ${file_link(added[0], added[1], entry.revid)} <br />
+                    <a tal:define="filename python:added[0];
+                                   file_id  python:added[1]"
+                       tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                                       title string:Annotate ${filename}"
+                       tal:content="filename">
+                      filename
+                    </a>
+                    <br />
                   </span>
                 </td>
               </tr>
@@ -166,7 +216,14 @@
                 </th>
                 <td class="files">
                   <span tal:repeat="removed entry/changes/removed" class="filename">
-                    ${file_link(removed[0], removed[1], entry.revid)} <br />
+                    <a tal:define="filename python:removed[0];
+                                   file_id  python:removed[1]"
+                       tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                                       title string:Annotate ${filename}"
+                       tal:content="filename">
+                      filename
+                    </a>
+                    <br />
                   </span>
                 </td>
               </tr>
@@ -176,7 +233,22 @@
                 </th>
                 <td class="files">
                   <span tal:repeat="renamed entry/changes/renamed" class="filename">
-                    ${file_link(renamed[0], renamed[2], entry.revid)} => ${file_link(renamed[1], renamed[2], entry.revid)}<br />
+                    <tal:block define="old_filename python:renamed[0];
+                                       new_filename python:renamed[1];
+                                       file_id      python:renamed[2]">
+                      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                                         title string:Annotate ${old_filename}"
+                         tal:content="old_filename">
+                        old_filename
+                      </a>
+                      =>
+                      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                                         title string:Annotate ${new_filename}"
+                         tal:content="new_filename">
+                        new_filename
+                      </a>
+                    </tal:block>
+                    <br />
                   </span>
                 </td>
               </tr>
@@ -187,10 +259,15 @@
                 <td class="files">
                   <span tal:repeat="item entry/changes/modified">
                     <span class="filename">
-                      ${file_link(item.filename, item.file_id, entry.revid)}
+                      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=item.file_id);
+                                         title string:Annotate ${item/filename}"
+                         tal:content="item/filename">
+                        item/filename
+                      </a>
                     </span>
                     &nbsp;
-                    <a href="${branch.url([ '/revision', entry.revid ], **util.get_context()) + '#' + item.filename}" class="jump">
+                    <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename" 
+                       class="jump">
                       &#8594; diff
                     </a>
                     <br />
