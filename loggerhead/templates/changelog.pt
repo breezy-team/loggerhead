@@ -13,18 +13,16 @@
           tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
 
 
-    <span py:def="file_link(filename, file_id, revid)">
-      <a href="${url(['/annotate', revid], file_id=file_id)}" title="Annotate ${filename}">${filename}</a>
-    </span>
-
-    <script type="text/javascript" tal:attributes="src python:tg.url('/static/javascript/collapse.js')"></script>
+    <script type="text/javascript" 
+            tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+    </script>
   </head>
 
   <body onload="javascript:sortCollapseElements();">
 
     <tal:navigation content="structure here/navigation.pt" />
 
-    <h1>
+    <h1 style="margin-bottom: 1em">
       <span class="branch-name" tal:content="branch/friendly_name">
         ${branch.friendly_name}
       </span>
@@ -138,7 +136,7 @@
         <tr tal:attributes="class string:revision-details-block parity${entry/parity}">
           <td colspan="2">
           </td>
-          <td colspan="4">
+          <td tal:attributes="colspan subcolspan">
             <table tal:attributes="class string:revision-details hidden-details collapse-cl-${entry/revno}-content">
               <tr tal:condition="python:len(entry.merge_points) > 0">
                 <th class="children">
@@ -299,6 +297,8 @@
  	</tr>
       </table>
     </div>
+
+    <tal:footer content="structure here/footer.pt" />
 
   </body>
 </html>
