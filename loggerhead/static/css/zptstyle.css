@@ -265,6 +265,15 @@ div.links div {
     font-family: monospace;
 }
 
+td.files {
+    padding-top: 0em;
+    padding-bottom: 0em;
+}
+th.files {
+    padding-top: 0em;
+    padding-bottom: 0em;
+}
+
 .log-entries .revision-details td.files .jump {
     font-size: smaller;
 }
