@@ -47,7 +47,7 @@ class InventoryUI (object):
         self.log = branch.log
 
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.inventory')
+    @turbogears.expose(html='zpt:loggerhead.templates.inventory')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()

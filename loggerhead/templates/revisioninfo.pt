@@ -1,0 +1,57 @@
+<div class="revision-info">
+  <table>
+    <tr>
+      <th class="author">
+        committed by:
+      </th>
+      <td class="author"
+          tal:content="python:util.hide_email(change.author)">
+        author@email
+      </td>
+    </tr>
+    <tr>
+      <th class="date">
+        date:
+      </th>
+      <td class="date"
+          tal:content="python:change.date.strftime('%d %b %Y %H:%M')">
+        date
+      </td>
+    </tr>
+
+    <tr tal:condition="change/merge_points">
+      <th class="children">
+        merged in:
+      </th>
+      <td class="children">
+        <span tal:repeat="child change/merge_points"
+              tal:content="python:revision_link(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', clear=1, start_revid=child.revid)" >
+          ${} <br />
+        </span>
+      </td>
+    </tr>
+    <tr tal:condition="python:len(change.parents) > 1">
+      <th class="parents">
+        merged from:
+      </th>
+      <td class="parents">
+        <span tal:repeat="parent python:change.parents[1:]"
+              tal:content="python:revision_link(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', clear=1, start_revid=parent.revid)">
+            ${} <br />
+        </span>
+      </td>
+    </tr>
+
+    <tr>
+      <th class="description">
+        description:
+      </th>
+      <td class="description">
+        <span tal:repeat="line change/comment_clean">
+          <tal:line replace="structure line" />
+          <br />
+        </span>
+      </td>
+    </tr>
+  </table>
+</div>
