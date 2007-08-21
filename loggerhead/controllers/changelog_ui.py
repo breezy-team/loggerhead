@@ -70,6 +70,7 @@ class ChangeLogUI (object):
                 scan_list = revid_list[i:]
             entry_list = scan_list[:pagesize]
             entries = h.get_changes(entry_list)
+            h.add_changes(entries)
         except:
             self.log.exception('Exception fetching changes')
             raise InternalError('Could not fetch changes')

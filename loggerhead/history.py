@@ -622,7 +622,7 @@ class History (object):
         self.log.info('lsprof complete!')
         return ret
 
-    def _get_deltas_for_revisions_with_trees(self, revisions):
+    def _get_deltas_for_revisions_with_trees(self, entries):
         """Produce a generator of revision deltas.
 
         Note that the input is a sequence of REVISIONS, not revision_ids.
@@ -630,20 +630,20 @@ class History (object):
         Each delta is relative to the revision's lefthand predecessor.
         """
         required_trees = set()
-        for revision in revisions:
-            required_trees.add(revision.revision_id)
-            required_trees.update(revision.parent_ids[:1])
+        for entry in entries:
+            required_trees.add(entry.revid)
+            required_trees.update([p.revid for p in entry.parents[:1]])
         trees = dict((t.get_revision_id(), t) for
                      t in self._branch.repository.revision_trees(required_trees))
         ret = []
         self._branch.repository.lock_read()
         try:
-            for revision in revisions:
-                if not revision.parent_ids:
-                    old_tree = self._branch.repository.revision_tree(None)
+            for entry in entries:
+                if not entry.parents:
+                    old_tree = self._branch.repository.revision_tree("null:")
                 else:
-                    old_tree = trees[revision.parent_ids[0]]
-                tree = trees[revision.revision_id]
+                    old_tree = trees[entry.parents[0].revid]
+                tree = trees[entry.revid]
                 ret.append(tree.changes_from(old_tree))
             return ret
         finally:
@@ -684,16 +684,15 @@ class History (object):
         if not revid_list:
             return []
 
-        delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
-        combined_list = zip(rev_list, delta_list)
+        return [self.entry_from_revision(rev) for rev in rev_list]
 
-        entries = []
-        for rev, delta in combined_list:
-            entry = self.entry_from_revision(rev)
+    @with_branch_lock
+    @with_bzrlib_read_lock
+    def add_changes(self, entries):
+        delta_list = self._get_deltas_for_revisions_with_trees(entries)
+
+        for entry, delta in zip(entries, delta_list):
             entry.changes = self.parse_delta(delta)
-            entries.append(entry)
-
-        return entries
 
     @with_bzrlib_read_lock
     def _get_diff(self, revid1, revid2):
@@ -702,6 +701,7 @@ class History (object):
         delta = rev_tree2.changes_from(rev_tree1)
         return rev_tree1, rev_tree2, delta
 
+    # XXX locking?
     def get_change_with_diff(self, revid, compare_revid=None):
         entry = self.get_changes([revid])[0]
         if compare_revid is None:
@@ -709,9 +709,8 @@ class History (object):
                 compare_revid = entry.parents[0].revid
             else:
                 compare_revid = 'null:'
-        else:
-            rev_tree1, rev_tree2, delta = self._get_diff(compare_revid, revid)
-            entry.changes = self.parse_delta(delta)
+        rev_tree1, rev_tree2, delta = self._get_diff(compare_revid, revid)
+        entry.changes = self.parse_delta(delta)
         entry.changes.modified = self._parse_diffs(compare_revid, revid)
         return entry
 
