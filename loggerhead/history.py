@@ -589,7 +589,7 @@ class History (object):
                     p.branch_nick = '(missing)'
 
     @with_branch_lock
-    def get_changes(self, revid_list, get_diffs=False):
+    def get_changes(self, revid_list):
         if self._change_cache is None:
             changes = self.get_changes_uncached(revid_list)
         else:
@@ -603,13 +603,6 @@ class History (object):
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
             change.revno = self.get_revno(change.revid)
-            if get_diffs:
-                # this may be time-consuming, but it only happens on the revision page, and only for one revision at a time.
-                if len(change.parents) > 0:
-                    parent_revid = change.parents[0].revid
-                else:
-                    parent_revid = None
-                change.changes.modified = self._parse_diffs(parent_revid, change.revid)
 
         parity = 0
         for change in changes:
@@ -697,7 +690,7 @@ class History (object):
         entries = []
         for rev, delta in combined_list:
             entry = self.entry_from_revision(rev)
-            entry.changes = self.parse_delta(delta, False)
+            entry.changes = self.parse_delta(delta)
             entries.append(entry)
 
         return entries
@@ -709,10 +702,17 @@ class History (object):
         delta = rev_tree2.changes_from(rev_tree1)
         return rev_tree1, rev_tree2, delta
 
-    def get_diff(self, revid1, revid2):
-        rev_tree1, rev_tree2, delta = self._get_diff(revid1, revid2)
-        entry = self.get_changes([revid2], False)[0]
-        entry.changes = self.parse_delta(delta, True)
+    def get_change_with_diff(self, revid, compare_revid=None):
+        entry = self.get_changes([revid])[0]
+        if compare_revid is None:
+            if entry.parents:
+                compare_revid = entry.parents[0].revid
+            else:
+                compare_revid = 'null:'
+        else:
+            rev_tree1, rev_tree2, delta = self._get_diff(compare_revid, revid)
+            entry.changes = self.parse_delta(delta)
+        entry.changes.modified = self._parse_diffs(compare_revid, revid)
         return entry
 
     @with_branch_lock
@@ -810,7 +810,7 @@ class History (object):
         return chunks
 
     @with_branch_lock
-    def parse_delta(self, delta, get_diffs=True):
+    def parse_delta(self, delta):
         """
         Return a nested data structure containing the changes in a delta::
 

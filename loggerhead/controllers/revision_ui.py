@@ -67,10 +67,7 @@ class RevisionUI (object):
             navigation.query = query
         util.fill_in_navigation(navigation)
 
-        if compare_revid is not None:
-            change = h.get_diff(compare_revid, revid)
-        else:
-            change = h.get_changes([ revid ], get_diffs=True)[0]
+        change = h.get_change_with_diff(revid, compare_revid)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([ change ])
 
