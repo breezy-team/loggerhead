@@ -57,7 +57,7 @@ class InventoryUI (object):
             revid = h.fix_revid(args[0])
         else:
             revid = h.last_revid
-        
+
         try:
             rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
@@ -68,20 +68,13 @@ class InventoryUI (object):
         file_id = kw.get('file_id', inv.root.file_id)
         sort_type = kw.get('sort', None)
 
-        try:
-            rev = h.get_revision(revid)
-            inv = h.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise InternalError('Could not fetch changes')
-
         # no navbar for revisions
         navigation = util.Container()
 
         change = h.get_changes([ revid ])[0]
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([ change ])
-        
+
         path = inv.id2path(file_id)
         if not path.startswith('/'):
             path = '/' + path
