@@ -697,7 +697,7 @@ class History (object):
         entries = []
         for rev, (new_tree, old_tree, delta) in combined_list:
             entry = self.entry_from_revision(rev)
-            entry.changes = self.parse_delta(delta, old_tree, new_tree)
+            entry.changes = self.parse_delta(delta, False)
             entries.append(entry)
         
         return entries
@@ -711,8 +711,8 @@ class History (object):
     
     def get_diff(self, revid1, revid2):
         rev_tree1, rev_tree2, delta = self._get_diff(revid1, revid2)
-        entry = self.get_changes([ revid2 ], False)[0]
-        entry.changes = self.parse_delta(delta, True, rev_tree1, rev_tree2)
+        entry = self.get_changes([revid2], False)[0]
+        entry.changes = self.parse_delta(delta, True)
         return entry
     
     @with_branch_lock
@@ -810,7 +810,7 @@ class History (object):
         return chunks
                 
     @with_branch_lock
-    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
+    def parse_delta(self, delta, get_diffs=True):
         """
         Return a nested data structure containing the changes in a delta::
         
