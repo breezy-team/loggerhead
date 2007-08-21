@@ -651,7 +651,7 @@ class History (object):
                 else:
                     old_tree = trees[revision.parent_ids[0]]
                 tree = trees[revision.revision_id]
-                ret.append((tree, old_tree, tree.changes_from(old_tree)))
+                ret.append(tree.changes_from(old_tree))
             return ret
         finally:
             self._branch.repository.unlock()
@@ -695,7 +695,7 @@ class History (object):
         combined_list = zip(rev_list, delta_list)
         
         entries = []
-        for rev, (new_tree, old_tree, delta) in combined_list:
+        for rev, delta in combined_list:
             entry = self.entry_from_revision(rev)
             entry.changes = self.parse_delta(delta, False)
             entries.append(entry)
@@ -808,7 +808,7 @@ class History (object):
         if chunk is not None:
             chunks.append(chunk)
         return chunks
-                
+    
     @with_branch_lock
     def parse_delta(self, delta, get_diffs=True):
         """
