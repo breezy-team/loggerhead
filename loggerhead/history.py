@@ -860,25 +860,26 @@ class History (object):
         path = inv.id2path(file_id)
         file_list = []
 
+        revid_set = set()
+
+        for filename, entry in dir_ie.children.iteritems():
+            revid_set.add(entry.revision)
+
+        change_dict = {}
+        for change in self.get_changes(list(revid_set)):
+            change_dict[change.revid] = change
+
         for filename, entry in dir_ie.children.iteritems():
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
 
             revid = entry.revision
-            if self._change_cache:
-                timestamp = self.get_changes([revid])[0].date
-            else:
-                revision = self._branch.repository.get_revision(revid)
-                timestamp = datetime.datetime.fromtimestamp(revision.timestamp)
-
-            change = util.Container(date=timestamp,
-                                    revno=self.get_revno(revid))
 
             file = util.Container(
                 filename=filename, executable=entry.executable, kind=entry.kind,
                 pathname=pathname, file_id=entry.file_id, size=entry.text_size,
-                revid=revid, change=change)
+                revid=revid, change=change_dict[revid])
             file_list.append(file)
 
         if sort_type == 'filename' or sort_type is None:
