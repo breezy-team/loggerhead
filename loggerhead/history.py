@@ -280,10 +280,6 @@ class History (object):
     def get_config(self):
         return self._branch.get_config()
 
-    @with_branch_lock
-    def get_revision(self, revid):
-        return self._branch.repository.get_revision(revid)
-
     def get_revno(self, revid):
         if revid not in self._revision_info:
             # ghost parent?
@@ -671,28 +667,34 @@ class History (object):
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
-        done = False
-        while not done:
+        while True:
             try:
                 rev_list = self._branch.repository.get_revisions(revid_list)
-                done = True
             except (KeyError, bzrlib.errors.NoSuchRevision), e:
                 # this sometimes happens with arch-converted branches.
                 # i don't know why. :(
                 self.log.debug('No such revision (skipping): %s', e)
                 revid_list.remove(e.revision)
-        if not revid_list:
-            return []
+            else:
+                break
 
         return [self.entry_from_revision(rev) for rev in rev_list]
 
-    @with_branch_lock
     @with_bzrlib_read_lock
-    def add_changes(self, entries):
+    def get_file_changes_uncached(self, entries):
         delta_list = self._get_deltas_for_revisions_with_trees(entries)
 
-        for entry, delta in zip(entries, delta_list):
-            entry.changes = self.parse_delta(delta)
+        return [self.parse_delta(delta) for delta in delta_list]
+
+    @with_branch_lock
+    def get_file_changes(self, entries):
+        return self.get_file_changes_uncached(entries)
+
+    def add_changes(self, entries):
+        changes_list = self.get_file_changes(entries)
+
+        for entry, changes in zip(entries, changes_list):
+            entry.changes = changes
 
     @with_branch_lock
     @with_bzrlib_read_lock
