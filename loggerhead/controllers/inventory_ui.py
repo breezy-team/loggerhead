@@ -52,55 +52,59 @@ class InventoryUI (object):
         z = time.time()
         h = self._branch.get_history()
         util.set_context(kw)
-        
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
 
+        h._branch.lock_read()
         try:
-            inv = h.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise InternalError('Could not fetch changes')
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
+            else:
+                revid = h.last_revid
 
-        file_id = kw.get('file_id', inv.root.file_id)
-        sort_type = kw.get('sort', None)
+            try:
+                inv = h.get_inventory(revid)
+            except:
+                self.log.exception('Exception fetching changes')
+                raise InternalError('Could not fetch changes')
 
-        # no navbar for revisions
-        navigation = util.Container()
+            file_id = kw.get('file_id', inv.root.file_id)
+            sort_type = kw.get('sort', None)
 
-        change = h.get_changes([ revid ])[0]
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+            # no navbar for revisions
+            navigation = util.Container()
 
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
-            path = '/' + path
-        idpath = inv.get_idpath(file_id)
-        if len(idpath) > 1:
-            updir = dirname(path)
-            updir_file_id = idpath[-2]
-        else:
-            updir = None
-            updir_file_id = None
-        if updir == '/':
-            updir_file_id = None
+            change = h.get_changes([ revid ])[0]
+            # add parent & merge-point branch-nick info, in case it's useful
+            h.get_branch_nicks([ change ])
 
-        vals = {
-            'branch': self._branch,
-            'util': util,
-            'revid': revid,
-            'change': change,
-            'file_id': file_id,
-            'path': path,
-            'updir': updir,
-            'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, file_id, sort_type),
-            'history': h,
-            'posixpath': posixpath,
-            'navigation': navigation,
-        }
-        h.flush_cache()
-        self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
-        return vals
+            path = inv.id2path(file_id)
+            if not path.startswith('/'):
+                path = '/' + path
+            idpath = inv.get_idpath(file_id)
+            if len(idpath) > 1:
+                updir = dirname(path)
+                updir_file_id = idpath[-2]
+            else:
+                updir = None
+                updir_file_id = None
+            if updir == '/':
+                updir_file_id = None
+
+            vals = {
+                'branch': self._branch,
+                'util': util,
+                'revid': revid,
+                'change': change,
+                'file_id': file_id,
+                'path': path,
+                'updir': updir,
+                'updir_file_id': updir_file_id,
+                'filelist': h.get_filelist(inv, file_id, sort_type),
+                'history': h,
+                'posixpath': posixpath,
+                'navigation': navigation,
+            }
+            h.flush_cache()
+            self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
+            return vals
+        finally:
+            h._branch.unlock()
