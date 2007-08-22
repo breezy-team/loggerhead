@@ -59,7 +59,6 @@ class InventoryUI (object):
             revid = h.last_revid
 
         try:
-            rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
         except:
             self.log.exception('Exception fetching changes')
