@@ -694,24 +694,25 @@ class History (object):
         for entry, delta in zip(entries, delta_list):
             entry.changes = self.parse_delta(delta)
 
+    @with_branch_lock
     @with_bzrlib_read_lock
-    def _get_diff(self, revid1, revid2):
-        rev_tree1 = self._branch.repository.revision_tree(revid1)
-        rev_tree2 = self._branch.repository.revision_tree(revid2)
-        delta = rev_tree2.changes_from(rev_tree1)
-        return rev_tree1, rev_tree2, delta
-
-    # XXX locking?
     def get_change_with_diff(self, revid, compare_revid=None):
         entry = self.get_changes([revid])[0]
+
         if compare_revid is None:
             if entry.parents:
                 compare_revid = entry.parents[0].revid
             else:
                 compare_revid = 'null:'
-        rev_tree1, rev_tree2, delta = self._get_diff(compare_revid, revid)
+
+        rev_tree1 = self._branch.repository.revision_tree(compare_revid)
+        rev_tree2 = self._branch.repository.revision_tree(revid)
+        delta = rev_tree2.changes_from(rev_tree1)
+
         entry.changes = self.parse_delta(delta)
-        entry.changes.modified = self._parse_diffs(compare_revid, revid)
+
+        entry.changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
+
         return entry
 
     @with_branch_lock
@@ -725,7 +726,7 @@ class History (object):
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def _parse_diffs(self, revid1, revid2):
+    def _parse_diffs(self, old_tree, new_tree, delta):
         """
         Return a list of processed diffs, in the format::
 
@@ -742,7 +743,6 @@ class History (object):
                 ),
             )
         """
-        old_tree, new_tree, delta = self._get_diff(revid1, revid2)
         process = []
         out = []
 
@@ -808,7 +808,6 @@ class History (object):
             chunks.append(chunk)
         return chunks
 
-    @with_branch_lock
     def parse_delta(self, delta):
         """
         Return a nested data structure containing the changes in a delta::
