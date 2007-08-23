@@ -44,52 +44,56 @@ class RevisionUI (object):
         h = self._branch.get_history()
         util.set_context(kw)
         
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = None
-        
-        file_id = kw.get('file_id', None)
-        start_revid = h.fix_revid(kw.get('start_revid', None))
-        query = kw.get('q', None)
-        remember = kw.get('remember', None)
-        compare_revid = kw.get('compare_revid', None)
-        
+        h._branch.lock_read()
         try:
-            revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise InternalError('Could not fetch changes')
-        
-        navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
-                                    pagesize=1, scan_url='/revision', branch=self._branch, feed=True)
-        if query is not None:
-            navigation.query = query
-        util.fill_in_navigation(navigation)
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
+            else:
+                revid = None
 
-        change = h.get_change_with_diff(revid, compare_revid)
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+            file_id = kw.get('file_id', None)
+            start_revid = h.fix_revid(kw.get('start_revid', None))
+            query = kw.get('q', None)
+            remember = kw.get('remember', None)
+            compare_revid = kw.get('compare_revid', None)
 
-        # let's make side-by-side diff be the default
-        side_by_side = not kw.get('unified', False)
-        if side_by_side:
-            h.add_side_by_side([ change ])
-        
-        vals = {
-            'branch': self._branch,
-            'revid': revid,
-            'change': change,
-            'start_revid': start_revid,
-            'file_id': file_id,
-            'util': util,
-            'history': h,
-            'navigation': navigation,
-            'query': query,
-            'remember': remember,
-            'compare_revid': compare_revid,
-            'side_by_side': side_by_side,
-        }
-        h.flush_cache()
-        self.log.info('/revision: %r seconds' % (time.time() - z,))
-        return vals
+            try:
+                revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+            except:
+                self.log.exception('Exception fetching changes')
+                raise InternalError('Could not fetch changes')
+
+            navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
+                                        pagesize=1, scan_url='/revision', branch=self._branch, feed=True)
+            if query is not None:
+                navigation.query = query
+            util.fill_in_navigation(navigation)
+
+            change = h.get_change_with_diff(revid, compare_revid)
+            # add parent & merge-point branch-nick info, in case it's useful
+            h.get_branch_nicks([ change ])
+
+            # let's make side-by-side diff be the default
+            side_by_side = not kw.get('unified', False)
+            if side_by_side:
+                h.add_side_by_side([ change ])
+
+            vals = {
+                'branch': self._branch,
+                'revid': revid,
+                'change': change,
+                'start_revid': start_revid,
+                'file_id': file_id,
+                'util': util,
+                'history': h,
+                'navigation': navigation,
+                'query': query,
+                'remember': remember,
+                'compare_revid': compare_revid,
+                'side_by_side': side_by_side,
+            }
+            h.flush_cache()
+            self.log.info('/revision: %r seconds' % (time.time() - z,))
+            return vals
+        finally:
+            h._branch.unlock()

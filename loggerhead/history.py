@@ -58,18 +58,6 @@ import bzrlib.ui
 
 with_branch_lock = util.with_lock('_lock', 'branch')
 
-@decorator
-def with_bzrlib_read_lock(unbound):
-    def bzrlib_read_locked(self, *args, **kw):
-        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
-        self._branch.repository.lock_read()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._branch.repository.unlock()
-            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
-    return bzrlib_read_locked
-
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
@@ -665,22 +653,26 @@ class History (object):
         return util.Container(entry)
 
     @with_branch_lock
-    @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
-        while True:
-            try:
-                rev_list = self._branch.repository.get_revisions(revid_list)
-            except (KeyError, bzrlib.errors.NoSuchRevision), e:
-                # this sometimes happens with arch-converted branches.
-                # i don't know why. :(
-                self.log.debug('No such revision (skipping): %s', e)
-                revid_list.remove(e.revision)
-            else:
-                break
+        # Because we may loop and call get_revisions multiple times (to throw
+        # out dud revids), we grab a read lock.
+        self._branch.lock_read()
+        try:
+            while True:
+                try:
+                    rev_list = self._branch.repository.get_revisions(revid_list)
+                except (KeyError, bzrlib.errors.NoSuchRevision), e:
+                    # this sometimes happens with arch-converted branches.
+                    # i don't know why. :(
+                    self.log.debug('No such revision (skipping): %s', e)
+                    revid_list.remove(e.revision)
+                else:
+                    break
 
-        return [self.entry_from_revision(rev) for rev in rev_list]
+            return [self.entry_from_revision(rev) for rev in rev_list]
+        finally:
+            self._branch.unlock()
 
-    @with_bzrlib_read_lock
     def get_file_changes_uncached(self, entries):
         delta_list = self._get_deltas_for_revisions_with_trees(entries)
 
@@ -697,7 +689,6 @@ class History (object):
             entry.changes = changes
 
     @with_branch_lock
-    @with_bzrlib_read_lock
     def get_change_with_diff(self, revid, compare_revid=None):
         entry = self.get_changes([revid])[0]
 
@@ -946,7 +937,6 @@ class History (object):
         self.log.debug('annotate: %r secs' % (time.time() - z,))
 
     @with_branch_lock
-    @with_bzrlib_read_lock
     def get_bundle(self, revid, compare_revid=None):
         if compare_revid is None:
             parents = self._revision_graph[revid]
