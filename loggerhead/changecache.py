@@ -163,3 +163,20 @@ class ChangeCache (object):
         self.flush()
 
 
+class FileChangeCache(object):
+    def __init__(self, history, cache_path):
+        self.history = history
+        self.log = history.log
+
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
+
+        self._changes_filename = os.path.join(cache_path, 'filechanges')
+
+        # use a lockfile since the cache folder could be shared across
+        # different processes.
+        self._lock = LockFile(os.path.join(cache_path, 'lock'))
+
+    @with_lock
+    def get_file_changes(self, entries):
+        return self.history.get_file_changes_uncached(entries)

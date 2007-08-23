@@ -29,7 +29,7 @@ import turbogears
 from cherrypy import HTTPRedirect
 
 from loggerhead import util
-from loggerhead.changecache import ChangeCache
+from loggerhead.changecache import ChangeCache, FileChangeCache
 from loggerhead.history import History
 from loggerhead.textindex import TextIndex
 from loggerhead.controllers.changelog_ui import ChangeLogUI
@@ -141,14 +141,16 @@ class BranchView (object):
             self.log.debug('Reload branch history...')
             if self._history is not None:
                 self._history.detach()
-            self._history = History.from_folder(self._absfolder, self._name)
+            _history = self._history = History.from_folder(
+                self._absfolder, self._name)
             cache_path = self._config.get('cachepath', None)
             if cache_path is None:
                 # try the project config
                 cache_path = self._project_config.get('cachepath', None)
             if cache_path is not None:
-                self._history.use_cache(ChangeCache(self._history, cache_path))
-                self._history.use_search_index(TextIndex(self._history, cache_path))
+                _history.use_cache(ChangeCache(_history, cache_path))
+                _history.use_file_cache(FileChangeCache(_history, cache_path))
+                _history.use_search_index(TextIndex(_history, cache_path))
         return self._history
     
     def check_rebuild(self):

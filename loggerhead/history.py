@@ -178,6 +178,7 @@ class History (object):
 
     def __init__(self):
         self._change_cache = None
+        self._file_change_cache = None
         self._index = None
         self._lock = threading.RLock()
 
@@ -233,6 +234,9 @@ class History (object):
 
     def use_cache(self, cache):
         self._change_cache = cache
+
+    def use_file_cache(self, cache):
+        self._file_change_cache = cache
 
     def use_search_index(self, index):
         self._index = index
@@ -680,7 +684,10 @@ class History (object):
 
     @with_branch_lock
     def get_file_changes(self, entries):
-        return self.get_file_changes_uncached(entries)
+        if self._file_change_cache is None:
+            return self.get_file_changes_uncached(entries)
+        else:
+            return self._file_change_cache.get_file_changes(entries)
 
     def add_changes(self, entries):
         changes_list = self.get_file_changes(entries)
