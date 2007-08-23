@@ -25,6 +25,7 @@ once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
 """
 
+import cPickle
 import logging
 import os
 import shelve
@@ -162,6 +163,31 @@ class ChangeCache (object):
         self.log.info('Revision cache rebuild completed.')
         self.flush()
 
+from pysqlite2 import dbapi2
+
+class FakeShelf(object):
+    def __init__(self, filename):
+        self.filename = filename
+        if not os.path.exists(filename):
+            c = dbapi2.connect(filename)
+            c.execute("create table filechanges (revid blob primary key, data blob)")
+    def get(self, revid):
+        c = dbapi2.connect(self.filename)
+        data = c.execute(
+            "select data from filechanges where revid = ?",
+            (revid,)).fetchone()
+        if data is None:
+            return None
+        else:
+            return cPickle.loads(data[0].encode('latin-1'))
+        c.close()
+    def __setitem__(self, revid, obj):
+        c = dbapi2.connect(self.filename)
+        data = unicode(cPickle.dumps(obj), 'latin-1')
+        c.execute("insert into filechanges (revid, data) values (?, ?)",
+                  (revid, data))
+        c.commit()
+        c.close()
 
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
@@ -171,7 +197,8 @@ class FileChangeCache(object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
-        self._changes_filename = os.path.join(cache_path, 'filechanges')
+        _changes_filename = os.path.join(cache_path, 'filechanges.sql')
+        self.cache = FakeShelf(_changes_filename)
 
         # use a lockfile since the cache folder could be shared across
         # different processes.
@@ -194,23 +221,19 @@ class FileChangeCache(object):
 
     @with_lock
     def get_file_changes(self, entries):
-        cache = shelve.open(self._changes_filename, 'c', protocol=2)
-        try:
-            out = []
-            missing_entries = []
-            missing_entry_indices = []
-            for entry in entries:
-                changes = cache.get(entry.revid)
-                if changes is not None:
-                    out.append(changes)
-                else:
-                    missing_entries.append(entry)
-                    missing_entry_indices.append(len(out))
-                    out.append(None)
-            missing_changes = self.history.get_file_changes_uncached(missing_entries)
-            for i, entry, changes in zip(
-                missing_entry_indices, missing_entries, missing_changes):
-                cache[entry.revid] = out[i] = changes
-            return out
-        finally:
-            cache.close()
+        out = []
+        missing_entries = []
+        missing_entry_indices = []
+        for entry in entries:
+            changes = self.cache.get(entry.revid)
+            if changes is not None:
+                out.append(changes)
+            else:
+                missing_entries.append(entry)
+                missing_entry_indices.append(len(out))
+                out.append(None)
+        missing_changes = self.history.get_file_changes_uncached(missing_entries)
+        for i, entry, changes in zip(
+            missing_entry_indices, missing_entries, missing_changes):
+            self.cache[entry.revid] = out[i] = changes
+        return out
