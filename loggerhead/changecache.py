@@ -175,7 +175,7 @@ class FileChangeCache(object):
 
         # use a lockfile since the cache folder could be shared across
         # different processes.
-        self._lock = LockFile(os.path.join(cache_path, 'lock'))
+        self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
 
         self._closed = False
 
