@@ -58,18 +58,6 @@ import bzrlib.ui
 
 with_branch_lock = util.with_lock('_lock', 'branch')
 
-@decorator
-def with_bzrlib_read_lock(unbound):
-    def bzrlib_read_locked(self, *args, **kw):
-        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
-        self._branch.repository.lock_read()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._branch.repository.unlock()
-            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
-    return bzrlib_read_locked
-
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
@@ -190,6 +178,7 @@ class History (object):
 
     def __init__(self):
         self._change_cache = None
+        self._file_change_cache = None
         self._index = None
         self._lock = threading.RLock()
 
@@ -246,6 +235,9 @@ class History (object):
     def use_cache(self, cache):
         self._change_cache = cache
 
+    def use_file_cache(self, cache):
+        self._file_change_cache = cache
+
     def use_search_index(self, index):
         self._index = index
 
@@ -280,9 +272,6 @@ class History (object):
     def get_config(self):
         return self._branch.get_config()
 
-    @with_branch_lock
-    def get_revision(self, revid):
-        return self._branch.repository.get_revision(revid)
 
     def get_revno(self, revid):
         if revid not in self._revision_info:
@@ -589,7 +578,7 @@ class History (object):
                     p.branch_nick = '(missing)'
 
     @with_branch_lock
-    def get_changes(self, revid_list, get_diffs=False):
+    def get_changes(self, revid_list):
         if self._change_cache is None:
             changes = self.get_changes_uncached(revid_list)
         else:
@@ -603,13 +592,6 @@ class History (object):
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
             change.revno = self.get_revno(change.revid)
-            if get_diffs:
-                # this may be time-consuming, but it only happens on the revision page, and only for one revision at a time.
-                if len(change.parents) > 0:
-                    parent_revid = change.parents[0].revid
-                else:
-                    parent_revid = None
-                change.changes.modified = self._parse_diffs(parent_revid, change.revid)
 
         parity = 0
         for change in changes:
@@ -629,7 +611,7 @@ class History (object):
         self.log.info('lsprof complete!')
         return ret
 
-    def _get_deltas_for_revisions_with_trees(self, revisions):
+    def _get_deltas_for_revisions_with_trees(self, entries):
         """Produce a generator of revision deltas.
 
         Note that the input is a sequence of REVISIONS, not revision_ids.
@@ -637,21 +619,21 @@ class History (object):
         Each delta is relative to the revision's lefthand predecessor.
         """
         required_trees = set()
-        for revision in revisions:
-            required_trees.add(revision.revision_id)
-            required_trees.update(revision.parent_ids[:1])
+        for entry in entries:
+            required_trees.add(entry.revid)
+            required_trees.update([p.revid for p in entry.parents[:1]])
         trees = dict((t.get_revision_id(), t) for
                      t in self._branch.repository.revision_trees(required_trees))
         ret = []
         self._branch.repository.lock_read()
         try:
-            for revision in revisions:
-                if not revision.parent_ids:
-                    old_tree = self._branch.repository.revision_tree(None)
+            for entry in entries:
+                if not entry.parents:
+                    old_tree = self._branch.repository.revision_tree("null:")
                 else:
-                    old_tree = trees[revision.parent_ids[0]]
-                tree = trees[revision.revision_id]
-                ret.append((tree, old_tree, tree.changes_from(old_tree)))
+                    old_tree = trees[entry.parents[0].revid]
+                tree = trees[entry.revid]
+                ret.append(tree.changes_from(old_tree))
             return ret
         finally:
             self._branch.repository.unlock()
@@ -676,43 +658,62 @@ class History (object):
         return util.Container(entry)
 
     @with_branch_lock
-    @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
-        done = False
-        while not done:
-            try:
-                rev_list = self._branch.repository.get_revisions(revid_list)
-                done = True
-            except (KeyError, bzrlib.errors.NoSuchRevision), e:
-                # this sometimes happens with arch-converted branches.
-                # i don't know why. :(
-                self.log.debug('No such revision (skipping): %s', e)
-                revid_list.remove(e.revision)
-        if not revid_list:
-            return []
+        # Because we may loop and call get_revisions multiple times (to throw
+        # out dud revids), we grab a read lock.
+        self._branch.lock_read()
+        try:
+            while True:
+                try:
+                    rev_list = self._branch.repository.get_revisions(revid_list)
+                except (KeyError, bzrlib.errors.NoSuchRevision), e:
+                    # this sometimes happens with arch-converted branches.
+                    # i don't know why. :(
+                    self.log.debug('No such revision (skipping): %s', e)
+                    revid_list.remove(e.revision)
+                else:
+                    break
 
-        delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
-        combined_list = zip(rev_list, delta_list)
+            return [self.entry_from_revision(rev) for rev in rev_list]
+        finally:
+            self._branch.unlock()
 
-        entries = []
-        for rev, (new_tree, old_tree, delta) in combined_list:
-            entry = self.entry_from_revision(rev)
-            entry.changes = self.parse_delta(delta, old_tree, new_tree)
-            entries.append(entry)
+    def get_file_changes_uncached(self, entries):
+        delta_list = self._get_deltas_for_revisions_with_trees(entries)
 
-        return entries
+        return [self.parse_delta(delta) for delta in delta_list]
 
-    @with_bzrlib_read_lock
-    def _get_diff(self, revid1, revid2):
-        rev_tree1 = self._branch.repository.revision_tree(revid1)
-        rev_tree2 = self._branch.repository.revision_tree(revid2)
+    @with_branch_lock
+    def get_file_changes(self, entries):
+        if self._file_change_cache is None:
+            return self.get_file_changes_uncached(entries)
+        else:
+            return self._file_change_cache.get_file_changes(entries)
+
+    def add_changes(self, entries):
+        changes_list = self.get_file_changes(entries)
+
+        for entry, changes in zip(entries, changes_list):
+            entry.changes = changes
+
+    @with_branch_lock
+    def get_change_with_diff(self, revid, compare_revid=None):
+        entry = self.get_changes([revid])[0]
+
+        if compare_revid is None:
+            if entry.parents:
+                compare_revid = entry.parents[0].revid
+            else:
+                compare_revid = 'null:'
+
+        rev_tree1 = self._branch.repository.revision_tree(compare_revid)
+        rev_tree2 = self._branch.repository.revision_tree(revid)
         delta = rev_tree2.changes_from(rev_tree1)
-        return rev_tree1, rev_tree2, delta
 
-    def get_diff(self, revid1, revid2):
-        rev_tree1, rev_tree2, delta = self._get_diff(revid1, revid2)
-        entry = self.get_changes([ revid2 ], False)[0]
-        entry.changes = self.parse_delta(delta, True, rev_tree1, rev_tree2)
+        entry.changes = self.parse_delta(delta)
+
+        entry.changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
+
         return entry
 
     @with_branch_lock
@@ -726,7 +727,7 @@ class History (object):
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def _parse_diffs(self, revid1, revid2):
+    def _parse_diffs(self, old_tree, new_tree, delta):
         """
         Return a list of processed diffs, in the format::
 
@@ -743,7 +744,6 @@ class History (object):
                 ),
             )
         """
-        old_tree, new_tree, delta = self._get_diff(revid1, revid2)
         process = []
         out = []
 
@@ -809,8 +809,7 @@ class History (object):
             chunks.append(chunk)
         return chunks
 
-    @with_branch_lock
-    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
+    def parse_delta(self, delta):
         """
         Return a nested data structure containing the changes in a delta::
 
@@ -861,25 +860,26 @@ class History (object):
         path = inv.id2path(file_id)
         file_list = []
 
+        revid_set = set()
+
+        for filename, entry in dir_ie.children.iteritems():
+            revid_set.add(entry.revision)
+
+        change_dict = {}
+        for change in self.get_changes(list(revid_set)):
+            change_dict[change.revid] = change
+
         for filename, entry in dir_ie.children.iteritems():
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
 
             revid = entry.revision
-            if self._change_cache:
-                timestamp = self.get_changes([revid])[0].date
-            else:
-                revision = self._branch.repository.get_revision(revid)
-                timestamp = datetime.datetime.fromtimestamp(revision.timestamp)
-
-            change = util.Container(date=timestamp,
-                                    revno=self.get_revno(revid))
 
             file = util.Container(
                 filename=filename, executable=entry.executable, kind=entry.kind,
                 pathname=pathname, file_id=entry.file_id, size=entry.text_size,
-                revid=revid, change=change)
+                revid=revid, change=change_dict[revid])
             file_list.append(file)
 
         if sort_type == 'filename' or sort_type is None:
@@ -945,7 +945,6 @@ class History (object):
         self.log.debug('annotate: %r secs' % (time.time() - z,))
 
     @with_branch_lock
-    @with_bzrlib_read_lock
     def get_bundle(self, revid, compare_revid=None):
         if compare_revid is None:
             parents = self._revision_graph[revid]

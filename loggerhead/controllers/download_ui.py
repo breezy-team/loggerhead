@@ -47,19 +47,23 @@ class DownloadUI (object):
         z = time.time()
         h = self._branch.get_history()
         
-        if len(args) < 2:
-            raise HTTPRedirect(self._branch.url('/changes'))
-        
-        revid = h.fix_revid(args[0])
-        file_id = args[1]
-        path, filename, content = h.get_file(file_id, revid)
-        mime_type, encoding = mimetypes.guess_type(filename)
-        if mime_type is None:
-            mime_type = 'application/octet-stream'
+        h._branch.lock_read()
+        try:
+            if len(args) < 2:
+                raise HTTPRedirect(self._branch.url('/changes'))
 
-        self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
-        response.headers['Content-Type'] = mime_type
-        response.headers['Content-Length'] = len(content)
-        response.headers['Content-Disposition'] = 'attachment; filename=%s'%(filename,)
-        response.body = content
-        return response.body
+            revid = h.fix_revid(args[0])
+            file_id = args[1]
+            path, filename, content = h.get_file(file_id, revid)
+            mime_type, encoding = mimetypes.guess_type(filename)
+            if mime_type is None:
+                mime_type = 'application/octet-stream'
+
+            self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
+            response.headers['Content-Type'] = mime_type
+            response.headers['Content-Length'] = len(content)
+            response.headers['Content-Disposition'] = 'attachment; filename=%s'%(filename,)
+            response.body = content
+            return response.body
+        finally:
+            h._branch.unlock()
