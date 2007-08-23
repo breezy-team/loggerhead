@@ -52,44 +52,48 @@ class AnnotateUI (object):
         z = time.time()
         h = self._branch.get_history()
         util.set_context(kw)
-        
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
 
-        path = None
-        if len(args) > 1:
-            path = '/'.join(args[1:])
-            if not path.startswith('/'):
-                path = '/' + path
-        
-        file_id = kw.get('file_id', None)
-        if (file_id is None) and (path is None):
-            raise HTTPError(400, 'No file_id or filename provided to annotate')
+        h._branch.lock_read()
+        try:
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
+            else:
+                revid = h.last_revid
 
-        if file_id is None:
-            file_id = h.get_file_id(revid, path)
-            
-        # no navbar for revisions
-        navigation = util.Container()
-        
-        if path is None:
-            path = h.get_path(revid, file_id)
-        filename = os.path.basename(path)
+            path = None
+            if len(args) > 1:
+                path = '/'.join(args[1:])
+                if not path.startswith('/'):
+                    path = '/' + path
 
-        vals = {
-            'branch': self._branch,
-            'util': util,
-            'revid': revid,
-            'file_id': file_id,
-            'path': path,
-            'filename': filename,
-            'history': h,
-            'navigation': navigation,
-            'change': h.get_changes([ revid ])[0],
-            'contents': list(h.annotate_file(file_id, revid)),
-        }
-        h.flush_cache()
-        self.log.info('/annotate: %r secs' % (time.time() - z,))
-        return vals
+            file_id = kw.get('file_id', None)
+            if (file_id is None) and (path is None):
+                raise HTTPError(400, 'No file_id or filename provided to annotate')
+
+            if file_id is None:
+                file_id = h.get_file_id(revid, path)
+
+            # no navbar for revisions
+            navigation = util.Container()
+
+            if path is None:
+                path = h.get_path(revid, file_id)
+            filename = os.path.basename(path)
+
+            vals = {
+                'branch': self._branch,
+                'util': util,
+                'revid': revid,
+                'file_id': file_id,
+                'path': path,
+                'filename': filename,
+                'history': h,
+                'navigation': navigation,
+                'change': h.get_changes([ revid ])[0],
+                'contents': list(h.annotate_file(file_id, revid)),
+            }
+            h.flush_cache()
+            self.log.info('/annotate: %r secs' % (time.time() - z,))
+            return vals
+        finally:
+            h._branch.unlock()
