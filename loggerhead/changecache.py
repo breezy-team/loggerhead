@@ -163,31 +163,38 @@ class ChangeCache (object):
         self.log.info('Revision cache rebuild completed.')
         self.flush()
 
+from storm.locals import *
+
+class FileChange(object):
+    __storm_table__ = "FileChange"
+    revid = RawStr(primary=True)
+    data = RawStr()
+    def __init__(self, revid, data):
+        self.revid = revid
+        self.data = data
+
 from pysqlite2 import dbapi2
 
 class FakeShelf(object):
     def __init__(self, filename):
         self.filename = filename
-        if not os.path.exists(filename):
-            c = dbapi2.connect(filename)
-            c.execute("create table filechanges (revid blob primary key, data blob)")
+        create_tables = not os.path.exists(filename)
+        self.store = Store(create_database("sqlite:"+filename))
+        if create_tables:
+            self.store.execute(
+                "create table filechange (revid blob primary key, data blob)")
+            self.store.commit()
     def get(self, revid):
-        c = dbapi2.connect(self.filename)
-        data = c.execute(
-            "select data from filechanges where revid = ?",
-            (revid,)).fetchone()
-        if data is None:
+        filechange = self.store.get(FileChange, revid)
+        if filechange is None:
             return None
         else:
-            return cPickle.loads(data[0].encode('latin-1'))
-        c.close()
-    def __setitem__(self, revid, obj):
-        c = dbapi2.connect(self.filename)
-        data = unicode(cPickle.dumps(obj), 'latin-1')
-        c.execute("insert into filechanges (revid, data) values (?, ?)",
-                  (revid, data))
-        c.commit()
-        c.close()
+            return cPickle.loads(filechange.data)
+    def add(self, revid_obj_pairs):
+        for revid, obj in revid_obj_pairs:
+            filechange = FileChange(revid, cPickle.dumps(obj, protocol=2))
+            self.store.add(filechange)
+        self.store.commit()
 
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
@@ -232,8 +239,12 @@ class FileChangeCache(object):
                 missing_entries.append(entry)
                 missing_entry_indices.append(len(out))
                 out.append(None)
-        missing_changes = self.history.get_file_changes_uncached(missing_entries)
-        for i, entry, changes in zip(
-            missing_entry_indices, missing_entries, missing_changes):
-            self.cache[entry.revid] = out[i] = changes
+        if missing_entries:
+            missing_changes = self.history.get_file_changes_uncached(missing_entries)
+            revid_changes_pairs = []
+            for i, entry, changes in zip(
+                missing_entry_indices, missing_entries, missing_changes):
+                revid_changes_pairs.append((entry.revid, changes))
+                out[i] = changes
+            self.cache.add(revid_changes_pairs)
         return out
