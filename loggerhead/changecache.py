@@ -38,7 +38,50 @@ from loggerhead.lockfile import LockFile
 
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
-        
+
+
+from storm.locals import *
+
+class RevisionData(object):
+    __storm_table__ = "FileChange"
+    revid = RawStr(primary=True)
+    data = RawStr()
+    def __init__(self, revid, data):
+        self.revid = revid
+        self.data = data
+
+class FileChange(RevisionData):
+    __storm_table__ = "FileChange"
+class Change(RevisionData):
+    __storm_table__ = "Change"
+
+class FakeShelf(object):
+    def __init__(self, filename, cls):
+        self.cls = cls
+        self.filename = filename
+        create_table = not os.path.exists(self.filename)
+        self.store = Store(create_database("sqlite:"+self.filename))
+        if create_table:
+            self._create_table()
+    def _create_table(self):
+        if not os.path.exists(filename):
+            store.execute(
+                "create table %s (revid blob primary key, data blob)"
+                % (cls.__name__,))
+            store.commit()
+    def get(self, revid):
+        filechange = self.store.get(self.cls, revid)
+        if filechange is None:
+            return None
+        else:
+            return cPickle.loads(filechange.data)
+    def add(self, revid_obj_pairs):
+        for revid, obj in revid_obj_pairs:
+            filechange = self.cls(revid, cPickle.dumps(obj, protocol=2))
+            self.store.add(filechange)
+        self.store.commit()
+    def count(self):
+        return self.store.find(self.cls).count()
 
 class ChangeCache (object):
     
@@ -49,8 +92,7 @@ class ChangeCache (object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
-        _changes_filename = os.path.join(cache_path, 'changes.sql')
-        self.cache = FakeShelf(_changes_filename, Change)
+        self._changes_filename = os.path.join(cache_path, 'changes.sql')
 
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'lock'))
@@ -60,7 +102,10 @@ class ChangeCache (object):
         def log_sizes():
             self.log.info('Using change cache %s; %d entries.' % (cache_path, self.size()))
         threading.Thread(target=log_sizes).start()
-    
+
+    def _cache(self):
+        return FakeShelf(self._changes_filename, Change)
+
     @with_lock
     def close(self):
         self.log.debug('Closing cache file.')
@@ -84,8 +129,9 @@ class ChangeCache (object):
         out = []
         missing_revids = []
         missing_revid_indices = []
+        cache = self._cache()
         for revid in revid_list:
-            entry = self.cache.get(revid)
+            entry = cache.get(revid)
             if entry is not None:
                 out.append(entry)
             else:
@@ -102,20 +148,20 @@ class ChangeCache (object):
                 out[i] = entry = missing_entry_dict.get(revid)
                 if entry is not None:
                     revid_entry_pairs.append((revid, entry))
-            self.cache.add(revid_entry_pairs)
+            cache.add(revid_entry_pairs)
         return filter(None, out)
 
     @with_lock
     def full(self):
-        count = self.cache.count()
+        cache = self._cache()
         last_revid = util.to_utf8(self.history.last_revid)
         revision_history = self.history.get_revision_history()
-        return (count >= len(revision_history)
-                and self.cache.get(last_revid) is not None)
+        return (cache.count() >= len(revision_history)
+                and cache.get(last_revid) is not None)
 
     @with_lock
     def size(self):
-        return self.cache.count()
+        return self._cache().count()
 
     def check_rebuild(self, max_time=3600):
         """
@@ -155,51 +201,6 @@ class ChangeCache (object):
         self.log.info('Revision cache rebuild completed.')
         self.flush()
 
-from storm.locals import *
-
-class RevisionData(object):
-    __storm_table__ = "FileChange"
-    revid = RawStr(primary=True)
-    data = RawStr()
-    def __init__(self, revid, data):
-        self.revid = revid
-        self.data = data
-
-class FileChange(RevisionData):
-    __storm_table__ = "FileChange"
-class Change(RevisionData):
-    __storm_table__ = "Change"
-
-from pysqlite2 import dbapi2
-
-class FakeShelf(object):
-    def __init__(self, filename, cls):
-        self.cls = cls
-        self.filename = filename
-        create_tables = not os.path.exists(filename)
-        if not os.path.exists(filename):
-            store = Store(create_database("sqlite:"+self.filename))
-            store.execute(
-                "create table %s (revid blob primary key, data blob)"
-                % (cls.__name__,))
-            store.commit()
-    def get(self, revid):
-        store = Store(create_database("sqlite:"+self.filename))
-        filechange = store.get(self.cls, revid)
-        if filechange is None:
-            return None
-        else:
-            return cPickle.loads(filechange.data)
-    def add(self, revid_obj_pairs):
-        store = Store(create_database("sqlite:"+self.filename))
-        for revid, obj in revid_obj_pairs:
-            filechange = self.cls(revid, cPickle.dumps(obj, protocol=2))
-            store.add(filechange)
-        store.commit()
-    def count(self):
-        store = Store(create_database("sqlite:"+self.filename))
-        return store.find(self.cls).count()
-
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
         self.history = history
@@ -208,14 +209,16 @@ class FileChangeCache(object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
-        _changes_filename = os.path.join(cache_path, 'filechanges.sql')
-        self.cache = FakeShelf(_changes_filename, FileChange)
+        self._changes_filename = os.path.join(cache_path, 'filechanges.sql')
 
         # use a lockfile since the cache folder could be shared across
         # different processes.
         self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
 
         self._closed = False
+
+    def _cache(self):
+        return FakeShelf(self._changes_filename, FileChange)
 
     @with_lock
     def close(self):
@@ -235,8 +238,9 @@ class FileChangeCache(object):
         out = []
         missing_entries = []
         missing_entry_indices = []
+        cache = self._cache()
         for entry in entries:
-            changes = self.cache.get(entry.revid)
+            changes = cache.get(entry.revid)
             if changes is not None:
                 out.append(changes)
             else:
@@ -250,5 +254,5 @@ class FileChangeCache(object):
                 missing_entry_indices, missing_entries, missing_changes):
                 revid_changes_pairs.append((entry.revid, changes))
                 out[i] = changes
-            self.cache.add(revid_changes_pairs)
+            cache.add(revid_changes_pairs)
         return out
