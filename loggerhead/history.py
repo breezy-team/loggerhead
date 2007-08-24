@@ -366,6 +366,8 @@ class History (object):
         # if they entered a revid, just jump straight there; ignore the passed-in revid_list
         revid = self.fix_revid(query)
         if revid is not None:
+            if isinstance(revid, unicode):
+                revid = revid.encode('utf-8')
             changes = self.get_changes([ revid ])
             if (changes is not None) and (len(changes) > 0):
                 return [ revid ]

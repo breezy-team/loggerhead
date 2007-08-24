@@ -49,12 +49,13 @@ class ChangeCache (object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
-        self._changes_filename = os.path.join(cache_path, 'changes')
-        
+        _changes_filename = os.path.join(cache_path, 'changes.sql')
+        self.cache = FakeShelf(_changes_filename, Change)
+
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'lock'))
         self._closed = False
-        
+
         # this is fluff; don't slow down startup time with it.
         def log_sizes():
             self.log.info('Using change cache %s; %d entries.' % (cache_path, self.size()))
@@ -80,51 +81,42 @@ class ChangeCache (object):
         from the cache are fetched by calling L{History.get_change_uncached}
         and inserted into the cache before returning.
         """
-        cache = shelve.open(self._changes_filename, 'c', protocol=2)
+        out = []
+        missing_revids = []
+        missing_revid_indices = []
+        for revid in revid_list:
+            entry = self.cache.get(revid)
+            if entry is not None:
+                out.append(entry)
+            else:
+                missing_revids.append(revid)
+                missing_revid_indices.append(len(out))
+                out.append(None)
+        if missing_revids:
+            missing_entries = self.history.get_changes_uncached(missing_revids)
+            missing_entry_dict = {}
+            for entry in missing_entries:
+                missing_entry_dict[entry.revid] = entry
+            revid_entry_pairs = []
+            for i, revid in zip(missing_revid_indices, missing_revids):
+                out[i] = entry = missing_entry_dict.get(revid)
+                if entry is not None:
+                    revid_entry_pairs.append((revid, entry))
+            self.cache.add(revid_entry_pairs)
+        return filter(None, out)
 
-        try:
-            out = []
-            fetch_list = []
-            sfetch_list = []
-            for revid in revid_list:
-                # if the revid is in unicode, use the utf-8 encoding as the key
-                srevid = util.to_utf8(revid)
-
-                if srevid in cache:
-                    out.append(cache[srevid])
-                else:
-                    #self.log.debug('Entry cache miss: %r' % (revid,))
-                    out.append(None)
-                    fetch_list.append(revid)
-                    sfetch_list.append(srevid)
-
-            if len(fetch_list) > 0:
-                # some revisions weren't in the cache; fetch them
-                changes = self.history.get_changes_uncached(fetch_list)
-                if len(changes) == 0:
-                    return changes
-                for i in xrange(len(revid_list)):
-                    if out[i] is None:
-                        cache[sfetch_list.pop(0)] = out[i] = changes.pop(0)
-            return out
-        finally:
-            cache.close()
-    
     @with_lock
     def full(self):
-        cache = shelve.open(self._changes_filename, 'c', protocol=2)
-        try:
-            return (len(cache) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in cache)
-        finally:
-            cache.close()
+        count = self.cache.count()
+        last_revid = util.to_utf8(self.history.last_revid)
+        revision_history = self.history.get_revision_history()
+        return (count >= len(revision_history)
+                and self.cache.get(last_revid) is not None)
 
     @with_lock
     def size(self):
-        cache = shelve.open(self._changes_filename, 'c', protocol=2)
-        s1 = len(cache)
-        cache.close()
-        return s1
-        
+        return self.cache.count()
+
     def check_rebuild(self, max_time=3600):
         """
         check if we need to fill in any missing pieces of the cache.  pull in
@@ -165,7 +157,7 @@ class ChangeCache (object):
 
 from storm.locals import *
 
-class FileChange(object):
+class RevisionData(object):
     __storm_table__ = "FileChange"
     revid = RawStr(primary=True)
     data = RawStr()
@@ -173,28 +165,40 @@ class FileChange(object):
         self.revid = revid
         self.data = data
 
+class FileChange(RevisionData):
+    __storm_table__ = "FileChange"
+class Change(RevisionData):
+    __storm_table__ = "Change"
+
 from pysqlite2 import dbapi2
 
 class FakeShelf(object):
-    def __init__(self, filename):
+    def __init__(self, filename, cls):
+        self.cls = cls
         self.filename = filename
         create_tables = not os.path.exists(filename)
-        self.store = Store(create_database("sqlite:"+filename))
-        if create_tables:
-            self.store.execute(
-                "create table filechange (revid blob primary key, data blob)")
-            self.store.commit()
+        if not os.path.exists(filename):
+            store = Store(create_database("sqlite:"+self.filename))
+            store.execute(
+                "create table %s (revid blob primary key, data blob)"
+                % (cls.__name__,))
+            store.commit()
     def get(self, revid):
-        filechange = self.store.get(FileChange, revid)
+        store = Store(create_database("sqlite:"+self.filename))
+        filechange = store.get(self.cls, revid)
         if filechange is None:
             return None
         else:
             return cPickle.loads(filechange.data)
     def add(self, revid_obj_pairs):
+        store = Store(create_database("sqlite:"+self.filename))
         for revid, obj in revid_obj_pairs:
-            filechange = FileChange(revid, cPickle.dumps(obj, protocol=2))
-            self.store.add(filechange)
-        self.store.commit()
+            filechange = self.cls(revid, cPickle.dumps(obj, protocol=2))
+            store.add(filechange)
+        store.commit()
+    def count(self):
+        store = Store(create_database("sqlite:"+self.filename))
+        return store.find(self.cls).count()
 
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
@@ -205,7 +209,7 @@ class FileChangeCache(object):
             os.mkdir(cache_path)
 
         _changes_filename = os.path.join(cache_path, 'filechanges.sql')
-        self.cache = FakeShelf(_changes_filename)
+        self.cache = FakeShelf(_changes_filename, FileChange)
 
         # use a lockfile since the cache folder could be shared across
         # different processes.
