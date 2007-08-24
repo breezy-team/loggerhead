@@ -43,45 +43,37 @@ with_lock = util.with_lock('_lock', 'ChangeCache')
 from storm.locals import *
 
 class RevisionData(object):
-    __storm_table__ = "FileChange"
+    __storm_table__ = "RevisionData"
     revid = RawStr(primary=True)
     data = RawStr()
     def __init__(self, revid, data):
         self.revid = revid
         self.data = data
 
-class FileChange(RevisionData):
-    __storm_table__ = "FileChange"
-class Change(RevisionData):
-    __storm_table__ = "Change"
-
 class FakeShelf(object):
-    def __init__(self, filename, cls):
-        self.cls = cls
-        self.filename = filename
-        create_table = not os.path.exists(self.filename)
-        self.store = Store(create_database("sqlite:"+self.filename))
+    def __init__(self, filename):
+        create_table = not os.path.exists(filename)
+        self.store = Store(create_database("sqlite:"+filename))
         if create_table:
-            self._create_table()
-    def _create_table(self):
-        if not os.path.exists(filename):
-            store.execute(
-                "create table %s (revid blob primary key, data blob)"
-                % (cls.__name__,))
-            store.commit()
+            self._create_table(filename)
+    def _create_table(self, filename):
+        self.store.execute(
+            "create table RevisionData "
+            "(revid blob primary key, data blob)")
+        self.store.commit()
     def get(self, revid):
-        filechange = self.store.get(self.cls, revid)
+        filechange = self.store.get(RevisionData, revid)
         if filechange is None:
             return None
         else:
             return cPickle.loads(filechange.data)
     def add(self, revid_obj_pairs):
         for revid, obj in revid_obj_pairs:
-            filechange = self.cls(revid, cPickle.dumps(obj, protocol=2))
+            filechange = RevisionData(revid, cPickle.dumps(obj, protocol=2))
             self.store.add(filechange)
         self.store.commit()
     def count(self):
-        return self.store.find(self.cls).count()
+        return self.store.find(RevisionData).count()
 
 class ChangeCache (object):
     
@@ -98,13 +90,14 @@ class ChangeCache (object):
         self._lock = LockFile(os.path.join(cache_path, 'lock'))
         self._closed = False
 
-        # this is fluff; don't slow down startup time with it.
-        def log_sizes():
-            self.log.info('Using change cache %s; %d entries.' % (cache_path, self.size()))
-        threading.Thread(target=log_sizes).start()
+##         # this is fluff; don't slow down startup time with it.
+##         # but it is racy in tests :(
+##         def log_sizes():
+##             self.log.info('Using change cache %s; %d entries.' % (cache_path, self.size()))
+##         threading.Thread(target=log_sizes).start()
 
     def _cache(self):
-        return FakeShelf(self._changes_filename, Change)
+        return FakeShelf(self._changes_filename)
 
     @with_lock
     def close(self):
@@ -218,7 +211,7 @@ class FileChangeCache(object):
         self._closed = False
 
     def _cache(self):
-        return FakeShelf(self._changes_filename, FileChange)
+        return FakeShelf(self._changes_filename)
 
     @with_lock
     def close(self):
