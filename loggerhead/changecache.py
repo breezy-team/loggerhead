@@ -72,8 +72,15 @@ class FakeShelf(object):
             filechange = RevisionData(revid, cPickle.dumps(obj, protocol=2))
             self.store.add(filechange)
         self.store.commit()
+    def update(self, revid_obj_pairs):
+        for revid, obj in revid_obj_pairs:
+            filechange = self.store.get(RevisionData, revid)
+            filechange.data = cPickle.dumps(obj, protocol=2)
+        self.store.commit()
     def count(self):
         return self.store.find(RevisionData).count()
+    def close(self):
+        self.store.close()
 
 class ChangeCache (object):
     
