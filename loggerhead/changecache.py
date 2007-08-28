@@ -28,7 +28,6 @@ cached a change, it's good forever.
 import cPickle
 import logging
 import os
-import shelve
 import threading
 import time
 
@@ -39,48 +38,44 @@ from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
-
-from storm.locals import *
-
-class RevisionData(object):
-    __storm_table__ = "RevisionData"
-    revid = RawStr(primary=True)
-    data = RawStr()
-    def __init__(self, revid, data):
-        self.revid = revid
-        self.data = data
+from pysqlite2 import dbapi2
 
 class FakeShelf(object):
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
-        self.store = Store(create_database("sqlite:"+filename))
+        self.connection = dbapi2.connect(filename)
         if create_table:
-            self._create_table(filename)
-    def _create_table(self, filename):
-        self.store.execute(
+            self._create_table()
+    def _create_table(self):
+        self.connection.execute(
             "create table RevisionData "
             "(revid blob primary key, data blob)")
-        self.store.commit()
+        self.connection.commit()
     def get(self, revid):
-        filechange = self.store.get(RevisionData, revid)
+        filechange = self.connection.execute(
+            "select data from revisiondata where revid = ?",
+            (revid,)).fetchone()
         if filechange is None:
             return None
         else:
-            return cPickle.loads(filechange.data)
+            return cPickle.loads(filechange[0].encode('latin-1'))
     def add(self, revid_obj_pairs):
-        for revid, obj in revid_obj_pairs:
-            filechange = RevisionData(revid, cPickle.dumps(obj, protocol=2))
-            self.store.add(filechange)
-        self.store.commit()
+        self.connection.executemany(
+            "insert into revisiondata (revid, data) values (?, ?)",
+            [(r, unicode(cPickle.dumps(d, protocol=2), 'latin-1'))
+             for (r, d) in revid_obj_pairs])
+        self.connection.commit()
     def update(self, revid_obj_pairs):
-        for revid, obj in revid_obj_pairs:
-            filechange = self.store.get(RevisionData, revid)
-            filechange.data = cPickle.dumps(obj, protocol=2)
+        self.connection.executemany(
+            "update revisiondata set data = ? where revid = ?",
+            [(unicode(cPickle.dumps(d, protocol=2), 'latin-1'), r)
+             for (r, d) in revid_obj_pairs])
         self.store.commit()
     def count(self):
-        return self.store.find(RevisionData).count()
+        return self.connection.execute(
+            "select count(*) from revisiondata").fetchone()[0]
     def close(self):
-        self.store.close()
+        self.connection.close()
 
 class ChangeCache (object):
     

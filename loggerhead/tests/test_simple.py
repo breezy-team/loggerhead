@@ -58,8 +58,8 @@ class BasicTests(object):
         cherrypy.root = Root(config)
 
     def tearDown(self):
-        #if self.bzrbranch is not None:
-        #    shutil.rmtree(self.bzrbranch)
+        if self.bzrbranch is not None:
+            shutil.rmtree(self.bzrbranch)
         bzrlib.osutils.set_or_unset_env('BZR_HOME', self.old_bzrhome)
 
 class TestWithSimpleTree(BasicTests):

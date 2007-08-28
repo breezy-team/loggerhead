@@ -19,7 +19,7 @@
 """
 indexing of the comment text of revisions, for fast searching.
 
-two separate 'shelve' files are created:
+two separate database files are created:
 
     - recorded: revid -> 1 (if the revid is indexed)
     - index: 3-letter substring -> list(revids)
@@ -28,7 +28,6 @@ two separate 'shelve' files are created:
 import logging
 import os
 import re
-import shelve
 import threading
 import time
 
