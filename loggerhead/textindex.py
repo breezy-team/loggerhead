@@ -144,11 +144,11 @@ class TextIndex (object):
             if len(revid_set) > ALL_THRESHOLD:
                 revid_set = ALL
             if orig is not None:
-                index.update([(sub, revid_set)])
+                index.update([(sub, revid_set)], commit=False)
             else:
-                index.add([(sub, revid_set)])
+                index.add([(sub, revid_set)], commit=False)
 
-        recorded.add([(util.to_utf8(change.revid), True)])
+        recorded.add([(util.to_utf8(change.revid), True)], commit=False)
 
     @with_lock
     def index_changes(self, revid_list):
@@ -160,8 +160,8 @@ class TextIndex (object):
             for change in change_list:
                 self._index_change(change, recorded, index)
         finally:
-            index.close()
-            recorded.close()
+            index.close(commit=True)
+            recorded.close(commit=True)
     
     @with_lock
     def find(self, text, revid_list=None):

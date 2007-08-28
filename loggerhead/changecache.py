@@ -55,7 +55,7 @@ class FakeShelf(object):
         r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
         return r
     def _unserialize(self, data):
-        return cPickle.loads(data)
+        return cPickle.loads(str(data))
     def get(self, revid):
         filechange = self.connection.execute(
             "select data from revisiondata where revid = ?",
@@ -64,24 +64,28 @@ class FakeShelf(object):
             return None
         else:
             return self._unserialize(filechange[0])
-    def add(self, revid_obj_pairs):
+    def add(self, revid_obj_pairs, commit=True):
         self.connection.executemany(
             "insert into revisiondata (revid, data) values (?, ?)",
             [(r, self._serialize(d)) for (r, d) in revid_obj_pairs])
-        self.connection.commit()
-    def update(self, revid_obj_pairs):
+        if commit:
+            self.connection.commit()
+    def update(self, revid_obj_pairs, commit=True):
         self.connection.executemany(
             "update revisiondata set data = ? where revid = ?",
             [(self._serialize(d), r) for (r, d) in revid_obj_pairs])
-        self.connection.commit()
+        if commit:
+            self.connection.commit()
     def count(self):
         return self.connection.execute(
             "select count(*) from revisiondata").fetchone()[0]
-    def close(self):
+    def close(self, commit=False):
+        if commit:
+            self.connection.commit()
         self.connection.close()
 
 class ChangeCache (object):
-    
+
     def __init__(self, history, cache_path):
         self.history = history
         self.log = history.log
