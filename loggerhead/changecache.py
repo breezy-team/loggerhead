@@ -49,8 +49,13 @@ class FakeShelf(object):
     def _create_table(self):
         self.connection.execute(
             "create table RevisionData "
-            "(revid blob primary key, data blob)")
+            "(revid binary primary key, data binary)")
         self.connection.commit()
+    def _serialize(self, obj):
+        r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
+        return r
+    def _unserialize(self, data):
+        return cPickle.loads(data)
     def get(self, revid):
         filechange = self.connection.execute(
             "select data from revisiondata where revid = ?",
@@ -58,19 +63,17 @@ class FakeShelf(object):
         if filechange is None:
             return None
         else:
-            return cPickle.loads(filechange[0].encode('latin-1'))
+            return self._unserialize(filechange[0])
     def add(self, revid_obj_pairs):
         self.connection.executemany(
             "insert into revisiondata (revid, data) values (?, ?)",
-            [(r, unicode(cPickle.dumps(d, protocol=2), 'latin-1'))
-             for (r, d) in revid_obj_pairs])
+            [(r, self._serialize(d)) for (r, d) in revid_obj_pairs])
         self.connection.commit()
     def update(self, revid_obj_pairs):
         self.connection.executemany(
             "update revisiondata set data = ? where revid = ?",
-            [(unicode(cPickle.dumps(d, protocol=2), 'latin-1'), r)
-             for (r, d) in revid_obj_pairs])
-        self.store.commit()
+            [(self._serialize(d), r) for (r, d) in revid_obj_pairs])
+        self.connection.commit()
     def count(self):
         return self.connection.execute(
             "select count(*) from revisiondata").fetchone()[0]
