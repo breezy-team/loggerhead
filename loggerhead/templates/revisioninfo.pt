@@ -24,10 +24,14 @@
         merged in:
       </th>
       <td class="children">
-        <span tal:repeat="child change/merge_points"
-              tal:content="python:revision_link(child.revid, '(' + child.revno + util.if_present(' %s', child.branch_nick) + ')', clear=1, start_revid=child.revid)" >
-          ${} <br />
-        </span>
+        <tal:merge-points repeat="child change/merge_points">
+          <a tal:attributes="title string:Show revision ${child/revno};
+                             href python:branch.url([ '/revision', child.revid ], **util.get_context(clear=1, start_revid=child.revid))"
+             tal:content="python:'(' + child.revno + util.if_present(' %s', child.branch_nick) + ')'">
+            text
+          </a>
+          <br />
+        </tal:merge-points>
       </td>
     </tr>
     <tr tal:condition="python:len(change.parents) > 1">
@@ -35,10 +39,13 @@
         merged from:
       </th>
       <td class="parents">
-        <span tal:repeat="parent python:change.parents[1:]"
-              tal:content="python:revision_link(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')', clear=1, start_revid=parent.revid)">
-            ${} <br />
-        </span>
+        <tal:parents repeat="parent python:change.parents[1:]">
+          <a tal:attributes="title string:Show revision ${parent/revno};
+                             href python:branch.url([ '/revision', parent.revid ], **util.get_context(clear=1, start_revid=parent.revid))"
+             tal:content="python:'(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')'">
+            text
+          </a>
+        </tal:parents>
       </td>
     </tr>
 
