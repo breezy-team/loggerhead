@@ -1,12 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta content="text/html; charset=utf-8" http-equiv="Content-Type" py:replace="''"/>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
     <title>
-      ${branch.friendly_name} : revision ${change.revno}
+      <tal:branch-name content="branch/friendly_name">
+        ${branch.friendly_name}
+      </tal:branch-name>
+      : revision
+      <tal:revno content="change/revno">
+        ${change.revno}
+      </tal:revno>
     </title>
 
-    <span py:replace="use_collapse_buttons()"></span>
+    <link rel="stylesheet"
+          tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
+
+    <script type="text/javascript"
+            tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+    </script>
 
     <script type="text/javascript">
       <!--
@@ -30,75 +41,65 @@
 
   <body onload="javascript:load()">
 
-    ${navbar()}
+    <tal:navigation content="structure here/navigation.pt" />
 
     <h1>
-      <span class="branch-name">
+      <span class="branch-name" tal:content="branch/friendly_name">
         ${branch.friendly_name}
       </span>
-      : revision ${change.revno}
-      <span py:if="compare_revid is not None">
-        (compared to revision ${history.get_revno(compare_revid)})
+      : revision
+      <tal:revno content="change/revno">
+        ${change.revno}
+      </tal:revno>
+      <span tal:condition="python:compare_revid is not None">
+        (compared to revision <tal:b replace="python:history.get_revno(compare_revid)" />)
       </span>
     </h1>
 
-      <div class="links">
-        <div>
-          <b>&#8594;</b>
-          <a href="${branch.url([ '/files', revid ], **util.get_context())}">
-            browse files
-          </a>
-        </div>
-        <div>
-          <b>&#8594;</b>
-          <a href="${branch.url('/changes', **util.get_context(start_revid=revid))}">
-            view branch changes
-          </a>
-        </div>
-        <span py:if="compare_revid is None" py:strip="True">
-          <div>
-            <b>&#8594;</b>
-            <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">
-              view/download patch
-            </a>
-          </div>
-        </span>
-        <span py:if="compare_revid is not None" py:strip="True">
-          <div>
-            <b>&#8594;</b>
-            <a href="${branch.url([ '/bundle', revid, compare_revid, 'bundle.txt' ])}">
-              view/download patch
-            </a>
-          </div>
-        </span>
-        <span py:if="(remember is not None) and (compare_revid is None)" py:strip="True">
-          <div>
-            <b>&#8594;</b>
-            <a href="${branch.url([ '/revision', revid ],
-                     **util.get_context(compare_revid=remember))}">
-              compare with revision ${history.get_revno(remember)}
-            </a>
-          </div>
-        </span>
-        <span py:if="remember != revid" py:strip="True">
-          <div>
-            <b>&#8594;</b>
-            <a href="${branch.url([ '/revision', revid ],
-                     **util.get_context(remember=revid, compare_revid=None))}">
-              compare with another revision
-            </a>
-          </div>
-        </span>
-        <span py:if="compare_revid is not None" py:strip="True">
-          <div>
-            <b>&#8594;</b>
-            <a href="${branch.url([ '/revision', revid ],
-                     **util.get_context(remember=None, compare_revid=None))}">
-              stop comparing to revision ${history.get_revno(compare_revid)}
-            </a>
-          </div>
-        </span>
+    <div class="links">
+      <div>
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/files', revid ])">
+          browse files
+        </a>
       </div>
+      <div>
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url(['/changes'], start_revid=revid)">
+          view branch changes
+        </a>
+      </div>
+      <div tal:condition="python:compare_revid is None" >
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/bundle', revid, 'bundle.txt' ])">
+          view/download patch
+        </a>
+      </div>
+      <div tal:condition="python:compare_revid is not None" >
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/bundle', revid, compare_revid, 'bundle.txt' ])">
+          view/download patch
+        </a>
+      </div>
+      <div tal:condition="python:(remember is not None) and (compare_revid is None)" >
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/revision', revid ], compare_revid=remember)">
+          compare with revision ${history.get_revno(remember)}
+        </a>
+      </div>
+      <div  tal:condition="python:remember != revid">
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/revision', revid ], remember=revid, compare_revid=None)">
+          compare with another revision
+        </a>
+      </div>
+      <div tal:condition="python:compare_revid is not None">
+        <b>&#8594;</b>
+        <a tal:attributes="href python:url([ '/revision', revid ], remember=None, compare_revid=None)">
+          stop comparing to revision ${history.get_revno(compare_revid)}
+        </a>
+      </div>
+    </div>
 
     <tal:revision-info replace="structure python:revisioninfo(url, branch, change, True)" />
 
