@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <tal:revision-info replace="structure here/revisioninfo.pt" />
+    <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
 
     <div class="inventory-path">
       <b>folder:</b> <span class="folder" tal:content="path"> ${path} </span>

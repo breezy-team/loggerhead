@@ -27,7 +27,7 @@ import time
 import turbogears
 from cherrypy import InternalError, session
 
-from loggerhead import util
+from loggerhead import util, revisioninfo
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -89,6 +89,9 @@ class InventoryUI (object):
             if updir == '/':
                 updir_file_id = None
 
+            def url(pathargs, **kw):
+                return self._branch.url(pathargs, **util.get_context(**kw))
+
             vals = {
                 'branch': self._branch,
                 'util': util,
@@ -102,6 +105,8 @@ class InventoryUI (object):
                 'history': h,
                 'posixpath': posixpath,
                 'navigation': navigation,
+                'revisioninfo': revisioninfo,
+                'url': url,
             }
             h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))

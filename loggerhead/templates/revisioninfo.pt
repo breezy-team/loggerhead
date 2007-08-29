@@ -60,5 +60,15 @@
         </span>
       </td>
     </tr>
+    <tal:block condition="includefilechanges|nothing">
+      <tr class="divider">
+        <th>
+        </th>
+        <td>
+        </td>
+      </tr>
+      <tal:block define="entry change"
+                 content="structure here/revisionfilechanges.pt" />
+    </tal:block>
   </table>
 </div>

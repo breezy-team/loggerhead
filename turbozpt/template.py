@@ -27,9 +27,10 @@ class PageTemplate(pagetemplatefile.PageTemplateFile):
         pagetemplatefile.PageTemplateFile.__init__(self, self.fullpath)
     
     def render(self, extra_dict=None):
-	if extra_dict:
-    	    context = self.pt_getContext()
-	    context.update(extra_dict)
+	if extra_dict is None:
+            extra_dict = {}
+        context = self.pt_getContext()
+        context.update(extra_dict)
 	return self.pt_render(context)
     
     def add_context(self, d):
