@@ -30,7 +30,8 @@ class AtomUI (object):
         self._branch = branch
         self.log = branch.log
 
-    @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
+    @turbogears.expose(template='zpt:loggerhead.templates.atom',
+                       format="xml", content_type="application/atom+xml")
     def default(self, *args):
         h = self._branch.get_history()
 
@@ -51,4 +52,4 @@ class AtomUI (object):
             h.flush_cache()
             return vals
         finally:
-            h.unlock()
+            h._branch.unlock()

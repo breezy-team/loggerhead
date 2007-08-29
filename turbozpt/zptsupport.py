@@ -87,7 +87,7 @@ class TurboZpt:
 	if self.get_extra_vars:
 	    data.update(self.get_extra_vars())
 	data.update(info)
-        return tinstance(**data)
+        return tinstance(**data).encode('utf-8')
 
     def transform(self, info, template):
 	"Render the output to Elements"
