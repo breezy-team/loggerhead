@@ -103,7 +103,7 @@ class Root (controllers.RootController):
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
-    @turbogears.expose(template='loggerhead.templates.browse')
+    @turbogears.expose(template='zpt:loggerhead.templates.browse')
     def index(self):
         for p in self._projects:
             p._recheck_auto_folders()
