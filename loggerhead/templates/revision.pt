@@ -106,21 +106,30 @@
     <table class="diff-option-buttons">
       <tr>
         <td>
-          ${collapse_all_button('file', 'table-row')}
+	  <a class="hide-all collapse-file-hideall"
+	     href="javascript:collapseAllDisplay('file','none')">
+	    <img tal:attributes="src python:tg.url('/static/images/nav-small-down.gif')"
+	         width="10" height="10" alt="collapse"
+	         class="collapse-triangle" />collapse all</a>
+	  <a class="hide-all collapse-file-showall"
+	     href="javascript:collapseAllDisplay('file','table-row')">
+	    <img tal:attributes="src python:tg.url('/static/images/nav-small-right.gif')"
+	         width="10" height="10" alt="expand"
+	         class="collapse-triangle" />expand all</a>
         </td>
 
         <td class="spacey">
           <a href="javascript:show_sbs()"
              class="hide-all collapse-style-sbs-show"
              title="collapse">
-            <img src="${tg.url('/static/images/nav-small-out.gif')}"
+            <img tal:attributes="src python:tg.url('/static/images/nav-small-out.gif')"
                  width="22" height="10" class="collapse-triangle" />
             show side by side
           </a>
           <a href="javascript:show_unified()"
              class="hide-all collapse-style-unified-show"
              title="expand">
-            <img src="${tg.url('/static/images/nav-small-in.gif')}"
+            <img tal:attributes="src python:tg.url('/static/images/nav-small-in.gif')"
                  width="22" height="10" class="collapse-triangle" />
             show unified diff
           </a>

@@ -75,11 +75,13 @@
           item/filename
         </a>
       </span>
-      &nbsp;
-      <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename" 
-         class="jump">
-        &#8594; diff
-      </a>
+      <tal:block condition="links">
+        &nbsp;
+        <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename" 
+           class="jump">
+          &#8594; diff
+        </a>
+      </tal:block>
     </td>
   </tr>
 </tal:block>

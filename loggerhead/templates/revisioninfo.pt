@@ -60,15 +60,14 @@
         </span>
       </td>
     </tr>
-    <tal:block condition="includefilechanges|nothing">
+    <tal:block condition="includefilechanges">
       <tr class="divider">
         <th>
         </th>
         <td>
         </td>
       </tr>
-      <tal:block define="entry change"
-                 content="structure here/revisionfilechanges.pt" />
+      <tal:block content="structure python:file_change_summary(url, change, False)" />
     </tal:block>
   </table>
 </div>
