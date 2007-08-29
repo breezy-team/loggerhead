@@ -38,7 +38,7 @@ class RevisionUI (object):
     
 #    @util.lsprof
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.revision')
+    @turbogears.expose(html='zpt:loggerhead.templates.revision')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
@@ -78,6 +78,9 @@ class RevisionUI (object):
             if side_by_side:
                 h.add_side_by_side([ change ])
 
+            def url(pathargs, **kw):
+                return self._branch.url(pathargs, **util.get_context(**kw))
+
             vals = {
                 'branch': self._branch,
                 'revid': revid,
@@ -92,6 +95,7 @@ class RevisionUI (object):
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
                 'revisioninfo': revisioninfo,
+                'url': url,
             }
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
