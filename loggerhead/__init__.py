@@ -8,14 +8,22 @@ def _pt(name):
 
 
 def file_change_summary(url, entry, links=True):
-    pt = _pt('revisionfilechanges')
-    return pt.render(dict(url=url, entry=entry, links=links))
+    return _pt('revisionfilechanges').render(
+        dict(url=url, entry=entry, links=links))
 
 def revisioninfo(url, branch, entry, includefilechanges=False):
     from loggerhead import util
-    pt = _pt('revisioninfo')
-    return pt.render(
+    return _pt('revisioninfo').render(
         dict(url=url, change=entry, branch=branch, util=util,
              includefilechanges=includefilechanges,
              file_change_summary=file_change_summary))
 
+
+def collapse_button(group, name, normal='block'):
+    import turbogears
+    return _pt('collapse-button').render(
+        dict(group=group, name=name, normal=normal, tg=turbogears))
+
+templatefunctions = {'file_change_summary':file_change_summary,
+                     'revisioninfo':revisioninfo,
+                     'collapse_button':collapse_button}

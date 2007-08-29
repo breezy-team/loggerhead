@@ -26,7 +26,7 @@ import time
 import turbogears
 from cherrypy import InternalError, session
 
-from loggerhead import util, revisioninfo
+from loggerhead import util, templatefunctions
 
 
 class RevisionUI (object):
@@ -94,9 +94,9 @@ class RevisionUI (object):
                 'remember': remember,
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
-                'revisioninfo': revisioninfo,
                 'url': url,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
             return vals

@@ -148,83 +148,94 @@
       </tr>
     </table>
 
-    <!-- ! i'm not a big fan of embedding python code here, but the alternatives all seem to be worse -->
-    <?python uniqs={}; ?>
-
-    <div class="diff" py:if="change.changes.modified">
+    <div class="diff"
+         tal:condition="change/changes/modified"
+         tal:define="uniqs python:{}">
       <!-- ! side-by-side diff -->
       <table class="diff-block collapse-style-sbs-content">
-        <span py:strip="True" py:for="item in change.changes.modified">
-          <tr>
-            <th class="filename" colspan="4">
-              ${collapse_button('file', util.uniq(uniqs, item.file_id), 'table-row')}
-              <a href="${branch.url([ '/annotate', change.revid ], **util.get_context(file_id=item.file_id))}"
-                 name="${item.filename}-s" title="Annotate ${item.filename}">
-                ${item.filename}
-              </a>
-            </th>
-          </tr>
+        <tal:block repeat="item change/changes/modified">
+          <tal:u define="u python:util.uniq(uniqs, item.file_id)">
+            <tr>
+              <th class="filename" colspan="4">
+                <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
+                <a tal:attributes="href  python:url(['/annotate', change.revid], file_id=item.file_id);
+                                   name  string:${item/filename}-s;
+                                   title string:Annotate ${item/filename}"
+                   tal:content="item/filename">
+                  ${item.filename}
+                </a>
+              </th>
+            </tr>
 
-          <span py:strip="True" py:for="chunk in item.sbs_chunks">
-            <tr class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
-              <th class="lineno">
-                old
-              </th>
-              <th>
-              </th>
-              <th class="lineno">
-                new
-              </th>
-              <th>
-              </th>
-            </tr>
-            <tr py:for="line in chunk.diff"
-                class="diff-chunk collapse-file-${util.uniq(uniqs, item.file_id)}-content">
-              <span py:if="line.old_lineno" py:strip="True">
-                <td class="lineno">
-                  ${line.old_lineno}
+            <tal:block repeat="chunk item/sbs_chunks">
+              <tr tal:attributes="class string:diff-chunk collapse-file-${u}-content">
+                <th class="lineno">
+                  old
+                </th>
+                <th>
+                </th>
+                <th class="lineno">
+                  new
+                </th>
+                <th>
+                </th>
+              </tr>
+              <tr tal:repeat="line chunk/diff"
+                  tal:attributes="class string:diff-chunk collapse-file-${u}-content">
+                <tal:block condition="line/old_lineno">
+                  <td class="lineno"
+                      tal:content="line/old_lineno">
+                    ${line.old_lineno}
+                  </td>
+                  <td tal:attributes="class string:diff-${line/old_type}"
+                      tal:content="line/old_line">
+                    ${line.old_line}
+                  </td>
+                </tal:block>
+                <tal:block condition="not:line/old_lineno">
+                  <td class="lineno-skip"
+                      tal:content="line/old_lineno">
+                    ${line.old_lineno}
+                  </td>
+                  <td tal:attributes="class string:diff-${line/old_type}-skip"
+                      tal:content="line/old_line">
+                    ${line.old_line}
+                  </td>
+                </tal:block>
+                <tal:block condition="line/new_lineno">
+                  <td class="lineno"
+                      tal:content="line/new_lineno">
+                    ${line.new_lineno}
+                  </td>
+                  <td tal:attributes="class string:diff-${line/new_type}"
+                      tal:content="line/new_line">
+                    ${line.new_line}
+                  </td>
+                </tal:block>
+                <tal:block condition="not:line/new_lineno">
+                  <td class="lineno-skip"
+                      tal:content="line/new_lineno">
+                    ${line.new_lineno}
+                  </td>
+                  <td tal:attributes="class string:diff-${line/new_type}-skip"
+                      tal:content="line/new_line">
+                    ${line.new_line}
+                  </td>
+                </tal:block>
+              </tr>
+              <tr tal:attributes="class string:diff-chunk-spacing collapse-file-${u}-content">
+                <td colspan="4">
+                  &nbsp;
                 </td>
-                <td class="diff-${line.old_type}">
-                  ${line.old_line}
-                </td>
-              </span>
-              <span py:if="not line.old_lineno" py:strip="True">
-                <td class="lineno-skip">
-                  ${line.old_lineno}
-                </td>
-                <td class="diff-${line.old_type}-skip">
-                  ${line.old_line}
-                </td>
-              </span>
-              <span py:if="line.new_lineno" py:strip="True">
-                <td py:if="line.new_lineno" class="lineno">
-                  ${line.new_lineno}
-                </td>
-                <td class="diff-${line.new_type}">
-                  ${line.new_line}
-                </td>
-              </span>
-              <span py:if="not line.new_lineno" py:strip="True">
-                <td py:if="not line.new_lineno" class="lineno-skip">
-                  ${line.new_lineno}
-                </td>
-                <td class="diff-${line.new_type}-skip">
-                  ${line.new_line}
-                </td>
-              </span>
-            </tr>
-            <tr class="diff-chunk-spacing collapse-file-${util.uniq(uniqs, item.file_id)}-content">
+              </tr>
+            </tal:block>
+            <tr class="diff-spacing">
               <td colspan="4">
                 &nbsp;
               </td>
             </tr>
-          </span>
-          <tr class="diff-spacing">
-            <td colspan="4">
-              &nbsp;
-            </td>
-          </tr>
-        </span>
+          </tal:u>
+        </tal:block>
       </table>
 
       <!-- ! unified diff -->
