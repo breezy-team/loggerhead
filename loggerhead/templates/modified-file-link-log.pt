@@ -1,0 +1,14 @@
+<tal:block>
+  <span class="filename">
+    <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=item.file_id);
+                       title string:Annotate ${item/filename}"
+       tal:content="item/filename">
+      item/filename
+    </a>
+  </span>
+  &nbsp;
+  <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename"
+     class="jump">
+    &#8594; diff
+  </a>
+</tal:block>

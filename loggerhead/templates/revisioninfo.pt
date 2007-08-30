@@ -60,14 +60,14 @@
         </span>
       </td>
     </tr>
-    <tal:block condition="includefilechanges">
+    <tal:block condition="nocall:modified_file_link">
       <tr class="divider">
         <th>
         </th>
         <td>
         </td>
       </tr>
-      <tal:block content="structure python:file_change_summary(url, change, False)" />
+      <tal:block content="structure python:file_change_summary(url, change, modified_file_link)" />
     </tal:block>
   </table>
 </div>

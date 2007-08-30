@@ -69,19 +69,8 @@
     </th>
     <td class="files">
       <span class="filename">
-        <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=item.file_id);
-                           title string:Annotate ${item/filename}"
-           tal:content="item/filename">
-          item/filename
-        </a>
+        <tal:b content="structure python:modified_file_link(url, entry, item)" />
       </span>
-      <tal:block condition="links">
-        &nbsp;
-        <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename" 
-           class="jump">
-          &#8594; diff
-        </a>
-      </tal:block>
     </td>
   </tr>
 </tal:block>

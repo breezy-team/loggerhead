@@ -101,7 +101,7 @@
       </div>
     </div>
 
-    <tal:revision-info replace="structure python:revisioninfo(url, branch, change, True)" />
+    <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
 
     <table class="diff-option-buttons">
       <tr>

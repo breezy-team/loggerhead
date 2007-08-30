@@ -168,7 +168,7 @@
                   </tal:block>
                 </td>
               </tr>
-              <tal:block content="structure python:file_change_summary(url, entry)" />
+              <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
             </table>
           </td>
         </tr>
