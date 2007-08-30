@@ -51,4 +51,4 @@ class AtomUI (object):
             h.flush_cache()
             return vals
         finally:
-            h.unlock()
+            h._branch.unlock()
