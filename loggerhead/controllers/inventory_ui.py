@@ -27,7 +27,7 @@ import time
 import turbogears
 from cherrypy import InternalError, session
 
-from loggerhead import util, revisioninfo
+from loggerhead import util, templatefunctions
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -105,9 +105,9 @@ class InventoryUI (object):
                 'history': h,
                 'posixpath': posixpath,
                 'navigation': navigation,
-                'revisioninfo': revisioninfo,
                 'url': url,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
             return vals

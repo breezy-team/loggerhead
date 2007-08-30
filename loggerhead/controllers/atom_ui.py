@@ -20,7 +20,7 @@
 import cherrypy
 import turbogears
 
-from loggerhead import util
+from loggerhead import util, templatefunctions
 
 
 class AtomUI (object):
@@ -49,6 +49,7 @@ class AtomUI (object):
                 'history': h,
                 'updated': entries[0].date.isoformat() + 'Z',
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             return vals
         finally:

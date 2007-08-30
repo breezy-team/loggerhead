@@ -27,7 +27,7 @@ import time
 import turbogears
 from cherrypy import HTTPError, InternalError, session
 
-from loggerhead import util
+from loggerhead import util, templatefunctions
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -97,6 +97,7 @@ class AnnotateUI (object):
                 'contents': list(h.annotate_file(file_id, revid)),
                 'url':url,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/annotate: %r secs' % (time.time() - z,))
             return vals
