@@ -1,4 +1,5 @@
 import os
+import turbogears
 import turbozpt
 from turbozpt.template import PageTemplate
 
@@ -20,10 +21,14 @@ def revisioninfo(url, branch, entry, includefilechanges=False):
 
 
 def collapse_button(group, name, normal='block'):
-    import turbogears
     return _pt('collapse-button').render(
         dict(group=group, name=name, normal=normal, tg=turbogears))
 
+def collapse_all_button(group, normal='block'):
+    return _pt('collapse-all-button').render(
+        dict(group=group, normal=normal, tg=turbogears))
+
 templatefunctions = {'file_change_summary':file_change_summary,
                      'revisioninfo':revisioninfo,
-                     'collapse_button':collapse_button}
+                     'collapse_button':collapse_button,
+                     'collapse_all_button':collapse_all_button}

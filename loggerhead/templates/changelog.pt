@@ -51,16 +51,7 @@
 
     <span tal:condition="not:search_failed"
           class="changelog">
-      <a class="hide-all collapse-cl-hideall"
-	 href="javascript:collapseAllDisplay('cl','none')">
-	<img tal:attributes="src python:tg.url('/static/images/nav-small-down.gif')"
-	     width="10" height="10" alt="collapse"
-	     class="collapse-triangle" />collapse all</a>
-      <a class="hide-all collapse-cl-showall"
-	 href="javascript:collapseAllDisplay('cl','block')">
-	<img tal:attributes="src python:tg.url('/static/images/nav-small-right.gif')"
-	     width="10" height="10" alt="expand"
-	     class="collapse-triangle" />expand all</a>
+      <tal:b content="structure python:collapse_all_button('cl')" />
     </span>
 
     <table class="log-entries"
@@ -92,20 +83,7 @@
               text
             </a>
           <td class="expand-button" tal:define="name entry/revno">
-	    <a tal:attributes="href  string:javascript:collapseDisplay('cl','${name}','none');
-                               class string:hide-button collapse-cl-${name}-hide"
-	        title="collapse">
-	      <img tal:attributes="src python:tg.url('/static/images/nav-small-down.gif')"
-	           width="10" height="10" alt="collapse"
-	           class="collapse-triangle" />
-	    </a>
-	    <a tal:attributes="href  string:javascript:collapseDisplay('cl','${name}','block');
-                               class string:show-button collapse-cl-${name}-show"
-	        title="collapse">
-	      <img tal:attributes="src python:tg.url('/static/images/nav-small-right.gif')"
-	           width="10" height="10" alt="expand"
-	           class="collapse-triangle" />
-	    </a>
+            <tal:b content="structure python:collapse_button('cl', entry.revno)" />
           </td>
           <td class="summary">
             <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);

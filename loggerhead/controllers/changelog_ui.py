@@ -24,7 +24,7 @@ import turbogears
 from cherrypy import InternalError, session
 
 from loggerhead import util
-from loggerhead import file_change_summary
+from loggerhead import templatefunctions
 
 
 class ChangeLogUI (object):
@@ -118,8 +118,8 @@ class ChangeLogUI (object):
                 'search_failed': search_failed,
                 'all_same_author': all_same_author,
                 'url': url,
-                'file_change_summary': file_change_summary,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
             return vals
