@@ -6,4 +6,4 @@ __all__ = ["TurboZpt"]
 
 from turbogears.view import engines, stdvars
 
-engines['zpt'] = TurboZpt(stdvars, {})
+engines['zpt'] = TurboZpt(stdvars)

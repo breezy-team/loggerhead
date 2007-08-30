@@ -1,11 +1,8 @@
 """
-By VladDrac@irc.freenode.net/#turbogears
-+ Some small modifications
 """
 
 from zope.pagetemplate import pagetemplatefile
-import os.path
-import sys
+import os
 
 _zpt_cache = {}
 
@@ -32,19 +29,16 @@ class Here(object):
         self.options = options
 
     def __getitem__(self, name):
-        tpl = zpt(os.path.join(self.base, name))
-        return tpl(**self.options)
+        return zpt(os.path.join(self.base, name))(**self.options)
 
 class PageTemplate(pagetemplatefile.PageTemplateFile):
     def __init__(self, name):
-    	base = os.path.dirname(sys._getframe(1).f_globals["__file__"])
-        self.name = name
-        self.fullpath = os.path.join(base, self.name)
-        self.base = os.path.dirname(self.fullpath)
-        pagetemplatefile.PageTemplateFile.__init__(self, self.fullpath)
+        self.base = os.path.dirname(name)
+        pagetemplatefile.PageTemplateFile.__init__(self, name)
 
     def pt_getContext(self, args=(), options={}, **ignored):
-        rval = pagetemplatefile.PageTemplateFile.pt_getContext(self, args, options, **ignored)
-	rval.update(options)
-        rval.update({'here':Here(self.base, options), 'template':self})
+        rval = pagetemplatefile.PageTemplateFile.pt_getContext(
+            self, args, options, **ignored)
+        rval.update(options)
+        rval.update({'here':Here(self.base, options)})
         return rval
