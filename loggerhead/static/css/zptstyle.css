@@ -415,7 +415,7 @@ th.files {
 .diff-option-buttons .collapse-file-showall { display: none; }
 
 .diff-block .show-button { display: none; }
-.diff .collapse-style-unified-content { display: none; }
+.collapse-style-unified-content { display: none; }
 .collapse-style-sbs-show { display: none; }
 
 .diff-insert {
