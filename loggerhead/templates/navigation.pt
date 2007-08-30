@@ -13,7 +13,7 @@
         </td>
         <td align="right" tal:condition="navigation/revid_list|nothing">
           <span tal:condition="navigation/feed" class="rbuttons feed">
-            <a tal:attributes="href python:branch.url('/atom')">
+            <a tal:attributes="href python:url(['/atom'])">
               <img tal:attributes="src python:tg.url('/static/images/feed-icon-16x16.gif')" />
             </a>
           </span>

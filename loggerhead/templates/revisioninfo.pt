@@ -26,8 +26,8 @@
       <td class="children">
         <tal:merge-points repeat="child change/merge_points">
           <a tal:attributes="title string:Show revision ${child/revno};
-                             href python:branch.url([ '/revision', child.revid ], **util.get_context(clear=1, start_revid=child.revid))"
-             tal:content="python:'(' + child.revno + util.if_present(' %s', child.branch_nick) + ')'">
+                             href python:url(['/revision', child.revid], clear=1, start_revid=child.revid)"
+             tal:content="python:revno_with_nick(child)">
             text
           </a>
           <br />
@@ -41,8 +41,8 @@
       <td class="parents">
         <tal:parents repeat="parent python:change.parents[1:]">
           <a tal:attributes="title string:Show revision ${parent/revno};
-                             href python:branch.url([ '/revision', parent.revid ], **util.get_context(clear=1, start_revid=parent.revid))"
-             tal:content="python:'(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')'">
+                             href python:url(['/revision', parent.revid], clear=1, start_revid=parent.revid)"
+             tal:content="python:revno_with_nick(parent)">
             text
           </a>
         </tal:parents>

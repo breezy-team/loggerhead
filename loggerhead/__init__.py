@@ -27,7 +27,15 @@ def collapse_all_button(group, normal='block'):
     return _pt('collapse-all-button')(
         group=group, normal=normal, tg=turbogears)
 
-templatefunctions = {'file_change_summary':file_change_summary,
-                     'revisioninfo':revisioninfo,
-                     'collapse_button':collapse_button,
-                     'collapse_all_button':collapse_all_button}
+def revno_with_nick(entry):
+    if entry.branch_nick:
+        extra = ' ' + entry.branch_nick
+    else:
+        extra = ''
+    return '(%s%s)'%(child.revno, extra)
+
+templatefunctions = {'file_change_summary': file_change_summary,
+                     'revisioninfo': revisioninfo,
+                     'collapse_button': collapse_button,
+                     'collapse_all_button': collapse_all_button,
+                     'revno_with_nick': revno_with_nick}

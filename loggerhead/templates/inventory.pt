@@ -29,10 +29,10 @@
     </h1>
 
     <div class="links">
-      <div> <b>&#8594;</b> <a tal:attributes="href python:branch.url('/revision', **util.get_context(clear=1, start_revid=revid))">
+      <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=revid)">
 	  view revision </a>
       </div>
-      <div> <b>&#8594;</b> <a tal:attributes="href python:branch.url('/changes', **util.get_context(clear=1, start_revid=revid))">
+      <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=revid)">
 	  view branch changes </a>
       </div>
     </div>
@@ -49,16 +49,16 @@
           Permissions
         </th>
         <th>
-          <a tal:attributes="href python:branch.url([ '/files', revid ], **util.get_context(sort='filename'))">Filename</a>
+          <a tal:attributes="href python:url(['/files', revid], sort='filename')">Filename</a>
         </th>
         <th>
           Latest Rev
         </th>
         <th>
-          <a tal:attributes="href python:branch.url([ '/files', revid ], **util.get_context(sort='date'))">Last Changed</a>
+          <a tal:attributes="href python:url(['/files', revid], sort='date')">Last Changed</a>
         </th>
         <th>
-          <a tal:attributes="href python:branch.url([ '/files', revid ], **util.get_context(sort='size'))">Size</a>
+          <a tal:attributes="href python:url(['/files', revid], sort='size')">Size</a>
         </th>
         <th>
         </th>
@@ -69,8 +69,7 @@
       <tr class="parity1" tal:condition="python:updir">
         <td class="permissions">drwxr-xr-x</td>
         <td class="filename directory">
-          <a tal:attributes="href python:branch.url([ '/files', revid ],
-                             **util.get_context(file_id=updir_file_id))">
+          <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)">
             (up)
           </a>
         </td>
@@ -91,8 +90,7 @@
         </td>
         <td tal:attributes="class string:filename ${file/kind}">
           <a tal:condition="python:file.kind=='directory'"
-             tal:attributes="href python:branch.url([ '/files', revid ],
-                             **util.get_context(file_id=file.file_id))"
+             tal:attributes="href python:url(['/files', revid], file_id=file.file_id)"
              tal:content="string:${file/filename}/">
             ${file.filename}/
           </a>
@@ -100,16 +98,15 @@
                 tal:content="string:${file/filename}@">
             ${file.filename}@
           </span>
-          <a tal:condition="python:file.kind=='file'" 
-             tal:attributes="href python:branch.url([ '/annotate', revid ],
-                                  **util.get_context(file_id=file.file_id));
+          <a tal:condition="python:file.kind=='file'"
+             tal:attributes="href python:url(['/annotate', revid], file_id=file.file_id);
                              title string:Annotate ${file/filename}"
             tal:content="string:${file/filename}">
             ${file.filename}
           </a>
         </td>
         <td class="revision">
-          <a tal:attributes="href python:branch.url([ '/revision', file.revid ], **util.get_context(start_revid=file.revid, file_id=file.file_id));
+          <a tal:attributes="href python:url(['/revision', file.revid], start_revid=file.revid, file_id=file.file_id);
                              title string:Show revision ${file/change/revno}"
              tal:content="python:util.trunc(file.change.revno, 15)">
             ${text}
@@ -126,14 +123,14 @@
           </span>
         </td>
         <td class="changes-link">
-          <a tal:attributes="href python:branch.url('/changes', **util.get_context(start_revid=file.revid, file_id=file.file_id));
+          <a tal:attributes="href python:url(['/changes'], start_revid=file.revid, file_id=file.file_id);
                              title string:Changes affecting ${file/filename} up to revision ${file/change/revno}">
             changes
           </a>
         </td>
         <td class="download-link">
           <a tal:condition="python:file.kind=='file'"
-             tal:attributes="href python:branch.url([ '/download', file.revid, file.file_id, file.filename ]);
+             tal:attributes="href python:url(['/download', file.revid, file.file_id, file.filename]);
                              title string:Download ${file/filename} at revision ${file/change/revno}">
             download
           </a>

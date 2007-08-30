@@ -8,7 +8,7 @@
     <link rel="stylesheet"
           tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
     <link rel="alternate" type="application/atom+xml"
-          tal:attributes="href python:branch.url('/atom');
+          tal:attributes="href python:url(['/atom']);
                           title string:RSS feed for ${branch/friendly_name}"
           />
 
@@ -78,7 +78,7 @@
         <tr tal:attributes="class string:revision-header parity${entry/parity}">
           <td class="revision-number">
             <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                               href  python:url([ '/revision', entry.revid ])"
+                               href  python:url(['/revision', entry.revid])"
                tal:content="python:util.trunc(entry.revno)">
               text
             </a>
@@ -87,7 +87,7 @@
           </td>
           <td class="summary">
             <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                               href  python:url([ '/revision', entry.revid ])"
+                               href  python:url(['/revision', entry.revid])"
                tal:content="entry/short_comment">
               text
             </a>
@@ -103,7 +103,7 @@
             (<tal:b content="python:util.ago(entry.date)" />)
           </td>
           <td class="inventory-link">
-            <a tal:attributes="href python:branch.url(['/files', entry.revid]);
+            <a tal:attributes="href python:url(['/files', entry.revid]);
                                title string:Files at revision ${entry/revno}">
               files
             </a>
@@ -123,7 +123,7 @@
                   <span tal:repeat="child entry/merge_points">
                     <a title="Show history"
                        tal:attributes="href python:url(['/changes'], start_revid=child.revid)"
-                       tal:content="python:'(' + child.revno + util.if_present(' %s', child.branch_nick) + ')'">
+                       tal:content="python:revno_with_nick(child)">
                        class="revlink">
                       ${text}
                     </a>
@@ -140,7 +140,7 @@
                     <span tal:condition="python:parent.revid != entry.parents[0].revid">
                     <a title="Show history"
                        tal:attributes="href python:url(['/changes'], start_revid=parent.revid)"
-                       tal:content="python:'(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')'">
+                       tal:content="python:revno_with_nick(parent)">
                        class="revlink">
                       ${text}
                     </a>
