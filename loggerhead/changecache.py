@@ -38,16 +38,37 @@ from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
-from pysqlite2 import dbapi2
+#SQLITE_INTERFACE = 'pysqlite2'
+SQLITE_INTERFACE = 'sqlite'
+
+if SQLITE_INTERFACE == 'pysqlite2':
+    from pysqlite2 import dbapi2
+    _param_marker = '?'
+elif SQLITE_INTERFACE == 'sqlite':
+    import sqlite as dbapi2
+    _param_marker = '%s'
+else:
+    raise AssertionError("bad sqlite interface!?")
+
+_select_stmt = ("select data from revisiondata where revid = ?"
+                ).replace('?', _param_marker)
+_insert_stmt = ("insert into revisiondata (revid, data) "
+                "values (?, ?)").replace('?', _param_marker)
+_update_stmt = ("update revisiondata set data = ? where revid = ?"
+                ).replace('?', _param_marker)
+
+
+
 
 class FakeShelf(object):
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
         self.connection = dbapi2.connect(filename)
+        self.cursor = self.connection.cursor()
         if create_table:
             self._create_table()
     def _create_table(self):
-        self.connection.execute(
+        self.cursor.execute(
             "create table RevisionData "
             "(revid binary primary key, data binary)")
         self.connection.commit()
@@ -57,28 +78,26 @@ class FakeShelf(object):
     def _unserialize(self, data):
         return cPickle.loads(str(data))
     def get(self, revid):
-        filechange = self.connection.execute(
-            "select data from revisiondata where revid = ?",
-            (revid,)).fetchone()
+        self.cursor.execute(_select_stmt, (revid,))
+        filechange = self.cursor.fetchone()
         if filechange is None:
             return None
         else:
             return self._unserialize(filechange[0])
     def add(self, revid_obj_pairs, commit=True):
-        self.connection.executemany(
-            "insert into revisiondata (revid, data) values (?, ?)",
-            [(r, self._serialize(d)) for (r, d) in revid_obj_pairs])
+        for  (r, d) in revid_obj_pairs:
+            self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
         if commit:
             self.connection.commit()
     def update(self, revid_obj_pairs, commit=True):
-        self.connection.executemany(
-            "update revisiondata set data = ? where revid = ?",
-            [(self._serialize(d), r) for (r, d) in revid_obj_pairs])
+        for  (r, d) in revid_obj_pairs:
+            self.cursor.execute(_update_stmt, (self._serialize(d), r))
         if commit:
             self.connection.commit()
     def count(self):
-        return self.connection.execute(
-            "select count(*) from revisiondata").fetchone()[0]
+        self.cursor.execute(
+            "select count(*) from revisiondata")
+        return self.cursor.fetchone()[0]
     def close(self, commit=False):
         if commit:
             self.connection.commit()
