@@ -157,6 +157,7 @@ class BranchView (object):
             h.check_rebuild()
     
     def url(self, elements, **kw):
+        "build an url relative to this branch"
         if not isinstance(elements, list):
             elements = [elements]
         if elements[0].startswith('/'):
@@ -164,6 +165,10 @@ class BranchView (object):
         elements = [urllib.quote(x) for x in elements]
         return turbogears.url([ '/' + self.group_name, self.name ] + elements, **kw)
 
+    def context_url(self, elements, **kw):
+        "build an url relative to this branch, bringing along browsing context"
+        return self.url(elements, **util.get_context(**kw))
+    
     def last_updated(self):
         h = self.get_history()
         change = h.get_changes([ h.last_revid ])[0]
