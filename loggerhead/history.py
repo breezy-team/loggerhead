@@ -600,6 +600,12 @@ class History (object):
         for change in changes:
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+            if len(change.parents) > 0:
+                if isinstance(change.parents[0], util.Container):
+                    # old cache stored a potentially-bogus revno
+                    change.parents = [util.Container(revid=p.revid, revno=self.get_revno(p.revid)) for p in change.parents]
+                else:
+                    change.parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in change.parents]
             change.revno = self.get_revno(change.revid)
             if get_diffs:
                 # this may be time-consuming, but it only happens on the
@@ -689,7 +695,6 @@ class History (object):
         templates.
         """
         commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
-        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
         message, short_message = clean_message(revision.message)
 
         entry = {
@@ -700,7 +705,7 @@ class History (object):
             'short_comment': short_message,
             'comment': revision.message,
             'comment_clean': [util.html_clean(s) for s in message],
-            'parents': parents,
+            'parents': revision.parent_ids,
         }
         return util.Container(entry)
 
