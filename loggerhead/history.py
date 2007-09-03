@@ -602,7 +602,8 @@ class History (object):
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
             change.revno = self.get_revno(change.revid)
             if get_diffs:
-                # this may be time-consuming, but it only happens on the revision page, and only for one revision at a time.
+                # this may be time-consuming, but it only happens on the
+                # revision page, and only for one revision at a time.
                 if len(change.parents) > 0:
                     parent_revid = change.parents[0].revid
                 else:
@@ -616,62 +617,16 @@ class History (object):
         
         return changes
 
-    # alright, let's profile this sucka.
-    def _get_changes_profiled(self, revid_list, get_diffs=False):
+    # alright, let's profile this sucka. (FIXME remove this eventually...)
+    def _get_changes_profiled(self, revid_list):
         from loggerhead.lsprof import profile
         import cPickle
-        ret, stats = profile(self.get_changes_uncached, revid_list, get_diffs)
+        ret, stats = profile(self.get_changes_uncached, revid_list)
         stats.sort()
         stats.freeze()
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
         self.log.info('lsprof complete!')
         return ret
-
-    def _get_deltas_for_revisions_with_trees(self, revisions):
-        """Produce a generator of revision deltas.
-        
-        Note that the input is a sequence of REVISIONS, not revision_ids.
-        Trees will be held in memory until the generator exits.
-        Each delta is relative to the revision's lefthand predecessor.
-        """
-        required_trees = set()
-        for revision in revisions:
-            required_trees.add(revision.revision_id)
-            required_trees.update(revision.parent_ids[:1])
-        trees = dict((t.get_revision_id(), t) for 
-                     t in self._branch.repository.revision_trees(required_trees))
-        ret = []
-        self._branch.repository.lock_read()
-        try:
-            for revision in revisions:
-                if not revision.parent_ids:
-                    old_tree = self._branch.repository.revision_tree(None)
-                else:
-                    old_tree = trees[revision.parent_ids[0]]
-                tree = trees[revision.revision_id]
-                ret.append((tree, old_tree, tree.changes_from(old_tree)))
-            return ret
-        finally:
-            self._branch.repository.unlock()
-    
-    def entry_from_revision(self, revision):
-        commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
-        
-        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
-
-        message, short_message = clean_message(revision.message)
-
-        entry = {
-            'revid': revision.revision_id,
-            'date': commit_time,
-            'author': revision.committer,
-            'branch_nick': revision.properties.get('branch-nick', None),
-            'short_comment': short_message,
-            'comment': revision.message,
-            'comment_clean': [util.html_clean(s) for s in message],
-            'parents': parents,
-        }
-        return util.Container(entry)
 
     @with_branch_lock
     @with_bzrlib_read_lock
@@ -692,26 +647,76 @@ class History (object):
         delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
         combined_list = zip(rev_list, delta_list)
         
-        entries = []
+        changes = []
         for rev, (new_tree, old_tree, delta) in combined_list:
-            entry = self.entry_from_revision(rev)
-            entry.changes = self.parse_delta(delta, old_tree, new_tree)
-            entries.append(entry)
+            change = self._change_from_revision(rev)
+            change.changes = self.parse_delta(delta, old_tree, new_tree)
+            changes.append(change)
         
-        return entries
+        return changes
+
+    def _get_deltas_for_revisions_with_trees(self, revisions):
+        """Produce a list of revision deltas.
+        
+        Note that the input is a sequence of REVISIONS, not revision_ids.
+        Trees will be held in memory until the generator exits.
+        Each delta is relative to the revision's lefthand predecessor.
+        (This is copied from bzrlib.)
+        """
+        required_trees = set()
+        for revision in revisions:
+            required_trees.add(revision.revision_id)
+            required_trees.update(revision.parent_ids[:1])
+        trees = dict((t.get_revision_id(), t) for 
+                     t in self._branch.repository.revision_trees(required_trees))
+        ret = []
+        self._branch.repository.lock_read()
+        try:
+            for revision in revisions:
+                if not revision.parent_ids:
+                    old_tree = self._branch.repository.revision_tree(None)
+                else:
+                    old_tree = trees[revision.parent_ids[0]]
+                tree = trees[revision.revision_id]
+                ret.append((tree, old_tree, tree.changes_from(old_tree)))
+            return ret
+        finally:
+            self._branch.repository.unlock()
+
+    def _change_from_revision(self, revision):
+        """
+        Given a bzrlib Revision, return a processed "change" for use in
+        templates.
+        """
+        commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
+        parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
+        message, short_message = clean_message(revision.message)
+
+        entry = {
+            'revid': revision.revision_id,
+            'date': commit_time,
+            'author': revision.committer,
+            'branch_nick': revision.properties.get('branch-nick', None),
+            'short_comment': short_message,
+            'comment': revision.message,
+            'comment_clean': [util.html_clean(s) for s in message],
+            'parents': parents,
+        }
+        return util.Container(entry)
 
     @with_bzrlib_read_lock
-    def _get_diff(self, revid1, revid2):
+    def _get_delta_and_trees(self, revid1, revid2):
         rev_tree1 = self._branch.repository.revision_tree(revid1)
         rev_tree2 = self._branch.repository.revision_tree(revid2)
         delta = rev_tree2.changes_from(rev_tree1)
         return rev_tree1, rev_tree2, delta
     
-    def get_diff(self, revid1, revid2):
-        rev_tree1, rev_tree2, delta = self._get_diff(revid1, revid2)
-        entry = self.get_changes([ revid2 ], False)[0]
-        entry.changes = self.parse_delta(delta, True, rev_tree1, rev_tree2)
-        return entry
+    def get_change_relative_to(self, revid1, revid2):
+        rev_tree1, rev_tree2, delta = self._get_delta_and_trees(revid1, revid2)
+        change = self.get_changes([ revid2 ])[0]
+        change.changes = self.parse_delta(delta, rev_tree1, rev_tree2)
+        change.changes.modified = self._parse_diffs(revid1, revid2)
+        return change
     
     @with_branch_lock
     def get_file(self, file_id, revid):
@@ -741,7 +746,7 @@ class History (object):
                 ),
             )
         """
-        old_tree, new_tree, delta = self._get_diff(revid1, revid2)
+        old_tree, new_tree, delta = self._get_delta_and_trees(revid1, revid2)
         process = []
         out = []
         
@@ -803,9 +808,9 @@ class History (object):
         if chunk is not None:
             chunks.append(chunk)
         return chunks
-                
+
     @with_branch_lock
-    def parse_delta(self, delta, get_diffs=True, old_tree=None, new_tree=None):
+    def parse_delta(self, delta, old_tree=None, new_tree=None):
         """
         Return a nested data structure containing the changes in a delta::
         
