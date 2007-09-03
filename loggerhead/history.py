@@ -452,14 +452,16 @@ class History (object):
         determine the revision list we're viewing (start_revid, file_id, query)
         and where we are in it (revid).
         
-        if a query is given, we're viewing query results.
-        if a file_id is given, we're viewing revisions for a specific file.
-        if a start_revid is given, we're viewing the branch from a
-            specific revision up the tree.
-        (these may be combined to view revisions for a specific file, from
-            a specific revision, with a specific search query.)
+            - if a query is given, we're viewing query results.
+            - if a file_id is given, we're viewing revisions for a specific
+              file.
+            - if a start_revid is given, we're viewing the branch from a
+              specific revision up the tree.
+
+        these may be combined to view revisions for a specific file, from
+        a specific revision, with a specific search query.
             
-        returns a new (revid, start_revid, revid_list, scan_list) where:
+        returns a new (revid, start_revid, revid_list) where:
         
             - revid: current position within the view
             - start_revid: starting revision of this view
