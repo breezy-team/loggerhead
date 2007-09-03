@@ -166,7 +166,6 @@ class ChangeCache (object):
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
         self.history = history
-        self.log = history.log
 
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
@@ -176,21 +175,6 @@ class FileChangeCache(object):
         # use a lockfile since the cache folder could be shared across
         # different processes.
         self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
-
-        self._closed = False
-
-    @with_lock
-    def close(self):
-        self.log.debug('Closing cache file.')
-        self._closed = True
-
-    @with_lock
-    def closed(self):
-        return self._closed
-
-    @with_lock
-    def flush(self):
-        pass
 
     @with_lock
     def get_file_changes(self, entries):
