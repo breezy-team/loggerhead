@@ -636,29 +636,18 @@ class History (object):
     def get_changes_uncached(self, revid_list):
         # Because we may loop and call get_revisions multiple times (to throw
         # out dud revids), we grab the bzrlib read lock.
-        done = False
-        while not done:
+        while True:
             try:
                 rev_list = self._branch.repository.get_revisions(revid_list)
-                done = True
             except (KeyError, bzrlib.errors.NoSuchRevision), e:
                 # this sometimes happens with arch-converted branches.
                 # i don't know why. :(
                 self.log.debug('No such revision (skipping): %s', e)
                 revid_list.remove(e.revision)
-        if not revid_list:
-            return []
-        
-        delta_list = self._get_deltas_for_revisions_with_trees(rev_list)
-        combined_list = zip(rev_list, delta_list)
-        
-        changes = []
-        for rev, (new_tree, old_tree, delta) in combined_list:
-            change = self._change_from_revision(rev)
-            change.changes = self.parse_delta(delta, old_tree, new_tree)
-            changes.append(change)
-        
-        return changes
+            else:
+                break
+
+        return [self._change_from_revision(rev) for rev in rev_list]        
 
     def _get_deltas_for_revisions_with_trees(self, revisions):
         """Produce a list of revision deltas.
