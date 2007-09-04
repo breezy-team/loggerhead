@@ -499,6 +499,8 @@ table.inventory th.permissions {
     font-family: monospace;
     font-size: smaller;
     width: 5em;
+    line-height: 1em;
+    vertical-align: bottom;
 }
 
 .inventory td.revision {
@@ -509,7 +511,7 @@ table.inventory th.permissions {
 
 .inventory td.date {
     padding-right: 1em;
-    width: 10em;
+    width: 11em;
 }
 
 .inventory td.changes-link {
