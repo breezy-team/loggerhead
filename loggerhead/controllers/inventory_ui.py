@@ -56,13 +56,19 @@ class InventoryUI (object):
         if len(args) > 0:
             revid = h.fix_revid(args[0])
         else:
-            revid = None
+            revid = h.last_revid
         
-        file_id = kw.get('file_id', None)
+        try:
+            rev = h.get_revision(revid)
+            inv = h.get_inventory(revid)
+        except:
+            self.log.exception('Exception fetching changes')
+            raise InternalError('Could not fetch changes')
+
+        file_id = kw.get('file_id', inv.root.file_id)
         sort_type = kw.get('sort', None)
 
         try:
-            revid_list, revid = h.get_file_view(revid, file_id)
             rev = h.get_revision(revid)
             inv = h.get_inventory(revid)
         except:
@@ -98,7 +104,7 @@ class InventoryUI (object):
             'path': path,
             'updir': updir,
             'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, path, sort_type),
+            'filelist': h.get_filelist(inv, file_id, sort_type),
             'history': h,
             'posixpath': posixpath,
             'navigation': navigation,

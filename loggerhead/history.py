@@ -426,24 +426,22 @@ class History (object):
     @with_branch_lock
     def get_file_view(self, revid, file_id):
         """
-        Given an optional revid and optional path, return a (revlist, revid)
-        for navigation through the current scope: from the revid (or the
-        latest revision) back to the original revision.
+        Given a revid and optional path, return a (revlist, revid) for
+        navigation through the current scope: from the revid (or the latest
+        revision) back to the original revision.
         
         If file_id is None, the entire revision history is the list scope.
-        If revid is None, the latest revision is used.
         """
         if revid is None:
             revid = self._last_revid
         if file_id is not None:
-            # since revid is 'start_revid', possibly should start the path tracing from revid... FIXME
+            # since revid is 'start_revid', possibly should start the path
+            # tracing from revid... FIXME
             revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = list(self.get_revids_from(revlist, revid))
         else:
             revlist = list(self.get_revids_from(None, revid))
-        if revid is None:
-            revid = revlist[0]
-        return revlist, revid
+        return revlist
     
     @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
@@ -470,19 +468,23 @@ class History (object):
         file_id and query are never changed so aren't returned, but they may
         contain vital context for future url navigation.
         """
+        if start_revid is None:
+            start_revid = self._last_revid
+
         if query is None:
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+            revid_list = self.get_file_view(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list, start_revid = self.get_file_view(revid, file_id)
+                revid_list= self.get_file_view(revid, file_id)
+                start_revid = revid
             return revid, start_revid, revid_list
         
         # potentially limit the search
-        if (start_revid is not None) or (file_id is not None):
-            revid_list, start_revid = self.get_file_view(start_revid, file_id)
+        if file_id is not None:
+            revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
 
@@ -767,13 +769,16 @@ class History (object):
             old_lines = old_tree.get_file_lines(fid)
             new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
-            try:
-                bzrlib.diff.internal_diff(old_path, old_lines,
-                                          new_path, new_lines, buffer)
-            except bzrlib.errors.BinaryFile:
-                diff = ''
+            if old_lines != new_lines:
+                try:
+                    bzrlib.diff.internal_diff(old_path, old_lines,
+                                              new_path, new_lines, buffer)
+                except bzrlib.errors.BinaryFile:
+                    diff = ''
+                else:
+                    diff = buffer.getvalue()
             else:
-                diff = buffer.getvalue()
+                diff = ''
             out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff)))
         
         return out
@@ -858,23 +863,17 @@ class History (object):
                 m.sbs_chunks = _make_side_by_side(m.chunks)
     
     @with_branch_lock
-    def get_filelist(self, inv, path, sort_type=None):
+    def get_filelist(self, inv, file_id, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
         """
-        while path.endswith('/'):
-            path = path[:-1]
-        if path.startswith('/'):
-            path = path[1:]
-        
-        entries = inv.entries()
-        
+
+        dir_ie = inv[file_id]
+        path = inv.id2path(file_id)
         file_list = []
-        for filepath, entry in entries:
-            if posixpath.dirname(filepath) != path:
-                continue
-            filename = posixpath.basename(filepath)
+
+        for filename, entry in dir_ie.children.iteritems():
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
@@ -888,18 +887,20 @@ class History (object):
 
             change = util.Container(date=timestamp,
                                     revno=self.get_revno(revid))
-            
-            file = util.Container(filename=filename, executable=entry.executable, kind=entry.kind,
-                                  pathname=pathname, file_id=entry.file_id, size=entry.text_size, revid=revid, change=change)
+
+            file = util.Container(
+                filename=filename, executable=entry.executable, kind=entry.kind,
+                pathname=pathname, file_id=entry.file_id, size=entry.text_size,
+                revid=revid, change=change)
             file_list.append(file)
-        
-        if sort_type == 'filename':
+
+        if sort_type == 'filename' or sort_type is None:
             file_list.sort(key=lambda x: x.filename)
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
-        
+
         parity = 0
         for file in file_list:
             file.parity = parity

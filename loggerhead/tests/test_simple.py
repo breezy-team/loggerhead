@@ -89,7 +89,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
-        assert self.msg in cherrypy.response.body[0]
+        assert cgi.escape(self.msg) in cherrypy.response.body[0]
 
     def test_changes_search(self):
         testutil.create_request('/project/branch/changes?q=foo')
@@ -103,6 +103,10 @@ class TestWithSimpleTree(BasicTests):
 
     def test_inventory(self):
         testutil.create_request('/project/branch/files')
+        assert 'myfilename' in cherrypy.response.body[0]
+
+    def test_revision(self):
+        testutil.create_request('/project/branch/revision/' + self.revid)
         assert 'myfilename' in cherrypy.response.body[0]
 
 class TestWithSimpleTreeAndCache(TestWithSimpleTree):

@@ -87,11 +87,13 @@ class ChangeLogUI (object):
         # tell the template to show committer info in the "details block"
         # instead of on each line.
         all_same_author = True
-        author = changes[0].author
-        for e in changes[1:]:
-            if e.author != author:
-                all_same_author = False
-                break
+
+        if changes:
+            author = changes[0].author
+            for e in changes[1:]:
+                if e.author != author:
+                    all_same_author = False
+                    break
 
         vals = {
             'branch': self._branch,
