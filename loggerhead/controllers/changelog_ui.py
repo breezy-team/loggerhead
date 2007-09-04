@@ -39,76 +39,81 @@ class ChangeLogUI (object):
         z = time.time()
         h = self._branch.get_history()
         config = self._branch.config
-        
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = None
 
-        file_id = kw.get('file_id', None)
-        query = kw.get('q', None)
-        start_revid = h.fix_revid(kw.get('start_revid', None))
-        orig_start_revid = start_revid
-        pagesize = int(config.get('pagesize', '20'))
-        search_failed = False
-        
+        h._branch.lock_read()
         try:
-            revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
-            kw['start_revid'] = start_revid
-            util.set_context(kw)
-            
-            if (query is not None) and (len(revid_list) == 0):
-                search_failed = True
-
-            if len(revid_list) == 0:
-                scan_list = revid_list
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
             else:
-                if revid in revid_list: # XXX is this always true?
-                    i = revid_list.index(revid)
+                revid = None
+
+            file_id = kw.get('file_id', None)
+            query = kw.get('q', None)
+            start_revid = h.fix_revid(kw.get('start_revid', None))
+            orig_start_revid = start_revid
+            pagesize = int(config.get('pagesize', '20'))
+            search_failed = False
+
+            try:
+                revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+                kw['start_revid'] = start_revid
+                util.set_context(kw)
+
+                if (query is not None) and (len(revid_list) == 0):
+                    search_failed = True
+
+                if len(revid_list) == 0:
+                    scan_list = revid_list
                 else:
-                    i = None
-                scan_list = revid_list[i:]
-            change_list = scan_list[:pagesize]
-            changes = list(h.get_changes(change_list))
-        except:
-            self.log.exception('Exception fetching changes')
-            raise InternalError('Could not fetch changes')
+                    if revid in revid_list: # XXX is this always true?
+                        i = revid_list.index(revid)
+                    else:
+                        i = None
+                    scan_list = revid_list[i:]
+                change_list = scan_list[:pagesize]
+                changes = list(h.get_changes(change_list))
+                h.add_changes(changes)
+            except:
+                self.log.exception('Exception fetching changes')
+                raise InternalError('Could not fetch changes')
 
-        navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
-                                    file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
-        if query is not None:
-            navigation.query = query
-        util.fill_in_navigation(navigation)
-        
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks(changes)
-        
-        # does every change on this page have the same committer?  if so,
-        # tell the template to show committer info in the "details block"
-        # instead of on each line.
-        all_same_author = True
+            navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
+                                        file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
+            if query is not None:
+                navigation.query = query
+            util.fill_in_navigation(navigation)
 
-        if changes:
-            author = changes[0].author
-            for e in changes[1:]:
-                if e.author != author:
-                    all_same_author = False
-                    break
+            # add parent & merge-point branch-nick info, in case it's useful
+            h.get_branch_nicks(changes)
 
-        vals = {
-            'branch': self._branch,
-            'changes': changes,
-            'util': util,
-            'history': h,
-            'revid': revid,
-            'navigation': navigation,
-            'file_id': file_id,
-            'start_revid': start_revid,
-            'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
-            'query': query,
-            'search_failed': search_failed,
-            'all_same_author': all_same_author,
-        }
-        h.flush_cache()
-        self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
-        return vals
+            # does every change on this page have the same committer?  if so,
+            # tell the template to show committer info in the "details block"
+            # instead of on each line.
+            all_same_author = True
+
+            if changes:
+                author = changes[0].author
+                for e in changes[1:]:
+                    if e.author != author:
+                        all_same_author = False
+                        break
+
+            vals = {
+                'branch': self._branch,
+                'changes': changes,
+                'util': util,
+                'history': h,
+                'revid': revid,
+                'navigation': navigation,
+                'file_id': file_id,
+                'start_revid': start_revid,
+                'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
+                'query': query,
+                'search_failed': search_failed,
+                'all_same_author': all_same_author,
+            }
+            h.flush_cache()
+            self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
+            return vals
+        finally:
+            h._branch.unlock()
