@@ -3,15 +3,18 @@ import turbogears
 import turbozpt
 from turbozpt.template import zpt
 
+templatefunctions = {}
+def templatefunc(func):
+    templatefunctions[func.__name__] = func
+    return func
+
+
 _base = os.path.dirname(__file__)
 def _pt(name):
     return zpt(os.path.join(_base, 'templates', name + '.pt'))
 
-templatefunctions = {}
 
-def templatefunc(func):
-    templatefunctions[func.__name__] = func
-    return func
+templatefunctions['macros'] = _pt('master').macros
 
 @templatefunc
 def file_change_summary(url, entry, modified_file_link):

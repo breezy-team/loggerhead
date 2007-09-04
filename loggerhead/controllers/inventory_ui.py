@@ -27,7 +27,7 @@ import time
 import turbogears
 from cherrypy import InternalError, session
 
-from loggerhead import util,
+from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 
 
