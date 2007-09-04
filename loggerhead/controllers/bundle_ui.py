@@ -52,7 +52,7 @@ class BundleUI (object):
             self.log.exception('Exception fetching bundle')
             raise InternalError('Could not fetch bundle')
             
-        response.headers['Content-Type'] = 'text/plain'
+        response.headers['Content-Type'] = 'application/octet-stream'
         response.headers['Content-Length'] = len(bundle_data)
         response.body = bundle_data
         self.log.info('/bundle: %r seconds' % (time.time() - z,))
