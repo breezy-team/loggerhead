@@ -14,6 +14,11 @@
         <a href="${branch.url([ '/annotate', revid ], **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
     </span>
     
+    <span py:def="file_diff_link(revid, filename)">
+        <a href="javascript:diff_url('${branch.context_url([ '/revision', revid ]) + '#' + filename}')"
+           title="View diff for ${filename}">${filename}</a>
+    </span>
+    
     ${use_collapse_buttons()}
 
     <script type="text/javascript"> <!--
@@ -125,8 +130,7 @@ ${navbar()}
                 <tr py:if="entry.changes.modified">
                     <th class="files"> files modified: </th>
                     <td class="files"> <span py:for="item in entry.changes.modified">
-                        <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
-                        <a href="javascript:diff_url('${branch.context_url([ '/revision', entry.revid ]) + '#' + item.filename}')" class="jump">&#8594; diff</a>
+                        <span class="filename">${file_diff_link(entry.revid, item.filename)}</span>
                         <br />
                     </span> </td>
                 </tr>
