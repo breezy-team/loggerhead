@@ -24,7 +24,7 @@ import turbogears
 from cherrypy import InternalError, session
 
 from loggerhead import util
-from loggerhead import templatefunctions
+from loggerhead.templatefunctions import templatefunctions
 
 
 class ChangeLogUI (object):

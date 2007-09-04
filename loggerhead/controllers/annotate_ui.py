@@ -27,7 +27,8 @@ import time
 import turbogears
 from cherrypy import HTTPError, InternalError, session
 
-from loggerhead import util, templatefunctions
+from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 log = logging.getLogger("loggerhead.controllers")

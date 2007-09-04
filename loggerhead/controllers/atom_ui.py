@@ -20,7 +20,8 @@
 import cherrypy
 import turbogears
 
-from loggerhead import util, templatefunctions
+from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 class AtomUI (object):
