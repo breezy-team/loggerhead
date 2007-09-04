@@ -27,14 +27,23 @@
         collapseDisplay('style', 'sbs', 'none');
         document.cookie='diff=unified; path=' + path; 
     }
-    function load() {
+    function load(path) {
         sortCollapseElements();
-        if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); window.location.hash = window.location.hash; }
+        if (document.cookie.indexOf('diff=unified') >= 0) {
+            show_unified(path);
+        }
+        if (document.cookie.indexOf('stop=1') >= 0) {
+            return;
+        }
+        if (document.cookie.indexOf('diff=unified') >= 0) {
+            window.location.hash = window.location.hash;
+            document.cookie='stop=1; max-age=5; path=' + window.location.pathname;
+        } 
     }
     // --> </script>
 </head>
 
-<body onload="javascript:load()">
+<body onload="javascript:load('${branch.url('/')}')">
 
 ${navbar()}
 
