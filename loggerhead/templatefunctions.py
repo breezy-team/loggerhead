@@ -14,7 +14,7 @@ def _pt(name):
     return zpt(os.path.join(_base, 'templates', name + '.pt'))
 
 
-templatefunctions['macros'] = _pt('master').macros
+templatefunctions['macros'] = _pt('macros').macros
 
 @templatefunc
 def file_change_summary(url, entry, modified_file_link):
