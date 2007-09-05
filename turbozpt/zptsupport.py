@@ -1,10 +1,28 @@
 "TurboGears support for Zope Page Templates"
 
-from template import zpt
+import logging
+import os
 import pkg_resources
 
-import logging
+from zope.pagetemplate.pagetemplatefile import PageTemplateFile
+
 log = logging.getLogger("turbogears.zptsupport")
+
+_zpt_cache = {}
+
+def zpt(tfile):
+    tinstance = _zpt_cache.get(tfile)
+    if tinstance is None:
+        tinstance = _zpt_cache[tfile] = TGPageTemplateFile(tfile)
+    return tinstance
+
+class TGPageTemplateFile(PageTemplateFile):
+
+    def pt_getContext(self, args=(), options={}, **ignored):
+        namespace = super(TGPageTemplateFile, self).pt_getContext(
+            args, options, **ignored)
+        namespace.update(options)
+        return namespace
 
 class TurboZpt(object):
     extension = "pt"
@@ -47,4 +65,3 @@ class TurboZpt(object):
             data.update(self.get_extra_vars())
         data.update(info)
         return tinstance(**data).encode('utf-8')
-
