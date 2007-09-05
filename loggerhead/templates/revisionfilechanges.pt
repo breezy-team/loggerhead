@@ -8,14 +8,11 @@
     <td class="files"
         tal:define="filename python:added[0];
                     file_id  python:added[1]">
-      <span class="filename">
-        <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
-                           title string:Annotate ${filename}"
-           tal:content="filename">
-          filename
-        </a>
-        <br />
-      </span>
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${filename}"
+         tal:content="filename" class="filename">
+        filename
+      </a>
     </td>
   </tr>
   <tr tal:repeat="removed entry/changes/removed">
@@ -27,13 +24,11 @@
     <td class="files"
         tal:define="filename python:removed[0];
                     file_id  python:removed[1]">
-      <span class="filename">
-        <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
-                           title string:Annotate ${filename}"
-           tal:content="filename">
-          filename
-        </a>
-      </span>
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${filename}"
+         tal:content="filename" class="filename">
+        filename
+      </a>
     </td>
   </tr>
   <tr tal:repeat="renamed entry/changes/renamed">
@@ -46,19 +41,17 @@
         tal:define="old_filename python:renamed[0];
                     new_filename python:renamed[1];
                     file_id      python:renamed[2]">
-      <span class="filename">
-        <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
-                           title string:Annotate ${old_filename}"
-           tal:content="old_filename">
-          old_filename
-        </a>
-        =>
-        <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
-                           title string:Annotate ${new_filename}"
-           tal:content="new_filename">
-          new_filename
-        </a>
-      </span>
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${old_filename}"
+         tal:content="old_filename" class="filename">
+        old_filename
+      </a>
+      =>
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${new_filename}"
+         tal:content="new_filename">
+        new_filename
+      </a>
     </td>
   </tr>
   <tr tal:repeat="item entry/changes/modified" class="filename">
@@ -68,9 +61,7 @@
       </tal:block>
     </th>
     <td class="files">
-      <span class="filename">
         <tal:b content="structure python:modified_file_link(url, entry, item)" />
-      </span>
     </td>
   </tr>
 </tal:block>

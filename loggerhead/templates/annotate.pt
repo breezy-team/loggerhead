@@ -2,18 +2,10 @@
           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
   <head>
-    <title metal:fill-slot="title">
-      <tal:branch-name content="branch/friendly_name">
-        ${branch.friendly_name}
-      </tal:branch-name>
-      : contents of
-      <tal:path content="path">
-        ${path}
-      </tal:path>
-      at revision
-      <tal:revno content="change/revno">
-        ${change.revno}
-      </tal:revno>
+    <title metal:fill-slot="title"
+           tal:content="string:${branch/friendly_name} : contents of ${path}
+                        at revision ${change/revno}">
+      ${branch.friendly_name} : contents of ${path} at revision ${change.revno}
     </title>
   </head>
 

@@ -8,24 +8,24 @@
   <link rel="self" tal:attributes="href python:branch.url([''])" />
 
   <entry tal:repeat="entry changes">
-    <title>
-      <tal:r content="entry/revno" />: <tal:r content="entry/short_comment" />
+    <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
+      ${entry/revno}: ${entry/short_comment}
     </title>
     <updated>
-      <tal:r content="python:entry.date.isoformat() + 'Z'" />
+      <tal:r content="entry/date/isoformat">Z
     </updated>
-    <id>
-      <tal:r content="python:branch.url(['revision', entry.revid ])" />
+    <id tal:content="python:branch.url(['revision', entry.revid])">
+      ID
     </id>
     <author>
-      <name>
-        <tal:r content="python:util.hide_email(entry.author)" />
+      <name tal:content="python:util.hide_email(entry.author)">
+        author
       </name>
     </author>
-    <content type="text">
-      <tal:r content="entry/comment" />
+    <content type="text" tal:content="entry/comment">
+      comment
     </content>
     <link rel="alternate"
-          tal:attributes="href python:branch.url(['revision', entry.revid ])" />
+          tal:attributes="href python:branch.url(['revision', entry.revid])" />
   </entry>
 </feed>

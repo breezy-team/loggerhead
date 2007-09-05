@@ -19,33 +19,37 @@
       </td>
     </tr>
 
-    <tr tal:condition="change/merge_points">
+    <tr tal:repeat="merge_point change/merge_points">
       <th class="children">
-        merged in:
+        <tal:block condition="repeat/merge_point/start">
+          merged in:
+        </tal:block>
       </th>
       <td class="children">
-        <tal:merge-points repeat="child change/merge_points">
-          <a tal:attributes="title string:Show revision ${child/revno};
-                             href python:url(['/revision', child.revid], clear=1, start_revid=child.revid)"
-             tal:content="python:revno_with_nick(child)">
-            text
-          </a>
-          <br />
-        </tal:merge-points>
+        <a title="Show history"
+           tal:attributes="title string:Show revision ${merge_point/revno};
+                           href python:url(['/revision', merge_point.revid],
+                                           clear=1, start_revid=merge_point.revid)"
+           tal:content="python:revno_with_nick(merge_point)">
+          ${text}
+        </a>
       </td>
     </tr>
-    <tr tal:condition="python:len(change.parents) > 1">
+
+    <tr tal:repeat="parent python:change.parents[1:]">
       <th class="parents">
-        merged from:
+        <tal:block condition="repeat/parent/start">
+          merged from:
+        </tal:block>
       </th>
       <td class="parents">
-        <tal:parents repeat="parent python:change.parents[1:]">
-          <a tal:attributes="title string:Show revision ${parent/revno};
+        <a title="Show history"
+           tal:attributes="title string:Show revision ${parent/revno};
                              href python:url(['/revision', parent.revid], clear=1, start_revid=parent.revid)"
-             tal:content="python:revno_with_nick(parent)">
-            text
-          </a>
-        </tal:parents>
+           tal:content="python:revno_with_nick(parent)">
+          class="revlink">
+          ${text}
+        </a>
       </td>
     </tr>
 
@@ -60,6 +64,7 @@
         </span>
       </td>
     </tr>
+
     <tal:block condition="nocall:modified_file_link">
       <tr class="divider">
         <th>

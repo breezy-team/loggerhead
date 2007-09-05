@@ -1,14 +1,9 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
   <head>
-    <title metal:fill-slot="title">
-      <tal:branch-name content="branch/friendly_name">
-        ${branch.friendly_name}
-      </tal:branch-name>
-      : files for revision
-      <tal:revno content="change/revno">
-        ${change.revno}
-      </tal:revno>
+    <title metal:fill-slot="title"
+           tal:content="string:${branch/friendly_name} : files for revision ${change/revno}">
+      ${branch.friendly_name} : files for revision ${change.revno}
     </title>
   </head>
   <body>
