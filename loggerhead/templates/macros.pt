@@ -14,7 +14,7 @@
     <metal:block metal:define-slot="header-extras" />
   </head>
 
-  <body>
+  <body tal:attributes="onload onload|nothing">
 
     <div class="bar" tal:condition="navigation|nothing">
       <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))">
