@@ -35,7 +35,6 @@ class ChangeLogUI (object):
         self.log = branch.log
         
     @util.strip_whitespace
-    #@turbogears.expose(html='loggerhead.templates.changelog')
     @turbogears.expose(html='zpt:loggerhead.templates.changelog')
     def default(self, *args, **kw):
         z = time.time()
