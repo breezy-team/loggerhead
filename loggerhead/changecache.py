@@ -240,7 +240,7 @@ class FileChangeCache(object):
         out = []
         missing_entries = []
         missing_entry_indices = []
-        cache = self._cache()
+        cache = FakeShelf(self._changes_filename)
         for entry in entries:
             changes = cache.get(entry.revid)
             if changes is not None:
