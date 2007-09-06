@@ -85,7 +85,7 @@ class TestWithSimpleTree(BasicTests):
     def test_index(self):
         testutil.create_request('/')
         link = '<a href="/project/branch">branch</a>'
-        assert link in cherrypy.response.body[0]
+        assert link in cherrypy.response.body[0].lower()
 
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
@@ -129,7 +129,7 @@ class TestEmptyBranch(BasicTests):
     def test_index(self):
         testutil.create_request('/')
         link = '<a href="/project/branch">branch</a>'
-        assert link in cherrypy.response.body[0]
+        assert link in cherrypy.response.body[0].lower()
 
     def test_changes(self):
         testutil.create_request('/project/branch/changes')
