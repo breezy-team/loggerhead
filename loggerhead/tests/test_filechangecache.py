@@ -1,9 +1,9 @@
-from loggerhead.changecache import FileChangeCache
+"""Tests for the FileChangeCache in loggerhead.changecache."""
 
-import random
 import shutil
 import tempfile
 
+from loggerhead.changecache import FileChangeCache
 
 class MockEntry:
     def __init__(self, revid):
@@ -23,8 +23,8 @@ class MockHistory:
 
 class TestFileChangeCache(object):
 
-    # there are so i can run it with py.test and take advantage of the
-    # error reporting...
+    # setup_method and teardown_method are so i can run the tests with
+    # py.test and take advantage of the error reporting.
     def setup_method(self, meth):
         self.setUp()
 
@@ -32,64 +32,64 @@ class TestFileChangeCache(object):
         self.tearDown()
 
     def setUp(self):
-        self.cache_folder = tempfile.mkdtemp()
+        self.cache_folders = []
 
     def tearDown(self):
-        shutil.rmtree(self.cache_folder)
+        for folder in self.cache_folders:
+            shutil.rmtree(folder)
+
+
+    def makeHistoryAndEntriesForRevids(self, revids, fill_cache_with=[]):
+        cache_folder = tempfile.mkdtemp()
+        self.cache_folders.append(cache_folder)
+        self.history = MockHistory()
+        self.cache = FileChangeCache(self.history, cache_folder)
+
+        self.entries = [MockEntry(revid) for revid in revids]
+
+        self.cache.get_file_changes([entry for entry in self.entries
+                                     if entry.revid in fill_cache_with])
+        self.history.fetched_revids.clear()
+
 
     def test_empty_cache(self):
         """An empty cache passes all the revids through to the history object.
         """
-
-        history = MockHistory()
-        cache = FileChangeCache(history, self.cache_folder)
-
         revids = ['a', 'b']
-        entries = [MockEntry(revid) for revid in revids]
+        self.makeHistoryAndEntriesForRevids(revids)
 
-        result = cache.get_file_changes(entries)
+        result = self.cache.get_file_changes(self.entries)
 
-        assert result == revids
-
-        assert history.fetched_revids == set(revids)
+        assert result == self.revids
+        assert self.history.fetched_revids == set(self.revids)
 
     def test_full_cache(self):
         """A full cache passes none of the revids through to the history
         object.
         """
-
-        history = MockHistory()
-        cache = FileChangeCache(history, self.cache_folder)
-
         revids = ['a', 'b']
-        entries = [MockEntry(revid) for revid in revids]
+        self.makeHistoryAndEntriesForRevids(revids, fill_cache_with=revids)
 
-        # One call to fill the cache
-        cache.get_file_changes(entries)
-        history.fetched_revids.clear()
+        result = self.cache.get_file_changes(self.entries)
 
-        result = cache.get_file_changes(entries)
         assert result == revids
-
-        assert history.fetched_revids == set()
+        assert self.history.fetched_revids == set()
 
     def test_partial_cache(self):
         """A partially full cache passes some of the revids through to the
         history object, and preserves the ordering of the argument list.
         """
+        # To test the preservation of argument order code, we put the uncached
+        # revid at the beginning, middle and then end of the list of revids
+        # being asked for.
+        for i in range(3):
+            cached_revids = ['a', 'b']
+            revids = cached_revids[:]
+            revids.insert(i, 'uncached')
+            self.makeHistoryAndEntriesForRevids(
+                revids, fillCacheWith=cached_revids)
 
-        history = MockHistory()
-        cache = FileChangeCache(history, self.cache_folder)
+            result = self.cache.get_file_changes(self.entries)
+            assert result == revids
 
-        revids = [chr(ord('a') + i) for i in range(20)]
-        entries = [MockEntry(revid) for revid in revids]
-
-        some_entries = random.sample(entries, len(entries)/2)
-        cache.get_file_changes(some_entries)
-        history.fetched_revids.clear()
-
-        result = cache.get_file_changes(entries)
-        assert result == revids
-
-        assert history.fetched_revids \
-               == set(revids) - set([e.revid for e in some_entries])
+            assert self.history.fetched_revids == set(['uncached'])

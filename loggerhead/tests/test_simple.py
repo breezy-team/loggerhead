@@ -23,9 +23,8 @@ def test_simple():
 
 class BasicTests(object):
 
-
-    # there are so i can run it with py.test and take advantage of the
-    # error reporting...
+    # setup_method and teardown_method are so i can run the tests with
+    # py.test and take advantage of the error reporting.
     def setup_method(self, meth):
         self.setUp()
 

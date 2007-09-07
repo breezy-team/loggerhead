@@ -51,6 +51,7 @@ import bzrlib.decorators
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
+import bzrlib.revision
 import bzrlib.textfile
 import bzrlib.tsort
 import bzrlib.ui
@@ -628,7 +629,8 @@ class History (object):
         try:
             for entry in entries:
                 if not entry.parents:
-                    old_tree = self._branch.repository.revision_tree("null:")
+                    old_tree = self._branch.repository.revision_tree(
+                        bzrlib.revision.NULL_REVISION)
                 else:
                     old_tree = trees[entry.parents[0].revid]
                 tree = trees[entry.revid]
