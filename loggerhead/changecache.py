@@ -38,8 +38,7 @@ from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
-#SQLITE_INTERFACE = 'pysqlite2'
-SQLITE_INTERFACE = 'sqlite'
+SQLITE_INTERFACE = os.environ.get('SQLITE_INTERFACE', 'sqlite')
 
 if SQLITE_INTERFACE == 'pysqlite2':
     from pysqlite2 import dbapi2
@@ -48,7 +47,7 @@ elif SQLITE_INTERFACE == 'sqlite':
     import sqlite as dbapi2
     _param_marker = '%s'
 else:
-    raise AssertionError("bad sqlite interface!?")
+    raise AssertionError("bad sqlite interface %r!?"%SQLITE_INTERFACE)
 
 _select_stmt = ("select data from revisiondata where revid = ?"
                 ).replace('?', _param_marker)
