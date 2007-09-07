@@ -163,3 +163,38 @@ class ChangeCache (object):
         self.flush()
 
 
+class FileChangeCache(object):
+    def __init__(self, history, cache_path):
+        self.history = history
+
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
+
+        self._changes_filename = os.path.join(cache_path, 'filechanges')
+
+        # use a lockfile since the cache folder could be shared across
+        # different processes.
+        self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
+
+    @with_lock
+    def get_file_changes(self, entries):
+        cache = shelve.open(self._changes_filename, 'c', protocol=2)
+        try:
+            out = []
+            missing_entries = []
+            missing_entry_indices = []
+            for entry in entries:
+                changes = cache.get(entry.revid)
+                if changes is not None:
+                    out.append(changes)
+                else:
+                    missing_entries.append(entry)
+                    missing_entry_indices.append(len(out))
+                    out.append(None)
+            missing_changes = self.history.get_file_changes_uncached(missing_entries)
+            for i, entry, changes in zip(
+                missing_entry_indices, missing_entries, missing_changes):
+                cache[entry.revid] = out[i] = changes
+            return out
+        finally:
+            cache.close()
