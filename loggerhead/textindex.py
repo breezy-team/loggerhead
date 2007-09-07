@@ -19,7 +19,7 @@
 """
 indexing of the comment text of revisions, for fast searching.
 
-two separate 'shelve' files are created:
+two separate database files are created:
 
     - recorded: revid -> 1 (if the revid is indexed)
     - index: 3-letter substring -> list(revids)
@@ -28,13 +28,13 @@ two separate 'shelve' files are created:
 import logging
 import os
 import re
-import shelve
 import threading
 import time
 
 from loggerhead import util
 from loggerhead.util import decorator
 from loggerhead.lockfile import LockFile
+from loggerhead.changecache import FakeShelf
 
 # if any substring index reaches this many revids, replace the entry with
 # an ALL marker -- it's not worth an explicit index.
@@ -69,21 +69,27 @@ class TextIndex (object):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
         
-        self._recorded_filename = os.path.join(cache_path, 'textindex-recorded')
-        self._index_filename = os.path.join(cache_path, 'textindex')
+        self._recorded_filename = os.path.join(cache_path, 'textindex-recorded.sql')
+        self._index_filename = os.path.join(cache_path, 'textindex.sql')
         
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'index-lock'))
         self._closed = False
         
         self.log.info('Using search index; %d entries.', len(self))
+
+    def _index(self):
+        return FakeShelf(self._index_filename)
+
+    def _recorded(self):
+        return FakeShelf(self._recorded_filename)
     
     def _is_indexed(self, revid, recorded):
-        return recorded.get(util.to_utf8(revid), None) is not None
+        return recorded.get(util.to_utf8(revid)) is not None
         
     @with_lock
     def is_indexed(self, revid):
-        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        recorded = self._recorded()
         try:
             return self._is_indexed(revid, recorded)
         finally:
@@ -91,9 +97,9 @@ class TextIndex (object):
     
     @with_lock
     def __len__(self):
-        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        recorded = self._recorded()
         try:
-            return len(recorded)
+            return recorded.count()
         finally:
             recorded.close()
 
@@ -111,9 +117,11 @@ class TextIndex (object):
     
     @with_lock
     def full(self):
-        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
+        recorded = self._recorded()
+        last_revid = util.to_utf8(self.history.last_revid)
         try:
-            return (len(recorded) >= len(self.history.get_revision_history())) and (util.to_utf8(self.history.last_revid) in recorded)
+            return (recorded.count() >= len(self.history.get_revision_history())
+                    and recorded.get(last_revid) is not None)
         finally:
             recorded.close()
 
@@ -126,7 +134,7 @@ class TextIndex (object):
             return
         for i in xrange(len(comment) - 2):
             sub = comment[i:i + 3]
-            revid_set = index.get(sub, None)
+            orig = revid_set = index.get(sub)
             if revid_set is None:
                 revid_set = set()
             elif revid_set == ALL:
@@ -135,26 +143,29 @@ class TextIndex (object):
             revid_set.add(change.revid)
             if len(revid_set) > ALL_THRESHOLD:
                 revid_set = ALL
-            index[sub] = revid_set
-        
-        recorded[util.to_utf8(change.revid)] = True
+            if orig is not None:
+                index.update([(sub, revid_set)], commit=False)
+            else:
+                index.add([(sub, revid_set)], commit=False)
+
+        recorded.add([(util.to_utf8(change.revid), True)], commit=False)
 
     @with_lock
     def index_changes(self, revid_list):
-        recorded = shelve.open(self._recorded_filename, 'c', protocol=2)
-        index = shelve.open(self._index_filename, 'c', protocol=2)
+        recorded = self._recorded()
+        index = self._index()
         try:
             revid_list = [r for r in revid_list if not self._is_indexed(r, recorded)]
             change_list = self.history.get_changes(revid_list)
             for change in change_list:
                 self._index_change(change, recorded, index)
         finally:
-            index.close()
-            recorded.close()
+            index.close(commit=True)
+            recorded.close(commit=True)
     
     @with_lock
     def find(self, text, revid_list=None):
-        index = shelve.open(self._index_filename, 'c', protocol=2)
+        index = self._index()
         try:
             text = normalize_string(text)
             if len(text) < 3:
@@ -167,7 +178,7 @@ class TextIndex (object):
             
             for i in xrange(len(text) - 2):
                 sub = text[i:i + 3]
-                revid_set = index.get(sub, None)
+                revid_set = index.get(sub)
                 if revid_set is None:
                     # zero matches, stop here.
                     return []
