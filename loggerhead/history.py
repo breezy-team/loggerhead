@@ -131,16 +131,24 @@ def is_branch(folder):
 
 
 def clean_message(message):
-    # clean up a commit message and return it and a short (1-line) version
-    message = message.splitlines()
-    if len(message) == 1:
-        # robey-style 1-line long message
-        message = textwrap.wrap(message[0])
-    elif len(message) == 0:
-        # sometimes a commit may have NO message!
-        message = ['']
+    """Clean up a commit message and return it and a short (1-line) version.
 
-    # make short form of commit message
+    Commit messages that are long single lines are reflowed using the textwrap
+    module (Robey, the original author of this code, apparently favored this
+    style of message).
+    """
+    message = message.splitlines()
+
+    if len(message) == 1:
+        message = textwrap.wrap(message[0])
+
+    if len(message) == 0:
+        # We can end up where when (a) the commit message was empty or (b)
+        # when the message consisted entirely of whitespace, in which case
+        # textwrap.wrap() returns an empty list.
+        return [''], ''
+
+    # Make short form of commit message.
     short_message = message[0]
     if len(short_message) > 80:
         short_message = short_message[:80] + '...'
