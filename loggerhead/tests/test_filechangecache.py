@@ -60,8 +60,8 @@ class TestFileChangeCache(object):
 
         result = self.cache.get_file_changes(self.entries)
 
-        assert result == self.revids
-        assert self.history.fetched_revids == set(self.revids)
+        assert result == revids
+        assert self.history.fetched_revids == set(revids)
 
     def test_full_cache(self):
         """A full cache passes none of the revids through to the history
@@ -87,7 +87,7 @@ class TestFileChangeCache(object):
             revids = cached_revids[:]
             revids.insert(i, 'uncached')
             self.makeHistoryAndEntriesForRevids(
-                revids, fillCacheWith=cached_revids)
+                revids, fill_cache_with=cached_revids)
 
             result = self.cache.get_file_changes(self.entries)
             assert result == revids
