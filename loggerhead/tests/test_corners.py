@@ -48,6 +48,24 @@ class TestCornerCases(BasicTests):
 
         self.setUpLoggerhead()
 
-
         testutil.create_request('/project/branch/revision/'+newrevid)
         assert 'executable' in cherrypy.response.body[0]
+
+    def test_whitespace_only_commit_message(self):
+        self.createBranch()
+
+        f = open(os.path.join(self.bzrbranch, 'myfilename'), 'w')
+        try:
+            f.write("foo")
+        finally:
+            f.close()
+        self.tree.add('myfilename')
+        msg = ' '
+        self.tree.commit(message=msg)
+
+        self.setUpLoggerhead()
+
+        testutil.create_request('/project/branch/changes')
+        # It's not much of an assertion, but we only really care about
+        # "assert not crashed".
+        assert 'myfilename' in cherrypy.response.body[0]
