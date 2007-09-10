@@ -50,15 +50,16 @@ class TestCornerCases(BasicTests):
         does not break the rendering."""
         self.createBranch()
 
+        # Just a commit to have a file to change the execute bit of.
         msg = 'a very exciting commit message'
         self.addFileAndCommit('myfilename', msg)
 
+        # Make a commit that changes the execute bit of 'myfilename'.
         os.chmod(os.path.join(self.bzrbranch, 'myfilename'), 0755)
-
         newrevid = self.tree.commit(message='make something executable')
 
+        # Check that it didn't break things.
         self.setUpLoggerhead()
-
         testutil.create_request('/project/branch/revision/'+newrevid)
         assert 'executable' in cherrypy.response.body[0]
 
@@ -67,8 +68,10 @@ class TestCornerCases(BasicTests):
         """Check that an empty commit message does not break the rendering."""
         self.createBranch()
 
+        # Make a commit that has an empty message.
         self.addFileAndCommit('myfilename', '')
 
+        # Check that it didn't break things.
         self.setUpLoggerhead()
         testutil.create_request('/project/branch/changes')
         # It's not much of an assertion, but we only really care about
@@ -81,8 +84,10 @@ class TestCornerCases(BasicTests):
         rendering."""
         self.createBranch()
 
+        # Make a commit that has a whitespace only message.
         self.addFileAndCommit('myfilename', '   ')
 
+        # Check that it didn't break things.
         self.setUpLoggerhead()
         testutil.create_request('/project/branch/changes')
         # It's not much of an assertion, but we only really care about
