@@ -19,8 +19,8 @@
               file_id=getattr(navigation, 'file_id', None))}"><table><tr>
             <td><span class="buttons">
                 <!-- ! navbar buttons never change, from now on.  i decree it! -->
-                <a href="${branch.url('/changes', **util.get_context(clear=1))}"> changes </a>
-                <a href="${branch.url('/files', **util.get_context(clear=1))}"> files </a>
+                <a href="${branch.context_url('/changes', clear=1)}"> changes </a>
+                <a href="${branch.context_url('/files', clear=1)}"> files </a>
                 <span class="search"> search: <input type="text" name="q" /> </span>
             </span></td>
             <td align="right" py:if="hasattr(navigation, 'revid_list')">
@@ -34,8 +34,7 @@
                     </span>
                 	<span py:if="not navigation.prev_page_revid"> &#171; </span>
                     revision ${history.get_revno(revid)}
-                    (<span py:if="navigation.pagesize > 1">page </span>
-                    ${navigation.page_position} / ${navigation.page_count})
+                    (<span py:if="navigation.pagesize > 1">page </span>${navigation.page_position} / ${navigation.page_count})
                 	<span py:if="navigation.next_page_revid">
                     <a href="${navigation.next_page_url}" title="Next page"> &#187; </a>
                     </span>

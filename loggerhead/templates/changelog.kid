@@ -14,7 +14,22 @@
         <a href="${branch.url([ '/annotate', revid ], **util.get_context(file_id=file_id))}" title="Annotate ${filename}">${filename}</a>
     </span>
     
+    <span py:def="file_diff_link(revid, filename)">
+        <a href="javascript:diff_url('${branch.context_url([ '/revision', revid ]) + '#' + filename}')"
+           title="View diff for ${filename}">${filename}</a>
+    </span>
+    
     ${use_collapse_buttons()}
+
+    <script type="text/javascript"> <!--
+    function diff_url(url) {
+        if (document.cookie.indexOf('diff=unified') >= 0) {
+            this.location.href = url + "-u";
+        } else {
+            this.location.href = url + "-s";
+        }
+    }
+    // --> </script>
 </head>
 
 <body onload="javascript:sortCollapseElements();">
@@ -62,7 +77,7 @@ ${navbar()}
             <span py:strip="True" py:if="not all_same_author">
                 <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
             </span>
-            <td class="date"> ${entry.date.strftime('%Y-%m-%d, %H:%M')} &nbsp; (${util.ago(entry.date)}) </td>
+            <td class="date"> ${util.format_date(entry.date)} &nbsp; (${util.ago(entry.date)}) </td>
             <td class="inventory-link"> 
                 <a href="${branch.url([ '/files', entry.revid ])}"
                     title="Files at revision ${entry.revno}"> files</a>
@@ -83,9 +98,9 @@ ${navbar()}
                 <tr py:if="len(entry.parents) > 1">
                     <th class="parents"> merged from: </th>
                     <td class="parents">
-                        <span py:for="parent in entry.parents"><span py:if="parent.revid != entry.parents[0].revid">
-                            ${loglink(parent.revid, '(' + parent.revno + util.if_present(' %s', parent.branch_nick) + ')')} <br />
-                        </span></span>
+                        <span py:for="parent in entry.parents[1:]">
+                            ${loglink(parent.revid, parent.revno + util.if_present(' (%s)', parent.branch_nick))} <br />
+                        </span>
                     </td>
                 </tr>
                 <span py:strip="True" py:if="all_same_author">
@@ -115,8 +130,7 @@ ${navbar()}
                 <tr py:if="entry.changes.modified">
                     <th class="files"> files modified: </th>
                     <td class="files"> <span py:for="item in entry.changes.modified">
-                        <span class="filename">${file_link(item.filename, item.file_id, entry.revid)}</span> &nbsp;
-                        <a href="${branch.url([ '/revision', entry.revid ], **util.get_context()) + '#' + item.filename}" class="jump">&#8594; diff</a>
+                        <span class="filename">${file_diff_link(entry.revid, item.filename)}</span>
                         <br />
                     </span> </td>
                 </tr>

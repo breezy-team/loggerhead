@@ -70,9 +70,9 @@ class ChangeLogUI (object):
                     else:
                         i = None
                     scan_list = revid_list[i:]
-                entry_list = scan_list[:pagesize]
-                entries = h.get_changes(entry_list)
-                h.add_changes(entries)
+                change_list = scan_list[:pagesize]
+                changes = list(h.get_changes(change_list))
+                h.add_changes(changes)
             except:
                 self.log.exception('Exception fetching changes')
                 raise InternalError('Could not fetch changes')
@@ -83,25 +83,24 @@ class ChangeLogUI (object):
                 navigation.query = query
             util.fill_in_navigation(navigation)
 
-            entries = list(entries)
             # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks(entries)
+            h.get_branch_nicks(changes)
 
             # does every change on this page have the same committer?  if so,
             # tell the template to show committer info in the "details block"
             # instead of on each line.
             all_same_author = True
 
-            if entries:
-                author = entries[0].author
-                for e in entries[1:]:
+            if changes:
+                author = changes[0].author
+                for e in changes[1:]:
                     if e.author != author:
                         all_same_author = False
                         break
 
             vals = {
                 'branch': self._branch,
-                'changes': entries,
+                'changes': changes,
                 'util': util,
                 'history': h,
                 'revid': revid,
