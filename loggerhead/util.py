@@ -78,6 +78,25 @@ def fix_year(year):
     return year
 
 
+_g_format = '%Y-%m-%d @ %H:%M'
+
+def format_date(date):
+    if _g_format == 'fancy':
+        return fancy_format_date(date)
+    return date.strftime(_g_format)
+
+def fancy_format_date(date):
+    delta = datetime.datetime.now() - date
+    if delta.days > 300:
+        return date.strftime('%d %b %Y')
+    else:
+        return date.strftime('%d %b %H:%M')
+
+def set_date_format(format):
+    global _g_format
+    _g_format = format
+
+
 class Container (object):
     """
     Convert a dict into an object with attributes.

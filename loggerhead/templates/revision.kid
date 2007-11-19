@@ -17,24 +17,33 @@
     <span py:replace="use_collapse_buttons()"></span>
     
     <script type="text/javascript"> <!--
-    function show_sbs() {
+    function show_sbs(path) {
         collapseDisplay('style', 'sbs', 'table');
         collapseDisplay('style', 'unified', 'none');
-        document.cookie='diff=sbs';
+        document.cookie='diff=sbs; path=' + path; 
     }
-    function show_unified() {
+    function show_unified(path) {
         collapseDisplay('style', 'unified', 'table');
         collapseDisplay('style', 'sbs', 'none');
-        document.cookie='diff=unified'; 
+        document.cookie='diff=unified; path=' + path; 
     }
-    function load() {
+    function load(path) {
         sortCollapseElements();
-        if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); }
+        if (document.cookie.indexOf('diff=unified') >= 0) {
+            show_unified(path);
+        }
+        if (document.cookie.indexOf('stop=1') >= 0) {
+            return;
+        }
+        if (document.cookie.indexOf('diff=unified') >= 0) {
+            window.location.hash = window.location.hash;
+            document.cookie='stop=1; max-age=5; path=' + window.location.pathname;
+        } 
     }
     // --> </script>
 </head>
 
-<body onload="javascript:load()">
+<body onload="javascript:load('${branch.url('/')}')">
 
 ${navbar()}
 
@@ -42,32 +51,27 @@ ${navbar()}
     <span py:if="compare_revid is not None"> (compared to revision ${history.get_revno(compare_revid)}) </span>
     
     <div class="links">
-        <div> <b>&#8594;</b> <a href="${branch.url([ '/files', revid ], **util.get_context())}">
-            browse files</a> </div>
-        <div> <b>&#8594;</b> <a href="${branch.url('/changes', **util.get_context(start_revid=revid))}">
-            view branch changes</a> </div>
-        <span py:if="compare_revid is None" py:strip="True">
-            <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, 'bundle.txt' ])}">
-                view/download patch</a> </div>
-        </span>
+        <div> <b>&#8594;</b> <a href="${branch.context_url([ '/files', revid ])}">
+            browse files at revision ${change.revno} </a> </div>
+        <div> <b>&#8594;</b> <a href="${branch.context_url('/changes', start_revid=revid)}">
+            view history from revision ${change.revno} </a> </div>
         <span py:if="compare_revid is not None" py:strip="True">
             <div> <b>&#8594;</b> <a href="${branch.url([ '/bundle', revid, compare_revid, 'bundle.txt' ])}">
-                view/download patch</a> </div>
+                download bundle from ${history.get_revno(compare_revid)} to ${change.revno} </a> </div>
         </span>
-        <span py:if="(remember is not None) and (compare_revid is None)" py:strip="True">
-            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
-                **util.get_context(compare_revid=remember))}">
+        <span py:if="(remember is not None) and (compare_revid is None) and (revid != remember)" py:strip="True">
+            <div> <b>&#8594;</b> <a href="${branch.context_url([ '/revision', revid ], compare_revid=remember)}">
                 compare with revision ${history.get_revno(remember)} </a></div>
         </span>
         <span py:if="remember != revid" py:strip="True">
-            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
-                **util.get_context(remember=revid, compare_revid=None))}">
+            <div> <b>&#8594;</b> <a href="${branch.context_url([ '/revision', revid ], remember=revid, compare_revid=None)}">
                 compare with another revision </a></div>
         </span>
         <span py:if="compare_revid is not None" py:strip="True">
-            <div> <b>&#8594;</b> <a href="${branch.url([ '/revision', revid ],
-                **util.get_context(remember=None, compare_revid=None))}">
-                stop comparing to revision ${history.get_revno(compare_revid)} </a></div>
+            <div> <b>&#8594;</b> <a href="${branch.context_url([ '/revision', compare_revid ], remember=revid, compare_revid=revid)}">
+                reverse the comparison (${change.revno} to ${history.get_revno(compare_revid)})</a></div>
+            <div> <b>&#8594;</b> <a href="${branch.context_url([ '/revision', revid ], remember=None, compare_revid=None)}">
+                stop comparing with revision ${history.get_revno(compare_revid)} </a></div>
         </span>
     </div>
 </h1>
@@ -80,7 +84,7 @@ ${navbar()}
         </tr>
         <tr>
             <th class="date">date:</th>
-            <td class="date"> ${change.date.strftime('%d %b %Y %H:%M')} </td>
+            <td class="date"> ${util.format_date(change.date)} </td>
         </tr>
 
         <tr py:if="len(change.merge_points) > 0">
@@ -142,9 +146,9 @@ ${navbar()}
     <td> ${collapse_all_button('file', 'table-row')} </td>
 
     <td class="spacey">
-        <a href="javascript:show_sbs()" class="hide-all collapse-style-sbs-show" title="collapse">
+        <a href="javascript:show_sbs('${branch.url('/')}')" class="hide-all collapse-style-sbs-show" title="collapse">
             <img src="${tg.url('/static/images/nav-small-out.gif')}" width="22" height="10" class="collapse-triangle" />show side by side</a>
-        <a href="javascript:show_unified()" class="hide-all collapse-style-unified-show" title="expand">
+        <a href="javascript:show_unified('${branch.url('/')}')" class="hide-all collapse-style-unified-show" title="expand">
             <img src="${tg.url('/static/images/nav-small-in.gif')}" width="22" height="10" class="collapse-triangle" />show unified diff</a>
     </td>
     
