@@ -677,8 +677,8 @@ class History (object):
         ret = []
         self._branch.repository.lock_read()
         try:
-            for entry in entries:
-                if not entry.parents:
+            for revision in revisions:
+                if not revision.parents:
                     old_tree = self._branch.repository.revision_tree(
                         bzrlib.revision.NULL_REVISION)
                 else:
