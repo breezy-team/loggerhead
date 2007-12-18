@@ -229,11 +229,10 @@ class History (object):
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
             self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
-
         # cache merge info
         self._where_merged = {}
         for revid in self._revision_graph.keys():
-            if not revid in self._full_history:
+            if self._revision_info[revid][2] == 0:
                 continue
             for parent in self._revision_graph[revid]:
                 self._where_merged.setdefault(parent, set()).add(revid)
@@ -244,7 +243,11 @@ class History (object):
     @classmethod
     def from_folder(cls, path, name=None):
         b = bzrlib.branch.Branch.open(path)
-        return cls.from_branch(b, name)
+        b.lock_read()
+        try:
+            return cls.from_branch(b, name)
+        finally:
+            b.unlock()
 
     @with_branch_lock
     def out_of_date(self):
