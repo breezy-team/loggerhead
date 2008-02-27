@@ -253,8 +253,12 @@ class History (object):
     @with_branch_lock
     def out_of_date(self):
         # the branch may have been upgraded on disk, in which case we're stale.
+        newly_opened = bzrlib.branch.Branch.open(self._branch.base)
         if self._branch.__class__ is not \
-               bzrlib.branch.Branch.open(self._branch.base).__class__:
+               newly_opened.__class__:
+            return True
+        if self._branch.repository.__class__ is not \
+               newly_opened.repository.__class__:
             return True
         return self._branch.last_revision() != self._last_revid
 
