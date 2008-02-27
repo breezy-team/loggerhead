@@ -210,10 +210,7 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        if self._last_revid is not None:
-            self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
-        else:
-            self._revision_graph = {}
+        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
 
         if name is None:
             name = self._branch.nick
@@ -223,7 +220,11 @@ class History (object):
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
-        self._merge_sort = bzrlib.tsort.merge_sort(self._revision_graph, self._last_revid, generate_revno=True)
+        if bzrlib.revision.is_null(self._last_revid):
+            self._merge_sort = []
+        else:
+            self._merge_sort = bzrlib.tsort.merge_sort(
+                self._revision_graph, self._last_revid, generate_revno=True)
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
@@ -252,8 +253,12 @@ class History (object):
     @with_branch_lock
     def out_of_date(self):
         # the branch may have been upgraded on disk, in which case we're stale.
+        newly_opened = bzrlib.branch.Branch.open(self._branch.base)
         if self._branch.__class__ is not \
-               bzrlib.branch.Branch.open(self._branch.base).__class__:
+               newly_opened.__class__:
+            return True
+        if self._branch.repository.__class__ is not \
+               newly_opened.repository.__class__:
             return True
         return self._branch.last_revision() != self._last_revid
 
@@ -265,6 +270,10 @@ class History (object):
 
     def use_search_index(self, index):
         self._index = index
+
+    @property
+    def has_revisions(self):
+        return not bzrlib.revision.is_null(self.last_revid)
 
     @with_branch_lock
     def detach(self):
@@ -607,6 +616,10 @@ class History (object):
 
     @with_branch_lock
     def get_changes(self, revid_list):
+        """Return a list of changes objects for the given revids.
+
+        Revisions not present and NULL_REVISION will be ignored.
+        """
         if self._change_cache is None:
             changes = self.get_changes_uncached(revid_list)
         else:
@@ -648,20 +661,13 @@ class History (object):
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
-        # Because we may loop and call get_revisions multiple times (to throw
-        # out dud revids), we grab the bzrlib read lock.
-        while True:
-            try:
-                rev_list = self._branch.repository.get_revisions(revid_list)
-            except (KeyError, bzrlib.errors.NoSuchRevision), e:
-                # this sometimes happens with arch-converted branches.
-                # i don't know why. :(
-                self.log.debug('No such revision (skipping): %s', e)
-                revid_list.remove(e.revision)
-            else:
-                break
+        revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
+                            revid_list)
+        repo = self._branch.repository
+        rev_list = repo.get_revisions(
+            repo.get_graph().get_parent_map(revid_list))
 
-        return [self._change_from_revision(rev) for rev in rev_list]        
+        return [self._change_from_revision(rev) for rev in rev_list]
 
     def _get_deltas_for_revisions_with_trees(self, revisions):
         """Produce a list of revision deltas.
