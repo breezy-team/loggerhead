@@ -75,8 +75,6 @@ class ChangeLogUI (object):
                 h.add_changes(changes)
             except:
                 self.log.exception('Exception fetching changes')
-                import pdb, sys
-                pdb.post_mortem(sys.exc_traceback)
                 raise InternalError('Could not fetch changes')
 
             navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
