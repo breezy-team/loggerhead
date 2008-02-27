@@ -616,6 +616,10 @@ class History (object):
 
     @with_branch_lock
     def get_changes(self, revid_list):
+        """Return a list of changes objects for the given revids.
+
+        Revisions not present and NULL_REVISION will be ignored.
+        """
         if self._change_cache is None:
             changes = self.get_changes_uncached(revid_list)
         else:
