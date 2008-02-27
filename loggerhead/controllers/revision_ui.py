@@ -17,14 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import datetime
-import logging
-import os
-import textwrap
 import time
 
 import turbogears
-from cherrypy import InternalError, session
+from cherrypy import InternalError
 
 from loggerhead import util
 

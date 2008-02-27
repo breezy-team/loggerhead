@@ -17,18 +17,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import datetime
 import logging
 import mimetypes
-import os
-import posixpath
-import textwrap
 import time
 
 import turbogears
-from cherrypy import HTTPRedirect, response, session
-
-from loggerhead import util
+from cherrypy import HTTPRedirect, response
 
 
 log = logging.getLogger("loggerhead.controllers")

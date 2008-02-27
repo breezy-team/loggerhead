@@ -27,14 +27,9 @@
 
 
 import bisect
-import cgi
 import datetime
 import logging
-import os
-import posixpath
 import re
-import shelve
-import sys
 import textwrap
 import threading
 import time
@@ -44,15 +39,12 @@ from loggerhead import util
 from loggerhead.util import decorator
 
 import bzrlib
-import bzrlib.annotate
 import bzrlib.branch
 import bzrlib.bundle.serializer
-import bzrlib.decorators
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
 import bzrlib.revision
-import bzrlib.textfile
 import bzrlib.tsort
 import bzrlib.ui
 

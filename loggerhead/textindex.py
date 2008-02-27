@@ -25,14 +25,11 @@ two separate database files are created:
     - index: 3-letter substring -> list(revids)
 """
 
-import logging
 import os
 import re
-import threading
 import time
 
 from loggerhead import util
-from loggerhead.util import decorator
 from loggerhead.lockfile import LockFile
 from loggerhead.changecache import FakeShelf
 

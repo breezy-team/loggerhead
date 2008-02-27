@@ -29,8 +29,6 @@ import threading
 import time
 import traceback
 
-import turbogears
-
 
 log = logging.getLogger("loggerhead.controllers")
 

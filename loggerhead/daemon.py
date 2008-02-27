@@ -1,7 +1,6 @@
 # daemon code from ASPN
 
 import os
-import sys
 
 
 def daemonize(pidfile, home):

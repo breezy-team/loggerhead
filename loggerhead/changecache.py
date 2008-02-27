@@ -26,13 +26,10 @@ cached a change, it's good forever.
 """
 
 import cPickle
-import logging
 import os
-import threading
 import time
 
 from loggerhead import util
-from loggerhead.util import decorator
 from loggerhead.lockfile import LockFile
 
 
