@@ -653,20 +653,11 @@ class History (object):
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
-        # Because we may loop and call get_revisions multiple times (to throw
-        # out dud revids), we grab the bzrlib read lock.
-        while True:
-            try:
-                rev_list = self._branch.repository.get_revisions(revid_list)
-            except (KeyError, bzrlib.errors.NoSuchRevision), e:
-                # this sometimes happens with arch-converted branches.
-                # i don't know why. :(
-                self.log.debug('No such revision (skipping): %s', e)
-                revid_list.remove(e.revision)
-            else:
-                break
+        repo = self._branch.repository
+        rev_list = repo.get_revisions(
+            repo.get_graph().get_parent_map(revid_list))
 
-        return [self._change_from_revision(rev) for rev in rev_list]        
+        return [self._change_from_revision(rev) for rev in rev_list]
 
     def _get_deltas_for_revisions_with_trees(self, revisions):
         """Produce a list of revision deltas.
