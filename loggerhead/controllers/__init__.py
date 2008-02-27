@@ -20,17 +20,14 @@
 import logging
 import os
 import re
-import sys
-import time
 
 import turbogears
 from turbogears import controllers
-from cherrypy import NotFound
 from configobj import ConfigObj
 
 from loggerhead import util
 from loggerhead.branchview import BranchView
-from loggerhead.history import History, is_branch
+from loggerhead.history import is_branch
 
 log = logging.getLogger("loggerhead.controllers")
 

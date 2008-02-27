@@ -25,14 +25,11 @@ two separate database files are created:
     - index: 3-letter substring -> list(revids)
 """
 
-import logging
 import os
 import re
-import threading
 import time
 
 from loggerhead import util
-from loggerhead.util import decorator
 from loggerhead.lockfile import LockFile
 from loggerhead.changecache import FakeShelf
 
@@ -65,17 +62,17 @@ class TextIndex (object):
     def __init__(self, history, cache_path):
         self.history = history
         self.log = history.log
-        
+
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
-        
+
         self._recorded_filename = os.path.join(cache_path, 'textindex-recorded.sql')
         self._index_filename = os.path.join(cache_path, 'textindex.sql')
-        
+
         # use a lockfile since the cache folder could be shared across different processes.
         self._lock = LockFile(os.path.join(cache_path, 'index-lock'))
         self._closed = False
-        
+
         self.log.info('Using search index; %d entries.', len(self))
 
     def _index(self):
@@ -83,10 +80,10 @@ class TextIndex (object):
 
     def _recorded(self):
         return FakeShelf(self._recorded_filename)
-    
+
     def _is_indexed(self, revid, recorded):
         return recorded.get(util.to_utf8(revid)) is not None
-        
+
     @with_lock
     def is_indexed(self, revid):
         recorded = self._recorded()
@@ -94,7 +91,7 @@ class TextIndex (object):
             return self._is_indexed(revid, recorded)
         finally:
             recorded.close()
-    
+
     @with_lock
     def __len__(self):
         recorded = self._recorded()
@@ -106,15 +103,15 @@ class TextIndex (object):
     @with_lock
     def close(self):
         self._closed = True
-    
+
     @with_lock
     def closed(self):
         return self._closed
-    
+
     @with_lock
     def flush(self):
         pass
-    
+
     @with_lock
     def full(self):
         recorded = self._recorded()
@@ -162,7 +159,7 @@ class TextIndex (object):
         finally:
             index.close(commit=True)
             recorded.close(commit=True)
-    
+
     @with_lock
     def find(self, text, revid_list=None):
         index = self._index()
@@ -170,12 +167,12 @@ class TextIndex (object):
             text = normalize_string(text)
             if len(text) < 3:
                 return []
-    
+
             total_set = None
             if revid_list is not None:
                 total_set = set(revid_list)
             seen_all = False
-            
+
             for i in xrange(len(text) - 2):
                 sub = text[i:i + 3]
                 revid_set = index.get(sub)
@@ -194,7 +191,7 @@ class TextIndex (object):
                     return []
         finally:
             index.close()
-        
+
         # tricky: if seen_all is True, one of the substring indices was ALL
         # (in other words, unindexed), so our results are actually a superset
         # of the exact answer.
@@ -204,7 +201,7 @@ class TextIndex (object):
         # we DON'T care, and if one of the substrings hit ALL, there's a small
         # chance that we'll give a few false positives.
         return total_set
-    
+
     def check_rebuild(self, max_time=3600):
         """
         check if there are any un-indexed revisions, and if so, index them.
@@ -241,4 +238,3 @@ class TextIndex (object):
             time.sleep(1)
         self.log.info('Search index completed.')
         self.flush()
-
