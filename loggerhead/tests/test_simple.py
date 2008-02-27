@@ -32,7 +32,7 @@ class BasicTests(object):
         self.tearDown()
 
     def setUp(self):
-        #logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
         self.bzrbranch = None
         self.old_bzrhome = None
 

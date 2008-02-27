@@ -210,10 +210,7 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        if self._last_revid is not None:
-            self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
-        else:
-            self._revision_graph = {}
+        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
 
         if name is None:
             name = self._branch.nick
@@ -223,7 +220,11 @@ class History (object):
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
-        self._merge_sort = bzrlib.tsort.merge_sort(self._revision_graph, self._last_revid, generate_revno=True)
+        if bzrlib.revision.is_null(self._last_revid):
+            self._merge_sort = []
+        else:
+            self._merge_sort = bzrlib.tsort.merge_sort(
+                self._revision_graph, self._last_revid, generate_revno=True)
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
@@ -265,6 +266,10 @@ class History (object):
 
     def use_search_index(self, index):
         self._index = index
+
+    @property
+    def has_revisions(self):
+        return not bzrlib.revision.is_null(self.last_revid)
 
     @with_branch_lock
     def detach(self):
