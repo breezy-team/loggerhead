@@ -105,7 +105,7 @@ class Container (object):
                 setattr(self, key, value)
         for key, value in kw.iteritems():
             setattr(self, key, value)
-    
+
     def __repr__(self):
         out = '{ '
         for key, value in self.__dict__.iteritems():
@@ -160,7 +160,7 @@ def hide_email(email):
         return '%s at %s' % (username, domains[-2])
     return '%s at %s' % (username, domains[0])
 
-    
+
 def triple_factors(min_value=1):
     factors = (1, 3)
     index = 0
@@ -178,10 +178,10 @@ def scan_range(pos, max, pagesize=1):
     """
     given a position in a maximum range, return a list of negative and positive
     jump factors for an hgweb-style triple-factor geometric scan.
-    
+
     for example, with pos=20 and max=500, the range would be:
     [ -10, -3, -1, 1, 3, 10, 30, 100, 300 ]
-    
+
     i admit this is a very strange way of jumping through revisions.  i didn't
     invent it. :)
     """
@@ -289,7 +289,7 @@ def human_size(size, min_divisor=0):
         divisor = MEG
     else:
         divisor = KILO
-    
+
     dot = size % divisor
     base = size - dot
     dot = dot * 10 // divisor
@@ -297,7 +297,7 @@ def human_size(size, min_divisor=0):
     if dot >= 10:
         base += 1
         dot -= 10
-    
+
     out = str(base)
     if (base < 100) and (dot != 0):
         out += '.%d' % (dot,)
@@ -308,7 +308,7 @@ def human_size(size, min_divisor=0):
     elif divisor == GIG:
         out += 'G'
     return out
-    
+
 
 def fill_in_navigation(navigation):
     """
@@ -322,21 +322,21 @@ def fill_in_navigation(navigation):
     navigation.count = len(navigation.revid_list)
     navigation.page_position = navigation.position // navigation.pagesize + 1
     navigation.page_count = (len(navigation.revid_list) + (navigation.pagesize - 1)) // navigation.pagesize
-    
+
     def get_offset(offset):
         if (navigation.position + offset < 0) or (navigation.position + offset > navigation.count - 1):
             return None
         return navigation.revid_list[navigation.position + offset]
-    
+
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
-    
+
     params = { 'file_id': navigation.file_id }
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
     else:
         params['start_revid'] = navigation.start_revid
-        
+
     if navigation.prev_page_revid:
         navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **get_context(**params))
     if navigation.next_page_revid:
@@ -449,7 +449,7 @@ def get_context(**overrides):
     """
     return a context map that may be overriden by specific values passed in,
     but only contains keys from the list of valid context keys.
-    
+
     if 'clear' is set, only the 'remember' context value will be added, and
     all other context will be omitted.
     """

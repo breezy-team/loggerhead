@@ -104,7 +104,7 @@ class ChangeCache (object):
     def __init__(self, history, cache_path):
         self.history = history
         self.log = history.log
-        
+
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
 
@@ -127,7 +127,7 @@ class ChangeCache (object):
     def close(self):
         self.log.debug('Closing cache file.')
         self._closed = True
-    
+
     @with_lock
     def closed(self):
         return self._closed
@@ -135,7 +135,7 @@ class ChangeCache (object):
     @with_lock
     def flush(self):
         pass
-    
+
     @with_lock
     def get_changes(self, revid_list):
         """
@@ -188,7 +188,7 @@ class ChangeCache (object):
         """
         if self.closed() or self.full():
             return
-        
+
         self.log.info('Building revision cache...')
         start_time = time.time()
         last_update = time.time()

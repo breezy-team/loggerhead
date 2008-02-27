@@ -35,7 +35,7 @@ class LockFile (object):
     lock may be acquired multiple times by the same thread, as long as it's
     released an equal number of times.  unlike threading.Lock, this lock can
     be used across processes.
-    
+
     this uses os.open(O_CREAT|O_EXCL), which apparently works even on windows,
     but will not work over NFS, if anyone still uses that.  so don't put the
     cache folder on an NFS server...
@@ -50,7 +50,7 @@ class LockFile (object):
             # remove stale locks left over from a previous run
             if time.time() - os.stat(filename).st_mtime > MAX_STALE_TIME:
                 os.remove(filename)
-    
+
     @with_lock
     def _try_acquire(self):
         if self._count > 0:
@@ -63,7 +63,7 @@ class LockFile (object):
             return True
         except OSError:
             return False
-    
+
     def acquire(self):
         # try over and over, sleeping on exponential backoff with an upper limit of about 5 seconds
         pause = 0.1

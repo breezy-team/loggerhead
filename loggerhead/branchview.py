@@ -53,12 +53,12 @@ class BranchView (object):
         self._config = config
         self._project_config = project_config
         self.log = logging.getLogger('loggerhead.%s' % (name,))
-        
+
         # branch history
         self._history_lock = threading.RLock()
         self._history = None
         self._closed = False
-        
+
         self.changes = ChangeLogUI(self)
         self.revision = RevisionUI(self)
         self.files = InventoryUI(self)
@@ -66,12 +66,12 @@ class BranchView (object):
         self.download = DownloadUI(self)
         self.atom = AtomUI(self)
         self.bundle = BundleUI(self)
-        
+
         # force history object to be loaded:
         self.get_history()
-        
+
         turbogears.startup.call_on_shutdown.append(self.close)
-    
+
     @with_history_lock
     def close(self):
         # it's important that we cleanly detach the history, so the cache
@@ -80,13 +80,13 @@ class BranchView (object):
         self._history.detach()
         self._history = None
         self._closed = True
-            
+
     config = property(lambda self: self._config)
-    
+
     name = property(lambda self: self._name)
 
     group_name = property(lambda self: self._group_name)
-    
+
     def _get_friendly_name(self):
         name = self._config.get('branch_name', None)
         if name is not None:
@@ -106,9 +106,9 @@ class BranchView (object):
         # try branch-specific config?
         description = self.get_history().get_config().get_user_option('description')
         return description
-        
+
     description = property(_get_description)
-    
+
     def _get_branch_url(self):
         url = self._config.get('url', None)
         if url is not None:
@@ -120,9 +120,9 @@ class BranchView (object):
         # try branch-specific config?
         url = self.get_history().get_config().get_user_option('public_branch')
         return url
-        
+
     branch_url = property(_get_branch_url)
-    
+
     @turbogears.expose()
     def index(self):
         raise HTTPRedirect(self.url('/changes'))
@@ -152,12 +152,12 @@ class BranchView (object):
                 _history.use_file_cache(FileChangeCache(_history, cache_path))
                 _history.use_search_index(TextIndex(_history, cache_path))
         return self._history
-    
+
     def check_rebuild(self):
         h = self.get_history()
         if h is not None:
             h.check_rebuild()
-    
+
     def url(self, elements, **kw):
         "build an url relative to this branch"
         if not isinstance(elements, list):
@@ -170,7 +170,7 @@ class BranchView (object):
     def context_url(self, elements, **kw):
         "build an url relative to this branch, bringing along browsing context"
         return self.url(elements, **util.get_context(**kw))
-    
+
     def last_updated(self):
         h = self.get_history()
         change = h.get_changes([ h.last_revid ])[0]

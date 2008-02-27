@@ -36,7 +36,7 @@ def profile(f, *args, **kwds):
         for pp in _g_threadmap.values():
             pp.disable()
         threading.setprofile(None)
-    
+
     threads = {}
     for tid, pp in _g_threadmap.items():
         threads[tid] = Stats(pp.getstats(), {})
@@ -112,7 +112,7 @@ class _CallTreeFilter(object):
         self.out_file = None
 
     def output(self, out_file):
-        self.out_file = out_file        
+        self.out_file = out_file
         print >> out_file, 'events: Ticks'
         self._print_summary()
         for entry in self.data:

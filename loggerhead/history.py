@@ -465,7 +465,7 @@ class History (object):
         use the URL parameters (revid, start_revid, file_id, and query) to
         determine the revision list we're viewing (start_revid, file_id, query)
         and where we are in it (revid).
-        
+
             - if a query is given, we're viewing query results.
             - if a file_id is given, we're viewing revisions for a specific
               file.
@@ -474,9 +474,9 @@ class History (object):
 
         these may be combined to view revisions for a specific file, from
         a specific revision, with a specific search query.
-            
+
         returns a new (revid, start_revid, revid_list) where:
-        
+
             - revid: current position within the view
             - start_revid: starting revision of this view
             - revid_list: list of revision ids for this view
@@ -663,7 +663,7 @@ class History (object):
 
     def _get_deltas_for_revisions_with_trees(self, revisions):
         """Produce a list of revision deltas.
-        
+
         Note that the input is a sequence of REVISIONS, not revision_ids.
         Trees will be held in memory until the generator exits.
         Each delta is relative to the revision's lefthand predecessor.
@@ -989,4 +989,3 @@ class History (object):
         s = StringIO()
         bzrlib.bundle.serializer.write_bundle(self._branch.repository, revid, compare_revid, s)
         return s.getvalue()
-
