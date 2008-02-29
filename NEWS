@@ -23,9 +23,9 @@ What's changed in loggerhead?
     - Much dead code was removed.
 
     - Loggerhead now computes the files changed between revisions only
-      when it needs to know this, which is a fairly expensive
-      operation in Bazaar.  This massively improves performance and
-      memory usage in some situations.
+      when it needs to know this.  This is a fairly expensive
+      operation in Bazaar, and doing it less massively improves
+      performance and memory usage in some situations.
 
     - Loggerhead now takes a read lock on the branch being viewed for
       the duration of each request, which improves performance
@@ -38,12 +38,27 @@ What's changed in loggerhead?
     - The creation of History objects is much faster for large
       branches (Aaron Bentley).
 
+    - Allow the construction of URLs using revnos and file paths as
+      well as revids and fileids (bug #98826):
+
+      - For changes pages, append the newest revno to display to the
+        URL, like http://.../changes/<revno>
+
+      - For annotate pages, append the revno to display to the URL,
+        followed by the path, like http://.../annotate/<revno>/<path>
+
+      - For file listing and revision pages append the revno to
+        display to the URL, like http://.../files/<revno>
+
+      Loggerhead still generates URLs using revision and file ids for
+      the moment.
+
     - Many bugs were fixed:
 
       - Loggerhead does not escape special characters when embedding a
         revision ID in a URL (bug #88286)
 
-      - Improved robustness ines the face of ghosts.
+      - Improved robustness in the face of ghosts.
 
       - Don't crash on displaying a commit with an empty message (bug
         #86247)
@@ -56,9 +71,6 @@ What's changed in loggerhead?
 
       - Loggerhead atom feeds expose internal hostname (James
         Henstridge, bug #93585)
-
-      - Allow the construction of URLs using revnos and file paths as
-        well as revids and fileids (bug #98826)
 
       - loggerhead don't like page break character (0x0C) in text
         files (bug #113313)

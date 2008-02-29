@@ -1,9 +1,9 @@
 LOGGERHEAD
 ==========
 
-[ version 1.2 for bazaar 1.2 ]
+[ Version 1.2 for Bazaar 1.2 ]
 
-Loggerhead is a web viewer for bazaar branches.  It can be used to
+Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
 usual things.
 
@@ -47,8 +47,8 @@ to create three caches per branch when it first launches:
     - a cache of files changed in a revision
     - a text searching cache
 
-You can put the cache folder anywhere, but I find that a folder under
-the branch's .bzr/ folder is the simplest place.
+You can put the cache folder anywhere.  A folder under the branch's
+.bzr/ folder is a convenient place.
 
 The revision data cache and text searching cache will be automatically
 filled once loggerhead starts up.  The caches for a branch with 15,000
@@ -56,8 +56,8 @@ revisions take about four minutes each on a fairly fast machine, but
 mileage may vary.  Once they are built, they update every six hours or
 so but usually finish quickly (or instantly) after the initial creation.
 
-You may update the bazaar branch at any time (for example, from a cron).
-Loggerhead will notice and refresh, and bazaar uses its own branch
+You may update the Bazaar branch at any time (for example, from a cron).
+Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
 
