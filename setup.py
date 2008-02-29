@@ -15,6 +15,8 @@ setup(
     url=url,
     download_url=download_url,
     license=license,
+    maintainer="Michael Hudson",
+    maintainer_email="michael.hudson@canonical.com",
     
     install_requires = [
         "TurboGears >= 1.0b1",
