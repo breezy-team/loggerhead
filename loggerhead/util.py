@@ -75,7 +75,7 @@ def approximatedate(date):
         result += ' ago'
         return result
 
-def lp_format_date(date):
+def format_date(date):
     from elementtree import ElementTree as ET
     elem = ET.Element("span")
     elem.text = approximatedate(date)
