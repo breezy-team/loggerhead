@@ -114,7 +114,7 @@ def main():
     index_freq = config.get('cache_rebuild_frequency', 6 * 3600)
     turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root._check_rebuild)
 
-    util.set_date_format(config.get('date_format', 'fancy'))
+    #util.set_date_format(config.get('date_format', 'fancy'))
     try:
         turbogears.start_server(Root)
     finally:

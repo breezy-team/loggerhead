@@ -32,67 +32,55 @@ import traceback
 
 log = logging.getLogger("loggerhead.controllers")
 
+def day_date(value):
+    return value.strftime('%Y-%m-%d')
 
-def timespan(delta):
-    if delta.days > 730:
-        # good grief!
-        return '%d years' % (int(delta.days // 365.25),)
-    if delta.days >= 3:
-        return '%d days' % delta.days
-    seg = []
-    if delta.days > 0:
-        if delta.days == 1:
-            seg.append('1 day')
-        else:
-            seg.append('%d days' % delta.days)
-    hrs = delta.seconds // 3600
-    mins = (delta.seconds % 3600) // 60
-    if hrs > 0:
-        if hrs == 1:
-            seg.append('1 hour')
-        else:
-            seg.append('%d hours' % hrs)
-    if delta.days == 0:
-        if mins > 0:
-            if mins == 1:
-                seg.append('1 minute')
-            else:
-                seg.append('%d minutes' % mins)
-        elif hrs == 0:
-            seg.append('less than a minute')
-    return ', '.join(seg)
+def displaydate(date):
+    delta = abs(datetime.datetime.now() - date)
+    if delta > datetime.timedelta(1, 0, 0):
+        # far in the past or future, display the date
+        return 'on ' + day_date(date)
+    return approximatedate(date)
 
-
-def ago(timestamp):
-    now = datetime.datetime.now()
-    return timespan(now - timestamp) + ' ago'
-
-
-def fix_year(year):
-    if year < 70:
-        year += 2000
-    if year < 100:
-        year += 1900
-    return year
-
-
-_g_format = '%Y-%m-%d @ %H:%M'
-
-def format_date(date):
-    if _g_format == 'fancy':
-        return fancy_format_date(date)
-    return date.strftime(_g_format)
-
-def fancy_format_date(date):
+def approximatedate(date):
     delta = datetime.datetime.now() - date
-    if delta.days > 300:
-        return date.strftime('%d %b %Y')
+    if abs(delta) > datetime.timedelta(1, 0, 0):
+        # far in the past or future, display the date
+        return day_date(date)
+    future = delta < datetime.timedelta(0, 0, 0)
+    delta = abs(delta)
+    days = delta.days
+    hours = delta.seconds / 3600
+    minutes = (delta.seconds - (3600*hours)) / 60
+    seconds = delta.seconds % 60
+    result = ''
+    if future:
+        result += 'in '
+    if days != 0:
+        amount = days
+        unit = 'day'
+    elif hours != 0:
+        amount = hours
+        unit = 'hour'
+    elif minutes != 0:
+        amount = minutes
+        unit = 'minute'
     else:
-        return date.strftime('%d %b %H:%M')
+        amount = seconds
+        unit = 'second'
+    if amount != 1:
+        unit += 's'
+    result += '%s %s' % (amount, unit)
+    if not future:
+        result += ' ago'
+        return result
 
-def set_date_format(format):
-    global _g_format
-    _g_format = format
+def lp_format_date(date):
+    from elementtree import ElementTree as ET
+    elem = ET.Element("span")
+    elem.text = approximatedate(date)
+    elem.set("title", date.strftime("%Y-%m-%d %T"))
+    return elem
 
 
 class Container (object):
