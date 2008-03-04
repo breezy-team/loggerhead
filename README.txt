@@ -7,34 +7,49 @@ Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
 usual things.
 
-This is a TurboGears (http://www.turbogears.org) project.  It can be
-started by running::
+To get started, first you need to create a 'loggerhead.conf' file
+specifying the branches you want to view.  A 'loggerhead.conf.example'
+file is included in the source which has comments explaining the
+various options.
+
+Loggerhead can then be started by running::
 
     $ ./start-loggerhead.py
 
-This will run loggerhead in the background.  To stop it, run::
+This will run loggerhead in the background.  It listens on port 8080
+by default, so go to http://localhost:8080/ in your browser to see the
+list of bublished branches.
+
+To stop Loggerhead, run::
 
     $ ./stop-loggerhead.py
 
-If you're not familiar with TurboGears, the simplest way to get running
-is to add the lines like the following to your apache configuration::
+If you want to view Bazaar branches from your existing Apache
+installation, you'll need to configure Apache to proxy certain
+requests to Loggerhead.  Adding lines like this to you Apache
+configuration is one way to do this::
 
     <Location "/branches/">
         ProxyPass http://127.0.0.1:8080/
         ProxyPassReverse http://127.0.0.1:8080/
     </Location>
 
-The config file is "loggerhead.conf".  In there, you can configure
-projects, and branches per project.  The idea is that you could be
-publishing several (possibly unrelated) projects through the same
-loggerhead instance, and several branches for the same project.  A
-commented example of a configuration file is loggerhead.conf.example
+In the configuration file you can configure projects, and branches per
+project.  The idea is that you could be publishing several (possibly
+unrelated) projects through the same loggerhead instance, and several
+branches for the same project.  See the "loggerhead.conf.example" file
 included with the source.
 
-Don't bother with "dev.cfg" or any of the other TurboGears config files.
-Loggerhead overrides those values with its own.
+Although Loggerhead is a TurboGears (http://www.turbogears.org)
+project, don't bother with "dev.cfg" or any of the other TurboGears
+config files.  Loggerhead overrides those values with its own.
 
-A debug and access log are stored in the logs/ folder.
+A debug and access log are stored in the logs/ folder, relative to
+the location of the start-loggerhead.py script.
+
+You may update the Bazaar branch at any time (for example, from a cron).
+Loggerhead will notice and refresh, and Bazaar uses its own branch
+locking to prevent corruption.
 
 
 CACHES
@@ -47,8 +62,7 @@ to create three caches per branch when it first launches:
     - a cache of files changed in a revision
     - a text searching cache
 
-You can put the cache folder anywhere.  A folder under the branch's
-.bzr/ folder is a convenient place.
+You can put the cache folder anywhere.
 
 The revision data cache and text searching cache will be automatically
 filled once loggerhead starts up.  The caches for a branch with 15,000
@@ -56,13 +70,14 @@ revisions take about four minutes each on a fairly fast machine, but
 mileage may vary.  Once they are built, they update every six hours or
 so but usually finish quickly (or instantly) after the initial creation.
 
-You may update the Bazaar branch at any time (for example, from a cron).
-Loggerhead will notice and refresh, and Bazaar uses its own branch
-locking to prevent corruption.
-
 
 SUPPORT
 -------
 
-This is loosely based on bazaar-webserve, which was loosely based on hgweb.
-Discussion should take place on the bazaar-dev mailing list.
+Loggerhead is loosely based on bazaar-webserve, which was loosely
+based on hgweb.  Discussion should take place on the bazaar-dev
+mailing list at bazaar@lists.canonical.com.  You can join the list at
+<https://lists.ubuntu.com/mailman/listinfo/bazaar>.  You don't need to
+subscribe to post, but your first post will be held briefly for manual
+moderation.
+
