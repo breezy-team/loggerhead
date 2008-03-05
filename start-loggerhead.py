@@ -12,7 +12,7 @@ import turbogears
 import cherrypy
 cherrypy.lowercase_api = True
 
-from loggerhead import daemon, release, util
+from loggerhead import daemon, release
 
 
 def make_handler(config, filename):
@@ -114,7 +114,6 @@ def main():
     index_freq = config.get('cache_rebuild_frequency', 6 * 3600)
     turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root._check_rebuild)
 
-    #util.set_date_format(config.get('date_format', 'fancy'))
     try:
         turbogears.start_server(Root)
     finally:
