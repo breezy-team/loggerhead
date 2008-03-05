@@ -656,8 +656,9 @@ class History (object):
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
                             revid_list)
         repo = self._branch.repository
-        rev_list = repo.get_revisions(
-            repo.get_graph().get_parent_map(revid_list))
+        parent_map = repo.get_graph().get_parent_map(revid_list)
+        present_revids = filter(lambda revid:revid in parent_map, revid_list)
+        rev_list = repo.get_revisions(present_revids)
 
         return [self._change_from_revision(rev) for rev in rev_list]
 
