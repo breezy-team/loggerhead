@@ -1,6 +1,12 @@
 What's changed in loggerhead?
 =============================
 
+1.2.1  [06mar2008]
+------------------
+
+    - The changelog view was out of order when not using the revision
+      cache.
+
 1.2  [04mar2008]
 ----------------
 
