@@ -86,7 +86,7 @@ def main():
     
     turbogears.update_config(configfile="dev.cfg", modulename="loggerhead.config")
     
-    potential_overrides = [ ('server.socket_port', int), ('server.webpath', str), ('server.thread_pool', int) ]
+    potential_overrides = [ ('server.socket_port', int), ('server.webpath', str), ('server.thread_pool', int), ('server.socket_host' ,str) ]
     for key, keytype in potential_overrides:
         value = config.get(key, None)
         if value is not None:
