@@ -1,6 +1,6 @@
 # Release information about loggerhead
 
-version = "1.2"
+version = "1.2.1"
 
 description = "Loggerhead is a web viewer for projects in bazaar."
 
