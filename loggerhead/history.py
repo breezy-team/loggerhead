@@ -656,8 +656,12 @@ class History (object):
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
                             revid_list)
         repo = self._branch.repository
-        rev_list = repo.get_revisions(
-            repo.get_graph().get_parent_map(revid_list))
+        parent_map = repo.get_graph().get_parent_map(revid_list)
+        # We need to return the answer in the same order as the input,
+        # less any ghosts.
+        present_revids = [revid for revid in revid_list
+                          if revid in parent_map]
+        rev_list = repo.get_revisions(present_revids)
 
         return [self._change_from_revision(rev) for rev in rev_list]
 
