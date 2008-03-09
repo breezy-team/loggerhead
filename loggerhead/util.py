@@ -17,6 +17,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from elementtree import ElementTree as ET
+
 import base64
 import cgi
 import datetime
@@ -32,21 +34,38 @@ import traceback
 
 log = logging.getLogger("loggerhead.controllers")
 
-def day_date(value):
+# Display of times.
+
+# date_day -- just the day
+# date_time -- full date with time
+#
+# displaydate -- for use in sentences
+# approximatedate -- for use in tables
+#
+# displaydate and approximatedate return an elementtree <span> Element
+# with the full date in a tooltip.
+
+def date_day(value):
     return value.strftime('%Y-%m-%d')
 
-def displaydate(date):
+
+def date_time(value):
+    return value.strftime('%Y-%m-%d %T')
+
+
+def _displaydate(date):
     delta = abs(datetime.datetime.now() - date)
     if delta > datetime.timedelta(1, 0, 0):
         # far in the past or future, display the date
-        return 'on ' + day_date(date)
-    return approximatedate(date)
+        return 'on ' + date_day(date)
+    return _approximatedate(date)
 
-def approximatedate(date):
+
+def _approximatedate(date):
     delta = datetime.datetime.now() - date
     if abs(delta) > datetime.timedelta(1, 0, 0):
         # far in the past or future, display the date
-        return day_date(date)
+        return date_day(date)
     future = delta < datetime.timedelta(0, 0, 0)
     delta = abs(delta)
     days = delta.days
@@ -75,12 +94,20 @@ def approximatedate(date):
         result += ' ago'
         return result
 
-def format_date(date):
-    from elementtree import ElementTree as ET
+
+def _wrap_with_date_time_title(date, formatted_date):
     elem = ET.Element("span")
-    elem.text = approximatedate(date)
-    elem.set("title", date.strftime("%Y-%m-%d %T"))
+    elem.text = formatted_date
+    elem.set("title", date_time(date))
     return elem
+
+
+def approximatedate(date):
+    return _wrap_with_date_time_title(date, _approximatedate(date))
+
+
+def displaydate(date):
+    return _wrap_with_date_time_title(date, _displaydate(date))
 
 
 class Container (object):

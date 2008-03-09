@@ -28,7 +28,7 @@ ${navbar()}
         </tr>
         <tr>
             <th class="date">date:</th>
-            <td class="date"> ${util.format_date(change.date)} </td>
+            <td class="date"> ${util.date_time(change.date)} </td>
         </tr>
 
         <tr py:if="len(change.merge_points) > 0">
@@ -86,7 +86,7 @@ ${navbar()}
                 file_id=file.file_id)}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
         <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
-        <td class="date"> ${util.format_date(file.change.date)} </td>
+        <td class="date"> ${util.date_time(file.change.date)} </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="changes-link"> 
             <a href="${branch.context_url('/changes', start_revid=file.revid, file_id=file.file_id)}"

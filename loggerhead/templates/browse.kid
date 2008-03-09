@@ -34,7 +34,7 @@
             <tr>
             <td class="name"> <a href="${tg.url([ '/' + project.name, view.name ])}">${view.friendly_name}</a> </td>
             <td class="description"> ${view.description} </td>
-            <td class="last-update"> ${view.get_history().has_revisions and util.format_date(view.last_updated()) or "(no revisions)"} </td>
+            <td class="last-update"> ${view.get_history().has_revisions and util.approximatedate(view.last_updated()) or "(no revisions)"} </td>
             <td class="feed">
                 <a href="${tg.url([ '/' + project.name, view.name, 'atom' ])}" title="atom feed">
                     <img src="${tg.url('/static/images/feed-icon-16x16.gif')}" alt="atom feed" />

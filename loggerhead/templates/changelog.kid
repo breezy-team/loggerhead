@@ -77,7 +77,7 @@ ${navbar()}
             <span py:strip="True" py:if="not all_same_author">
                 <td class="author"> ${util.trunc(util.hide_email(entry.author), 20)} </td>
             </span>
-            <td class="date"> ${util.format_date(entry.date)} </td>
+            <td class="date"> ${util.approximatedate(entry.date)} </td>
             <td class="inventory-link"> 
                 <a href="${branch.url([ '/files', entry.revid ])}"
                     title="Files at revision ${entry.revno}"> files</a>
