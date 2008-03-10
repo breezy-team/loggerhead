@@ -47,20 +47,22 @@ class RevisionUI (object):
             else:
                 revid = None
 
-            file_id = kw.get('file_id', None)
+            filter_file_id = kw.get('filter_file_id', None)
             start_revid = h.fix_revid(kw.get('start_revid', None))
             query = kw.get('q', None)
             remember = kw.get('remember', None)
             compare_revid = kw.get('compare_revid', None)
 
             try:
-                revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+                revid, start_revid, revid_list = h.get_view(revid, start_revid, filter_file_id, query)
             except:
                 self.log.exception('Exception fetching changes')
                 raise InternalError('Could not fetch changes')
 
-            navigation = util.Container(revid_list=revid_list, revid=revid, start_revid=start_revid, file_id=file_id,
-                                        pagesize=1, scan_url='/revision', branch=self._branch, feed=True)
+            navigation = util.Container(
+                revid_list=revid_list, revid=revid, start_revid=start_revid,
+                filter_file_id=filter_file_id, pagesize=1,
+                scan_url='/revision', branch=self._branch, feed=True)
             if query is not None:
                 navigation.query = query
             util.fill_in_navigation(navigation)
@@ -79,7 +81,7 @@ class RevisionUI (object):
                 'revid': revid,
                 'change': change,
                 'start_revid': start_revid,
-                'file_id': file_id,
+                'filter_file_id': filter_file_id,
                 'util': util,
                 'history': h,
                 'navigation': navigation,

@@ -85,12 +85,12 @@ ${navbar()}
             <a py:if="file.kind=='file'" href="${branch.context_url([ '/annotate', revid ],
                 file_id=file.file_id)}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
-        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
+        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, filter_file_id=file.file_id))} </td>
         <td class="date"> ${util.date_time(file.change.date)} </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="changes-link"> 
-            <a href="${branch.context_url('/changes', start_revid=file.revid, file_id=file.file_id)}"
-               title="Changes affecting ${file.filename} up to revision ${file.change.revno}"> changes </a>
+            <a href="${branch.context_url('/changes', start_revid=start_revid, file_id=file.file_id)}"
+               title="Changes affecting ${file.filename}"> changes </a>
         </td>
         <td class="download-link">
             <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"

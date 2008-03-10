@@ -37,7 +37,7 @@
 ${navbar()}
 
 <h1> <span class="branch-name">${branch.friendly_name}</span> : changes
-<span py:if="file_id"> to <span class="filename">${history.get_path(revid, file_id)}</span></span>
+<span py:if="filter_file_id"> to <span class="filename">${history.get_path(revid, filter_file_id)}</span></span>
 <span py:if="viewing_from"> from ${history.get_revno(start_revid)} </span>
 <span py:if="query"> matching "${query}"</span>
 </h1>

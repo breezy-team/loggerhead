@@ -308,17 +308,28 @@ class History (object):
     def get_revision_history(self):
         return self._full_history
 
-    def get_revids_from(self, revid_list, revid):
+    def get_revids_from(self, revid_list, start_revid):
         """
-        given a list of revision ids, yield revisions in graph order,
-        starting from revid.  the list can be None if you just want to travel
-        across all revisions.
+        Yield the mainline (wrt start_revid) revisions that merged each
+        revid in revid_list.
         """
-        while True:
-            if (revid_list is None) or (revid in revid_list):
-                yield revid
-            if not self._revision_graph.has_key(revid):
+        if revid_list is None:
+            revid_list = self._full_history
+        revid_set = set(revid_list)
+        revid = start_revid
+        def introduced_revisions(revid):
+            r = set([revid])
+            seq, revid, md, revno, end_of_merge = self._revision_info[revid]
+            i = seq + 1
+            while i < len(self._merge_sort) and self._merge_sort[i][2] > md:
+                r.add(self._merge_sort[i][1])
+                i += 1
+            return r
+        while 1:
+            if bzrlib.revision.is_null(revid):
                 return
+            if introduced_revisions(revid) & revid_set:
+                yield revid
             parents = self._revision_graph[revid]
             if len(parents) == 0:
                 return

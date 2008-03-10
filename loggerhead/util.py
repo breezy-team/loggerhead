@@ -346,7 +346,7 @@ def fill_in_navigation(navigation):
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
 
-    params = { 'file_id': navigation.file_id }
+    params = { 'filter_file_id': navigation.filter_file_id }
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
     else:
@@ -434,9 +434,11 @@ def lsprof(f):
 #         current location along the navigation path (while browsing)
 #     - starting revid (start_revid)
 #         the current beginning of navigation (navigation continues back to
-#         the original revision) -- this may not be along the primary revision
-#         path since the user may have navigated into a branch
+#         the original revision) -- this defines an 'alternate mainline'
+#         when the user navigates into a branch.
 #     - file_id
+#         the file being looked at
+#     - filter_file_id
 #         if navigating the revisions that touched a file
 #     - q (query)
 #         if navigating the revisions that matched a search query
@@ -453,7 +455,8 @@ def lsprof(f):
 #         for re-ordering an existing page by different sort
 
 t_context = threading.local()
-_valid = ('start_revid', 'file_id', 'q', 'remember', 'compare_revid', 'sort')
+_valid = ('start_revid', 'file_id', 'filter_file_id', 'q', 'remember',
+          'compare_revid', 'sort')
 
 
 def set_context(map):
