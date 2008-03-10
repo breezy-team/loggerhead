@@ -64,6 +64,7 @@ class InventoryUI (object):
                 raise InternalError('Could not fetch changes')
 
             file_id = kw.get('file_id', inv.root.file_id)
+            start_revid = kw.get('start_revid', None)
             sort_type = kw.get('sort', None)
 
             # no navbar for revisions
@@ -99,6 +100,7 @@ class InventoryUI (object):
                 'history': h,
                 'posixpath': posixpath,
                 'navigation': navigation,
+                'start_revid': start_revid,
             }
             h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
