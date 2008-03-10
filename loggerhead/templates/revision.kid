@@ -84,7 +84,7 @@ ${navbar()}
         </tr>
         <tr>
             <th class="date">date:</th>
-            <td class="date"> ${util.format_date(change.date)} </td>
+            <td class="date"> ${util.date_time(change.date)} </td>
         </tr>
 
         <tr py:if="len(change.merge_points) > 0">
