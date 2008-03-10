@@ -326,6 +326,8 @@ class History (object):
                 i += 1
             return r
         while 1:
+            if bzrlib.revision.is_null(revid):
+                return
             if introduced_revisions(revid) & revid_set:
                 yield revid
             parents = self._revision_graph[revid]
