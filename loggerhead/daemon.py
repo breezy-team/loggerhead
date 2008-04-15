@@ -38,20 +38,18 @@ def daemonize(pidfile, home):
     if (maxfd == resource.RLIM_INFINITY):
         maxfd = MAXFD
 
-    # Iterate through and close all file descriptors.
-    for fd in range(0, maxfd):
+    fd = os.open(REDIRECT_TO, os.O_RDONLY)
+    os.dup2(fd, 0)
+    fd = os.open(REDIRECT_TO, os.O_WRONLY)
+    os.dup2(fd, 1)
+    os.dup2(fd, 2)
+
+    # Iterate through and close all other file descriptors.
+    for fd in range(3, maxfd):
         try:
             os.close(fd)
         except OSError:        # ERROR, fd wasn't open to begin with (ignored)
             pass
-
-    # This call to open is guaranteed to return the lowest file descriptor,
-    # which will be 0 (stdin), since it was closed above.
-    os.open(REDIRECT_TO, os.O_RDWR)    # standard input (0)
-
-    # Duplicate standard input to standard output and standard error.
-    os.dup2(0, 1)                      # standard output (1)
-    os.dup2(0, 2)                      # standard error (2)
 
     f = open(pidfile, 'w')
     f.write('%d\n' % (os.getpid(),))
