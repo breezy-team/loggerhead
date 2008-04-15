@@ -505,7 +505,7 @@ class History (object):
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list= self.get_file_view(revid, file_id)
+                revid_list = self.get_file_view(revid, file_id)
                 start_revid = revid
             return revid, start_revid, revid_list
 
