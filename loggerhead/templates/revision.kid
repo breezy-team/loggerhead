@@ -141,6 +141,12 @@ ${navbar()}
     </table>
 </div>
 
+<div py:if="change.changes.modified and line_count &gt;= 3000" py:strip="True">
+  Diff of ${line_count} lines is too long to display -- limit is 3000 lines.
+</div>
+
+<div py:if="change.changes.modified and line_count &lt;= 3000" py:strip="True">
+
 <table class="diff-option-buttons">
 <tr>
     <td> ${collapse_all_button('file', 'table-row')} </td>
@@ -162,7 +168,7 @@ ${navbar()}
 <!-- ! i'm not a big fan of embedding python code here, but the alternatives all seem to be worse -->
 <?python uniqs={}; ?>
 
-<div class="diff" py:if="change.changes.modified">
+<div class="diff" py:if="change.changes.modified and line_count &lt;= 3000">
     <!-- ! side-by-side diff -->
     <table class="diff-block collapse-style-sbs-content">
         <span py:strip="True" py:for="item in change.changes.modified">
@@ -236,6 +242,7 @@ ${navbar()}
         </td>
 	</tr>
     </table>
+</div>
 </div>
 
 </body>
