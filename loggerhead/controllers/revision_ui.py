@@ -96,6 +96,8 @@ class RevisionUI (object):
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
                 'line_count': line_count,
+                'line_count_limit': 3000,
+                'show_plain_diffs': line_count > 3000,
             }
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))

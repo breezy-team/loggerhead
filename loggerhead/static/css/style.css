@@ -450,6 +450,12 @@ div.links div {
     background-color: #dee7ec;
 }*/
 
+pre.diff-plain {
+    border: 1px solid #8cacbb;
+    background-color: #f4f5f8;
+    padding: 1em;
+    font-size: smaller;
+}
 
 /* ----- file inventory ----- */
 
