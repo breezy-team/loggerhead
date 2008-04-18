@@ -71,13 +71,12 @@ class RevisionUI (object):
             # add parent & merge-point branch-nick info, in case it's useful
             h.get_branch_nicks([ change ])
 
-            line_count_limit = self._branch.get_config_item(
-                'line_count_limit', 3000)
+            line_count_limit = int(self._branch.get_config_item(
+                'line_count_limit', 3000))
             line_count = 0
             for file in change.changes.modified:
                 for chunk in file.chunks:
                     line_count += len(chunk.diff)
-            self.log.info("line_count %d", line_count)
 
             # let's make side-by-side diff be the default
             side_by_side = not kw.get('unified', False)
