@@ -45,13 +45,15 @@ with_history_lock = util.with_lock('_history_lock', 'History')
 
 
 class BranchView (object):
-    def __init__(self, group_name, name, subfolder, absfolder, config, project_config):
+    def __init__(self, group_name, name, subfolder, absfolder, config,
+                 project_config, root_config):
         self._group_name = group_name
         self._name = name
         self._folder = subfolder
         self._absfolder = absfolder
         self._config = config
         self._project_config = project_config
+        self._root_config = root_config
         self.log = logging.getLogger('loggerhead.%s' % (name,))
 
         # branch history
@@ -126,6 +128,12 @@ class BranchView (object):
     @turbogears.expose()
     def index(self):
         raise HTTPRedirect(self.url('/changes'))
+
+    def get_config_item(self, item, default=None):
+        for conf in self._config, self._project_config, self._root_config:
+            if item in conf:
+                return conf[item]
+        return default
 
     @with_history_lock
     def get_history(self):

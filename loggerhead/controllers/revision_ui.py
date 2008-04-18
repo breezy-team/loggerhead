@@ -71,6 +71,8 @@ class RevisionUI (object):
             # add parent & merge-point branch-nick info, in case it's useful
             h.get_branch_nicks([ change ])
 
+            line_count_limit = self._branch.get_config_item(
+                'line_count_limit', 3000)
             line_count = 0
             for file in change.changes.modified:
                 for chunk in file.chunks:
@@ -96,8 +98,8 @@ class RevisionUI (object):
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
                 'line_count': line_count,
-                'line_count_limit': 3000,
-                'show_plain_diffs': line_count > 3000,
+                'line_count_limit': line_count_limit,
+                'show_plain_diffs': line_count > line_count_limit,
             }
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
