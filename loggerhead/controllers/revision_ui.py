@@ -25,6 +25,9 @@ from cherrypy import InternalError
 from loggerhead import util
 
 
+DEFAULT_LINE_COUNT_LIMIT = 3000
+
+
 class RevisionUI (object):
 
     def __init__(self, branch):
@@ -72,7 +75,7 @@ class RevisionUI (object):
             h.get_branch_nicks([ change ])
 
             line_count_limit = int(self._branch.get_config_item(
-                'line_count_limit', 3000))
+                'line_count_limit', DEFAULT_LINE_COUNT_LIMIT))
             line_count = 0
             for file in change.changes.modified:
                 for chunk in file.chunks:
