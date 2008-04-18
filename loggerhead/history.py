@@ -816,7 +816,7 @@ class History (object):
                     diff = buffer.getvalue()
             else:
                 diff = ''
-            out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff)))
+            out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff), raw_diff=diff))
 
         return out
 

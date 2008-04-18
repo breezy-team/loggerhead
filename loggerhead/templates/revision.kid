@@ -130,16 +130,35 @@ ${navbar()}
         <tr py:if="change.changes.modified">
             <th class="files"> files modified: </th>
             <td class="files">
+              <span py:if="not show_plain_diffs" py:strip="True">
                 <span py:for="item in change.changes.modified" class="collapse-style-sbs-content">
                     <a href="#${item.filename}-s" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
                 </span>
                 <span py:for="item in change.changes.modified" class="collapse-style-unified-content">
                     <a href="#${item.filename}-u" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
                 </span>
+              </span>
+              <span py:if="show_plain_diffs" py:strip="True">
+                <span py:for="item in change.changes.modified" py:strip="True">
+                    <a href="#${item.filename}" class="filename" title="Jump to ${item.filename} below">${item.filename}</a><br />
+                </span>
+              </span>
             </td>
         </tr>
     </table>
 </div>
+
+<div py:if="show_plain_diffs" py:strip="True">
+  Diff of ${line_count} lines is too long to display richly -- limit is ${line_count_limit} lines.
+
+  <pre class="diff-plain">
+    <span py:strip="True" py:for="item in change.changes.modified">
+      <a name="${item.filename}" />${item.raw_diff}
+    </span>
+  </pre>
+</div>
+
+<div py:if="change.changes.modified and not show_plain_diffs" py:strip="True">
 
 <table class="diff-option-buttons">
 <tr>
@@ -162,7 +181,7 @@ ${navbar()}
 <!-- ! i'm not a big fan of embedding python code here, but the alternatives all seem to be worse -->
 <?python uniqs={}; ?>
 
-<div class="diff" py:if="change.changes.modified">
+<div class="diff">
     <!-- ! side-by-side diff -->
     <table class="diff-block collapse-style-sbs-content">
         <span py:strip="True" py:for="item in change.changes.modified">
@@ -236,6 +255,7 @@ ${navbar()}
         </td>
 	</tr>
     </table>
+</div>
 </div>
 
 </body>

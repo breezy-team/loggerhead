@@ -40,12 +40,13 @@ def cherrypy_friendly(s):
 
 
 class Project (object):
-    def __init__(self, name, config):
+    def __init__(self, name, config, root_config):
         self.name = name
         self.friendly_name = config.get('name', name)
         self.description = config.get('description', '')
         self.long_description = config.get('long_description', '')
         self._config = config
+        self._root_config = root_config
         
         self._views = []
         for view_name in config.sections:
@@ -83,7 +84,9 @@ class Project (object):
         
     def _add_view(self, view_name, view_config, folder):
         c_view_name = cherrypy_friendly(view_name)
-        view = BranchView(self.name, c_view_name, view_name, folder, view_config, self._config)
+        view = BranchView(
+            self.name, c_view_name, view_name, folder, view_config,
+            self._config, self._root_config)
         self._views.append(view)
         setattr(self, c_view_name, view)
         
@@ -96,7 +99,8 @@ class Root (controllers.RootController):
         self._config = config
         for project_name in self._config.sections:
             c_project_name = cherrypy_friendly(project_name)
-            project = Project(c_project_name, self._config[project_name])
+            project = Project(
+                c_project_name, self._config[project_name], self._config)
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
