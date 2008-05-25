@@ -47,7 +47,7 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
+from bzrlib import log
 
 with_branch_lock = util.with_lock('_lock', 'branch')
 
@@ -202,13 +202,19 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
-
+        #self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
+        mainline_revs, rev_nos, start_rev_id, end_rev_id = \
+                log._get_mainline_revs(branch, 1, None)
+        graph = branch.repository.get_graph()
+        parent_map = dict(((key, value) for key, value in
+             graph.iter_ancestry(mainline_revs[1:]) if value is not None))
+        self._revision_graph = log._strip_NULL_ghosts(parent_map)
+        
         if name is None:
             name = self._branch.nick
         self._name = name
         self.log = logging.getLogger('loggerhead.%s' % (name,))
-
+        
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
@@ -216,7 +222,8 @@ class History (object):
             self._merge_sort = []
         else:
             self._merge_sort = bzrlib.tsort.merge_sort(
-                self._revision_graph, self._last_revid, generate_revno=True)
+                self._revision_graph, self._last_revid, None, generate_revno=True)
+
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
@@ -224,6 +231,7 @@ class History (object):
             self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
         # cache merge info
         self._where_merged = {}
+        
         for revid in self._revision_graph.keys():
             if self._revision_info[revid][2] == 0:
                 continue
