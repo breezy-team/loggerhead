@@ -962,13 +962,9 @@ class History (object):
 
         file_revid = self.get_inventory(revid)[file_id].revision
         oldvalues = None
-
-        # because we cache revision metadata ourselves, it's actually much
-        # faster to call 'annotate_iter' on the weave directly than it is to
-        # ask bzrlib to annotate for us.
         tree = self._branch.repository.revision_tree(file_revid)
-
         revid_set = set()
+
         for line_revid, text in tree.annotate_iter(file_id):
             revid_set.add(line_revid)
             if self._BADCHARS_RE.match(text):
