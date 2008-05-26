@@ -202,19 +202,17 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        #self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
-        mainline_revs, rev_nos, start_rev_id, end_rev_id = \
-                log._get_mainline_revs(branch, 1, None)
-        graph = branch.repository.get_graph()
-        parent_map = dict(((key, value) for key, value in
-             graph.iter_ancestry(mainline_revs[1:]) if value is not None))
-        self._revision_graph = log._strip_NULL_ghosts(parent_map)
         
         if name is None:
             name = self._branch.nick
         self._name = name
         self.log = logging.getLogger('loggerhead.%s' % (name,))
-        
+
+        graph = branch.repository.get_graph()
+        parent_map = dict(((key, value) for key, value in
+             graph.iter_ancestry([self._last_revid]) if value is not None))
+        OB
+        self._revision_graph = log._strip_NULL_ghosts(parent_map) 
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
