@@ -966,10 +966,10 @@ class History (object):
         # because we cache revision metadata ourselves, it's actually much
         # faster to call 'annotate_iter' on the weave directly than it is to
         # ask bzrlib to annotate for us.
-        w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
+        tree = self._branch.repository.revision_tree(file_revid)
 
         revid_set = set()
-        for line_revid, text in w.annotate_iter(file_revid):
+        for line_revid, text in tree.annotate_iter(file_id):
             revid_set.add(line_revid)
             if self._BADCHARS_RE.match(text):
                 # bail out; this isn't displayable text
@@ -977,10 +977,11 @@ class History (object):
                                      text='(This is a binary file.)',
                                      change=util.Container())
                 return
-        change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
+        change_cache = dict([(c.revid, c) \
+                for c in self.get_changes(list(revid_set))])
 
         last_line_revid = None
-        for line_revid, text in w.annotate_iter(file_revid):
+        for line_revid, text in tree.annotate_iter(file_id):
             if line_revid == last_line_revid:
                 # remember which lines have a new revno and which don't
                 status = 'same'
