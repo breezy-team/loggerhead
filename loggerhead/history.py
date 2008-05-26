@@ -211,7 +211,7 @@ class History (object):
         graph = branch.repository.get_graph()
         parent_map = dict(((key, value) for key, value in
              graph.iter_ancestry([self._last_revid]) if value is not None))
-        OB
+        
         self._revision_graph = log._strip_NULL_ghosts(parent_map) 
         self._full_history = []
         self._revision_info = {}
