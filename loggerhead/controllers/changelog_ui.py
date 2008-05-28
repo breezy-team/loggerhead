@@ -17,11 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import os
 import time
 
 import turbogears
-from cherrypy import InternalError, session
+from cherrypy import InternalError
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
@@ -48,7 +47,7 @@ class ChangeLogUI (object):
             else:
                 revid = None
 
-            file_id = kw.get('file_id', None)
+            filter_file_id = kw.get('filter_file_id', None)
             query = kw.get('q', None)
             start_revid = h.fix_revid(kw.get('start_revid', None))
             orig_start_revid = start_revid
@@ -56,7 +55,8 @@ class ChangeLogUI (object):
             search_failed = False
 
             try:
-                revid, start_revid, revid_list = h.get_view(revid, start_revid, file_id, query)
+                revid, start_revid, revid_list = h.get_view(
+                    revid, start_revid, filter_file_id, query)
                 kw['start_revid'] = start_revid
                 util.set_context(kw)
 
@@ -71,31 +71,32 @@ class ChangeLogUI (object):
                     else:
                         i = None
                     scan_list = revid_list[i:]
-                entry_list = scan_list[:pagesize]
-                entries = h.get_changes(entry_list)
-                h.add_changes(entries)
+                change_list = scan_list[:pagesize]
+                changes = list(h.get_changes(change_list))
+                h.add_changes(changes)
             except:
                 self.log.exception('Exception fetching changes')
                 raise InternalError('Could not fetch changes')
 
-            navigation = util.Container(pagesize=pagesize, revid=revid, start_revid=start_revid, revid_list=revid_list,
-                                        file_id=file_id, scan_url='/changes', branch=self._branch, feed=True)
+            navigation = util.Container(
+                pagesize=pagesize, revid=revid, start_revid=start_revid,
+                revid_list=revid_list, filter_file_id=filter_file_id,
+                scan_url='/changes', branch=self._branch, feed=True)
             if query is not None:
                 navigation.query = query
             util.fill_in_navigation(navigation)
 
-            entries = list(entries)
             # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks(entries)
+            h.get_branch_nicks(changes)
 
             # does every change on this page have the same committer?  if so,
             # tell the template to show committer info in the "details block"
             # instead of on each line.
             all_same_author = True
 
-            if entries:
-                author = entries[0].author
-                for e in entries[1:]:
+            if changes:
+                author = changes[0].author
+                for e in changes[1:]:
                     if e.author != author:
                         all_same_author = False
                         break
@@ -105,12 +106,12 @@ class ChangeLogUI (object):
 
             vals = {
                 'branch': self._branch,
-                'changes': entries,
+                'changes': changes,
                 'util': util,
                 'history': h,
                 'revid': revid,
                 'navigation': navigation,
-                'file_id': file_id,
+                'filter_file_id': filter_file_id,
                 'start_revid': start_revid,
                 'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
                 'query': query,

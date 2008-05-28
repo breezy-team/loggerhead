@@ -17,15 +17,12 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import datetime
 import logging
-import os
 import posixpath
-import textwrap
 import time
 
 import turbogears
-from cherrypy import InternalError, session
+from cherrypy import InternalError
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
@@ -68,6 +65,7 @@ class InventoryUI (object):
                 raise InternalError('Could not fetch changes')
 
             file_id = kw.get('file_id', inv.root.file_id)
+            start_revid = kw.get('start_revid', None)
             sort_type = kw.get('sort', None)
 
             # no navbar for revisions
@@ -107,6 +105,7 @@ class InventoryUI (object):
                 'posixpath': posixpath,
                 'navigation': navigation,
                 'url': url,
+                'start_revid': start_revid,
             }
             vals.update(templatefunctions)
             h.flush_cache()

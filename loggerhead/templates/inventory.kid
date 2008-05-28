@@ -12,9 +12,9 @@ ${navbar()}
 
 <h1> <span class="branch-name">${branch.friendly_name}</span> : files for revision ${change.revno}
 	<div class="links">
-	    <div> <b>&#8594;</b> <a href="${branch.url('/revision', **util.get_context(clear=1, start_revid=revid))}">
+	    <div> <b>&#8594;</b> <a href="${branch.context_url('/revision', clear=1, start_revid=revid)}">
 	        view revision </a> </div>
-	    <div> <b>&#8594;</b> <a href="${branch.url('/changes', **util.get_context(clear=1, start_revid=revid))}">
+	    <div> <b>&#8594;</b> <a href="${branch.context_url('/changes', clear=1, start_revid=revid)}">
 	        view branch changes </a> </div>
 	</div>
 </h1>
@@ -28,7 +28,7 @@ ${navbar()}
         </tr>
         <tr>
             <th class="date">date:</th>
-            <td class="date"> ${change.date.strftime('%d %b %Y %H:%M')} </td>
+            <td class="date"> ${util.date_time(change.date)} </td>
         </tr>
 
         <tr py:if="len(change.merge_points) > 0">
@@ -62,36 +62,35 @@ ${navbar()}
 <table class="inventory" width="100%">
     <tr class="header">
         <th class="permissions"> Permissions </th>
-        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='filename'))}">Filename</a> </th>
+        <th> <a href="${branch.context_url([ '/files', revid ], sort='filename')}">Filename</a> </th>
         <th> Latest Rev </th>
-        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='date'))}">Last Changed</a> </th>
-        <th> <a href="${branch.url([ '/files', revid ], **util.get_context(sort='size'))}">Size</a> </th>
+        <th> <a href="${branch.context_url([ '/files', revid ], sort='date')}">Last Changed</a> </th>
+        <th> <a href="${branch.context_url([ '/files', revid ], sort='size')}">Size</a> </th>
         <th>  </th>
         <th>  </th>
     </tr>
     
     <tr class="parity1" py:if="updir">
         <td class="permissions">drwxr-xr-x</td>
-        <td class="filename directory"><a href="${branch.url([ '/files', revid ],
-            **util.get_context(file_id=updir_file_id))}"> (up) </a></td>
+        <td class="filename directory"><a href="${branch.context_url([ '/files', revid ], file_id=updir_file_id)}"> (up) </a></td>
         <td> </td> <td> </td> <td> </td> <td> </td>
     </tr>
 
     <tr py:for="file in filelist" class="parity${file.parity}">
         <td class="permissions"> ${util.fake_permissions(file.kind, file.executable)} </td>
         <td class="filename ${file.kind}">
-            <a py:if="file.kind=='directory'" href="${branch.url([ '/files', revid ],
-                **util.get_context(file_id=file.file_id))}">${file.filename}/</a>
+            <a py:if="file.kind=='directory'" href="${branch.context_url([ '/files', revid ],
+                file_id=file.file_id)}">${file.filename}/</a>
             <span py:if="file.kind=='symlink'">${file.filename}@</span>
-            <a py:if="file.kind=='file'" href="${branch.url([ '/annotate', revid ],
-                **util.get_context(file_id=file.file_id))}" title="Annotate ${file.filename}">${file.filename}</a>
+            <a py:if="file.kind=='file'" href="${branch.context_url([ '/annotate', revid ],
+                file_id=file.file_id)}" title="Annotate ${file.filename}">${file.filename}</a>
         </td>
-        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, file_id=file.file_id))} </td>
-        <td class="date"> ${file.change.date.strftime('%Y-%m-%d, %H:%M')} </td>
+        <td class="revision"> ${revision_link(file.revid, util.trunc(file.change.revno, 15), **util.get_context(start_revid=file.revid, filter_file_id=file.file_id))} </td>
+        <td class="date"> ${util.date_time(file.change.date)} </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="changes-link"> 
-            <a href="${branch.url('/changes', **util.get_context(start_revid=file.revid, file_id=file.file_id))}"
-               title="Changes affecting ${file.filename} up to revision ${file.change.revno}"> changes </a>
+            <a href="${branch.context_url('/changes', start_revid=start_revid, file_id=file.file_id)}"
+               title="Changes affecting ${file.filename}"> changes </a>
         </td>
         <td class="download-link">
             <a href="${branch.url([ '/download', file.revid, file.file_id, file.filename ])}"

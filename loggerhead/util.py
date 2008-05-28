@@ -17,6 +17,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from elementtree import ElementTree as ET
+
 import base64
 import cgi
 import datetime
@@ -29,53 +31,83 @@ import threading
 import time
 import traceback
 
-import turbogears
-
 
 log = logging.getLogger("loggerhead.controllers")
 
+# Display of times.
 
-def timespan(delta):
-    if delta.days > 730:
-        # good grief!
-        return '%d years' % (int(delta.days // 365.25),)
-    if delta.days >= 3:
-        return '%d days' % delta.days
-    seg = []
-    if delta.days > 0:
-        if delta.days == 1:
-            seg.append('1 day')
-        else:
-            seg.append('%d days' % delta.days)
-    hrs = delta.seconds // 3600
-    mins = (delta.seconds % 3600) // 60
-    if hrs > 0:
-        if hrs == 1:
-            seg.append('1 hour')
-        else:
-            seg.append('%d hours' % hrs)
-    if delta.days == 0:
-        if mins > 0:
-            if mins == 1:
-                seg.append('1 minute')
-            else:
-                seg.append('%d minutes' % mins)
-        elif hrs == 0:
-            seg.append('less than a minute')
-    return ', '.join(seg)
+# date_day -- just the day
+# date_time -- full date with time
+#
+# displaydate -- for use in sentences
+# approximatedate -- for use in tables
+#
+# displaydate and approximatedate return an elementtree <span> Element
+# with the full date in a tooltip.
+
+def date_day(value):
+    return value.strftime('%Y-%m-%d')
 
 
-def ago(timestamp):
-    now = datetime.datetime.now()
-    return timespan(now - timestamp) + ' ago'
+def date_time(value):
+    return value.strftime('%Y-%m-%d %T')
 
 
-def fix_year(year):
-    if year < 70:
-        year += 2000
-    if year < 100:
-        year += 1900
-    return year
+def _displaydate(date):
+    delta = abs(datetime.datetime.now() - date)
+    if delta > datetime.timedelta(1, 0, 0):
+        # far in the past or future, display the date
+        return 'on ' + date_day(date)
+    return _approximatedate(date)
+
+
+def _approximatedate(date):
+    delta = datetime.datetime.now() - date
+    if abs(delta) > datetime.timedelta(1, 0, 0):
+        # far in the past or future, display the date
+        return date_day(date)
+    future = delta < datetime.timedelta(0, 0, 0)
+    delta = abs(delta)
+    days = delta.days
+    hours = delta.seconds / 3600
+    minutes = (delta.seconds - (3600*hours)) / 60
+    seconds = delta.seconds % 60
+    result = ''
+    if future:
+        result += 'in '
+    if days != 0:
+        amount = days
+        unit = 'day'
+    elif hours != 0:
+        amount = hours
+        unit = 'hour'
+    elif minutes != 0:
+        amount = minutes
+        unit = 'minute'
+    else:
+        amount = seconds
+        unit = 'second'
+    if amount != 1:
+        unit += 's'
+    result += '%s %s' % (amount, unit)
+    if not future:
+        result += ' ago'
+        return result
+
+
+def _wrap_with_date_time_title(date, formatted_date):
+    elem = ET.Element("span")
+    elem.text = formatted_date
+    elem.set("title", date_time(date))
+    return elem
+
+
+def approximatedate(date):
+    return _wrap_with_date_time_title(date, _approximatedate(date))
+
+
+def displaydate(date):
+    return _wrap_with_date_time_title(date, _displaydate(date))
 
 
 class Container (object):
@@ -88,7 +120,7 @@ class Container (object):
                 setattr(self, key, value)
         for key, value in kw.iteritems():
             setattr(self, key, value)
-    
+
     def __repr__(self):
         out = '{ '
         for key, value in self.__dict__.iteritems():
@@ -143,7 +175,7 @@ def hide_email(email):
         return '%s at %s' % (username, domains[-2])
     return '%s at %s' % (username, domains[0])
 
-    
+
 def triple_factors(min_value=1):
     factors = (1, 3)
     index = 0
@@ -161,10 +193,10 @@ def scan_range(pos, max, pagesize=1):
     """
     given a position in a maximum range, return a list of negative and positive
     jump factors for an hgweb-style triple-factor geometric scan.
-    
+
     for example, with pos=20 and max=500, the range would be:
     [ -10, -3, -1, 1, 3, 10, 30, 100, 300 ]
-    
+
     i admit this is a very strange way of jumping through revisions.  i didn't
     invent it. :)
     """
@@ -272,7 +304,7 @@ def human_size(size, min_divisor=0):
         divisor = MEG
     else:
         divisor = KILO
-    
+
     dot = size % divisor
     base = size - dot
     dot = dot * 10 // divisor
@@ -280,7 +312,7 @@ def human_size(size, min_divisor=0):
     if dot >= 10:
         base += 1
         dot -= 10
-    
+
     out = str(base)
     if (base < 100) and (dot != 0):
         out += '.%d' % (dot,)
@@ -291,7 +323,7 @@ def human_size(size, min_divisor=0):
     elif divisor == GIG:
         out += 'G'
     return out
-    
+
 
 def fill_in_navigation(navigation):
     """
@@ -305,21 +337,21 @@ def fill_in_navigation(navigation):
     navigation.count = len(navigation.revid_list)
     navigation.page_position = navigation.position // navigation.pagesize + 1
     navigation.page_count = (len(navigation.revid_list) + (navigation.pagesize - 1)) // navigation.pagesize
-    
+
     def get_offset(offset):
         if (navigation.position + offset < 0) or (navigation.position + offset > navigation.count - 1):
             return None
         return navigation.revid_list[navigation.position + offset]
-    
+
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
-    
-    params = { 'file_id': navigation.file_id }
+
+    params = { 'filter_file_id': navigation.filter_file_id }
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
     else:
         params['start_revid'] = navigation.start_revid
-        
+
     if navigation.prev_page_revid:
         navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **get_context(**params))
     if navigation.next_page_revid:
@@ -402,9 +434,11 @@ def lsprof(f):
 #         current location along the navigation path (while browsing)
 #     - starting revid (start_revid)
 #         the current beginning of navigation (navigation continues back to
-#         the original revision) -- this may not be along the primary revision
-#         path since the user may have navigated into a branch
+#         the original revision) -- this defines an 'alternate mainline'
+#         when the user navigates into a branch.
 #     - file_id
+#         the file being looked at
+#     - filter_file_id
 #         if navigating the revisions that touched a file
 #     - q (query)
 #         if navigating the revisions that matched a search query
@@ -421,7 +455,8 @@ def lsprof(f):
 #         for re-ordering an existing page by different sort
 
 t_context = threading.local()
-_valid = ('start_revid', 'file_id', 'q', 'remember', 'compare_revid', 'sort')
+_valid = ('start_revid', 'file_id', 'filter_file_id', 'q', 'remember',
+          'compare_revid', 'sort')
 
 
 def set_context(map):
@@ -432,7 +467,7 @@ def get_context(**overrides):
     """
     return a context map that may be overriden by specific values passed in,
     but only contains keys from the list of valid context keys.
-    
+
     if 'clear' is set, only the 'remember' context value will be added, and
     all other context will be omitted.
     """

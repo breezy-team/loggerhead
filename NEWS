@@ -1,12 +1,118 @@
-
 What's changed in loggerhead?
 =============================
+
+1.2.1  [06mar2008]
+------------------
+
+    - The changelog view was out of order when not using the revision
+      cache.
+
+1.2  [04mar2008]
+----------------
+
+    - Michael Hudson <michael.hudson@canonical.com> has mostly taken
+      over the maintenance of loggerhead.
+
+    - loggerhead now has a simple test suite -- use 'nosetests' in the
+      loggerhead directory to run it.
+
+    - The rendering performance of pages that display large amounts of
+      text was improved by a factor of 4 or so.
+
+    - loggerhead no longer caches the text of the diffs between
+      revisions.  It rarely helped and wasted a lot of disk space.
+
+    - The layout of most pages was made more "tight" to waste less
+      screen real estate, and some other UI improvements (Kent
+      Gibson).
+
+    - Much dead code was removed.
+
+    - Loggerhead now computes the files changed between revisions only
+      when it needs to know this.  This is a fairly expensive
+      operation in Bazaar, and doing it less massively improves
+      performance and memory usage in some situations.
+
+    - Loggerhead now takes a read lock on the branch being viewed for
+      the duration of each request, which improves performance
+      significantly.
+
+    - Loggerhead no longer uses the corruption-prone Berkely DB-backed
+      shelve module for its caches, and rather (ab)uses a sqlite
+      database instead.
+
+    - The creation of History objects is much faster for large
+      branches (Aaron Bentley).
+
+    - Allow the construction of URLs using revnos and file paths as
+      well as revids and fileids (bug #98826):
+
+      - For changes pages, append the newest revno to display to the
+        URL, like http://.../changes/<revno>
+
+      - For annotate pages, append the revno to display to the URL,
+        followed by the path, like http://.../annotate/<revno>/<path>
+
+      - For file listing and revision pages append the revno to
+        display to the URL, like http://.../files/<revno>
+
+      Loggerhead still generates URLs using revision and file ids for
+      the moment.
+
+    - Many bugs were fixed:
+
+      - Loggerhead does not escape special characters when embedding a
+        revision ID in a URL (bug #88286)
+
+      - Improved robustness in the face of ghosts.
+
+      - Don't crash on displaying a commit with an empty message (bug
+        #86247)
+
+      - codebrowse fails with infinite redirections (James Henstridge,
+        bug #89854)
+
+      - Loggerhead fails to browse revisions that change binary files
+        (James Henstridge, bug #91686)
+
+      - Loggerhead atom feeds expose internal hostname (James
+        Henstridge, bug #93585)
+
+      - loggerhead don't like page break character (0x0C) in text
+        files (bug #113313)
+
+      - codebrowse source listings don't contain line number anchors
+        (bug #98826)
+
+      - only serve up unescaped user content with "Content-Disposition:
+        attachment"
+
+      - viewing the file listing consumes a lot memory (bug #116869)
+
+      - loggerhead can't handle empty branches (bug #119228)
+
+      - upgrading the format of a branch behind loggerhead could make
+        it fail for that branch (bug #118673)
+
+      - Error parsing non-ascii content (bug #117799)
+
+      - Loggerhead failed on whitespace-only commit messages.
+
+      - Links to diffs from within a revision do not work (bug
+        #119422)
+
+      - UTF-8 patches served as ISO-8859-1, fixed by served bundles as
+        application/octet-stream (bug #121336)
+
+      - TurboGears was turning query arguments into unicode, and bzr
+        stopped accepting unicode revids (bug #175228)
+
 
 1.1.1  [24jan2007]
 ------------------
 
     - fix broken inventory page (oops!)
-    
+
     - fix a few rendering problems with kid and safari
 
 
@@ -14,31 +120,31 @@ What's changed in loggerhead?
 ----------------
 
     - new feature to compare two revisions to each other
-    
+
     - inserted text in diffs is now blue instead of green
-    
+
     - fixed to start and stop as a daemon now (use "-f" to run in the
       foreground), and all config is in loggerhead.conf (no need to mess with
       dev.cfg)
-      
+
     - renamed show/hide javascript buttons to expand/collapse, and made them
       much faster
-      
+
     - added an atom-feed link to each branch on the browse page [elliot
       murphy]
-      
+
     - auto-publish feature for multiple branches under a single folder (see
       loggerhead.conf.example)
-      
+
     - added the ability to share cache files per-project instead of just
       per-branch
-    
+
     - added side-by-side diff display for the revision page (which is the
       default), with a button to switch between side-by-side and unified diff
       format
 
     - made caching use file locking, and close cleanly on shutdown
-    
+
     - miscellaneous speed and page-size improvements
 
 

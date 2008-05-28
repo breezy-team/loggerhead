@@ -27,14 +27,9 @@
 
 
 import bisect
-import cgi
 import datetime
 import logging
-import os
-import posixpath
 import re
-import shelve
-import sys
 import textwrap
 import threading
 import time
@@ -44,19 +39,30 @@ from loggerhead import util
 from loggerhead.util import decorator
 
 import bzrlib
-import bzrlib.annotate
 import bzrlib.branch
 import bzrlib.bundle.serializer
-import bzrlib.decorators
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
-import bzrlib.textfile
+import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
 
 
 with_branch_lock = util.with_lock('_lock', 'branch')
+
+
+@decorator
+def with_bzrlib_read_lock(unbound):
+    def bzrlib_read_locked(self, *args, **kw):
+        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
+        self._branch.repository.lock_read()
+        try:
+            return unbound(self, *args, **kw)
+        finally:
+            self._branch.repository.unlock()
+            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
+    return bzrlib_read_locked
 
 
 # bzrlib's UIFactory is not thread-safe
@@ -130,16 +136,24 @@ def is_branch(folder):
 
 
 def clean_message(message):
-    # clean up a commit message and return it and a short (1-line) version
-    message = message.splitlines()
-    if len(message) == 1:
-        # robey-style 1-line long message
-        message = textwrap.wrap(message[0])
-    elif len(message) == 0:
-        # sometimes a commit may have NO message!
-        message = ['']
+    """Clean up a commit message and return it and a short (1-line) version.
 
-    # make short form of commit message
+    Commit messages that are long single lines are reflowed using the textwrap
+    module (Robey, the original author of this code, apparently favored this
+    style of message).
+    """
+    message = message.splitlines()
+
+    if len(message) == 1:
+        message = textwrap.wrap(message[0])
+
+    if len(message) == 0:
+        # We can end up where when (a) the commit message was empty or (b)
+        # when the message consisted entirely of whitespace, in which case
+        # textwrap.wrap() returns an empty list.
+        return [''], ''
+
+    # Make short form of commit message.
     short_message = message[0]
     if len(short_message) > 60:
         short_message = short_message[:60] + '...'
@@ -188,10 +202,7 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        if self._last_revid is not None:
-            self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
-        else:
-            self._revision_graph = {}
+        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
 
         if name is None:
             name = self._branch.nick
@@ -201,17 +212,20 @@ class History (object):
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
-        self._merge_sort = bzrlib.tsort.merge_sort(self._revision_graph, self._last_revid, generate_revno=True)
+        if bzrlib.revision.is_null(self._last_revid):
+            self._merge_sort = []
+        else:
+            self._merge_sort = bzrlib.tsort.merge_sort(
+                self._revision_graph, self._last_revid, generate_revno=True)
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
             self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
-
         # cache merge info
         self._where_merged = {}
         for revid in self._revision_graph.keys():
-            if not revid in self._full_history:
+            if self._revision_info[revid][2] == 0:
                 continue
             for parent in self._revision_graph[revid]:
                 self._where_merged.setdefault(parent, set()).add(revid)
@@ -222,13 +236,21 @@ class History (object):
     @classmethod
     def from_folder(cls, path, name=None):
         b = bzrlib.branch.Branch.open(path)
-        return cls.from_branch(b, name)
+        b.lock_read()
+        try:
+            return cls.from_branch(b, name)
+        finally:
+            b.unlock()
 
     @with_branch_lock
     def out_of_date(self):
         # the branch may have been upgraded on disk, in which case we're stale.
+        newly_opened = bzrlib.branch.Branch.open(self._branch.base)
         if self._branch.__class__ is not \
-               bzrlib.branch.Branch.open(self._branch.base).__class__:
+               newly_opened.__class__:
+            return True
+        if self._branch.repository.__class__ is not \
+               newly_opened.repository.__class__:
             return True
         return self._branch.last_revision() != self._last_revid
 
@@ -240,6 +262,10 @@ class History (object):
 
     def use_search_index(self, index):
         self._index = index
+
+    @property
+    def has_revisions(self):
+        return not bzrlib.revision.is_null(self.last_revid)
 
     @with_branch_lock
     def detach(self):
@@ -283,17 +309,28 @@ class History (object):
     def get_revision_history(self):
         return self._full_history
 
-    def get_revids_from(self, revid_list, revid):
+    def get_revids_from(self, revid_list, start_revid):
         """
-        given a list of revision ids, yield revisions in graph order,
-        starting from revid.  the list can be None if you just want to travel
-        across all revisions.
+        Yield the mainline (wrt start_revid) revisions that merged each
+        revid in revid_list.
         """
-        while True:
-            if (revid_list is None) or (revid in revid_list):
-                yield revid
-            if not self._revision_graph.has_key(revid):
+        if revid_list is None:
+            revid_list = self._full_history
+        revid_set = set(revid_list)
+        revid = start_revid
+        def introduced_revisions(revid):
+            r = set([revid])
+            seq, revid, md, revno, end_of_merge = self._revision_info[revid]
+            i = seq + 1
+            while i < len(self._merge_sort) and self._merge_sort[i][2] > md:
+                r.add(self._merge_sort[i][1])
+                i += 1
+            return r
+        while 1:
+            if bzrlib.revision.is_null(revid):
                 return
+            if introduced_revisions(revid) & revid_set:
+                yield revid
             parents = self._revision_graph[revid]
             if len(parents) == 0:
                 return
@@ -367,6 +404,8 @@ class History (object):
         # if they entered a revid, just jump straight there; ignore the passed-in revid_list
         revid = self.fix_revid(query)
         if revid is not None:
+            if isinstance(revid, unicode):
+                revid = revid.encode('utf-8')
             changes = self.get_changes([ revid ])
             if (changes is not None) and (len(changes) > 0):
                 return [ revid ]
@@ -439,14 +478,16 @@ class History (object):
         determine the revision list we're viewing (start_revid, file_id, query)
         and where we are in it (revid).
 
-        if a query is given, we're viewing query results.
-        if a file_id is given, we're viewing revisions for a specific file.
-        if a start_revid is given, we're viewing the branch from a
-            specific revision up the tree.
-        (these may be combined to view revisions for a specific file, from
-            a specific revision, with a specific search query.)
+            - if a query is given, we're viewing query results.
+            - if a file_id is given, we're viewing revisions for a specific
+              file.
+            - if a start_revid is given, we're viewing the branch from a
+              specific revision up the tree.
 
-        returns a new (revid, start_revid, revid_list, scan_list) where:
+        these may be combined to view revisions for a specific file, from
+        a specific revision, with a specific search query.
+
+        returns a new (revid, start_revid, revid_list) where:
 
             - revid: current position within the view
             - start_revid: starting revision of this view
@@ -465,7 +506,7 @@ class History (object):
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list= self.get_file_view(revid, file_id)
+                revid_list = self.get_file_view(revid, file_id)
                 start_revid = revid
             return revid, start_revid, revid_list
 
@@ -579,6 +620,10 @@ class History (object):
 
     @with_branch_lock
     def get_changes(self, revid_list):
+        """Return a list of changes objects for the given revids.
+
+        Revisions not present and NULL_REVISION will be ignored.
+        """
         if self._change_cache is None:
             changes = self.get_changes_uncached(revid_list)
         else:
@@ -591,6 +636,12 @@ class History (object):
         for change in changes:
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
+            if len(change.parents) > 0:
+                if isinstance(change.parents[0], util.Container):
+                    # old cache stored a potentially-bogus revno
+                    change.parents = [util.Container(revid=p.revid, revno=self.get_revno(p.revid)) for p in change.parents]
+                else:
+                    change.parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in change.parents]
             change.revno = self.get_revno(change.revid)
 
         parity = 0
@@ -600,45 +651,66 @@ class History (object):
 
         return changes
 
-    # alright, let's profile this sucka.
-    def _get_changes_profiled(self, revid_list, get_diffs=False):
+    # alright, let's profile this sucka. (FIXME remove this eventually...)
+    def _get_changes_profiled(self, revid_list):
         from loggerhead.lsprof import profile
         import cPickle
-        ret, stats = profile(self.get_changes_uncached, revid_list, get_diffs)
+        ret, stats = profile(self.get_changes_uncached, revid_list)
         stats.sort()
         stats.freeze()
         cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
         self.log.info('lsprof complete!')
         return ret
 
-    def _get_deltas_for_revisions_with_trees(self, entries):
-        """Produce a generator of revision deltas.
+    @with_branch_lock
+    @with_bzrlib_read_lock
+    def get_changes_uncached(self, revid_list):
+        revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
+                            revid_list)
+        repo = self._branch.repository
+        parent_map = repo.get_graph().get_parent_map(revid_list)
+        # We need to return the answer in the same order as the input,
+        # less any ghosts.
+        present_revids = [revid for revid in revid_list
+                          if revid in parent_map]
+        rev_list = repo.get_revisions(present_revids)
+
+        return [self._change_from_revision(rev) for rev in rev_list]
+
+    def _get_deltas_for_revisions_with_trees(self, revisions):
+        """Produce a list of revision deltas.
 
         Note that the input is a sequence of REVISIONS, not revision_ids.
         Trees will be held in memory until the generator exits.
         Each delta is relative to the revision's lefthand predecessor.
+        (This is copied from bzrlib.)
         """
         required_trees = set()
-        for entry in entries:
-            required_trees.add(entry.revid)
-            required_trees.update([p.revid for p in entry.parents[:1]])
+        for revision in revisions:
+            required_trees.add(revision.revid)
+            required_trees.update([p.revid for p in revision.parents[:1]])
         trees = dict((t.get_revision_id(), t) for
                      t in self._branch.repository.revision_trees(required_trees))
         ret = []
         self._branch.repository.lock_read()
         try:
-            for entry in entries:
-                if not entry.parents:
-                    old_tree = self._branch.repository.revision_tree("null:")
+            for revision in revisions:
+                if not revision.parents:
+                    old_tree = self._branch.repository.revision_tree(
+                        bzrlib.revision.NULL_REVISION)
                 else:
-                    old_tree = trees[entry.parents[0].revid]
-                tree = trees[entry.revid]
+                    old_tree = trees[revision.parents[0].revid]
+                tree = trees[revision.revid]
                 ret.append(tree.changes_from(old_tree))
             return ret
         finally:
             self._branch.repository.unlock()
 
-    def entry_from_revision(self, revision):
+    def _change_from_revision(self, revision):
+        """
+        Given a bzrlib Revision, return a processed "change" for use in
+        templates.
+        """
         commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
 
         parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in revision.parent_ids]
@@ -653,30 +725,9 @@ class History (object):
             'short_comment': short_message,
             'comment': revision.message,
             'comment_clean': [util.html_clean(s) for s in message],
-            'parents': parents,
+            'parents': revision.parent_ids,
         }
         return util.Container(entry)
-
-    @with_branch_lock
-    def get_changes_uncached(self, revid_list):
-        # Because we may loop and call get_revisions multiple times (to throw
-        # out dud revids), we grab a read lock.
-        self._branch.lock_read()
-        try:
-            while True:
-                try:
-                    rev_list = self._branch.repository.get_revisions(revid_list)
-                except (KeyError, bzrlib.errors.NoSuchRevision), e:
-                    # this sometimes happens with arch-converted branches.
-                    # i don't know why. :(
-                    self.log.debug('No such revision (skipping): %s', e)
-                    revid_list.remove(e.revision)
-                else:
-                    break
-
-            return [self.entry_from_revision(rev) for rev in rev_list]
-        finally:
-            self._branch.unlock()
 
     def get_file_changes_uncached(self, entries):
         delta_list = self._get_deltas_for_revisions_with_trees(entries)
@@ -698,11 +749,11 @@ class History (object):
 
     @with_branch_lock
     def get_change_with_diff(self, revid, compare_revid=None):
-        entry = self.get_changes([revid])[0]
+        change = self.get_changes([revid])[0]
 
         if compare_revid is None:
-            if entry.parents:
-                compare_revid = entry.parents[0].revid
+            if change.parents:
+                compare_revid = change.parents[0].revid
             else:
                 compare_revid = 'null:'
 
@@ -710,11 +761,10 @@ class History (object):
         rev_tree2 = self._branch.repository.revision_tree(revid)
         delta = rev_tree2.changes_from(rev_tree1)
 
-        entry.changes = self.parse_delta(delta)
+        change.changes = self.parse_delta(delta)
+        change.changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
 
-        entry.changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
-
-        return entry
+        return change
 
     @with_branch_lock
     def get_file(self, file_id, revid):
@@ -767,7 +817,7 @@ class History (object):
                     diff = buffer.getvalue()
             else:
                 diff = ''
-            out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff)))
+            out.append(util.Container(filename=rich_filename(new_path, kind), file_id=fid, chunks=self._process_diff(diff), raw_diff=diff))
 
         return out
 
@@ -955,4 +1005,3 @@ class History (object):
         s = StringIO()
         bzrlib.bundle.serializer.write_bundle(self._branch.repository, revid, compare_revid, s)
         return s.getvalue()
-

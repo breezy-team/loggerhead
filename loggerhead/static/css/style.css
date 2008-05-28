@@ -216,7 +216,7 @@ div.links div {
 }
 
 .log-entries .revision-header {
-    font-size: normal;
+    font-size: 1.0em;
 }
 
 .log-entries .revision-header td {
@@ -313,10 +313,6 @@ div.links div {
     padding-left: 0.5em;
     padding-top: 2px;
     padding-bottom: 2px;
-}
-
-.revision-info table td.date {
-    font-family: monospace;
 }
 
 .revision-info table td.description {
@@ -454,6 +450,12 @@ div.links div {
     background-color: #dee7ec;
 }*/
 
+pre.diff-plain {
+    border: 1px solid #8cacbb;
+    background-color: #f4f5f8;
+    padding: 1em;
+    font-size: smaller;
+}
 
 /* ----- file inventory ----- */
 
@@ -503,6 +505,8 @@ table.inventory th.permissions {
     font-family: monospace;
     font-size: smaller;
     width: 5em;
+    line-height: 1em;
+    vertical-align: bottom;
 }
 
 .inventory td.revision {
@@ -513,7 +517,7 @@ table.inventory th.permissions {
 
 .inventory td.date {
     padding-right: 1em;
-    width: 10em;
+    width: 11em;
 }
 
 .inventory td.changes-link {

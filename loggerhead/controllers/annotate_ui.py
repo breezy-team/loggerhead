@@ -17,15 +17,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import datetime
 import logging
 import os
 import posixpath
-import textwrap
 import time
 
 import turbogears
-from cherrypy import HTTPError, InternalError, session
+from cherrypy import HTTPError
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
