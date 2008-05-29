@@ -89,7 +89,7 @@ ${navbar()}
         <td class="date"> ${util.date_time(file.change.date)} </td>
         <td class="size"> <span py:if="file.kind=='file'"> ${util.human_size(file.size)} </span></td>
         <td class="changes-link"> 
-            <a href="${branch.context_url('/changes', start_revid=start_revid, file_id=file.file_id)}"
+            <a href="${branch.context_url('/changes', start_revid=start_revid, filter_file_id=file.file_id)}"
                title="Changes affecting ${file.filename}"> changes </a>
         </td>
         <td class="download-link">
