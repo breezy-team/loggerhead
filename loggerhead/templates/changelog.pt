@@ -25,7 +25,7 @@
           ${branch.friendly_name}
         </span>
         : changes
-        <tal:block condition="file_id">
+        <tal:block condition="filter_file_id">
           to
           <span class="filename"
                 tal:content="python:history.get_path(revid, file_id)">
@@ -99,10 +99,8 @@
                   class="author">
                 ${util.trunc(util.hide_email(entry.author), 20)}
               </td>
-              <td class="date">
-                <tal:b content="python:entry.date.strftime('%Y-%m-%d, %H:%M')" />
-                &nbsp;
-                (<tal:b content="python:util.ago(entry.date)" />)
+              <td class="date" tal:content="python:util.approximatedate(entry.date)">
+	        ${util.approximatedate(entry.date)}
               </td>
               <td class="inventory-link">
                 <a tal:attributes="href python:url(['/files', entry.revid]);
