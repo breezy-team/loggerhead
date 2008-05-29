@@ -58,8 +58,8 @@
                   ${view.description}
                 </td>
                 <td class="last-update"
-                    tal:content="python:view.get_history().last_revid and util.ago(view.last_updated()) or '(no revisions)'">
-                  ${view.get_history().last_revid and util.ago(view.last_updated()) or "(no revisions)"}
+                    tal:content="python:view.get_history().has_revisions and util.approximatedate(view.last_updated()) or '(no revisions)'">
+                  ${view.get_history().has_revisions and util.ago(view.last_updated()) or "(no revisions)"}
                 </td>
                 <td class="feed">
                   <a tal:attributes="href python:tg.url(['/' + project.name, view.name, 'atom'])"
