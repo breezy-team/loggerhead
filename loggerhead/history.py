@@ -47,7 +47,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-from bzrlib import log
 
 with_branch_lock = util.with_lock('_lock', 'branch')
 
@@ -212,7 +211,7 @@ class History (object):
         parent_map = dict(((key, value) for key, value in
              graph.iter_ancestry([self._last_revid]) if value is not None))
         
-        self._revision_graph = log._strip_NULL_ghosts(parent_map) 
+        self._revision_graph = self._strip_NULL_ghosts(parent_map) 
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
@@ -220,13 +219,15 @@ class History (object):
             self._merge_sort = []
         else:
             self._merge_sort = bzrlib.tsort.merge_sort(
-                self._revision_graph, self._last_revid, None, generate_revno=True)
+                self._revision_graph, self._last_revid, None, 
+                generate_revno=True)
 
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
-            self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
+            self._revision_info[revid] = (seq, revid, merge_depth, revno_str, 
+                                          end_of_merge)
         # cache merge info
         self._where_merged = {}
         
@@ -238,6 +239,21 @@ class History (object):
 
         self.log.info('built revision graph cache: %r secs' % (time.time() - z,))
         return self
+
+    @staticmethod
+    def _strip_NULL_ghosts(revision_graph):
+        """
+        Copied over from bzrlib meant as a temporary workaround deprecated 
+        methods.
+        """
+
+        # Filter ghosts, and null:
+        if bzrlib.revision.NULL_REVISION in revision_graph:
+            del revision_graph[bzrlib.revision.NULL_REVISION]
+        for key, parents in revision_graph.items():
+            revision_graph[key] = tuple(parent for parent in parents if parent
+                in revision_graph)
+        return revision_graph
 
     @classmethod
     def from_folder(cls, path, name=None):
