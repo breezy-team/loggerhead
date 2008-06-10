@@ -32,7 +32,7 @@ class AtomUI (object):
 
     @turbogears.expose(template='zpt:loggerhead.templates.atom',
                        format="xml", content_type="application/atom+xml")
-    def default(self, *args):
+    def default(self, *args, **kwargs):
         h = self._branch.get_history()
 
         h._branch.lock_read()

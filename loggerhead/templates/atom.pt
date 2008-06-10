@@ -11,8 +11,8 @@
     <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
       ${entry/revno}: ${entry/short_comment}
     </title>
-    <updated>
-      <tal:r content="entry/date/isoformat">Z
+    <updated tal:content="entry/date/isoformat">
+    Z
     </updated>
     <id tal:content="python:branch.url(['revision', entry.revid])">
       ID
