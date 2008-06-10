@@ -28,8 +28,7 @@
         <tal:block condition="filter_file_id">
           to
           <span class="filename"
-                tal:content="python:history.get_path(revid, file_id)">
-            ${history.get_path(revid, file_id)}
+                tal:content="python:history.get_path(revid, filter_file_id)">
           </span>
         </tal:block>
         <tal:block condition="viewing_from">
