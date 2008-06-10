@@ -202,13 +202,17 @@ class History (object):
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
-        self._revision_graph = branch.repository.get_revision_graph(self._last_revid)
 
         if name is None:
             name = self._branch.nick
         self._name = name
         self.log = logging.getLogger('loggerhead.%s' % (name,))
 
+        graph = branch.repository.get_graph()
+        parent_map = dict(((key, value) for key, value in
+             graph.iter_ancestry([self._last_revid]) if value is not None))
+
+        self._revision_graph = self._strip_NULL_ghosts(parent_map)
         self._full_history = []
         self._revision_info = {}
         self._revno_revid = {}
@@ -217,13 +221,17 @@ class History (object):
         else:
             self._merge_sort = bzrlib.tsort.merge_sort(
                 self._revision_graph, self._last_revid, generate_revno=True)
+
         for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
             self._full_history.append(revid)
             revno_str = '.'.join(str(n) for n in revno)
             self._revno_revid[revno_str] = revid
-            self._revision_info[revid] = (seq, revid, merge_depth, revno_str, end_of_merge)
+            self._revision_info[revid] = (
+                seq, revid, merge_depth, revno_str, end_of_merge)
+
         # cache merge info
         self._where_merged = {}
+
         for revid in self._revision_graph.keys():
             if self._revision_info[revid][2] == 0:
                 continue
@@ -232,6 +240,21 @@ class History (object):
 
         self.log.info('built revision graph cache: %r secs' % (time.time() - z,))
         return self
+
+    @staticmethod
+    def _strip_NULL_ghosts(revision_graph):
+        """
+        Copied over from bzrlib meant as a temporary workaround deprecated 
+        methods.
+        """
+
+        # Filter ghosts, and null:
+        if bzrlib.revision.NULL_REVISION in revision_graph:
+            del revision_graph[bzrlib.revision.NULL_REVISION]
+        for key, parents in revision_graph.items():
+            revision_graph[key] = tuple(parent for parent in parents if parent
+                in revision_graph)
+        return revision_graph
 
     @classmethod
     def from_folder(cls, path, name=None):
@@ -956,14 +979,10 @@ class History (object):
 
         file_revid = self.get_inventory(revid)[file_id].revision
         oldvalues = None
-
-        # because we cache revision metadata ourselves, it's actually much
-        # faster to call 'annotate_iter' on the weave directly than it is to
-        # ask bzrlib to annotate for us.
-        w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
-
+        tree = self._branch.repository.revision_tree(file_revid)
         revid_set = set()
-        for line_revid, text in w.annotate_iter(file_revid):
+
+        for line_revid, text in tree.annotate_iter(file_id):
             revid_set.add(line_revid)
             if self._BADCHARS_RE.match(text):
                 # bail out; this isn't displayable text
@@ -971,10 +990,11 @@ class History (object):
                                      text='(This is a binary file.)',
                                      change=util.Container())
                 return
-        change_cache = dict([(c.revid, c) for c in self.get_changes(list(revid_set))])
+        change_cache = dict([(c.revid, c) \
+                for c in self.get_changes(list(revid_set))])
 
         last_line_revid = None
-        for line_revid, text in w.annotate_iter(file_revid):
+        for line_revid, text in tree.annotate_iter(file_id):
             if line_revid == last_line_revid:
                 # remember which lines have a new revno and which don't
                 status = 'same'
