@@ -2,7 +2,6 @@
 
 import StringIO
 import logging
-import os
 import pkg_resources
 
 #from zope.pagetemplate.pagetemplatefile import PageTemplateFile
@@ -15,20 +14,22 @@ _zpt_cache = {}
 def zpt(tfile):
     tinstance = _zpt_cache.get(tfile)
     if tinstance is None:
-        tinstance = _zpt_cache[tfile] = TemplateWrapper(simpleTAL.compileXMLTemplate(open(tfile)))
+        tinstance = _zpt_cache[tfile] = TemplateWrapper(
+            simpleTAL.compileXMLTemplate(open(tfile)), tfile)
     return tinstance
 
 class TemplateWrapper(object):
 
-    def __init__(self, template):
+    def __init__(self, template, filename):
         self.template = template
+        self.filename = filename
 
     def __call__(self, **kw):
         context = simpleTALES.Context(allowPythonPath=1)
         for k, v in kw.iteritems():
             context.addGlobal(k, v)
         s = StringIO.StringIO()
-        self.template.expand(context, s)
+        self.template.expand(context, s, 'utf-8')
         return s.getvalue()
 
     @property
@@ -78,7 +79,7 @@ class TurboZpt(object):
         @type template: string
         """
         tinstance = self.load_template(template)
-        #log.debug("Applying template %s" % (tinstance.filename))
+        log.debug("Applying template %s" % (tinstance.filename))
         data = dict()
         if self.get_extra_vars:
             data.update(self.get_extra_vars())
