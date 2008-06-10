@@ -4,7 +4,7 @@ from turbogears import testutil
 import turbogears
 import cherrypy
 
-RENDERED="<html>\n<head>\n<title>%s</title>\n</head>\n<body>\n<div>Hello, %s</div>\n</body>\n</html>\n"
+RENDERED="<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>\n<html>\n<head>\n<title>%s</title>\n</head>\n<body>\n<div>Hello, %s</div>\n</body>\n</html>"
 
 def test_template_lookup():
     tc = TurboZpt()
@@ -13,8 +13,16 @@ def test_template_lookup():
     TITLE="test"
     NAME="World"
     info = dict(title=TITLE, name=NAME)
-    t = template(**info)
-    assert str(t).startswith(RENDERED % (TITLE, NAME))
+    import StringIO
+    s = StringIO.StringIO()
+    from simpletal import simpleTALES
+    context = simpleTALES.Context(allowPythonPath=1)
+    for k, v in info.iteritems():
+        context.addGlobal(k, v)
+    template.expand(context, s)#(**info)
+    print s.getvalue()
+    print RENDERED % (TITLE, NAME)
+    assert s.getvalue().startswith(RENDERED % (TITLE, NAME))
 
 class TestRoot(controllers.Root):
     def index(self, name, title="test"):
