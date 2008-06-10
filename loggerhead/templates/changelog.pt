@@ -96,11 +96,10 @@
               </td>
               <td tal:condition="not:all_same_author"
                   tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
-                  class="author">
-                ${util.trunc(util.hide_email(entry.author), 20)}
-              </td>
-              <td class="date" tal:content="python:util.approximatedate(entry.date)">
-	        ${util.approximatedate(entry.date)}
+                  class="author"></td>
+              <td class="date">
+                  <span tal:attributes="title python:util.date_time(entry.date)"
+                        tal:content="python:util._approximatedate(entry.date)"></span>
               </td>
               <td class="inventory-link">
                 <a tal:attributes="href python:url(['/files', entry.revid]);

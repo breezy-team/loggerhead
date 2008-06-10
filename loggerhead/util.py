@@ -103,6 +103,7 @@ def _wrap_with_date_time_title(date, formatted_date):
 
 
 def approximatedate(date):
+    #FIXME: Returns an object instead of a string
     return _wrap_with_date_time_title(date, _approximatedate(date))
 
 
