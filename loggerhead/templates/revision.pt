@@ -7,7 +7,7 @@
         ${branch.friendly_name} : revision ${change.revno}
       </title>
 
-      <metal:block fill-slot="header-extras">
+      <metal:block fill-slot="header_extras">
         <script type="text/javascript"
                 tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
         </script>

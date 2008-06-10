@@ -13,16 +13,8 @@ def test_template_lookup():
     TITLE="test"
     NAME="World"
     info = dict(title=TITLE, name=NAME)
-    import StringIO
-    s = StringIO.StringIO()
-    from simpletal import simpleTALES
-    context = simpleTALES.Context(allowPythonPath=1)
-    for k, v in info.iteritems():
-        context.addGlobal(k, v)
-    template.expand(context, s)#(**info)
-    print s.getvalue()
-    print RENDERED % (TITLE, NAME)
-    assert s.getvalue().startswith(RENDERED % (TITLE, NAME))
+    s = template(**info)
+    assert s.startswith(RENDERED % (TITLE, NAME))
 
 class TestRoot(controllers.Root):
     def index(self, name, title="test"):

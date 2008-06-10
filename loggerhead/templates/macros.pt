@@ -11,7 +11,7 @@
     <link rel="stylesheet"
           tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
 
-    <metal:block metal:define-slot="header-extras" />
+    <metal:block metal:define-slot="header_extras" />
   </head>
 
   <body tal:attributes="onload onload|nothing">

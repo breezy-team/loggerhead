@@ -6,7 +6,7 @@
              tal:content="string:${branch/friendly_name} : changes">
         ${branch.friendly_name} : changes
       </title>
-      <metal:block fill-slot="header-extras">
+      <metal:block fill-slot="header_extras">
         <link rel="alternate" type="application/atom+xml"
               tal:attributes="href python:url(['/atom']);
                               title string:RSS feed for ${branch/friendly_name}"
@@ -157,7 +157,7 @@
                     </th>
                     <td class="description">
                       <tal:block repeat="line entry/comment_clean"
-                                 content="structure string:${line}<br />" />
+                                 content="structure string:${line}&lt;br /&gt;" />
                     </td>
                   </tr>
                   <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
