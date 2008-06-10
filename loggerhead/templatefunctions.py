@@ -1,7 +1,6 @@
 import os
 import turbogears
-import turbozpt
-from turbozpt.zptsupport import zpt
+from turbosimpletal.zptsupport import zpt
 
 templatefunctions = {}
 def templatefunc(func):

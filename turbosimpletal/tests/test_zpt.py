@@ -1,4 +1,4 @@
-from turbozpt import TurboZpt
+from turbosimpletal import TurboZpt
 from turbogears import controllers
 from turbogears import testutil
 import turbogears
@@ -8,7 +8,7 @@ RENDERED="<html>\n<head>\n<title>%s</title>\n</head>\n<body>\n<div>Hello, %s</di
 
 def test_template_lookup():
     tc = TurboZpt()
-    template = tc.load_template("turbozpt.tests.simple")
+    template = tc.load_template("turbosimpletal.tests.simple")
     assert template
     TITLE="test"
     NAME="World"
@@ -19,7 +19,7 @@ def test_template_lookup():
 class TestRoot(controllers.Root):
     def index(self, name, title="test"):
         return dict(name=name, title=title)
-    index = turbogears.expose(html="zpt:turbozpt.tests.simple")(index)
+    index = turbogears.expose(html="zpt:turbosimpletal.tests.simple")(index)
 
 def test_real_life_situation():
     cherrypy.root = TestRoot()

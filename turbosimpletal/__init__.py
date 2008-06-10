@@ -1,4 +1,4 @@
-from turbozpt import zptsupport
+from turbosimpletal import zptsupport
 
 TurboZpt = zptsupport.TurboZpt
 
