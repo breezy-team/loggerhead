@@ -45,7 +45,7 @@
           </div>
           <div tal:condition="python:compare_revid is not None" >
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/bundle', revid, 'bundle.txt'])">
+            <a tal:attributes="href python:branch.url(['/bundle', revid, compare_revid, 'bundle.txt'])">
                 download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
             </a>
           </div>
