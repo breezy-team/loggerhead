@@ -79,9 +79,6 @@ class AnnotateUI (object):
                 path = h.get_path(revid, file_id)
             filename = os.path.basename(path)
 
-            def url(pathargs, **kw):
-                return self._branch.url(pathargs, **util.get_context(**kw))
-
             vals = {
                 'branch': self._branch,
                 'util': util,
@@ -93,7 +90,7 @@ class AnnotateUI (object):
                 'navigation': navigation,
                 'change': h.get_changes([ revid ])[0],
                 'contents': list(h.annotate_file(file_id, revid)),
-                'url':url,
+                'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
             h.flush_cache()
