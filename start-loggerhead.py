@@ -99,7 +99,7 @@ def main():
         sys.stderr.write('PID file: %s\n' % (pidfile,))
         sys.stderr.write('\n')
     
-        #daemon.daemonize(pidfile, home)
+        daemon.daemonize(pidfile, home)
 
     setup_logging(home, config, foreground=options.foreground)
         
