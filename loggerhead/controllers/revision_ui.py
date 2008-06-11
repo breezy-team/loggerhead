@@ -87,9 +87,6 @@ class RevisionUI (object):
             if side_by_side:
                 h.add_side_by_side([ change ])
 
-            def url(pathargs, **kw):
-                return self._branch.url(pathargs, **kw)
-
             vals = {
                 'branch': self._branch,
                 'revid': revid,
@@ -103,7 +100,7 @@ class RevisionUI (object):
                 'remember': remember,
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
-                'url': url,
+                'url': self._branch.context_url,
                 'line_count': line_count,
                 'line_count_limit': line_count_limit,
                 'show_plain_diffs': line_count > line_count_limit,

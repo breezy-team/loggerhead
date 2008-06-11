@@ -88,9 +88,6 @@ class InventoryUI (object):
             if updir == '/':
                 updir_file_id = None
 
-            def url(pathargs, **kw):
-                return self._branch.url(pathargs, **kw)
-
             vals = {
                 'branch': self._branch,
                 'util': util,
@@ -104,7 +101,7 @@ class InventoryUI (object):
                 'history': h,
                 'posixpath': posixpath,
                 'navigation': navigation,
-                'url': url,
+                'url': self._branch.context_url,
                 'start_revid': start_revid,
             }
             vals.update(templatefunctions)

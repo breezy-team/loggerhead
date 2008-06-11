@@ -117,7 +117,7 @@ class ChangeLogUI (object):
                 'query': query,
                 'search_failed': search_failed,
                 'all_same_author': all_same_author,
-                'url': url,
+                'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
             h.flush_cache()
