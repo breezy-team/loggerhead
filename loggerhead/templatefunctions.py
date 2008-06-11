@@ -17,27 +17,27 @@ templatefunctions['macros'] = _pt('macros').macros
 
 @templatefunc
 def file_change_summary(url, entry, modified_file_link):
-    return _pt('revisionfilechanges')(
+    return _pt('revisionfilechanges').expand(
         url=url, entry=entry, modified_file_link=modified_file_link,
         **templatefunctions)
 
 @templatefunc
 def revisioninfo(url, branch, entry, modified_file_link=None):
     from loggerhead import util
-    return _pt('revisioninfo')(
+    return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
         modified_file_link=modified_file_link,
         **templatefunctions)
 
 @templatefunc
 def collapse_button(group, name, normal='block'):
-    return _pt('collapse-button')(
+    return _pt('collapse-button').expand(
         group=group, name=name, normal=normal, tg=turbogears,
         **templatefunctions)
 
 @templatefunc
 def collapse_all_button(group, normal='block'):
-    return _pt('collapse-all-button')(
+    return _pt('collapse-all-button').expand(
         group=group, normal=normal, tg=turbogears,
         **templatefunctions)
 
@@ -51,12 +51,12 @@ def revno_with_nick(entry):
 
 @templatefunc
 def modified_file_link_rev(url, entry, item):
-    return _pt('modified-file-link-rev')(
+    return _pt('modified-file-link-rev').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)
 
 @templatefunc
 def modified_file_link_log(url, entry, item):
-    return _pt('modified-file-link-log')(
+    return _pt('modified-file-link-log').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)

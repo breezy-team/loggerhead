@@ -24,12 +24,12 @@ class TemplateWrapper(object):
         self.template = template
         self.filename = filename
 
-    def __call__(self, **kw):
+    def expand(self, **info):
         context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in kw.iteritems():
+        for k, v in info.iteritems():
             context.addGlobal(k, v)
         s = StringIO.StringIO()
-        self.template.expand(context, s, 'utf-8')
+        self.template.expandInline(context, s)
         return s.getvalue()
 
     @property
@@ -84,4 +84,4 @@ class TurboZpt(object):
         if self.get_extra_vars:
             data.update(self.get_extra_vars())
         data.update(info)
-        return tinstance(**data)
+        return tinstance.expand(**data).encode('utf-8')

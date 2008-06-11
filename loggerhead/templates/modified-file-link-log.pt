@@ -1,3 +1,4 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <tal:block>
   <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=item.file_id);
                      title string:Annotate ${item/filename}"
