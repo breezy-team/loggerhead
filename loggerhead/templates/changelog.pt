@@ -101,7 +101,7 @@
                         tal:content="python:util._approximatedate(entry.date)"></span>
               </td>
               <td class="inventory-link">
-                <a tal:attributes="href python:url(['/files', entry.revid]);
+                <a tal:attributes="href python:branch.url(['/files', entry.revid]);
                                    title string:Files at revision ${entry/revno}">
                   files
                 </a>
