@@ -114,8 +114,8 @@
             </span>
           </td>
           <td class="changes-link">
-            <a tal:attributes="href python:url(['/changes'], filter_file_id=file.file_id);
-                               title string:Changes affecting ${file/filename} up to revision ${file/change/revno}">
+            <a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
+                               title string:Changes affecting ${file/filename}">
               changes
             </a>
           </td>
