@@ -1,13 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<tal:block>
-  <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=item.file_id);
-                     title string:Annotate ${item/filename}"
-     tal:content="item/filename" class="filename">
-    item/filename
-  </a>
-  &nbsp;
-  <a tal:attributes="href python:url(['/revision', entry.revid]) + '#' + item.filename"
-     class="jump">
-    &#8594; diff
-  </a>
-</tal:block>
+<a tal:attributes="href python:'javascript:diff_url(\'' + url(['/revision', entry.revid]) + '#' + item.filename + '\')';
+                   title string:Annotate ${item/filename}"
+   tal:content="item/filename" class="filename">
+  item/filename
+</a>
