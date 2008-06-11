@@ -80,7 +80,7 @@ class AnnotateUI (object):
             filename = os.path.basename(path)
 
             def url(pathargs, **kw):
-                return self._branch.url(pathargs, **util.get_context(**kw))
+                return self._branch.url(pathargs, **kw)
 
             vals = {
                 'branch': self._branch,

@@ -26,19 +26,19 @@
       <div class="links">
         <div>
           <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/files', revid], clear=1)">
+          <a tal:attributes="href python:url(['/files', revid])">
             browse files
           </a>
         </div>
         <div>
           <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=revid)">
+          <a tal:attributes="href python:url(['/revision'], start_revid=revid)">
             view revision
           </a>
         </div>
         <div>
           <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=revid, filter_file_id=file_id)">
+          <a tal:attributes="href python:url(['/changes'], start_revid=revid, filter_file_id=file_id)">
             view changes to this file
           </a>
         </div>
@@ -69,7 +69,7 @@
             <td tal:attributes="class string:revno ${line/status}">
               <a tal:condition="python:line.status=='changed'"
                  tal:content="python:util.trunc(line.change.revno)"
-                 tal:attributes="href python:url(['/revision'], clear=1, start_revid=line.change.revid, filter_file_id=file_id);
+                 tal:attributes="href python:url(['/revision'], start_revid=line.change.revid, filter_file_id=file_id);
                                  title python:'%s by %s, on %s (%s)'%(line.change.revno, util.hide_email(line.change.author), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))">
 
                 ${util.trunc(line.change.revno)}

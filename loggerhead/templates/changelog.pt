@@ -122,7 +122,7 @@
                     </th>
                     <td class="children">
                       <a title="Show history"
-                         tal:attributes="href python:url(['/changes'], start_revid=merge_point.revid)"
+                         tal:attributes="href python:url(['/changes'], start_revid=merge_point.revno)"
                          tal:content="python:revno_with_nick(merge_point)">
                         class="revlink">
                         ${text}
@@ -137,7 +137,7 @@
                     </th>
                     <td class="parents">
                       <a title="Show history"
-                         tal:attributes="href python:url(['/changes'], start_revid=parent.revid)"
+                         tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
                          tal:content="python:revno_with_nick(parent)">
                         class="revlink">
                         ${text}
