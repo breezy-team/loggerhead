@@ -2,27 +2,30 @@
 
 import StringIO
 import logging
+import os
 import pkg_resources
 
-#from zope.pagetemplate.pagetemplatefile import PageTemplateFile
 from simpletal import simpleTAL, simpleTALES
 
 log = logging.getLogger("turbogears.zptsupport")
 
-_zpt_cache = {}
 
+_zpt_cache = {}
 def zpt(tfile):
     tinstance = _zpt_cache.get(tfile)
-    if tinstance is None:
+    stat = os.stat(tfile)
+    if tinstance is None or tinstance.stat != stat:
         tinstance = _zpt_cache[tfile] = TemplateWrapper(
-            simpleTAL.compileXMLTemplate(open(tfile)), tfile)
+            simpleTAL.compileXMLTemplate(open(tfile)), tfile, stat)
     return tinstance
+
 
 class TemplateWrapper(object):
 
-    def __init__(self, template, filename):
+    def __init__(self, template, filename, stat):
         self.template = template
         self.filename = filename
+        self.stat = stat
 
     def expand(self, **info):
         context = simpleTALES.Context(allowPythonPath=1)
@@ -36,13 +39,6 @@ class TemplateWrapper(object):
     def macros(self):
         return self.template.macros
 
-## class TGPageTemplateFile(PageTemplateFile):
-
-##     def pt_getContext(self, args=(), options={}, **ignored):
-##         namespace = super(TGPageTemplateFile, self).pt_getContext(
-##             args, options, **ignored)
-##         namespace.update(options)
-##         return namespace
 
 class TurboZpt(object):
     extension = "pt"
