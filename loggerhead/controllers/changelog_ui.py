@@ -102,7 +102,7 @@ class ChangeLogUI (object):
                         break
 
             def url(pathargs, **kw):
-                return self._branch.url(pathargs, **util.get_context(**kw))
+                return self._branch.url(pathargs, **kw)
 
             vals = {
                 'branch': self._branch,

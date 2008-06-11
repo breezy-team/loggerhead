@@ -77,7 +77,7 @@
           </tal:we-are-comparing>
         </div>
 
-        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
+        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, revid, modified_file_link_rev)" />
 
         <table class="diff-option-buttons">
           <tr>

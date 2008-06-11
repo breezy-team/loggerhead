@@ -88,7 +88,7 @@ class RevisionUI (object):
                 h.add_side_by_side([ change ])
 
             def url(pathargs, **kw):
-                return self._branch.url(pathargs, **util.get_context(**kw))
+                return self._branch.url(pathargs, **kw)
 
             vals = {
                 'branch': self._branch,

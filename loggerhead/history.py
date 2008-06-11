@@ -688,6 +688,7 @@ class History (object):
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
+        # FIXME: deprecated method in getting a null revision
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
                             revid_list)
         repo = self._branch.repository

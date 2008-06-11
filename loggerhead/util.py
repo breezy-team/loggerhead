@@ -469,6 +469,9 @@ def set_context(map):
 
 def get_context(**overrides):
     """
+    Soon to be deprecated.
+
+
     return a context map that may be overriden by specific values passed in,
     but only contains keys from the list of valid context keys.
 

@@ -20,15 +20,15 @@
 
     <div metal:fill-slot="content">
       <div class="links">
-        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=revid)">
+        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/revision', change.revno])">
 	    view revision </a>
         </div>
-        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=revid)">
+        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/changes', change.revno])">
 	    view branch changes </a>
         </div>
       </div>
 
-      <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
+      <tal:revision-info replace="structure python:revisioninfo(url, branch, change, revid)" />
 
       <div class="inventory-path">
         <b>folder:</b> <span class="folder" tal:content="path"> ${path} </span>
@@ -81,7 +81,7 @@
           </td>
           <td tal:attributes="class string:filename ${file/kind}">
             <a tal:condition="python:file.kind=='directory'"
-               tal:attributes="href python:url(['/files', revid], file_id=file.file_id)"
+               tal:attributes="href python:url(['/files', file.change.revno], file_id=file.file_id)"
                tal:content="string:${file/filename}/">
               ${file.filename}/
             </a>
@@ -90,14 +90,14 @@
               ${file.filename}@
             </span>
             <a tal:condition="python:file.kind=='file'"
-               tal:attributes="href python:url(['/annotate', revid], file_id=file.file_id);
+               tal:attributes="href python:url(['/annotate', file.change.revno], file_id=file.file_id);
                                title string:Annotate ${file/filename}"
                tal:content="string:${file/filename}">
               ${file.filename}
             </a>
           </td>
           <td class="revision">
-            <a tal:attributes="href python:url(['/revision', file.revid], start_revid=file.revid, file_id=file.file_id);
+            <a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
                                title string:Show revision ${file/change/revno}"
                tal:content="python:util.trunc(file.change.revno, 15)">
               ${text}
@@ -114,7 +114,7 @@
             </span>
           </td>
           <td class="changes-link">
-            <a tal:attributes="href python:url(['/changes'], start_revid=file.revid, file_id=file.file_id);
+            <a tal:attributes="href python:url(['/changes', file.change.revno], file_id=file.file_id);
                                title string:Changes affecting ${file/filename} up to revision ${file/change/revno}">
               changes
             </a>

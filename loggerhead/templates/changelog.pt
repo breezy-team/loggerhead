@@ -78,7 +78,7 @@
             <tr tal:attributes="class string:revision-header parity${entry/parity}">
               <td class="revision-number">
                 <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                                   href  python:url(['/revision', entry.revid])"
+                                   href  python:url(['/revision', history.get_revno(entry.revid)])"
                    tal:content="python:util.trunc(entry.revno)">
                   text
                 </a>
@@ -88,7 +88,7 @@
               </td>
               <td class="summary">
                 <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                                   href  python:url(['/revision', entry.revid])"
+                                   href  python:url(['/revision', history.get_revno(entry.revid)])"
                    tal:content="entry/short_comment">
                   text
                 </a>
@@ -101,7 +101,8 @@
                         tal:content="python:util._approximatedate(entry.date)"></span>
               </td>
               <td class="inventory-link">
-                <a tal:attributes="href python:url(['/files', entry.revid]);
+                  <a tal:attributes="href python:url(['/files', history.get_revno(entry.revid)
+                                                      ]);
                                    title string:Files at revision ${entry/revno}">
                   files
                 </a>
