@@ -312,8 +312,8 @@ class History (object):
     def check_rebuild(self):
         if self._change_cache is not None:
             self._change_cache.check_rebuild()
-        if self._index is not None:
-            self._index.check_rebuild()
+        #if self._index is not None:
+        #    self._index.check_rebuild()
 
     last_revid = property(lambda self: self._last_revid, None, None)
 
