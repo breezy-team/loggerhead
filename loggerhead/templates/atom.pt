@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:tal="http://xml.zope.org/namespaces/tal">
+  <title>
+    bazaar changes for <tal:branch-name content="branch/friendly_name">branch name</tal:branch-name>
+  </title>
+  <updated tal:content="updated">${updated}</updated>
+  <id tal:content="python:branch.url(['atom'])">url</id>
+  <link rel="self" tal:attributes="href python:branch.url([''])" />
+
+  <entry tal:repeat="entry changes">
+    <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
+      ${entry/revno}: ${entry/short_comment}
+    </title>
+    <updated tal:content="entry/date/isoformat">
+    Z
+    </updated>
+    <id tal:content="python:branch.url(['revision', entry.revid])">
+      ID
+    </id>
+    <author>
+      <name tal:content="python:util.hide_email(entry.author)">
+        author
+      </name>
+    </author>
+    <content type="text" tal:content="entry/comment">
+      comment
+    </content>
+    <link rel="alternate"
+          tal:attributes="href python:branch.url(['revision', entry.revid])" />
+  </entry>
+</feed>

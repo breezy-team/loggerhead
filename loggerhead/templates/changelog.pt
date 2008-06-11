@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<tal:block define="onload string:sortCollapseElements()">
+  <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+    <head>
+      <title metal:fill-slot="title"
+             tal:content="string:${branch/friendly_name} : changes">
+        ${branch.friendly_name} : changes
+      </title>
+      <metal:block fill-slot="header_extras">
+        <link rel="alternate" type="application/atom+xml"
+              tal:attributes="href python:url(['/atom']);
+                              title string:RSS feed for ${branch/friendly_name}"
+              />
+
+        <script type="text/javascript"
+                tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+        </script>
+      </metal:block>
+    </head>
+
+    <body>
+
+      <h1 style="margin-bottom: 1em" metal:fill-slot="heading">
+        <span class="branch-name" tal:content="branch/friendly_name">
+          ${branch.friendly_name}
+        </span>
+        : changes
+        <tal:block condition="filter_file_id">
+          to
+          <span class="filename"
+                tal:content="python:history.get_path(revid, filter_file_id)">
+          </span>
+        </tal:block>
+        <tal:block condition="viewing_from">
+          from <tal:block content="python:history.get_revno(start_revid)" />
+        </tal:block>
+        <tal:block condition="query">
+          matching <tal:block content="query" />
+        </tal:block>
+      </h1>
+
+      <div metal:fill-slot="content">
+
+        <p tal:condition="search_failed">
+          Sorry, no results found for your search.
+        </p>
+
+        <p tal:condition="not:changes">
+          No revisions!
+        </p>
+
+        <p tal:condition="changes"
+           class="changelog">
+          <tal:b content="structure python:collapse_all_button('cl')" />
+        </p>
+
+        <table class="log-entries"
+               tal:define="subcolspan python:4-bool(all_same_author)">
+          <tr class="log-header">
+            <th class="revision-number">
+              Rev
+            </th>
+            <th>
+            </th>
+            <th class="summary">
+              Summary
+            </th>
+            <th tal:condition="not:all_same_author"
+                class="author">
+              Committer
+            </th>
+            <th class="date" colspan="2">
+              Date
+            </th>
+          </tr>
+          <tal:block tal:repeat="entry changes">
+            <a tal:attributes="name string:entry-${entry/revno}" />
+            <tr tal:attributes="class string:revision-header parity${entry/parity}">
+              <td class="revision-number">
+                <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
+                                   href  python:url(['/revision', entry.revid])"
+                   tal:content="python:util.trunc(entry.revno)">
+                  text
+                </a>
+              </td>
+              <td class="expand-button" tal:define="name entry/revno"
+                  tal:content="structure python:collapse_button('cl', entry.revno)">
+              </td>
+              <td class="summary">
+                <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
+                                   href  python:url(['/revision', entry.revid])"
+                   tal:content="entry/short_comment">
+                  text
+                </a>
+              </td>
+              <td tal:condition="not:all_same_author"
+                  tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
+                  class="author"></td>
+              <td class="date">
+                  <span tal:attributes="title python:util.date_time(entry.date)"
+                        tal:content="python:util._approximatedate(entry.date)"></span>
+              </td>
+              <td class="inventory-link">
+                <a tal:attributes="href python:branch.url(['/files', entry.revid]);
+                                   title string:Files at revision ${entry/revno}">
+                  files
+                </a>
+              </td>
+            </tr>
+
+            <tr tal:attributes="class string:revision-details-block parity${entry/parity}">
+              <td colspan="2">
+              </td>
+              <td tal:attributes="colspan subcolspan">
+                <table tal:attributes="class string:revision-details hidden-details collapse-cl-${entry/revno}-content">
+                  <tr tal:repeat="merge_point entry/merge_points">
+                    <th class="children">
+                      <tal:block condition="repeat/merge_point/start">
+                        merged in:
+                      </tal:block>
+                    </th>
+                    <td class="children">
+                      <a title="Show history"
+                         tal:attributes="href python:url(['/changes'], start_revid=merge_point.revid)"
+                         tal:content="python:revno_with_nick(merge_point)">
+                        class="revlink">
+                        ${text}
+                      </a>
+                    </td>
+                  </tr>
+                  <tr tal:repeat="parent python:entry.parents[1:]">
+                    <th class="parents">
+                      <tal:block condition="repeat/parent/start">
+                        merged from:
+                      </tal:block>
+                    </th>
+                    <td class="parents">
+                      <a title="Show history"
+                         tal:attributes="href python:url(['/changes'], start_revid=parent.revid)"
+                         tal:content="python:revno_with_nick(parent)">
+                        class="revlink">
+                        ${text}
+                      </a>
+                    </td>
+                  </tr>
+                  <tr tal:condition="all_same_author">
+                    <th class="author">
+                      committed by:
+                    </th>
+                    <td class="author" tal:content="python:util.hide_email(entry.author)">
+                      ${util.hide_email(entry.author)}
+                    </td>
+                  </tr>
+                  <tr>
+                    <th class="description">
+                      description:
+                    </th>
+                    <td class="description">
+                      <tal:block repeat="line entry/comment_clean"
+                                 content="structure string:${line}&lt;br /&gt;" />
+                    </td>
+                  </tr>
+                  <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
+                </table>
+              </td>
+            </tr>
+          </tal:block>
+        </table>
+
+        <div tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
+             class="bar">
+          <table>
+            <tr>
+              <td class="buttons">
+                <a tal:condition="navigation/prev_page_revid"
+                   tal:attributes="href navigation/prev_page_url">
+                  &lt;&lt; page
+                </a>
+	      </td>
+ 	      <td class="rbuttons" align="right">
+                <a tal:condition="navigation/next_page_revid"
+                   tal:attributes="href navigation/next_page_url">
+                  page &gt;&gt;
+                </a>
+ 	      </td>
+ 	    </tr>
+          </table>
+        </div>
+      </div>
+    </body>
+  </html>
+</tal:block>

@@ -23,6 +23,7 @@ import turbogears
 from cherrypy import InternalError
 
 from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
@@ -37,7 +38,7 @@ class RevisionUI (object):
     
 #    @util.lsprof
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.revision')
+    @turbogears.expose(html='zpt:loggerhead.templates.revision')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
@@ -99,10 +100,12 @@ class RevisionUI (object):
                 'remember': remember,
                 'compare_revid': compare_revid,
                 'side_by_side': side_by_side,
+                'url': self._branch.context_url,
                 'line_count': line_count,
                 'line_count_limit': line_count_limit,
                 'show_plain_diffs': line_count > line_count_limit,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
             return vals

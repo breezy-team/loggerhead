@@ -28,6 +28,7 @@ from configobj import ConfigObj
 from loggerhead import util
 from loggerhead.branchview import BranchView
 from loggerhead.history import is_branch
+from loggerhead.templatefunctions import templatefunctions
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -104,15 +105,17 @@ class Root (controllers.RootController):
             self._projects.append(project)
             setattr(self, c_project_name, project)
         
-    @turbogears.expose(template='loggerhead.templates.browse')
+    @turbogears.expose(template='zpt:loggerhead.templates.browse')
     def index(self):
         for p in self._projects:
             p._recheck_auto_folders()
-        return {
+        vals = {
             'projects': self._projects,
             'util': util,
-            'title': self._config.get('title', ''),
+            'title': self._config.get('title', None),
         }
+        vals.update(templatefunctions)
+        return vals
 
     def _check_rebuild(self):
         for p in self._projects:

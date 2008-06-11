@@ -20,6 +20,7 @@
 import turbogears
 
 from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 class AtomUI (object):
@@ -29,8 +30,9 @@ class AtomUI (object):
         self._branch = branch
         self.log = branch.log
 
-    @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
-    def default(self, *args):
+    @turbogears.expose(template='zpt:loggerhead.templates.atom',
+                       format="xml", content_type="application/atom+xml")
+    def default(self, *args, **kwargs):
         h = self._branch.get_history()
 
         h._branch.lock_read()
@@ -47,6 +49,7 @@ class AtomUI (object):
                 'history': h,
                 'updated': entries[0].date.isoformat() + 'Z',
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             return vals
         finally:

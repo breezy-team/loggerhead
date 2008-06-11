@@ -25,6 +25,7 @@ import turbogears
 from cherrypy import InternalError
 
 from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -44,7 +45,7 @@ class InventoryUI (object):
         self.log = branch.log
 
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.inventory')
+    @turbogears.expose(html='zpt:loggerhead.templates.inventory')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
@@ -100,8 +101,10 @@ class InventoryUI (object):
                 'history': h,
                 'posixpath': posixpath,
                 'navigation': navigation,
+                'url': self._branch.context_url,
                 'start_revid': start_revid,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
             return vals

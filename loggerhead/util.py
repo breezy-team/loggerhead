@@ -17,7 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from elementtree import ElementTree as ET
+try:
+    from xml.etree import ElementTree as ET
+except ImportError:
+    from elementtree import ElementTree as ET
 
 import base64
 import cgi
@@ -103,6 +106,7 @@ def _wrap_with_date_time_title(date, formatted_date):
 
 
 def approximatedate(date):
+    #FIXME: Returns an object instead of a string
     return _wrap_with_date_time_title(date, _approximatedate(date))
 
 

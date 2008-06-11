@@ -26,6 +26,7 @@ import turbogears
 from cherrypy import HTTPError
 
 from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -45,7 +46,7 @@ class AnnotateUI (object):
         self.log = branch.log
 
     @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.annotate')
+    @turbogears.expose(html='zpt:loggerhead.templates.annotate')
     def default(self, *args, **kw):
         z = time.time()
         h = self._branch.get_history()
@@ -89,7 +90,9 @@ class AnnotateUI (object):
                 'navigation': navigation,
                 'change': h.get_changes([ revid ])[0],
                 'contents': list(h.annotate_file(file_id, revid)),
+                'url': self._branch.context_url,
             }
+            vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/annotate: %r secs' % (time.time() - z,))
             return vals

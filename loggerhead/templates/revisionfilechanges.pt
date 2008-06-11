@@ -1,0 +1,67 @@
+<tal:block>
+  <tr tal:repeat="added entry/changes/added">
+    <th class="files">
+      <tal:block condition="repeat/added/start">
+        files added:
+      </tal:block>
+    </th>
+    <td class="files"
+        tal:define="filename python:added[0];
+                    file_id  python:added[1]">
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${filename}"
+         tal:content="filename" class="filename">
+        filename
+      </a>
+    </td>
+  </tr>
+  <tr tal:repeat="removed entry/changes/removed">
+    <th class="files">
+      <tal:block condition="repeat/removed/start">
+        files removed:
+      </tal:block>
+    </th>
+    <td class="files"
+        tal:define="filename python:removed[0];
+                    file_id  python:removed[1]">
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${filename}"
+         tal:content="filename" class="filename">
+        filename
+      </a>
+    </td>
+  </tr>
+  <tr tal:repeat="renamed entry/changes/renamed">
+    <th class="files">
+      <tal:block condition="repeat/renamed/start">
+        files renamed:
+      </tal:block>
+    </th>
+    <td class="files"
+        tal:define="old_filename python:renamed[0];
+                    new_filename python:renamed[1];
+                    file_id      python:renamed[2]">
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${old_filename}"
+         tal:content="old_filename" class="filename">
+        old_filename
+      </a>
+      =>
+      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
+                         title string:Annotate ${new_filename}"
+         tal:content="new_filename">
+        new_filename
+      </a>
+    </td>
+  </tr>
+  <tr tal:repeat="item entry/changes/modified" class="filename">
+    <th class="files">
+      <tal:block condition="repeat/item/start">
+        files modified:
+      </tal:block>
+    </th>
+    <td class="files">
+        <tal:b content="structure python:modified_file_link(url, entry, item)" />
+    </td>
+  </tr>
+</tal:block>

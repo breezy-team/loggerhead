@@ -155,8 +155,8 @@ def clean_message(message):
 
     # Make short form of commit message.
     short_message = message[0]
-    if len(short_message) > 80:
-        short_message = short_message[:80] + '...'
+    if len(short_message) > 60:
+        short_message = short_message[:60] + '...'
 
     return message, short_message
 
@@ -320,6 +320,7 @@ class History (object):
     @with_branch_lock
     def get_config(self):
         return self._branch.get_config()
+
 
     def get_revno(self, revid):
         if revid not in self._revision_info:
