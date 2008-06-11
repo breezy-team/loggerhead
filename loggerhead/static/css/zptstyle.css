@@ -208,6 +208,7 @@ div.links div {
     width: 98%;
     margin-top: 0.5em;
     margin-left: 1em;
+    font-size: 1em;
 }
 
 .log-entries .log-header {
@@ -292,7 +293,6 @@ th.files {
 
 .revision-info {
     border: none;
-    font-size: smaller;
     margin-bottom: 1em;
     padding: 0;
     background-color: #f4f5f8;
@@ -312,7 +312,7 @@ th.files {
     font-weight: normal;
     text-align: right;
     vertical-align: top;
-    
+    font-size: 0.8em;
     padding-left: 0.5em;
     padding-right: 0.5em;
     padding-top: 2px;
@@ -321,6 +321,7 @@ th.files {
 
 .revision-info td {
     font-weight: normal;
+    font-size: 0.8em;
     padding-left: 0.5em;
     padding-top: 2px;
     padding-bottom: 2px;
@@ -328,14 +329,17 @@ th.files {
 
 .revision-info table td.date {
     font-family: monospace;
+    font-size: 1em;
 }
 
 .revision-info table td.description {
     font-family: monospace;
+    font-size: 1em;
 }
 
-.revision-info table td.files .filename {
+.revision-info table td.files {
     font-family: monospace;
+    font-size: 1em;
 }
 
 .revision-info table td.files a.jump {
@@ -367,7 +371,7 @@ th.files {
 .diff-block th.filename {
     font-family: monospace;
     font-weight: normal;
-    font-size: smaller;
+    font-size: 1em;
     padding-left: 1em;
     padding-top: 1em;
     padding-bottom: 1em;
@@ -376,7 +380,7 @@ th.files {
 }
 
 .diff-block .diff-chunk {
-    font-size: 66%;
+    font-size: 0.9em;
     margin-top: 0px;
     margin-bottom: 2em;
 }
