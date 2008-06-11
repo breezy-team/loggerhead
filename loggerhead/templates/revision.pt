@@ -49,7 +49,7 @@
                 download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
             </a>
           </div>
-          <div tal:condition="python:(remember is not None) and (compare_revid is None)" >
+          <div tal:condition="python:(remember is not None) and (compare_revid is None) and (revid != remember)" >
             <b>&#8594;</b>
             <a tal:attributes="href python:url(['/revision', revid], compare_revid=remember)">
               compare with revision <tal:b content="python:history.get_revno(remember)" />
