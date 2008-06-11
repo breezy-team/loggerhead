@@ -57,7 +57,6 @@ class ChangeLogUI (object):
             try:
                 revid, start_revid, revid_list = h.get_view(
                     revid, start_revid, filter_file_id, query)
-                kw['start_revid'] = start_revid
                 util.set_context(kw)
 
                 if (query is not None) and (len(revid_list) == 0):
