@@ -63,7 +63,7 @@
             <a tal:attributes="name string:entry-${entry/revno}" />
             <tr class="blueRow">
                 <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
-                                   href  python:url(['/revision', entry.revno], clear=1)"
+                                                                href  python:url(['/revision', entry.revno], clear=1)"
                    tal:content="python:util.trunc(entry.revno)">
                   text
                 </a>
@@ -72,47 +72,29 @@
                 <td class="summcell"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                         href  python:url(['/revision', entry.revno], clear=1);
                                                         class string:link"
-                   tal:content="entry/short_comment">
-                  text
-              </a></td>
-                <td class="autcell">Launchpad Patch Queu&hellip;</td>
-                <td class="datr">2008-04-18</td>
-                <td class="diffr"><a href="#" title="Diff at version 165"><img src="images/ico_diff.gif" alt="Diff" /></a></td>
-                <td class="downr"><a href="#" title="Files at version 165"><img src="images/ico_file.gif" alt="Files" /></a></td>
+                                        tal:content="entry/short_comment"></a></td>
+                <td tal:condition="not:all_same_author"
+                  tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
+                  class="autcell"></td>
+                <td class="date">
+                    <span tal:attributes="title python:util.date_time(entry.date)"
+                          tal:content="python:util._approximatedate(entry.date)"></span>
+                </td>
+                <td class="diffr"><a tal:attributes="title python:'Show diff at revision '+entry.revno;
+                                                     href href  python:url(['/revision', entry.revno], clear=1)">
+                                  <img tal:attributes="src python:tg.url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
+                <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
+                                                     title string:Files at revision ${entry/revno}">
+                                   <img tal:attributes="src python:tg.url('/static/images/ico_file.gif');
+                                                        alt string:Files" /></a>
+                </td>
             </tr>
           </tal:block>
 
 
             <tr tal:attributes="class string:revision-header parity${entry/parity}">
-              <td class="revision-number">
-                <a tal:attributes="title python:'Show revision '+entry.revno;
-                                   href  python:url(['/revision', entry.revno], clear=1)"
-                   tal:content="python:util.trunc(entry.revno)">
-                  text
-                </a>
-              </td>
               <td class="expand-button" tal:define="name entry/revno"
                   tal:content="structure python:collapse_button('cl', entry.revno)">
-              </td>
-              <td class="summary">
-                <a tal:attributes="title python:'Show revision '+entry.revno;
-                                   href  python:url(['/revision', entry.revno], clear=1)"
-                   tal:content="entry/short_comment">
-                  text
-                </a>
-              </td>
-              <td tal:condition="not:all_same_author"
-                  tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
-                  class="author"></td>
-              <td class="date">
-                  <span tal:attributes="title python:util.date_time(entry.date)"
-                        tal:content="python:util._approximatedate(entry.date)"></span>
-              </td>
-              <td class="inventory-link">
-                <a tal:attributes="href python:branch.url(['/files', entry.revno]);
-                                   title string:Files at revision ${entry/revno}">
-                  files
-                </a>
               </td>
             </tr>
 
