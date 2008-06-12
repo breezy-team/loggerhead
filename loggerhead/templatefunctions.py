@@ -32,13 +32,13 @@ def revisioninfo(url, branch, entry, modified_file_link=None):
 @templatefunc
 def collapse_button(group, name, normal='block'):
     return _pt('collapse-button').expand(
-        group=group, name=name, normal=normal, tg=turbogears,
+        group=group, name=name, normal=normal,
         **templatefunctions)
 
 @templatefunc
 def collapse_all_button(group, normal='block'):
     return _pt('collapse-all-button').expand(
-        group=group, normal=normal, tg=turbogears,
+        group=group, normal=normal,
         **templatefunctions)
 
 @templatefunc
@@ -60,3 +60,10 @@ def modified_file_link_log(url, entry, item):
     return _pt('modified-file-link-log').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)
+
+class tg:
+    @staticmethod
+    def url(what):
+        return what
+
+templatefunctions['tg'] =  tg

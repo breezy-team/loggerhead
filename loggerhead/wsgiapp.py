@@ -1,8 +1,17 @@
+import logging
+import os
+
+from paste import urlparser
+from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 
-import logging
+
+static = os.path.join(
+    os.path.dirname(__file__), 'static')
+
+static_app = urlparser.make_static(None, static)
 
 logging.basicConfig()
 
@@ -22,7 +31,11 @@ class BranchWSGIApp(object):
         request = WSGIRequest(environ)
         response = WSGIResponse()
         response.headers['Content-Type'] = 'text/plain'
-        c = ChangeLogUI(self)
-        c.default(request, response)
+        path = path_info_pop(environ)
+        if not path or path == 'changes':
+            c = ChangeLogUI(self)
+            c.default(request, response)
+        elif path == 'static':
+            return static_app(environ, start_response)
         return response(environ, start_response)
 
