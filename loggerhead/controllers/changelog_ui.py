@@ -19,8 +19,8 @@
 
 import time
 
-import turbogears
 from cherrypy import InternalError
+from paste.request import path_info_pop
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
@@ -45,10 +45,10 @@ class ChangeLogUI (object):
 
         h._branch.lock_read()
         try:
-            args = ()
             kw = request.GET
-            if len(args) > 0:
-                revid = h.fix_revid(args[0])
+            arg = path_info_pop(request.environ)
+            if arg:
+                revid = h.fix_revid(arg)
             else:
                 revid = None
 
