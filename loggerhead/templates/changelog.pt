@@ -77,8 +77,8 @@
             <a tal:attributes="name string:entry-${entry/revno}" />
             <tr tal:attributes="class string:revision-header parity${entry/parity}">
               <td class="revision-number">
-                <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                                   href  python:url(['/revision', history.get_revno(entry.revid)])"
+                <a tal:attributes="title python:'Show revision '+entry.revno;
+                                   href  python:url(['/revision', entry.revno], clear=1)"
                    tal:content="python:util.trunc(entry.revno)">
                   text
                 </a>
@@ -87,8 +87,8 @@
                   tal:content="structure python:collapse_button('cl', entry.revno)">
               </td>
               <td class="summary">
-                <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);
-                                   href  python:url(['/revision', history.get_revno(entry.revid)])"
+                <a tal:attributes="title python:'Show revision '+entry.revno;
+                                   href  python:url(['/revision', entry.revno], clear=1)"
                    tal:content="entry/short_comment">
                   text
                 </a>

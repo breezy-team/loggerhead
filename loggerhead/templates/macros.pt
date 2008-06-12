@@ -22,8 +22,8 @@
           <tr>
             <td>
               <span class="buttons">
-                <a tal:attributes="href python:url('/changes')"> changes </a>
-                <a tal:attributes="href python:url('/files')"> files </a>
+                <a tal:attributes="href python:url('/changes', clear=1)"> changes </a>
+                <a tal:attributes="href python:url('/files', clear=1)"> files </a>
                 <span class="search">
                   search: <input type="text" name="q" />
                 </span>

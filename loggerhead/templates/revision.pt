@@ -125,7 +125,7 @@
                 <tr>
                   <th class="filename" colspan="4">
                     <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
-                    <a tal:attributes="href  python:url(['/annotate', change.revid], file_id=item.file_id);
+                    <a tal:attributes="href  python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
                                        name  string:${item/filename}-s;
                                        title string:Annotate ${item/filename}"
                        tal:content="item/filename">
