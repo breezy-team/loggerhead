@@ -26,6 +26,11 @@ from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 
 
+from turbosimpletal import TurboZpt
+
+t = TurboZpt()
+tt = t.load_template('loggerhead.templates.changelog')
+
 class ChangeLogUI (object):
     
     def __init__(self, branch):
@@ -33,15 +38,15 @@ class ChangeLogUI (object):
         self._branch = branch
         self.log = branch.log
         
-    @util.strip_whitespace
-    @turbogears.expose(html='zpt:loggerhead.templates.changelog')
-    def default(self, *args, **kw):
+    def default(self, request, response):
         z = time.time()
-        h = self._branch.get_history()
-        config = self._branch.config
+        h = self._branch.history
+        #config = self._branch.config
 
         h._branch.lock_read()
         try:
+            args = ()
+            kw = request.GET
             if len(args) > 0:
                 revid = h.fix_revid(args[0])
             else:
@@ -51,7 +56,7 @@ class ChangeLogUI (object):
             query = kw.get('q', None)
             start_revid = h.fix_revid(kw.get('start_revid', None))
             orig_start_revid = start_revid
-            pagesize = int(config.get('pagesize', '20'))
+            pagesize = 20#int(config.get('pagesize', '20'))
             search_failed = False
 
             try:
@@ -122,6 +127,7 @@ class ChangeLogUI (object):
             vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
-            return vals
+            response.headers['Content-Type'] = 'text/html'
+            response.write(tt.expand(**vals).encode('utf-8'))
         finally:
             h._branch.unlock()
