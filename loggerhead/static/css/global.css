@@ -187,28 +187,28 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	border:none;
 	border-bottom:1px solid #d2d2d2;
 }
-ul#expandrev {
+ul.expandrev {
 	list-style:none;
 	margin:10px 0px 5px 0px;
 	padding:0px;
 	font:normal 11px/normal sans-serif;
 	color:#000;
 }
-ul#expandrev li {
+ul.expandrev li {
 	padding:2px 0px 2px 20px;
 	margin:0px 0px 2px 0px;
 }
-ul#expandrev li.mergefrom {
+ul.expandrev li.mergefrom {
 	background:url(../images/ico_mergefrom.gif) 0px 0px no-repeat;
 }
-ul#expandrev li.committerli {
+ul.expandrev li.committerli {
 	background:url(../images/ico_committer.gif) 2px 0px no-repeat;
 }
-ul#expandrev li.desc {
+ul.expandrev li.desc {
 	background:url(../images/ico_description.gif) 0px 0px no-repeat;
 	color:#666;
 }
-ul#expandrev li.files {
+ul.expandrev li.files {
 	background:url(../images/ico_file.gif) 2px 0px no-repeat;
     margin-left: 8px;
 }

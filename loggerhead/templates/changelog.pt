@@ -3,9 +3,7 @@
   <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
     <head>
       <title metal:fill-slot="title"
-             tal:content="string:${branch/friendly_name} : changes">
-        ${branch.friendly_name} : changes
-      </title>
+             tal:content="string:${branch/friendly_name} : changes"></title>
       <metal:block fill-slot="header_extras">
         <link rel="alternate" type="application/atom+xml"
               tal:attributes="href python:url(['/atom']);
@@ -15,7 +13,7 @@
     </head>
 
     <body>
-        <h1 tal:content="branch/friendly_name"></h1>
+        <h1 tal:content="string:${branch/friendly_name}"></h1>
 
         <tal:block condition="filter_file_id">
           to
@@ -40,11 +38,6 @@
           No revisions!
         </p>
 
-        <p tal:condition="changes"
-           class="changelog">
-          <tal:b content="structure python:collapse_all_button('cl')" />
-        </p>
-
         <p class="fr revnolink">Revision <a href="#" title="Show revision 165">165</a> to <a href="#" title="Show revision 174">174</a></p>
     	<p class="expand"><a href="#"><img src="https://edge.launchpad.net/@@/treeCollapsed" alt="expand all" /> expand all</a></p>
         <!-- Table -->        
@@ -60,21 +53,25 @@
             <td class="downloadcell">Files</td>
           </tr>
           <tal:block tal:repeat="entry changes">
-            <a tal:attributes="name string:entry-${entry/revno}" />
-            <tr class="blueRow">
+            <a tal:attributes="name string:entry-${entry/revno}"/>
+            <tr class="blueRow revision_log">
                 <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                                 href  python:url(['/revision', entry.revno], clear=1)"
                    tal:content="python:util.trunc(entry.revno)">
                   text
                 </a>
                 </td>            
-                <td class="expcell"><a href="#" title="Expand"><img src="https://launchpad.net/@@/treeCollapsed" alt="Expand" /></a></td>
+                <td class="expcell">
+                    <div class="expand_revisioninfo">
+                        <img src="https://launchpad.net/@@/treeCollapsed" alt="Expand Revision" />
+                    </div>
+                </td>
                 <td class="summcell"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                         href  python:url(['/revision', entry.revno], clear=1);
                                                         class string:link"
                                         tal:content="entry/short_comment"></a>
                                     
-           	                        <ul id="expandrev">
+                                    <ul class="expandrev">
                	                        <li class="mergefrom" tal:repeat="parent python:entry.parents[1:]">
                                             <span class="revnolink">
                                                 <a tal:attributes="href python:url(['/changes', parent.revno])"

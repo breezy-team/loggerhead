@@ -10,7 +10,12 @@
     <style type="text/css" media="screen, print">@import url(https://launchpad.net/+icing/rev6393/+style-slimmer.css);</style>
     <link rel="stylesheet"
           tal:attributes="href python:tg.url('/static/css/global.css')" />
-
+    <script type="text/javascript"
+            tal:attributes="src python:tg.url('/static/javascript/mootools-1.2-core.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:tg.url('/static/javascript/mootools-1.2-more.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:tg.url('/static/javascript/custom.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
