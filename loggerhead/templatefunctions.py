@@ -22,11 +22,11 @@ def file_change_summary(url, entry, modified_file_link):
         **templatefunctions)
 
 @templatefunc
-def revisioninfo(url, branch, entry, revid, modified_file_link=None):
+def revisioninfo(url, branch, entry, modified_file_link=None):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
-        modified_file_link=modified_file_link, revid=revid,
+        modified_file_link=modified_file_link,
         **templatefunctions)
 
 @templatefunc
