@@ -15,6 +15,7 @@ static = os.path.join(
 static_app = urlparser.make_static(None, static)
 
 logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 

@@ -35,6 +35,12 @@ class TemplateWrapper(object):
         self.template.expandInline(context, s)
         return s.getvalue()
 
+    def expand_(self, f, **info):
+        context = simpleTALES.Context(allowPythonPath=1)
+        for k, v in info.iteritems():
+            context.addGlobal(k, v)
+        self.template.expand(context, f, 'utf-8')
+
     @property
     def macros(self):
         return self.template.macros
@@ -64,20 +70,3 @@ class TurboZpt(object):
             package, "%s.%s" % (basename, self.extension))
         return zpt(tfile)
 
-    def render(self, info, format="html", fragment=False, template=None):
-        """Renders data in the desired format.
-
-        @param info: the data / context itself
-        @type info: dict
-        @para format: "html"
-        @type format: "string"
-        @para template: name of the template to use
-        @type template: string
-        """
-        tinstance = self.load_template(template)
-        log.debug("Applying template %s" % (tinstance.filename))
-        data = dict()
-        if self.get_extra_vars:
-            data.update(self.get_extra_vars())
-        data.update(info)
-        return tinstance.expand(**data).encode('utf-8')

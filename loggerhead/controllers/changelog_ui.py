@@ -128,6 +128,6 @@ class ChangeLogUI (object):
             h.flush_cache()
             self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
             response.headers['Content-Type'] = 'text/html'
-            response.write(tt.expand(**vals).encode('utf-8'))
+            tt.expand_(response, **vals)
         finally:
             h._branch.unlock()
