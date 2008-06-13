@@ -69,7 +69,7 @@
         revision id:
       </th>
       <td class="revid">
-          <span tal:content="revid">
+          <span tal:content="python:change.revid">
               revid
         </span>
       </td>
