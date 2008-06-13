@@ -2,7 +2,7 @@
 
 <div tal:repeat="added entry/changes/added">
     <tal:block condition="repeat/added/start">
-        files added:
+        <li class="desc">files added:</li>
     </tal:block>
     <li class="files"
         tal:define="filename python:added[0];
@@ -15,7 +15,7 @@
 
 <div tal:repeat="removed entry/changes/removed">
     <tal:block condition="repeat/removed/start">
-        files removed:
+        <li class="desc">files removed:</li>
     </tal:block>
     <li class="files"
         tal:define="filename python:removed[0];
@@ -28,7 +28,7 @@
 
 <div tal:repeat="renamed entry/changes/renamed">
     <tal:block condition="repeat/renamed/start">
-        files renamed:
+        <li class="desc">files renamed:</li>
     </tal:block>
     <li class="files"
         tal:define="old_filename python:renamed[0];
@@ -50,7 +50,7 @@
 
 <div tal:repeat="item entry/changes/modified">
     <tal:block condition="repeat/item/start">
-        files modified:
+        <li class="desc">files modified:</li>
     </tal:block>
     <tal:b content="structure python:modified_file_link(url, entry, item)" />
 </div>

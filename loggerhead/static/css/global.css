@@ -28,8 +28,8 @@ form {
 }
 .fr {float:right;}
 .fl {float:left;}
-/*General Content*/
-/*Loggerhead Menu tabs*/
+
+/* Loggerhead Menu tabs */
 ul#menuTabs {
 	width:98%;
 	height:33px;
@@ -67,7 +67,8 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	background:#666 url(../images/bg_Tabs.gif) top center;
 	text-decoration:none;
 }
-/*Search & RSS*/
+
+/* Search & RSS */
 #finderBox {
 	width:300px;
 	float:right;
@@ -97,7 +98,8 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	display:inline;
 	padding:0px 0px 0px 10px;
 }
-/*Loggerhead General Content*/
+
+/* General Content */
 #loggerheadCont {
 	width:98%;
 	padding:10px 1%;
@@ -132,6 +134,7 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	color:#CC6600;
 	text-decoration:none;		
 }
+
 /*Log Table*/
 #logentries {
 	caption-side:top;
@@ -207,8 +210,10 @@ ul#expandrev li.desc {
 }
 ul#expandrev li.files {
 	background:url(../images/ico_file.gif) 2px 0px no-repeat;
+    margin-left: 8px;
 }
-/*Pagination Style*/
+
+/* Navigation */
 ul {border:0; margin:0; padding:0;}
 
 ul#pagination {
@@ -253,6 +258,6 @@ ul#pagination {
 #pagination .next a {
 	color:#0f6b97;
 }
-#pagination a:hover{
+#pagination a:hover {
 	border:solid 1px #666666;
 }		
