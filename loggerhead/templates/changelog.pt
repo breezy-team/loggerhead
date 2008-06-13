@@ -54,7 +54,7 @@
           </tr>
           <tal:block tal:repeat="entry changes">
             <a tal:attributes="name string:entry-${entry/revno}"/>
-            <tr class="blueRow revision_log">
+                <tr tal:attributes="class string:blueRow${entry/parity} revision_log">
                 <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                                 href  python:url(['/revision', entry.revno], clear=1)"
                    tal:content="python:util.trunc(entry.revno)">
@@ -70,7 +70,7 @@
                                                         href  python:url(['/revision', entry.revno], clear=1);
                                                         class string:link"
                                         tal:content="entry/short_comment"></a>
-                                    
+                                <div class="revisioninfo">
                                     <ul class="expandrev">
                	                        <li class="mergefrom" tal:repeat="parent python:entry.parents[1:]">
                                             <span class="revnolink">
@@ -85,6 +85,7 @@
                                             tal:content="python:util.hide_email(entry.author)"></li>
                                         <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
                                     </ul>
+                                </div>
                 </td>
                 <td tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
                     class="autcell"></td>
