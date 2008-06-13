@@ -72,10 +72,26 @@
                 <td class="summcell"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                         href  python:url(['/revision', entry.revno], clear=1);
                                                         class string:link"
-                                        tal:content="entry/short_comment"></a></td>
-                <td tal:condition="not:all_same_author"
-                  tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
-                  class="autcell"></td>
+                                        tal:content="entry/short_comment"></a>
+                                    
+           	                        <ul id="expandrev">
+               	                        <li class="mergefrom" tal:repeat="parent python:entry.parents[1:]">
+                                            <span class="revnolink">
+                                                <a tal:attributes="href python:url(['/changes', parent.revno])"
+                                                   tal:content="parent/revno"></a>
+                                            </span>
+                                            <a tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
+                                               tal:content="python:'(' + parent.branch_nick + ')'"
+                                                title="Show history" class="link"></a>
+                                        </li>
+                                        <li class="committerli" 
+                                            tal:content="python:util.hide_email(entry.author)"></li>
+                                        <li class="desc">(mbp) merge 1.3.1 news into trunk</li>
+                                        <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
+                                    </ul>
+                </td>
+                <td tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
+                    class="autcell"></td>
                 <td class="date">
                     <span tal:attributes="title python:util.date_time(entry.date)"
                           tal:content="python:util._approximatedate(entry.date)"></span>
@@ -118,29 +134,6 @@
                       </a>
                     </td>
                   </tr>
-                  <tr tal:repeat="parent python:entry.parents[1:]">
-                    <th class="parents">
-                      <tal:block condition="repeat/parent/start">
-                        merged from:
-                      </tal:block>
-                    </th>
-                    <td class="parents">
-                      <a title="Show history"
-                         tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
-                         tal:content="python:revno_with_nick(parent)">
-                        class="revlink">
-                        ${text}
-                      </a>
-                    </td>
-                  </tr>
-                  <tr tal:condition="all_same_author">
-                    <th class="author">
-                      committed by:
-                    </th>
-                    <td class="author" tal:content="python:util.hide_email(entry.author)">
-                      ${util.hide_email(entry.author)}
-                    </td>
-                  </tr>
                   <tr>
                     <th class="description">
                       description:
@@ -150,7 +143,7 @@
                                  content="structure string:${line}&lt;br /&gt;" />
                     </td>
                   </tr>
-                  <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
+
                 </table>
               </td>
             </tr>
