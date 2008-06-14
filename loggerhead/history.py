@@ -35,6 +35,7 @@ import threading
 import time
 from StringIO import StringIO
 
+from loggerhead import search
 from loggerhead import util
 from loggerhead.util import decorator
 
@@ -47,7 +48,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
 
 with_branch_lock = util.with_lock('_lock', 'branch')
 
@@ -539,7 +539,7 @@ class History (object):
         else:
             revid_list = None
 
-        revid_list = self.get_search_revid_list(query, revid_list)
+        revid_list = search.search_revisions(query)
         if len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
