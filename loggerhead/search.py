@@ -1,6 +1,5 @@
 import sets
 import os
-from configobj import ConfigObj
 from bzrlib.plugins.search import errors
 from bzrlib.plugins.search import index as _mod_index
 from bzrlib.plugins.search.index import FileTextHit, RevisionHit
