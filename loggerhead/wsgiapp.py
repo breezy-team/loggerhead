@@ -7,6 +7,9 @@ from paste import httpexceptions
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.controllers.changelog_ui import ChangeLogUI
+from loggerhead.controllers.inventory_ui import InventoryUI
+from loggerhead.controllers.annotate_ui import AnnotateUI
+from loggerhead.controllers.revision_ui import RevisionUI
 
 
 static = os.path.join(
@@ -27,9 +30,13 @@ class BranchWSGIApp(object):
     def url(self, *args, **kw):
         if isinstance(args[0], list):
             args = args[0]
+        qs = ''
+        for k, v in kw.iteritems():
+            qs += '%s=%s'%(k, v)
         return request.construct_url(
             self._environ, script_name=self._url_base,
-            path_info=self._url_base + '/'.join(args))
+            path_info=self._url_base + '/'.join(args),
+            querystring=qs)
 
     context_url = url
 
@@ -44,6 +51,15 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPMovedPermanently('changes')
         elif path == 'changes':
             c = ChangeLogUI(self)
+            c.default(req, response)
+        elif path == 'annotate':
+            c = AnnotateUI(self)
+            c.default(req, response)
+        elif path == 'files':
+            c = InventoryUI(self)
+            c.default(req, response)
+        elif path == 'revision':
+            c = RevisionUI(self)
             c.default(req, response)
         elif path == 'static':
             return static_app(environ, start_response)

@@ -19,11 +19,15 @@
 
 import time
 
-import turbogears
 from cherrypy import InternalError
+from paste.request import path_info_pop
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
+from turbosimpletal import TurboZpt
+
+t = TurboZpt()
+tt = t.load_template('loggerhead.templates.revision')
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
@@ -35,17 +39,22 @@ class RevisionUI (object):
         # BranchView object
         self._branch = branch
         self.log = branch.log
-    
-#    @util.lsprof
-    @util.strip_whitespace
-    @turbogears.expose(html='zpt:loggerhead.templates.revision')
-    def default(self, *args, **kw):
+
+    def default(self, request, response):
         z = time.time()
-        h = self._branch.get_history()
+        h = self._branch.history
+        kw = request.GET
         util.set_context(kw)
         
         h._branch.lock_read()
         try:
+            args = []
+            while 1:
+                arg = path_info_pop(request.environ)
+                if arg is None:
+                    break
+                args.append(arg)
+
             if len(args) > 0:
                 revid = h.fix_revid(args[0])
             else:
@@ -75,8 +84,7 @@ class RevisionUI (object):
             # add parent & merge-point branch-nick info, in case it's useful
             h.get_branch_nicks([ change ])
 
-            line_count_limit = int(self._branch.get_config_item(
-                'line_count_limit', DEFAULT_LINE_COUNT_LIMIT))
+            line_count_limit = DEFAULT_LINE_COUNT_LIMIT
             line_count = 0
             for file in change.changes.modified:
                 for chunk in file.chunks:
@@ -108,6 +116,7 @@ class RevisionUI (object):
             vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
-            return vals
+            response.headers['Content-Type'] = 'text/html'
+            tt.expand_(response, **vals)
         finally:
             h._branch.unlock()

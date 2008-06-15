@@ -1,5 +1,4 @@
 import os
-import turbogears
 from turbosimpletal.zptsupport import zpt
 
 templatefunctions = {}

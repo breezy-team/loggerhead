@@ -1,13 +1,10 @@
 "TurboGears support for Zope Page Templates"
 
 import StringIO
-import logging
 import os
 import pkg_resources
 
 from simpletal import simpleTAL, simpleTALES
-
-log = logging.getLogger("turbogears.zptsupport")
 
 
 _zpt_cache = {}

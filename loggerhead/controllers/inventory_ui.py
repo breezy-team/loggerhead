@@ -21,11 +21,15 @@ import logging
 import posixpath
 import time
 
-import turbogears
 from cherrypy import InternalError
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
+from turbosimpletal import TurboZpt
+from paste.request import path_info_pop
+
+t = TurboZpt()
+tt = t.load_template('loggerhead.templates.inventory')
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -44,15 +48,21 @@ class InventoryUI (object):
         self._branch = branch
         self.log = branch.log
 
-    @util.strip_whitespace
-    @turbogears.expose(html='zpt:loggerhead.templates.inventory')
-    def default(self, *args, **kw):
+    def default(self, request, response):
         z = time.time()
-        h = self._branch.get_history()
+        h = self._branch.history
+        kw = request.GET
         util.set_context(kw)
 
         h._branch.lock_read()
         try:
+            args = []
+            while 1:
+                arg = path_info_pop(request.environ)
+                if arg is None:
+                    break
+                args.append(arg)
+
             if len(args) > 0:
                 revid = h.fix_revid(args[0])
             else:
@@ -107,6 +117,7 @@ class InventoryUI (object):
             vals.update(templatefunctions)
             h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
-            return vals
+            response.headers['Content-Type'] = 'text/html'
+            tt.expand_(response, **vals)
         finally:
             h._branch.unlock()
