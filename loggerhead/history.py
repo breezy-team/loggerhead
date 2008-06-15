@@ -539,7 +539,7 @@ class History (object):
         else:
             revid_list = None
 
-        revid_list = search.search_revisions(query)
+        revid_list = search.search_revisions(self._branch, query)
         if len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
