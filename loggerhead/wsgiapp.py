@@ -40,6 +40,13 @@ class BranchWSGIApp(object):
 
     context_url = url
 
+    controllers_dict = {
+        'changes': ChangeLogUI,
+        'annotate': AnnotateUI,
+        'files': InventoryUI,
+        'revision': RevisionUI,
+        }
+
     def app(self, environ, start_response):
         req = WSGIRequest(environ)
         response = WSGIResponse()
@@ -49,19 +56,12 @@ class BranchWSGIApp(object):
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently('changes')
-        elif path == 'changes':
-            c = ChangeLogUI(self)
-            c.default(req, response)
-        elif path == 'annotate':
-            c = AnnotateUI(self)
-            c.default(req, response)
-        elif path == 'files':
-            c = InventoryUI(self)
-            c.default(req, response)
-        elif path == 'revision':
-            c = RevisionUI(self)
-            c.default(req, response)
-        elif path == 'static':
+        if path == 'static':
             return static_app(environ, start_response)
+        cls = self.controllers_dict.get(path)
+        if cls is None:
+            raise httpexceptions.HTTPNotFound()
+        c = cls(self)
+        c.default(req, response)
         return response(environ, start_response)
 
