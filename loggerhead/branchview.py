@@ -29,9 +29,8 @@ import turbogears
 from cherrypy import HTTPRedirect
 
 from loggerhead import util
-from loggerhead.changecache import ChangeCache, FileChangeCache
+from loggerhead.changecache import FileChangeCache
 from loggerhead.history import History
-from loggerhead.textindex import TextIndex
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.revision_ui import RevisionUI
@@ -59,7 +58,6 @@ class BranchView (object):
         # branch history
         self._history_lock = threading.RLock()
         self._history = None
-        self._closed = False
 
         self.changes = ChangeLogUI(self)
         self.revision = RevisionUI(self)
@@ -71,17 +69,6 @@ class BranchView (object):
 
         # force history object to be loaded:
         self.get_history()
-
-        turbogears.startup.call_on_shutdown.append(self.close)
-
-    @with_history_lock
-    def close(self):
-        # it's important that we cleanly detach the history, so the cache
-        # files can be closed correctly and hopefully remain uncorrupted.
-        # this should also stop any ongoing indexing.
-        self._history.detach()
-        self._history = None
-        self._closed = True
 
     config = property(lambda self: self._config)
 
@@ -143,12 +130,8 @@ class BranchView (object):
         calls.  but if the bazaar branch on-disk has been updated since this
         History was created, a new object will be created and returned.
         """
-        if self._closed:
-            return None
         if (self._history is None) or self._history.out_of_date():
             self.log.debug('Reload branch history...')
-            if self._history is not None:
-                self._history.detach()
             _history = self._history = History.from_folder(
                 self._absfolder, self._name)
             cache_path = self._config.get('cachepath', None)
@@ -156,15 +139,8 @@ class BranchView (object):
                 # try the project config
                 cache_path = self._project_config.get('cachepath', None)
             if cache_path is not None:
-                _history.use_cache(ChangeCache(_history, cache_path))
                 _history.use_file_cache(FileChangeCache(_history, cache_path))
-                _history.use_search_index(TextIndex(_history, cache_path))
         return self._history
-
-    def check_rebuild(self):
-        h = self.get_history()
-        if h is not None:
-            h.check_rebuild()
 
     def url(self, elements, **kw):
         "build an url relative to this branch"

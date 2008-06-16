@@ -114,7 +114,6 @@ class RevisionUI (object):
                 'show_plain_diffs': line_count > line_count_limit,
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             self.log.info('/revision: %r seconds' % (time.time() - z,))
             response.headers['Content-Type'] = 'text/html'
             tt.expand_(response, **vals)

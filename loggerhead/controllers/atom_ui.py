@@ -52,7 +52,6 @@ class AtomUI (object):
                 'updated': entries[0].date.isoformat() + 'Z',
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             response.headers['Content-Type'] = 'application/atom+xml'
             tt.expand_(response, **vals)
         finally:

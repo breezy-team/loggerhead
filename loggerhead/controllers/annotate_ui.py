@@ -105,7 +105,6 @@ class AnnotateUI (object):
                 'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             self.log.info('/annotate: %r secs' % (time.time() - z,))
             response.headers['Content-Type'] = 'text/html'
             tt.expand_(response, **vals)

@@ -114,7 +114,6 @@ class InventoryUI (object):
                 'start_revid': start_revid,
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
             response.headers['Content-Type'] = 'text/html'
             tt.expand_(response, **vals)
