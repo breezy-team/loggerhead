@@ -503,7 +503,6 @@ class History (object):
             path = '/' + path
         return self._branch.repository.get_revision_inventory(revid).path2id(path)
 
-
     def get_merge_point_list(self, revid):
         """
         Return the list of revids that have merged this node.
