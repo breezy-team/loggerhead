@@ -51,7 +51,7 @@
 
         <p tal:condition="changes"
            class="changelog">
-          <tal:b content="structure python:collapse_all_button('cl')" />
+          <tal:b content="structure python:collapse_all_button('cl', branch)" />
         </p>
 
         <table class="log-entries"
@@ -84,7 +84,7 @@
                 </a>
               </td>
               <td class="expand-button" tal:define="name entry/revno"
-                  tal:content="structure python:collapse_button('cl', entry.revno)">
+                  tal:content="structure python:collapse_button('cl', entry.revno, branch)">
               </td>
               <td class="summary">
                 <a tal:attributes="title python:'Show revision '+history.get_revno(entry.revid);

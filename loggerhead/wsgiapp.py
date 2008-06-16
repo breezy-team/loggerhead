@@ -26,9 +26,9 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 
-    def __init__(self, history):
+    def __init__(self, history, friendly_name=None):
         self.history = history
-        self.friendly_name = 'hello'
+        self.friendly_name = friendly_name
         self.log = logging.getLogger('hi')
 
     def url(self, *args, **kw):
@@ -72,7 +72,7 @@ class BranchWSGIApp(object):
         self._environ = environ
         path = request.path_info_pop(environ)
         if not path:
-            raise httpexceptions.HTTPMovedPermanently('changes')
+            raise httpexceptions.HTTPMovedPermanently(self._url_base + '/changes')
         if path == 'static':
             return static_app(environ, start_response)
         cls = self.controllers_dict.get(path)

@@ -29,15 +29,15 @@ def revisioninfo(url, branch, entry, modified_file_link=None):
         **templatefunctions)
 
 @templatefunc
-def collapse_button(group, name, normal='block'):
+def collapse_button(group, name, branch, normal='block'):
     return _pt('collapse-button').expand(
-        group=group, name=name, normal=normal,
+        group=group, name=name, normal=normal, branch=branch,
         **templatefunctions)
 
 @templatefunc
-def collapse_all_button(group, normal='block'):
+def collapse_all_button(group, branch, normal='block'):
     return _pt('collapse-all-button').expand(
-        group=group, normal=normal,
+        group=group, normal=normal, branch=branch,
         **templatefunctions)
 
 @templatefunc
