@@ -27,7 +27,6 @@ cached a change, it's good forever.
 
 import cPickle
 import os
-import time
 
 from loggerhead import util
 from loggerhead.lockfile import LockFile
@@ -78,19 +77,10 @@ class FakeShelf(object):
             return None
         else:
             return self._unserialize(filechange[0])
-    def add(self, revid_obj_pairs, commit=True):
+    def add(self, revid_obj_pairs):
         for  (r, d) in revid_obj_pairs:
             self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
-        if commit:
-            self.connection.commit()
-    def count(self):
-        self.cursor.execute(
-            "select count(*) from revisiondata")
-        return self.cursor.fetchone()[0]
-    def close(self, commit=False):
-        if commit:
-            self.connection.commit()
-        self.connection.close()
+        self.connection.commit()
 
 
 class FileChangeCache(object):
