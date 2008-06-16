@@ -50,7 +50,6 @@ class AtomUI (object):
                 'updated': entries[0].date.isoformat() + 'Z',
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             return vals
         finally:
             h._branch.unlock()
