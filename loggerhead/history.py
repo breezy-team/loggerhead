@@ -620,17 +620,6 @@ class History (object):
 
         return changes
 
-    # alright, let's profile this sucka. (FIXME remove this eventually...)
-    def _get_changes_profiled(self, revid_list):
-        from loggerhead.lsprof import profile
-        import cPickle
-        ret, stats = profile(self.get_changes_uncached, revid_list)
-        stats.sort()
-        stats.freeze()
-        cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
-        self.log.info('lsprof complete!')
-        return ret
-
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):

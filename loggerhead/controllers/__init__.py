@@ -116,10 +116,3 @@ class Root (controllers.RootController):
         }
         vals.update(templatefunctions)
         return vals
-
-
-# for use in profiling the very-slow get_change() method:
-#h = Root.bazaar.bzr_dev.get_history()
-#w = list(h.get_revision_history())
-#h._get_changes_profiled(w[:100])
-
