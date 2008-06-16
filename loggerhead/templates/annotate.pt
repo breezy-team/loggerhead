@@ -26,7 +26,7 @@
       <div class="links">
         <div>
           <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/files', revid], clear=1)">
+          <a tal:attributes="href python:url(['/files', revno], clear=1)">
             browse files
           </a>
         </div>

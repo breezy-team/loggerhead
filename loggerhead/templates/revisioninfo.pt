@@ -28,8 +28,7 @@
       <td class="children">
         <a title="Show history"
            tal:attributes="title string:Show revision ${merge_point/revno};
-                           href python:url(['/revision', merge_point.revid],
-                                           clear=1, start_revid=merge_point.revid)"
+                                        href python:url(['/revision', merge_point.revno])"
            tal:content="python:revno_with_nick(merge_point)">
           ${text}
         </a>
@@ -45,7 +44,7 @@
       <td class="parents">
         <a title="Show history"
            tal:attributes="title string:Show revision ${parent/revno};
-                             href python:url(['/revision', parent.revid], clear=1, start_revid=parent.revid)"
+                           href python:url(['/revision', parent.revno], clear=1)"
            tal:content="python:revno_with_nick(parent)">
           class="revlink">
           ${text}
@@ -61,6 +60,17 @@
         <span tal:repeat="line change/comment_clean">
           <tal:line replace="structure line" />
           <br />
+        </span>
+      </td>
+    </tr>
+
+    <tr>
+      <th class="revid">
+        revision id:
+      </th>
+      <td class="revid">
+          <span tal:content="python:change.revid">
+              revid
         </span>
       </td>
     </tr>
