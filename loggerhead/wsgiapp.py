@@ -14,6 +14,7 @@ from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.bundle_ui import BundleUI
 
+from loggerhead import util
 
 static = os.path.join(
     os.path.dirname(__file__), 'static')
@@ -33,15 +34,19 @@ class BranchWSGIApp(object):
     def url(self, *args, **kw):
         if isinstance(args[0], list):
             args = args[0]
-        qs = ''
+        qs = []
         for k, v in kw.iteritems():
-            qs += '%s=%s'%(k, v)
+            if v is not None:
+                qs.append('%s=%s'%(k, v))
+        qs = '&'.join(qs)
         return request.construct_url(
             self._environ, script_name=self._url_base,
             path_info=self._url_base + '/'.join(args),
             querystring=qs)
 
-    context_url = url
+    def context_url(self, *args, **kw):
+        kw = util.get_context(**kw)
+        return self.url(*args, **kw)
 
     controllers_dict = {
         'annotate': AnnotateUI,
