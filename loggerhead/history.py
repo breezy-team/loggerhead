@@ -476,14 +476,12 @@ class History (object):
         else:
             revid_list = None
 
-        try:
-            revid_list = self.get_search_revid_list(query, revid_list)
-            if len(revid_list) > 0:
-                if revid not in revid_list:
-                    revid = revid_list[0]
-                return revid, start_revid, revid_list
-        except:
-            # no results
+        revid_list = self.get_search_revid_list(query, revid_list)
+        if revid_list and len(revid_list) > 0:
+            if revid not in revid_list:
+                revid = revid_list[0]
+            return revid, start_revid, revid_list
+        else:
             return None, None, []
 
     @with_branch_lock
