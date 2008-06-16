@@ -1,8 +1,9 @@
-import os
+import cgi, os, tempfile
 from bzrlib import branch, errors
 from loggerhead.history import History
 from loggerhead.wsgiapp import BranchWSGIApp, static_app
 from paste.request import path_info_pop
+from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 from paste import httpserver
 from paste.httpexceptions import make_middleware
@@ -10,6 +11,7 @@ from paste.translogger import make_filter
 from loggerhead.changecache import FileChangeCache
 
 
+sql_dir = tempfile.mkdtemp()
 
 class BranchesFromFileSystemServer(object):
     def __init__(self, folder, root):
@@ -19,7 +21,17 @@ class BranchesFromFileSystemServer(object):
     def __call__(self, environ, start_response):
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPNotFound()
+            f = os.path.join(self.root.folder, self.folder)
+            request = WSGIRequest(environ)
+            response = WSGIResponse()
+            listing = [d for d in os.listdir(f) if not d.startswith('.')]
+            response.headers['Content-Type'] = 'text/html'
+            print >> response, '<html><body>'
+            for d in sorted(listing):
+                d = cgi.escape(d)
+                print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
+            print >> response, '</body></html>'
+            return response(environ, start_response)
         relpath = os.path.join(self.folder, segment)
         f = os.path.join(self.root.folder, relpath)
         if not os.path.isdir(f):
@@ -34,7 +46,7 @@ class BranchesFromFileSystemServer(object):
             b.lock_read()
             try:
                 _history = History.from_branch(b)
-                _history.use_file_cache(FileChangeCache(_history, 'sql'))
+                _history.use_file_cache(FileChangeCache(_history, sql_dir))
                 h = BranchWSGIApp(_history, relpath).app
                 self.root.cache[f] = h
                 return h(environ, start_response)
@@ -54,7 +66,7 @@ class BranchesFromFileSystemRoot(object):
             return BranchesFromFileSystemServer(
                 segment, self)(environ, start_response)
 
-app = BranchesFromFileSystemRoot('../..')
+app = BranchesFromFileSystemRoot('.')
 
 app = app
 app = make_middleware(app)
