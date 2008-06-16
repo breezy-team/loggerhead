@@ -29,6 +29,8 @@ class BranchesFromFileSystemServer(object):
         except errors.NotBranchError:
             segment = path_info_pop(environ)
             if segment is None:
+                raise httpexceptions.HTTPMovedPermanently(environ['SCRIPT_NAME'] + '/')
+            elif segment == '':
                 request = WSGIRequest(environ)
                 response = WSGIResponse()
                 listing = [d for d in os.listdir(path) if not d.startswith('.')]
@@ -49,7 +51,6 @@ class BranchesFromFileSystemServer(object):
             try:
                 _history = History.from_branch(b)
                 _history.use_file_cache(FileChangeCache(_history, sql_dir))
-                print '!!!', self.folder, path
                 if not self.folder:
                     name = os.path.basename(os.path.abspath(path))
                 else:
