@@ -72,7 +72,6 @@ app = app
 app = make_middleware(app)
 app = make_filter(app, None)
 
-from paste.evalexception.middleware import EvalException
 
-httpserver.serve(EvalException(app), host='127.0.0.1', port='9876')
+httpserver.serve(app, host='127.0.0.1', port='9876')
 
