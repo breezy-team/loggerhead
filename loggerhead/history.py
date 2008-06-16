@@ -352,20 +352,6 @@ class History (object):
         return revid_list[index:]
 
     @with_branch_lock
-    def get_revision_history_matching(self, revid_list, text):
-        self.log.debug('searching %d revisions for %r', len(revid_list), text)
-        z = time.time()
-        # this is going to be painfully slow. :(
-        out = []
-        text = text.lower()
-        for revid in revid_list:
-            change = self.get_changes([ revid ])[0]
-            if text in change.comment.lower():
-                out.append(revid)
-        self.log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
-        return out
-
-    @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
