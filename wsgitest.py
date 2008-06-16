@@ -7,6 +7,7 @@ from paste import httpexceptions
 from paste import httpserver
 from paste.httpexceptions import make_middleware
 from paste.translogger import make_filter
+from loggerhead.changecache import FileChangeCache
 
 
 
@@ -19,8 +20,8 @@ class BranchesFromFileSystemServer(object):
         segment = path_info_pop(environ)
         if segment is None:
             raise httpexceptions.HTTPNotFound()
-        f = os.path.join(self.folder, segment)
-        print f
+        relpath = os.path.join(self.folder, segment)
+        f = os.path.join(self.root.folder, relpath)
         if not os.path.isdir(f):
             raise httpexceptions.HTTPNotFound()
         if f in self.root.cache:
@@ -28,11 +29,13 @@ class BranchesFromFileSystemServer(object):
         try:
             b = branch.Branch.open(f)
         except errors.NotBranchError:
-            return BranchesFromFileSystemServer(f, self.root)(environ, start_response)
+            return BranchesFromFileSystemServer(relpath, self.root)(environ, start_response)
         else:
             b.lock_read()
             try:
-                h = BranchWSGIApp(History.from_branch(b), 'hello').app
+                _history = History.from_branch(b)
+                _history.use_file_cache(FileChangeCache(_history, 'sql'))
+                h = BranchWSGIApp(_history, relpath).app
                 self.root.cache[f] = h
                 return h(environ, start_response)
             finally:
@@ -49,7 +52,7 @@ class BranchesFromFileSystemRoot(object):
             return static_app(environ, start_response)
         else:
             return BranchesFromFileSystemServer(
-                os.path.join(self.folder, segment), self)(environ, start_response)
+                segment, self)(environ, start_response)
 
 app = BranchesFromFileSystemRoot('../..')
 

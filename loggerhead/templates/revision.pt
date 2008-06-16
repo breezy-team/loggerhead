@@ -82,7 +82,7 @@
         <table class="diff-option-buttons">
           <tr>
             <td>
-              <tal:b content="structure python:collapse_all_button('file', 'table-row')" />
+              <tal:b content="structure python:collapse_all_button('file', normal='table-row')" />
             </td>
 
             <td class="spacey">
@@ -124,7 +124,7 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
+                    <tal:b content="structure python:collapse_button('file', u, normal='table-row')" />
                     <a tal:attributes="href  python:url(['/annotate', change.revid], file_id=item.file_id);
                                        name  string:${item/filename}-s;
                                        title string:Annotate ${item/filename}"
@@ -211,7 +211,7 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
+                    <tal:b content="structure python:collapse_button('file', u, normal='table-row')" />
                     <a tal:attributes="href  python:url(['/annotate', change.revid], file_id=item.file_id);
                                        name  string:${item/filename}-u;
                                        title string:Annotate ${item/filename}"

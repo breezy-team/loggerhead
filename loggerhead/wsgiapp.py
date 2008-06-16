@@ -41,7 +41,7 @@ class BranchWSGIApp(object):
         qs = '&'.join(qs)
         return request.construct_url(
             self._environ, script_name=self._url_base,
-            path_info=self._url_base + '/'.join(args),
+            path_info='/'.join(args),
             querystring=qs)
 
     def context_url(self, *args, **kw):
