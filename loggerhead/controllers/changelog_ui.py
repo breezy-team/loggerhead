@@ -120,7 +120,6 @@ class ChangeLogUI (object):
                 'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
-            h.flush_cache()
             self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
             return vals
         finally:
