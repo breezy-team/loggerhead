@@ -13,7 +13,7 @@
               />
 
         <script type="text/javascript"
-                tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+                tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">
         </script>
       </metal:block>
     </head>

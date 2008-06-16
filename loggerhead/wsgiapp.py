@@ -48,6 +48,9 @@ class BranchWSGIApp(object):
         kw = util.get_context(**kw)
         return self.url(*args, **kw)
 
+    def static_url(self, path):
+        return self._static_url_base + path
+
     controllers_dict = {
         'annotate': AnnotateUI,
         'changes': ChangeLogUI,
@@ -63,6 +66,9 @@ class BranchWSGIApp(object):
         response = WSGIResponse()
         response.headers['Content-Type'] = 'text/plain'
         self._url_base = environ['SCRIPT_NAME']
+        self._static_url_base = environ.get('loggerhead.static.url')
+        if self._static_url_base is None:
+            self._static_url_base = self._url_base
         self._environ = environ
         path = request.path_info_pop(environ)
         if not path:
