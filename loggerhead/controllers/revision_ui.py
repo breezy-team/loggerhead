@@ -19,7 +19,7 @@
 
 import time
 
-from cherrypy import InternalError
+from paste.httpexceptions import HTTPServerError
 from paste.request import path_info_pop
 
 from loggerhead import util
@@ -70,7 +70,7 @@ class RevisionUI (object):
                 revid, start_revid, revid_list = h.get_view(revid, start_revid, filter_file_id, query)
             except:
                 self.log.exception('Exception fetching changes')
-                raise InternalError('Could not fetch changes')
+                raise HTTPServerError('Could not fetch changes')
 
             navigation = util.Container(
                 revid_list=revid_list, revid=revid, start_revid=start_revid,

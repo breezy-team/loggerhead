@@ -19,7 +19,7 @@
 
 import time
 
-from cherrypy import InternalError
+from paste.httpexceptions import HTTPServerError
 from paste.request import path_info_pop
 
 from loggerhead import util
@@ -81,7 +81,7 @@ class ChangeLogUI (object):
                 h.add_changes(changes)
             except:
                 self.log.exception('Exception fetching changes')
-                raise InternalError('Could not fetch changes')
+                raise HTTPServerError('Could not fetch changes')
 
             navigation = util.Container(
                 pagesize=pagesize, revid=revid, start_revid=start_revid,

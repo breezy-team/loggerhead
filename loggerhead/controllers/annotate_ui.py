@@ -23,7 +23,7 @@ import posixpath
 import time
 
 from paste.request import path_info_pop
-from cherrypy import HTTPError
+from paste.httpexceptions import HTTPBadRequest
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
@@ -79,7 +79,7 @@ class AnnotateUI (object):
 
             file_id = kw.get('file_id', None)
             if (file_id is None) and (path is None):
-                raise HTTPError(400, 'No file_id or filename provided to annotate')
+                raise HTTPBadRequest('No file_id or filename provided to annotate')
 
             if file_id is None:
                 file_id = h.get_file_id(revid, path)

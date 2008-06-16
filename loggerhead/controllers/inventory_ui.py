@@ -21,11 +21,10 @@ import logging
 import posixpath
 import time
 
-from cherrypy import InternalError
-
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 from turbosimpletal import TurboZpt
+from paste.httpexceptions import HTTPServerError
 from paste.request import path_info_pop
 
 t = TurboZpt()
@@ -72,7 +71,7 @@ class InventoryUI (object):
                 inv = h.get_inventory(revid)
             except:
                 self.log.exception('Exception fetching changes')
-                raise InternalError('Could not fetch changes')
+                raise HTTPServerError('Could not fetch changes')
 
             file_id = kw.get('file_id', inv.root.file_id)
             start_revid = kw.get('start_revid', None)
