@@ -10,6 +10,9 @@ from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.revision_ui import RevisionUI
+from loggerhead.controllers.atom_ui import AtomUI
+from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.bundle_ui import BundleUI
 
 
 static = os.path.join(
@@ -41,10 +44,13 @@ class BranchWSGIApp(object):
     context_url = url
 
     controllers_dict = {
-        'changes': ChangeLogUI,
         'annotate': AnnotateUI,
+        'changes': ChangeLogUI,
         'files': InventoryUI,
         'revision': RevisionUI,
+        'download': DownloadUI,
+        'atom': AtomUI,
+        'bundle': BundleUI,
         }
 
     def app(self, environ, start_response):

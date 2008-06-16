@@ -18,9 +18,8 @@
 
 import time
 
-import turbogears
-from cherrypy import HTTPRedirect, InternalError, response
-
+from paste import httpexceptions
+from paste.request import path_info_pop
 
 class BundleUI (object):
 
@@ -29,16 +28,21 @@ class BundleUI (object):
         self._branch = branch
         self.log = branch.log
 
-    @turbogears.expose()
-    def default(self, *args, **kw):
+    def default(self, request, response):
         # /bundle/<rev_id>/[<compare_rev_id>/]filename
         z = time.time()
-        h = self._branch.get_history()
+        h = self._branch.history
 
         h._branch.lock_read()
         try:
+            args = []
+            while 1:
+                arg = path_info_pop(request.environ)
+                if arg is None:
+                    break
+                args.append(arg)
             if len(args) < 1:
-                raise HTTPRedirect(self._branch.url('/changes'))
+                raise httpexceptions.HTTPMovedPermanently('../changes')
             revid = h.fix_revid(args[0])
             if len(args) >= 3:
                 compare_revid = h.fix_revid(args[1])
@@ -49,12 +53,11 @@ class BundleUI (object):
                 bundle_data = h.get_bundle(revid, compare_revid)
             except:
                 self.log.exception('Exception fetching bundle')
-                raise InternalError('Could not fetch bundle')
+                raise httpexceptions.HTTPServerError('Could not fetch bundle')
 
             response.headers['Content-Type'] = 'application/octet-stream'
             response.headers['Content-Length'] = len(bundle_data)
-            response.body = bundle_data
+            response.write(bundle_data)
             self.log.info('/bundle: %r seconds' % (time.time() - z,))
-            return response.body
         finally:
             h._branch.unlock()

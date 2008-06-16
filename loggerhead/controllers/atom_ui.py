@@ -17,27 +17,29 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import turbogears
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 
+from turbosimpletal import TurboZpt
+
+t = TurboZpt()
+tt = t.load_template('loggerhead.templates.atom')
+
 
 class AtomUI (object):
-    
+
     def __init__(self, branch):
         # BranchView object
         self._branch = branch
         self.log = branch.log
 
-    @turbogears.expose(template='zpt:loggerhead.templates.atom',
-                       format="xml", content_type="application/atom+xml")
-    def default(self, *args, **kwargs):
-        h = self._branch.get_history()
+    def default(self, response, request):
+        h = self._branch.history
 
         h._branch.lock_read()
         try:
-            pagesize = int(self._branch.config.get('pagesize', '20'))
+            pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
             revid_list = h.get_file_view(h.last_revid, None)
             entries = list(h.get_changes(list(revid_list)[:pagesize]))
@@ -51,6 +53,7 @@ class AtomUI (object):
             }
             vals.update(templatefunctions)
             h.flush_cache()
-            return vals
+            response.headers['Content-Type'] = 'application/atom+xml'
+            tt.expand_(response, **vals)
         finally:
             h._branch.unlock()
