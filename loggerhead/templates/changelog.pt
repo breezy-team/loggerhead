@@ -140,15 +140,6 @@
                         ${text}
                       </a>
                     </td>
-                  </tr>
-                  <tr>
-                    <th class="description">
-                      description:
-                    </th>
-                    <td class="description">
-                      <tal:block repeat="line entry/comment_clean"
-                                 content="structure string:${line}&lt;br /&gt;" />
-                    </td>
                 </tr>-->
         </table>
 
@@ -158,7 +149,9 @@
                 class="previous">
                 <a tal:attributes="href navigation/prev_page_url">&laquo; Previous</a>
             </li>
-            <!-- Leaving this to eventually show page numbers
+            <!-- FIXME: Leaving this to eventually show page numbers. Can't show all of them,
+                        so some magic has to be done to just show the previous and next N page numbers
+
             <li class="active">1</li>
             <tal:block tal:repeat="page_number python:range(navigation.page_count)">
             <li><a href="#"

@@ -2,7 +2,7 @@ window.addEvent('domready', function()
 {
     $$('.revision_log').each(function(item, i)
     {
-        // Make less redundant
+        // FIXME: Make less redundant
         var thisSlider = new Fx.Slide( item.getElement( '.revisioninfo' ), { duration: 200 } );
         var shortDescription = item.getElement( '.short_description' );
         var longDescription = item.getElement( '.long_description' );
@@ -29,7 +29,7 @@ function toggle_expand_all(action)
 {
     $$('.revision_log').each(function(item, i)
     {
-        // Make less redundant
+        // FIXME: Make less redundant
         var thisSlider = new Fx.Slide( item.getElement( '.revisioninfo' ), { duration: 200 } );
         var shortDescription = item.getElement( '.short_description' );
         var longDescription = item.getElement( '.long_description' );
