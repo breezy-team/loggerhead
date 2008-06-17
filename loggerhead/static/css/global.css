@@ -187,6 +187,9 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	border:none;
 	border-bottom:1px solid #d2d2d2;
 }
+.revisioninfo {
+    margin-top:4px;
+}
 ul.expandrev {
 	list-style:none;
 	font:normal 11px/normal sans-serif;
@@ -214,48 +217,41 @@ ul.expandrev li.files {
 /* Navigation */
 ul {border:0; margin:0; padding:0;}
 
-ul#pagination {
+ul#pages {
 	float:right;
 }
-#pagination li {
+#pages li {
 	border:0; margin:0; padding:0;
 	font-size:12px;
 	list-style:none;
 	float:left;
 	display:inline;
 }
-#pagination a {
+#pages a {
 	border:solid 1px #DDDDDD;
 	margin-right:2px;
 }
-#pagination .previous-off, #pagination .next-off {
-	color:#666666;
-	display:block;
-	float:left;
-	font-weight:bold;
-	padding:3px 4px;
-}
-#pagination .next a, #pagination .previous a {
+#pages .next a, #pages .previous a {
 	font-weight:bold;
 	border:solid 1px #fff;
 }
-#pagination .active {
+#pages .active {
 	color:#f37b06;
 	font-weight:bold;
 	display:block;
 	float:left;
 	padding:4px 6px;
 }
-#pagination a:link,#pagination a:visited {
+#pages a:link, #pages a:visited {
 	color:#f37b06;
 	display:block;
 	float:left;
 	padding:3px 6px;
 	text-decoration:none;
 }
-#pagination .next a {
+#pages .next a {
 	color:#0f6b97;
 }
-#pagination a:hover {
+#pages a:hover {
 	border:solid 1px #666666;
 }		

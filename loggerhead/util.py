@@ -354,8 +354,10 @@ def fill_in_navigation(navigation):
             return None
         return navigation.revid_list[navigation.position + offset]
 
+    navigation.last_in_page_revid = get_offset(navigation.pagesize - 1)
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
+
     prev_page_revno = navigation.branch._history.get_revno(
             navigation.prev_page_revid)
     next_page_revno = navigation.branch._history.get_revno(

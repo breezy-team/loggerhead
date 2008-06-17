@@ -7,7 +7,8 @@
     <title metal:define-slot="title">
       Title.
     </title>
-    <style type="text/css" media="screen, print">@import url(https://launchpad.net/+icing/rev6393/+style-slimmer.css);</style>
+    <style type="text/css" media="screen, print"
+        tal:content="python:'@import url('+tg.url('/static/css/launchpad_slimmer.css')+');'"></style>
     <link rel="stylesheet"
           tal:attributes="href python:tg.url('/static/css/global.css')" />
     <script type="text/javascript"
