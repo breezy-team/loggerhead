@@ -56,19 +56,11 @@ CACHES
 ------
 
 To speed up operations with large branches, loggerhead can be configured
-to create three caches per branch when it first launches:
+to create a files changed cache per branch on request:
 
-    - a revision data cache
     - a cache of files changed in a revision
-    - a text searching cache
 
 You can put the cache folder anywhere.
-
-The revision data cache and text searching cache will be automatically
-filled once loggerhead starts up.  The caches for a branch with 15,000
-revisions take about four minutes each on a fairly fast machine, but
-mileage may vary.  Once they are built, they update every six hours or
-so but usually finish quickly (or instantly) after the initial creation.
 
 
 SUPPORT
