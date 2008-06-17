@@ -18,6 +18,34 @@ class BranchesFromFileSystemServer(object):
         self.folder = folder
         self.root = root
 
+    def directory_listing(self, path, environ, start_response):
+        request = WSGIRequest(environ)
+        response = WSGIResponse()
+        listing = [d for d in os.listdir(path) if not d.startswith('.')]
+        response.headers['Content-Type'] = 'text/html'
+        print >> response, '<html><body>'
+        for d in sorted(listing):
+            if os.path.isdir(os.path.join(path, d)):
+                d = cgi.escape(d)
+                print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
+        print >> response, '</body></html>'
+        return response(environ, start_response)
+
+    def app_for_branch(self, b, path):
+        b.lock_read()
+        try:
+            _history = History.from_branch(b)
+            _history.use_file_cache(FileChangeCache(_history, sql_dir))
+            if not self.folder:
+                name = os.path.basename(os.path.abspath(path))
+            else:
+                name = self.folder
+            h = BranchWSGIApp(_history, name).app
+            self.root.cache[path] = h
+            return h
+        finally:
+            b.unlock()
+
     def __call__(self, environ, start_response):
         path = os.path.join(self.root.folder, self.folder)
         if not os.path.isdir(path):
@@ -31,35 +59,14 @@ class BranchesFromFileSystemServer(object):
             if segment is None:
                 raise httpexceptions.HTTPMovedPermanently(environ['SCRIPT_NAME'] + '/')
             elif segment == '':
-                request = WSGIRequest(environ)
-                response = WSGIResponse()
-                listing = [d for d in os.listdir(path) if not d.startswith('.')]
-                response.headers['Content-Type'] = 'text/html'
-                print >> response, '<html><body>'
-                for d in sorted(listing):
-                    if os.path.isdir(os.path.join(path, d)):
-                        d = cgi.escape(d)
-                        print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
-                print >> response, '</body></html>'
-                return response(environ, start_response)
+                return self.directory_listing(path, environ, start_response)
             else:
                 relpath = os.path.join(self.folder, segment)
                 return BranchesFromFileSystemServer(relpath, self.root)(
                     environ, start_response)
         else:
-            b.lock_read()
-            try:
-                _history = History.from_branch(b)
-                _history.use_file_cache(FileChangeCache(_history, sql_dir))
-                if not self.folder:
-                    name = os.path.basename(os.path.abspath(path))
-                else:
-                    name = self.folder
-                h = BranchWSGIApp(_history, name).app
-                self.root.cache[path] = h
-                return h(environ, start_response)
-            finally:
-                b.unlock()
+            return self.app_for_branch(b, path)(environ, start_response)
+
 
 class BranchesFromFileSystemRoot(object):
     def __init__(self, folder):
