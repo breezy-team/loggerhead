@@ -37,6 +37,13 @@ import traceback
 
 log = logging.getLogger("loggerhead.controllers")
 
+def fix_year(year):
+    if year < 70:
+        year += 2000
+    if year < 100:
+        year += 1900
+    return year
+
 # Display of times.
 
 # date_day -- just the day

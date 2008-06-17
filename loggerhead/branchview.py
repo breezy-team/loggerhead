@@ -58,7 +58,6 @@ class BranchView (object):
         # branch history
         self._history_lock = threading.RLock()
         self._history = None
-        self._closed = False
 
         self.changes = ChangeLogUI(self)
         self.revision = RevisionUI(self)
@@ -131,8 +130,6 @@ class BranchView (object):
         calls.  but if the bazaar branch on-disk has been updated since this
         History was created, a new object will be created and returned.
         """
-        if self._closed:
-            return None
         if (self._history is None) or self._history.out_of_date():
             self.log.debug('Reload branch history...')
             _history = self._history = History.from_folder(
@@ -144,8 +141,6 @@ class BranchView (object):
             if cache_path is not None:
                 _history.use_file_cache(FileChangeCache(_history, cache_path))
         return self._history
-
-        h = self.get_history()
 
     def url(self, elements, **kw):
         "build an url relative to this branch"

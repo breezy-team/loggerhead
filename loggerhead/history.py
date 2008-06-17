@@ -352,20 +352,6 @@ class History (object):
         return revid_list[index:]
 
     @with_branch_lock
-    def get_revision_history_matching(self, revid_list, text):
-        self.log.debug('searching %d revisions for %r', len(revid_list), text)
-        z = time.time()
-        # this is going to be painfully slow. :(
-        out = []
-        text = text.lower()
-        for revid in revid_list:
-            change = self.get_changes([ revid ])[0]
-            if text in change.comment.lower():
-                out.append(revid)
-        self.log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
-        return out
-
-    @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
@@ -490,14 +476,12 @@ class History (object):
         else:
             revid_list = None
 
-        try:
-            revid_list = self.get_search_revid_list(query, revid_list)
-            if len(revid_list) > 0:
-                if revid not in revid_list:
-                    revid = revid_list[0]
-                return revid, start_revid, revid_list
-        except:
-            # no results
+        revid_list = self.get_search_revid_list(query, revid_list)
+        if revid_list and len(revid_list) > 0:
+            if revid not in revid_list:
+                revid = revid_list[0]
+            return revid, start_revid, revid_list
+        else:
             return None, None, []
 
     @with_branch_lock
@@ -518,7 +502,6 @@ class History (object):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return self._branch.repository.get_revision_inventory(revid).path2id(path)
-
 
     def get_merge_point_list(self, revid):
         """
@@ -619,17 +602,6 @@ class History (object):
             parity ^= 1
 
         return changes
-
-    # alright, let's profile this sucka. (FIXME remove this eventually...)
-    def _get_changes_profiled(self, revid_list):
-        from loggerhead.lsprof import profile
-        import cPickle
-        ret, stats = profile(self.get_changes_uncached, revid_list)
-        stats.sort()
-        stats.freeze()
-        cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
-        self.log.info('lsprof complete!')
-        return ret
 
     @with_branch_lock
     @with_bzrlib_read_lock

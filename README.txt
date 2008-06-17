@@ -52,15 +52,12 @@ Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
 
-CACHES
-------
+FILES CHANGED CACHE
+-------------------
 
-To speed up operations with large branches, loggerhead can be configured
-to create a files changed cache per branch on request:
-
-    - a cache of files changed in a revision
-
-You can put the cache folder anywhere.
+To speed up the display of the changelog view for large trees,
+loggerhead can be configured to cache the files changes between
+revisions.  Set the 'cachepath' value in the config file.
 
 
 SUPPORT
