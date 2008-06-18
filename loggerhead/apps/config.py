@@ -3,6 +3,7 @@
 
 import logging
 import os
+import posixpath
 
 from configobj import ConfigObj
 
@@ -66,6 +67,22 @@ class Project (object):
             self._add_view(view_name, ConfigObj(), folder)
         self._auto_list = auto_list
 
+    def _get_branch_url(self, view):
+        url = view._config.get('url', None)
+        if url is not None:
+            return url
+        url = view._project_config.get('url_prefix', None)
+        if url is not None:
+            return posixpath.join(url, self._folder) + '/'
+        return None
+
+    def _get_description(self, view):
+        description = view._config.get('description', None)
+        if description is not None:
+            return description
+        description = view.get_history().get_config().get_user_option('description')
+        return description
+
     def _add_view(self, view_name, view_config, folder):
         h = History.from_folder(folder)
         friendly_name = view_config.get('branch_name', None)
@@ -75,6 +92,10 @@ class Project (object):
                 friendly_name = view_name
         view = BranchWSGIApp(h, friendly_name)
         view.name = view_name
+        branch_url = self._get_branch_url(view)
+        if branch_url is not None:
+            view.branch_url = branch_url
+        view.description = self._get_description(view)
         self.views.append(view)
         self.views_by_name[view_name] = view
 
