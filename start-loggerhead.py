@@ -8,9 +8,10 @@ import os
 import sys
 from optparse import OptionParser
 
-import turbogears
-import cherrypy
-cherrypy.lowercase_api = True
+from loggerhead.apps.config import Root
+from paste import httpserver
+from paste.httpexceptions import make_middleware
+from paste.translogger import make_filter
 
 from loggerhead import daemon, release
 
@@ -84,40 +85,38 @@ def main():
     if extra_path:
         sys.path.insert(0, extra_path)
 
-    turbogears.update_config(configfile="dev.cfg", modulename="loggerhead.config")
+    #turbogears.update_config(configfile="dev.cfg", modulename="loggerhead.config")
 
-    potential_overrides = [ ('server.socket_port', int), ('server.webpath', str), ('server.thread_pool', int), ('server.socket_host' ,str) ]
+    potential_overrides = [ ('server.socket_port', int),
+                            ('server.webpath', str),
+                            ('server.thread_pool', int),
+                            ('server.socket_host' ,str) ]
     for key, keytype in potential_overrides:
         value = config.get(key, None)
         if value is not None:
             value = keytype(value)
-            turbogears.config.update({ key: value })
+            #turbogears.config.update({ key: value })
 
-    if not options.foreground:
-        sys.stderr.write('\n')
-        sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % (pidfile,))
-        sys.stderr.write('\n')
+    ## if not options.foreground:
+    ##     sys.stderr.write('\n')
+    ##     sys.stderr.write('Launching loggerhead into the background.\n')
+    ##     sys.stderr.write('PID file: %s\n' % (pidfile,))
+    ##     sys.stderr.write('\n')
 
-        daemon.daemonize(pidfile, home)
+    ##     daemon.daemonize(pidfile, home)
 
     setup_logging(home, config, foreground=options.foreground)
 
     log = logging.getLogger('loggerhead')
     log.info('Starting up...')
 
-    from loggerhead.controllers import Root
+    app = Root(config)
 
-    Root = Root(config)
+    app = app
+    app = make_middleware(app)
+    app = make_filter(app, None)
 
-    try:
-        turbogears.start_server(Root)
-    finally:
-        log.info('Shutdown.')
-        try:
-            os.remove(pidfile)
-        except OSError:
-            pass
+    httpserver.serve(app, host='127.0.0.1', port='9876')
 
 
 if __name__ == '__main__':

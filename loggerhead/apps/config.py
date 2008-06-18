@@ -13,6 +13,7 @@ from paste.wsgiwrappers import WSGIResponse
 from turbosimpletal import TurboZpt
 
 from loggerhead.apps.branch import BranchWSGIApp
+from loggerhead.apps import static_app
 from loggerhead.history import History
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead import util
@@ -34,7 +35,7 @@ class Project (object):
         self._root_config = root_config
 
         self.views = []
-        self.views_by_name = []
+        self.views_by_name = {}
         for view_name in config.sections:
             log.debug('Configuring (project %s) branch %s...', name, view_name)
             self._add_view(
@@ -77,18 +78,19 @@ class Project (object):
             if friendly_name is None:
                 friendly_name = view_name
         view = BranchWSGIApp(h, friendly_name)
+        view.name = view_name
         self.views.append(view)
         self.views_by_name[view_name] = view
 
-    def __call__(self, environ, start_response):
+    def call(self, environ, start_response):
         segment = path_info_pop(environ)
         if not segment:
             raise httpexceptions.HTTPNotFound()
         else:
-            view = self.projects_by_name.get(segment)
+            view = self.views_by_name.get(segment)
             if view is None:
                 raise httpexceptions.HTTPNotFound()
-            return view(environ, start_response)
+            return view.app(environ, start_response)
 
 
 class Root(object):
@@ -97,25 +99,32 @@ class Root(object):
         self.projects = []
         self.config = config
         self.projects_by_name = {}
-        for project_name in self._config.sections:
+        for project_name in self.config.sections:
             project = Project(
                 project_name, self.config[project_name], self.config)
             self.projects.append(project)
-            self.projects_by_name[project_name] = project_name
+            self.projects_by_name[project_name] = project
 
     def browse(self, response):
         for p in self.projects:
             p._recheck_auto_folders()
+        class branch:
+            @staticmethod
+            def static_url(path):
+                print '!!!', repr(self._static_url_base), repr(path)
+                return self._static_url_base + path
         vals = {
             'projects': self.projects,
             'util': util,
-            'title': self._config.get('title', None),
+            'title': self.config.get('title', None),
+            'branch': branch,
         }
         vals.update(templatefunctions)
         response.headers['Content-Type'] = 'text/html'
         tt.expand_(response, **vals)
 
     def __call__(self, environ, start_response):
+        self._static_url_base = environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         segment = path_info_pop(environ)
         if segment is None:
             raise httpexceptions.HTTPMovedPermanently(
@@ -124,8 +133,10 @@ class Root(object):
             response = WSGIResponse()
             self.browse(response)
             return response(environ, start_response)
+        elif segment == 'static':
+            return static_app(environ, start_response)
         else:
             project = self.projects_by_name.get(segment)
             if project is None:
                 raise httpexceptions.HTTPNotFound()
-            return project(environ, start_response)
+            return project.call(environ, start_response)

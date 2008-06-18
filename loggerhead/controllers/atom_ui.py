@@ -34,7 +34,7 @@ class AtomUI (object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, response, request):
+    def default(self, request, response):
         h = self._branch.history
 
         h._branch.lock_read()

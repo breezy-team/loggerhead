@@ -1,5 +1,7 @@
 #
+import os
 
+from paste import urlparser
 
 static = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'static')

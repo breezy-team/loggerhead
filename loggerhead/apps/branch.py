@@ -56,6 +56,14 @@ class BranchWSGIApp(object):
         'bundle': BundleUI,
         }
 
+    def last_updated(self):
+        h = self.history
+        change = h.get_changes([ h.last_revid ])[0]
+        return change.date
+
+    def branch_url(self):
+        return self.history.get_config().get_user_option('public_branch')
+
     def app(self, environ, start_response):
         req = WSGIRequest(environ)
         response = WSGIResponse()
