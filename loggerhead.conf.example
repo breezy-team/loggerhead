@@ -27,8 +27,8 @@ log.roll = 'weekly'
     # for the top browsing page, you can include a description, in raw HTML.
     #description = 'Bazaar is a <i>revision control system</i>.'
 
-    # should we cache revisions and build a text index?  (HIGHLY recommended)
-    # this will be a folder containing a few files.  if the folder doesn't
+    # should we cache files changed? (recommended for large trees)
+    # this will be a folder containing one file.  if the folder doesn't
     # exist, it'll be created.
     #
     # all branches in this project will share the same cache, which is usually

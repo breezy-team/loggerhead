@@ -191,9 +191,7 @@ class _RevListToTimestamps(object):
 class History (object):
 
     def __init__(self):
-        self._change_cache = None
         self._file_change_cache = None
-        self._index = None
         self._lock = threading.RLock()
 
     @classmethod
@@ -277,43 +275,12 @@ class History (object):
             return True
         return self._branch.last_revision() != self._last_revid
 
-    def use_cache(self, cache):
-        self._change_cache = cache
-
     def use_file_cache(self, cache):
         self._file_change_cache = cache
-
-    def use_search_index(self, index):
-        self._index = index
 
     @property
     def has_revisions(self):
         return not bzrlib.revision.is_null(self.last_revid)
-
-    @with_branch_lock
-    def detach(self):
-        # called when a new history object needs to be created, because the
-        # branch history has changed.  we need to immediately close and stop
-        # using our caches, because a new history object will be created to
-        # replace us, using the same cache files.
-        # (may also be called during server shutdown.)
-        if self._change_cache is not None:
-            self._change_cache.close()
-            self._change_cache = None
-        if self._index is not None:
-            self._index.close()
-            self._index = None
-
-    def flush_cache(self):
-        if self._change_cache is None:
-            return
-        self._change_cache.flush()
-
-    def check_rebuild(self):
-        if self._change_cache is not None:
-            self._change_cache.check_rebuild()
-        #if self._index is not None:
-        #    self._index.check_rebuild()
 
     last_revid = property(lambda self: self._last_revid, None, None)
 
@@ -385,31 +352,6 @@ class History (object):
         return revid_list[index:]
 
     @with_branch_lock
-    def get_revision_history_matching(self, revid_list, text):
-        self.log.debug('searching %d revisions for %r', len(revid_list), text)
-        z = time.time()
-        # this is going to be painfully slow. :(
-        out = []
-        text = text.lower()
-        for revid in revid_list:
-            change = self.get_changes([ revid ])[0]
-            if text in change.comment.lower():
-                out.append(revid)
-        self.log.debug('searched %d revisions for %r in %r secs', len(revid_list), text, time.time() - z)
-        return out
-
-    def get_revision_history_matching_indexed(self, revid_list, text):
-        self.log.debug('searching %d revisions for %r', len(revid_list), text)
-        z = time.time()
-        if self._index is None:
-            return self.get_revision_history_matching(revid_list, text)
-        out = self._index.find(text, revid_list)
-        self.log.debug('searched %d revisions for %r in %r secs: %d results', len(revid_list), text, time.time() - z, len(out))
-        # put them in some coherent order :)
-        out = [r for r in self._full_history if r in out]
-        return out
-
-    @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
@@ -450,11 +392,6 @@ class History (object):
                 # if no limit to the query was given, search only the direct-parent path.
                 revid_list = list(self.get_revids_from(None, self._last_revid))
             return self.get_revision_history_since(revid_list, date)
-
-        # check comment fields.
-        if revid_list is None:
-            revid_list = self._full_history
-        return self.get_revision_history_matching_indexed(revid_list, query)
 
     revno_re = re.compile(r'^[\d\.]+$')
     # the date regex are without a final '$' so that queries like
@@ -540,12 +477,11 @@ class History (object):
             revid_list = None
 
         revid_list = self.get_search_revid_list(query, revid_list)
-        if len(revid_list) > 0:
+        if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
             return revid, start_revid, revid_list
         else:
-            # no results
             return None, None, []
 
     @with_branch_lock
@@ -566,7 +502,6 @@ class History (object):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return self._branch.repository.get_revision_inventory(revid).path2id(path)
-
 
     def get_merge_point_list(self, revid):
         """
@@ -647,10 +582,7 @@ class History (object):
 
         Revisions not present and NULL_REVISION will be ignored.
         """
-        if self._change_cache is None:
-            changes = self.get_changes_uncached(revid_list)
-        else:
-            changes = self._change_cache.get_changes(revid_list)
+        changes = self.get_changes_uncached(revid_list)
         if len(changes) == 0:
             return changes
 
@@ -660,11 +592,8 @@ class History (object):
             merge_revids = self.simplify_merge_point_list(self.get_merge_point_list(change.revid))
             change.merge_points = [util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids]
             if len(change.parents) > 0:
-                if isinstance(change.parents[0], util.Container):
-                    # old cache stored a potentially-bogus revno
-                    change.parents = [util.Container(revid=p.revid, revno=self.get_revno(p.revid)) for p in change.parents]
-                else:
-                    change.parents = [util.Container(revid=r, revno=self.get_revno(r)) for r in change.parents]
+                change.parents = [util.Container(revid=r, 
+                    revno=self.get_revno(r)) for r in change.parents]
             change.revno = self.get_revno(change.revid)
 
         parity = 0
@@ -674,30 +603,18 @@ class History (object):
 
         return changes
 
-    # alright, let's profile this sucka. (FIXME remove this eventually...)
-    def _get_changes_profiled(self, revid_list):
-        from loggerhead.lsprof import profile
-        import cPickle
-        ret, stats = profile(self.get_changes_uncached, revid_list)
-        stats.sort()
-        stats.freeze()
-        cPickle.dump(stats, open('lsprof.stats', 'w'), 2)
-        self.log.info('lsprof complete!')
-        return ret
-
     @with_branch_lock
     @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
                             revid_list)
-        repo = self._branch.repository
-        parent_map = repo.get_graph().get_parent_map(revid_list)
+        parent_map = self._branch.repository.get_graph().get_parent_map(revid_list)
         # We need to return the answer in the same order as the input,
         # less any ghosts.
         present_revids = [revid for revid in revid_list
                           if revid in parent_map]
-        rev_list = repo.get_revisions(present_revids)
+        rev_list = self._branch.repository.get_revisions(present_revids)
 
         return [self._change_from_revision(rev) for rev in rev_list]
 
