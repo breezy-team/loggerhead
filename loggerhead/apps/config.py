@@ -68,20 +68,20 @@ class Project (object):
             self._add_view(view_name, ConfigObj(), folder)
         self._auto_list = auto_list
 
-    def _get_branch_url(self, view):
-        url = view._config.get('url', None)
+    def _get_branch_url(self, view, view_config):
+        url = view_config.get('url', None)
         if url is not None:
             return url
-        url = view._project_config.get('url_prefix', None)
+        url = self._config.get('url_prefix', None)
         if url is not None:
             return posixpath.join(url, self._folder) + '/'
         return None
 
-    def _get_description(self, view):
-        description = view._config.get('description', None)
+    def _get_description(self, view, view_config):
+        description = view_config.get('description', None)
         if description is not None:
             return description
-        description = view.get_history().get_config().get_user_option('description')
+        description = view.history._branch.get_config().get_user_option('description')
         return description
 
     def _make_history(self, view_name, view_config, folder):
@@ -92,7 +92,7 @@ class Project (object):
             cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             h.use_file_cache(FileChangeCache(h, cache_path))
-
+        return h
 
     def _add_view(self, view_name, view_config, folder):
         h = self._make_history(view_name, view_config, folder)
@@ -103,10 +103,10 @@ class Project (object):
                 friendly_name = view_name
         view = BranchWSGIApp(h, friendly_name)
         view.name = view_name
-        branch_url = self._get_branch_url(view)
+        branch_url = self._get_branch_url(view, view_config)
         if branch_url is not None:
             view.branch_url = branch_url
-        view.description = self._get_description(view)
+        view.description = self._get_description(view, view_config)
         view._src_folder = folder
         view._view_config = view_config
         self.views.append(view)
@@ -143,7 +143,6 @@ class Root(object):
         class branch:
             @staticmethod
             def static_url(path):
-                print '!!!', repr(self._static_url_base), repr(path)
                 return self._static_url_base + path
         vals = {
             'projects': self.projects,
