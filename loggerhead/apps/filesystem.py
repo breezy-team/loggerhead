@@ -2,7 +2,7 @@ import cgi, os, tempfile
 from bzrlib import branch, errors
 from loggerhead.history import History
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import static_app
+from loggerhead.apps import favicon_app, static_app
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
@@ -78,6 +78,8 @@ class BranchesFromFileSystemRoot(object):
             segment = path_info_pop(environ)
             assert segment == 'static'
             return static_app(environ, start_response)
+        elif environ['PATH_INFO'] == '/favicon.ico':
+            return favicon_app(environ, start_response)
         else:
             return BranchesFromFileSystemServer(
                 '', self)(environ, start_response)

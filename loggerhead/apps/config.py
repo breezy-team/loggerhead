@@ -14,7 +14,7 @@ from paste import httpexceptions
 from paste.wsgiwrappers import WSGIResponse
 
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import static_app
+from loggerhead.apps import favicon_app, static_app
 from loggerhead.changecache import FileChangeCache
 from loggerhead.history import History
 from loggerhead.templatefunctions import templatefunctions
@@ -169,6 +169,8 @@ class Root(object):
             return response(environ, start_response)
         elif segment == 'static':
             return static_app(environ, start_response)
+        elif segment == 'favicon.ico':
+            return favicon_app(environ, start_response)
         else:
             project = self.projects_by_name.get(segment)
             if project is None:
