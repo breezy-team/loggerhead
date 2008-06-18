@@ -10,16 +10,12 @@ from paste.request import path_info_pop
 from paste import httpexceptions
 from paste.wsgiwrappers import WSGIResponse
 
-from turbosimpletal import TurboZpt
-
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import static_app
 from loggerhead.history import History
 from loggerhead.templatefunctions import templatefunctions
+from loggerhead.zptsupport import load_template
 from loggerhead import util
-
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.browse')
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -121,7 +117,8 @@ class Root(object):
         }
         vals.update(templatefunctions)
         response.headers['Content-Type'] = 'text/html'
-        tt.expand_(response, **vals)
+        template = load_template('loggerhead.templates.browse')
+        template.expand_into(response, **vals)
 
     def __call__(self, environ, start_response):
         self._static_url_base = environ['loggerhead.static.url'] = environ['SCRIPT_NAME']

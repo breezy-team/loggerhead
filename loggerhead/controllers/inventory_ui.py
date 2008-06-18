@@ -21,14 +21,12 @@ import logging
 import posixpath
 import time
 
-from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from turbosimpletal import TurboZpt
 from paste.httpexceptions import HTTPServerError
 from paste.request import path_info_pop
 
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.inventory')
+from loggerhead import util
+from loggerhead.templatefunctions import templatefunctions
+from loggerhead.zptsupport import load_template
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -116,6 +114,7 @@ class InventoryUI (object):
             vals.update(templatefunctions)
             self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
             response.headers['Content-Type'] = 'text/html'
-            tt.expand_(response, **vals)
+            template = load_template('loggerhead.templates.inventory')
+            template.expand_into(response, **vals)
         finally:
             h._branch.unlock()

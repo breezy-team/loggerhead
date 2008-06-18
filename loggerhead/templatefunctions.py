@@ -1,5 +1,5 @@
 import os
-from turbosimpletal.zptsupport import zpt
+from loggerhead.zptsupport import zpt
 
 templatefunctions = {}
 def templatefunc(func):

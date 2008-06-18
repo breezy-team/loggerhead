@@ -24,10 +24,7 @@ from paste.request import path_info_pop
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
-from turbosimpletal import TurboZpt
-
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.revision')
+from loggerhead.zptsupport import load_template
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
@@ -116,6 +113,7 @@ class RevisionUI (object):
             vals.update(templatefunctions)
             self.log.info('/revision: %r seconds' % (time.time() - z,))
             response.headers['Content-Type'] = 'text/html'
-            tt.expand_(response, **vals)
+            template = load_template('loggerhead.templates.revision')
+            template.expand_into(response, **vals)
         finally:
             h._branch.unlock()

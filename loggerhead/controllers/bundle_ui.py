@@ -21,6 +21,7 @@ import time
 from paste import httpexceptions
 from paste.request import path_info_pop
 
+
 class BundleUI (object):
 
     def __init__(self, branch):

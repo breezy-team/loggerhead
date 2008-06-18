@@ -27,12 +27,7 @@ from paste.httpexceptions import HTTPBadRequest
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
-
-
-from turbosimpletal import TurboZpt
-
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.annotate')
+from loggerhead.zptsupport import load_template
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -107,6 +102,7 @@ class AnnotateUI (object):
             vals.update(templatefunctions)
             self.log.info('/annotate: %r secs' % (time.time() - z,))
             response.headers['Content-Type'] = 'text/html'
-            tt.expand_(response, **vals)
+            template = load_template('loggerhead.templates.annotate')
+            template.expand_into(response, **vals)
         finally:
             h._branch.unlock()

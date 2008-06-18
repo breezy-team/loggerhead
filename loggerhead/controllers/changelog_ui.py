@@ -24,12 +24,9 @@ from paste.request import path_info_pop
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
+from loggerhead.zptsupport import load_template
 
 
-from turbosimpletal import TurboZpt
-
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.changelog')
 
 class ChangeLogUI (object):
     
@@ -126,6 +123,7 @@ class ChangeLogUI (object):
             vals.update(templatefunctions)
             self.log.info('/changes %r: %r secs' % (revid, time.time() - z))
             response.headers['Content-Type'] = 'text/html'
-            tt.expand_(response, **vals)
+            template = load_template('loggerhead.templates.changelog')
+            template.expand_into(response, **vals)
         finally:
             h._branch.unlock()

@@ -17,14 +17,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
-
-from turbosimpletal import TurboZpt
-
-t = TurboZpt()
-tt = t.load_template('loggerhead.templates.atom')
+from loggerhead.zptsupport import load_template
 
 
 class AtomUI (object):
@@ -53,6 +48,7 @@ class AtomUI (object):
             }
             vals.update(templatefunctions)
             response.headers['Content-Type'] = 'application/atom+xml'
-            tt.expand_(response, **vals)
+            template = load_template('loggerhead.templates.atom')
+            template.expand_into(response, **vals)
         finally:
             h._branch.unlock()

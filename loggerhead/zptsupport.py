@@ -1,10 +1,14 @@
-"TurboGears support for Zope Page Templates"
+"""Support for Zope Page Templates using the simpletal library."""
 
-import StringIO
+import logging
 import os
 import pkg_resources
+import StringIO
 
 from simpletal import simpleTAL, simpleTALES
+
+logging.getLogger("simpleTAL").setLevel(logging.INFO)
+logging.getLogger("simpleTALES").setLevel(logging.INFO)
 
 
 _zpt_cache = {}
@@ -32,7 +36,7 @@ class TemplateWrapper(object):
         self.template.expandInline(context, s)
         return s.getvalue()
 
-    def expand_(self, f, **info):
+    def expand_into(self, f, **info):
         context = simpleTALES.Context(allowPythonPath=1)
         for k, v in info.iteritems():
             context.addGlobal(k, v)
@@ -43,27 +47,20 @@ class TemplateWrapper(object):
         return self.template.macros
 
 
-class TurboZpt(object):
-    extension = "pt"
+def load_template(classname):
+    """Searches for a template along the Python path.
 
-    def __init__(self, extra_vars_func=None):
-        self.get_extra_vars = extra_vars_func
+    Template files must end in ".pt" and be in legitimate packages.
+    Templates are automatically checked for changes and reloaded as
+    neccessary.
+    """
+    divider = classname.rfind(".")
+    if divider > -1:
+        package = classname[0:divider]
+        basename = classname[divider+1:]
+    else:
+        raise ValueError, "All templates must be in a package"
 
-    def load_template(self, classname, loadingSite=False):
-        """Searches for a template along the Python path.
-
-        Template files must end in ".pt" and be in legitimate packages.
-        Templates are automatically checked for changes and reloaded as
-        neccessary.
-        """
-        divider = classname.rfind(".")
-        if divider > -1:
-            package = classname[0:divider]
-            basename = classname[divider+1:]
-        else:
-            raise ValueError, "All templates must be in a package"
-
-        tfile = pkg_resources.resource_filename(
-            package, "%s.%s" % (basename, self.extension))
-        return zpt(tfile)
-
+    tfile = pkg_resources.resource_filename(
+        package, "%s.%s" % (basename, "pt"))
+    return zpt(tfile)
