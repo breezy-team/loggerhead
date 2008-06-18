@@ -1,12 +1,11 @@
 import logging
-import os
 import urllib
 
-from paste import urlparser
 from paste import request
 from paste import httpexceptions
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
+from loggerhead.apps import static_app
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -16,11 +15,6 @@ from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.bundle_ui import BundleUI
 
 from loggerhead import util
-
-static = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), 'static')
-
-static_app = urlparser.make_static(None, static)
 
 logging.basicConfig()
 logging.getLogger().setLevel(logging.DEBUG)
@@ -82,4 +76,3 @@ class BranchWSGIApp(object):
         c = cls(self)
         c.default(req, response)
         return response(environ, start_response)
-

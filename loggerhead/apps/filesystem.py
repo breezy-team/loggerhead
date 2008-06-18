@@ -1,7 +1,8 @@
 import cgi, os, tempfile
 from bzrlib import branch, errors
 from loggerhead.history import History
-from loggerhead.apps.branch import BranchWSGIApp, static_app
+from loggerhead.apps.branch import BranchWSGIApp
+from loggerhead.apps import static_app
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
@@ -54,7 +55,8 @@ class BranchesFromFileSystemServer(object):
         except errors.NotBranchError:
             segment = path_info_pop(environ)
             if segment is None:
-                raise httpexceptions.HTTPMovedPermanently(environ['SCRIPT_NAME'] + '/')
+                raise httpexceptions.HTTPMovedPermanently(
+                    environ['SCRIPT_NAME'] + '/')
             elif segment == '':
                 return self.directory_listing(path, environ, start_response)
             else:
