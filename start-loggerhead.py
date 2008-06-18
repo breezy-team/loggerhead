@@ -110,10 +110,6 @@ def main():
     
     Root = Root(config)
     
-    # re-index every 6 hours
-    index_freq = config.get('cache_rebuild_frequency', 6 * 3600)
-    turbogears.scheduler.add_interval_task(initialdelay=1, interval=index_freq, action=Root._check_rebuild)
-
     try:
         turbogears.start_server(Root)
     finally:
