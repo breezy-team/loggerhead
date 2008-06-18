@@ -102,9 +102,6 @@ class ChangeLogUI (object):
                         all_same_author = False
                         break
 
-            def url(pathargs, **kw):
-                return self._branch.url(pathargs, **kw)
-
             vals = {
                 'branch': self._branch,
                 'changes': changes,
