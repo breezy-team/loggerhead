@@ -24,17 +24,28 @@ from bzrlib.transport import get_transport
 from bzrlib.plugin import load_plugins
 load_plugins()
 
-def search_revisions(branch, query_list=[]):
+def search_revisions(branch, query_list=[], suggest=False):
+    query_list = [query_list]
     index = _mod_index.open_index_branch(branch)
     query = [(query_item,) for query_item in query_list]
     revid_list = []
-    for result in index.search(query):
-        if isinstance(result, FileTextHit):
-            revid_list.append(result.text_key[1])
-        elif isinstance(result, RevisionHit):
-            revid_list.append(result.revision_key)
+    index._branch.lock_read()
+    if suggest:
+        terms = index.suggest(query)
+        terms = list(terms)
+        terms.sort()
+        return terms
+    else:
+        print query
+        for result in index.search(query):
+            if isinstance(result, FileTextHit):
+                revid_list.append(result.text_key[1])
+            elif isinstance(result, RevisionHit):
+                revid_list.append(result.revision_key)
+            print result
 
-    if len(revid_list) == 0:
-        raise errors.NoMatch(query_listo)
+        if len(revid_list) == 0:
+            raise errors.NoMatch(query_listo)
 
-    return list(sets.Set(revid_list))
+        return list(sets.Set(revid_list))
+    index._branch.unlock()

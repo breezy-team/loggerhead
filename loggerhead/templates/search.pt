@@ -1,0 +1,5 @@
+<ul>
+<tal:block repeat="term terms">
+<li tal:content="term"></li>
+</tal:block>
+</ul>

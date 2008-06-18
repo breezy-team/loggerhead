@@ -13,7 +13,13 @@
               />
 
         <script type="text/javascript"
+                tal:attributes="src python:tg.url('/static/javascript/mootools.js')">
+        </script>
+        <script type="text/javascript"
                 tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+        </script>
+        <script type="text/javascript"
+                tal:attributes="src python:tg.url('/static/javascript/custom.js')">
         </script>
       </metal:block>
     </head>
