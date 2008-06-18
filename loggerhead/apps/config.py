@@ -1,6 +1,8 @@
 # A server that recreates (modulo cherrypy bugs :) the url parsing
 # from the old, loggerhead.conf approach.
 
+# It's all a bit horrible really.
+
 import logging
 import os
 import posixpath
