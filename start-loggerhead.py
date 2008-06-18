@@ -88,6 +88,11 @@ def main():
                             ('server.webpath', str),
                             ('server.thread_pool', int),
                             ('server.socket_host' ,str) ]
+    server_port = int(config.get('server.socket_port', 8080))
+    nworkers = int(config.get('server.thread_pool', 10))
+    server_host = config.get('server.socket_host', '0.0.0.0')
+    webpath = config.get('server.webpath', None)
+
     for key, keytype in potential_overrides:
         value = config.get(key, None)
         if value is not None:
@@ -113,7 +118,14 @@ def main():
     app = make_middleware(app)
     app = make_filter(app, None)
 
-    httpserver.serve(app, host='127.0.0.1', port='9876')
+    if webpath:
+        if not webpath.endswith('/'):
+            webpath += '/'
+        def app(environ, start_response, app=app):
+            environ['SCRIPT_NAME'] = webpath
+            return app(environ, start_response)
+
+    httpserver.serve(app, host=server_host, port=server_port, threadpool_workers=nworkers)
 
 
 if __name__ == '__main__':
