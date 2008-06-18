@@ -1,10 +1,15 @@
-import cgi, os, tempfile
+import cgi
+import os
+import tempfile
+
 from bzrlib import branch, errors
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, static_app
+
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
+
+from loggerhead.apps.branch import BranchWSGIApp
+from loggerhead.apps import favicon_app, static_app
 
 
 sql_dir = tempfile.mkdtemp()

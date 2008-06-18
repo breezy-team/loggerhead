@@ -15,8 +15,6 @@ from paste.wsgiwrappers import WSGIResponse
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
-from loggerhead.changecache import FileChangeCache
-from loggerhead.history import History
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 from loggerhead import util

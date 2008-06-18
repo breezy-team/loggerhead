@@ -55,7 +55,7 @@ class BasicTests(object):
         return History.from_folder(self.bzrbranch)
 
     def setUpLoggerhead(self):
-        app = TestApp(BranchWSGIApp(self.makeHistory()).app)
+        app = TestApp(BranchWSGIApp(self.bzrbranch).app)
         return app
 
     def tearDown(self):

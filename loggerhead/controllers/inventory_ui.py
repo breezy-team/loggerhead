@@ -19,14 +19,11 @@
 
 import logging
 import posixpath
-import time
 
 from paste.httpexceptions import HTTPServerError
-from paste.request import path_info_pop
 
 from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from loggerhead.zptsupport import load_template
+from loggerhead.controllers import TemplatedBranchView
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -37,84 +34,60 @@ def dirname(path):
     path = posixpath.dirname(path)
     return path
 
-        
-class InventoryUI (object):
 
-    def __init__(self, branch):
-        # BranchView object
-        self._branch = branch
-        self.log = branch.log
+class InventoryUI(TemplatedBranchView):
 
-    def default(self, request, response):
-        z = time.time()
-        h = self._branch.history
-        kw = request.GET
-        util.set_context(kw)
+    template_path = 'loggerhead.templates.inventory'
 
-        h._branch.lock_read()
+    def get_values(self, h, args, kw, response):
+        if len(args) > 0:
+            revid = h.fix_revid(args[0])
+        else:
+            revid = h.last_revid
+
         try:
-            args = []
-            while 1:
-                arg = path_info_pop(request.environ)
-                if arg is None:
-                    break
-                args.append(arg)
+            inv = h.get_inventory(revid)
+        except:
+            self.log.exception('Exception fetching changes')
+            raise HTTPServerError('Could not fetch changes')
 
-            if len(args) > 0:
-                revid = h.fix_revid(args[0])
-            else:
-                revid = h.last_revid
+        file_id = kw.get('file_id', inv.root.file_id)
+        start_revid = kw.get('start_revid', None)
+        sort_type = kw.get('sort', None)
 
-            try:
-                inv = h.get_inventory(revid)
-            except:
-                self.log.exception('Exception fetching changes')
-                raise HTTPServerError('Could not fetch changes')
+        # no navbar for revisions
+        navigation = util.Container()
 
-            file_id = kw.get('file_id', inv.root.file_id)
-            start_revid = kw.get('start_revid', None)
-            sort_type = kw.get('sort', None)
+        change = h.get_changes([ revid ])[0]
+        # add parent & merge-point branch-nick info, in case it's useful
+        h.get_branch_nicks([ change ])
 
-            # no navbar for revisions
-            navigation = util.Container()
+        path = inv.id2path(file_id)
+        if not path.startswith('/'):
+            path = '/' + path
+        idpath = inv.get_idpath(file_id)
+        if len(idpath) > 1:
+            updir = dirname(path)
+            updir_file_id = idpath[-2]
+        else:
+            updir = None
+            updir_file_id = None
+        if updir == '/':
+            updir_file_id = None
 
-            change = h.get_changes([ revid ])[0]
-            # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks([ change ])
-
-            path = inv.id2path(file_id)
-            if not path.startswith('/'):
-                path = '/' + path
-            idpath = inv.get_idpath(file_id)
-            if len(idpath) > 1:
-                updir = dirname(path)
-                updir_file_id = idpath[-2]
-            else:
-                updir = None
-                updir_file_id = None
-            if updir == '/':
-                updir_file_id = None
-
-            vals = {
-                'branch': self._branch,
-                'util': util,
-                'revid': revid,
-                'change': change,
-                'file_id': file_id,
-                'path': path,
-                'updir': updir,
-                'updir_file_id': updir_file_id,
-                'filelist': h.get_filelist(inv, file_id, sort_type),
-                'history': h,
-                'posixpath': posixpath,
-                'navigation': navigation,
-                'url': self._branch.context_url,
-                'start_revid': start_revid,
-            }
-            vals.update(templatefunctions)
-            self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
-            response.headers['Content-Type'] = 'text/html'
-            template = load_template('loggerhead.templates.inventory')
-            template.expand_into(response, **vals)
-        finally:
-            h._branch.unlock()
+        return {
+            'branch': self._branch,
+            'util': util,
+            'revid': revid,
+            'change': change,
+            'file_id': file_id,
+            'path': path,
+            'updir': updir,
+            'updir_file_id': updir_file_id,
+            'filelist': h.get_filelist(inv, file_id, sort_type),
+            'history': h,
+            'posixpath': posixpath,
+            'navigation': navigation,
+            'url': self._branch.context_url,
+            'start_revid': start_revid,
+        }

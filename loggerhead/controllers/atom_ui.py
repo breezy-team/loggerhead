@@ -17,38 +17,21 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from loggerhead.zptsupport import load_template
+from loggerhead.controllers import TemplatedBranchView
 
 
-class AtomUI (object):
+class AtomUI (TemplatedBranchView):
 
-    def __init__(self, branch):
-        # BranchView object
-        self._branch = branch
-        self.log = branch.log
-
-    def default(self, request, response):
+    def get_values(self, h, args, kw, response):
         h = self._branch.history
 
-        h._branch.lock_read()
-        try:
-            pagesize = int(20)#self._branch.config.get('pagesize', '20'))
+        pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
-            revid_list = h.get_file_view(h.last_revid, None)
-            entries = list(h.get_changes(list(revid_list)[:pagesize]))
+        revid_list = h.get_file_view(h.last_revid, None)
+        entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
-            vals = {
-                'branch': self._branch,
-                'changes': entries,
-                'util': util,
-                'history': h,
-                'updated': entries[0].date.isoformat() + 'Z',
-            }
-            vals.update(templatefunctions)
-            response.headers['Content-Type'] = 'application/atom+xml'
-            template = load_template('loggerhead.templates.atom')
-            template.expand_into(response, **vals)
-        finally:
-            h._branch.unlock()
+        response.headers['Content-Type'] = 'application/atom+xml'
+        return {
+            'changes': entries,
+            'updated': entries[0].date.isoformat() + 'Z',
+        }

@@ -17,20 +17,14 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import logging
 import os
 import posixpath
-import time
 
-from paste.request import path_info_pop
 from paste.httpexceptions import HTTPBadRequest
 
+from loggerhead.controllers import TemplatedBranchView
 from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from loggerhead.zptsupport import load_template
 
-
-log = logging.getLogger("loggerhead.controllers")
 
 def dirname(path):
     while path.endswith('/'):
@@ -39,70 +33,42 @@ def dirname(path):
     return path
 
 
-class AnnotateUI (object):
+class AnnotateUI (TemplatedBranchView):
 
-    def __init__(self, branch):
-        # BranchView object
-        self._branch = branch
-        self.log = branch.log
+    template_path = 'loggerhead.templates.annotate'
 
-    def default(self, request, response):
-        z = time.time()
-        h = self._branch.history
-        kw = request.GET
-        util.set_context(kw)
+    def get_values(self, h, args, kw, response):
+        if len(args) > 0:
+            revid = h.fix_revid(args[0])
+        else:
+            revid = h.last_revid
 
-        h._branch.lock_read()
-        try:
-            args = []
-            while 1:
-                arg = path_info_pop(request.environ)
-                if arg is None:
-                    break
-                args.append(arg)
+        path = None
+        if len(args) > 1:
+            path = '/'.join(args[1:])
+            if not path.startswith('/'):
+                path = '/' + path
 
-            if len(args) > 0:
-                revid = h.fix_revid(args[0])
-            else:
-                revid = h.last_revid
+        file_id = kw.get('file_id', None)
+        if (file_id is None) and (path is None):
+            raise HTTPBadRequest('No file_id or filename provided to annotate')
 
-            path = None
-            if len(args) > 1:
-                path = '/'.join(args[1:])
-                if not path.startswith('/'):
-                    path = '/' + path
+        if file_id is None:
+            file_id = h.get_file_id(revid, path)
 
-            file_id = kw.get('file_id', None)
-            if (file_id is None) and (path is None):
-                raise HTTPBadRequest('No file_id or filename provided to annotate')
+        # no navbar for revisions
+        navigation = util.Container()
 
-            if file_id is None:
-                file_id = h.get_file_id(revid, path)
+        if path is None:
+            path = h.get_path(revid, file_id)
+        filename = os.path.basename(path)
 
-            # no navbar for revisions
-            navigation = util.Container()
-
-            if path is None:
-                path = h.get_path(revid, file_id)
-            filename = os.path.basename(path)
-
-            vals = {
-                'branch': self._branch,
-                'util': util,
-                'revid': revid,
-                'file_id': file_id,
-                'path': path,
-                'filename': filename,
-                'history': h,
-                'navigation': navigation,
-                'change': h.get_changes([ revid ])[0],
-                'contents': list(h.annotate_file(file_id, revid)),
-                'url': self._branch.context_url,
-            }
-            vals.update(templatefunctions)
-            self.log.info('/annotate: %r secs' % (time.time() - z,))
-            response.headers['Content-Type'] = 'text/html'
-            template = load_template('loggerhead.templates.annotate')
-            template.expand_into(response, **vals)
-        finally:
-            h._branch.unlock()
+        return {
+            'revid': revid,
+            'file_id': file_id,
+            'path': path,
+            'filename': filename,
+            'navigation': navigation,
+            'change': h.get_changes([ revid ])[0],
+            'contents': list(h.annotate_file(file_id, revid)),
+        }
