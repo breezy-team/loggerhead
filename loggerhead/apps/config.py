@@ -13,6 +13,7 @@ from paste.wsgiwrappers import WSGIResponse
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import static_app
+from loggerhead.changecache import FileChangeCache
 from loggerhead.history import History
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
@@ -83,8 +84,18 @@ class Project (object):
         description = view.get_history().get_config().get_user_option('description')
         return description
 
+    def _make_history(self, view_name, view_config, folder):
+        h = History.from_folder(folder, view_name)
+        cache_path = view_config.get('cachepath', None)
+        if cache_path is None:
+            # try the project config
+            cache_path = self._config.get('cachepath', None)
+        if cache_path is not None:
+            h.use_file_cache(FileChangeCache(h, cache_path))
+
+
     def _add_view(self, view_name, view_config, folder):
-        h = History.from_folder(folder)
+        h = self._make_history(view_name, view_config, folder)
         friendly_name = view_config.get('branch_name', None)
         if friendly_name is None:
             friendly_name = h.get_config().get_nickname()
@@ -96,6 +107,8 @@ class Project (object):
         if branch_url is not None:
             view.branch_url = branch_url
         view.description = self._get_description(view)
+        view._src_folder = folder
+        view._view_config = view_config
         self.views.append(view)
         self.views_by_name[view_name] = view
 
@@ -107,6 +120,8 @@ class Project (object):
             view = self.views_by_name.get(segment)
             if view is None:
                 raise httpexceptions.HTTPNotFound()
+            if view.history.out_of_date():
+                view.history = self._make_history(view.name, view._view_config, view._src_folder)
             return view.app(environ, start_response)
 
 
