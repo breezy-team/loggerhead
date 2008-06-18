@@ -1,4 +1,3 @@
-from configobj import ConfigObj
 import cgi
 import unittest
 import os
@@ -6,19 +5,21 @@ import tempfile
 import shutil
 import logging
 
-import cherrypy
-from turbogears import testutil
+import bzrlib.bzrdir
+import bzrlib.osutils
+from configobj import ConfigObj
 
-import bzrlib
+from loggerhead.history import History
+from loggerhead.apps.branch import BranchWSGIApp
+from paste.fixture import TestApp
 
-from loggerhead.controllers import Root
 
-def test_simple():
+def test_config_root():
+    from loggerhead.apps.config import Root
     config = ConfigObj()
-    r = Root(config)
-    cherrypy.root = r
-    testutil.create_request('/')
-    assert 'loggerhead branches' in cherrypy.response.body[0]
+    app = TestApp(Root(config))
+    res = app.get('/')
+    res.mustcontain('loggerhead branches')
 
 
 class BasicTests(object):
@@ -50,16 +51,18 @@ class BasicTests(object):
             folder = '%(branch)s'
     """
 
-    def setUpLoggerhead(self):
-        ini = self.config_template%dict(branch=self.bzrbranch)
+    def makeHistory(self):
+        return History.from_folder(self.bzrbranch)
 
-        config = ConfigObj(ini.splitlines())
-        cherrypy.root = Root(config)
+    def setUpLoggerhead(self):
+        app = TestApp(BranchWSGIApp(self.makeHistory()).app)
+        return app
 
     def tearDown(self):
         if self.bzrbranch is not None:
             shutil.rmtree(self.bzrbranch)
         bzrlib.osutils.set_or_unset_env('BZR_HOME', self.old_bzrhome)
+
 
 class TestWithSimpleTree(BasicTests):
 
@@ -79,68 +82,42 @@ class TestWithSimpleTree(BasicTests):
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
 
-        self.setUpLoggerhead()
-
-    def test_index(self):
-        testutil.create_request('/')
-        link = '<a href="/project/branch">branch</a>'
-        assert link in cherrypy.response.body[0].lower()
 
     def test_changes(self):
-        testutil.create_request('/project/branch/changes')
-        assert cgi.escape(self.msg) in cherrypy.response.body[0]
+        app = self.setUpLoggerhead()
+        res = app.get('/changes')
+        res.mustcontain(cgi.escape(self.msg))
 
     def test_changes_search(self):
-        testutil.create_request('/project/branch/changes?q=foo')
-        assert 'Sorry, no results found for your search.' in cherrypy.response.body[0]
+        app = self.setUpLoggerhead()
+        res = app.get('/changes', params={'q': 'foo'})
+        res.mustcontain('Sorry, no results found for your search.')
 
     def test_annotate(self):
-        testutil.create_request('/project/branch/annotate?'
-                                + 'file_id='+self.fileid)
+        app = self.setUpLoggerhead()
+        res = app.get('/annotate', params={'file_id':self.fileid})
         for line in self.filecontents.splitlines():
-            assert cgi.escape(line) in cherrypy.response.body[0]
+            res.mustcontain(cgi.escape(line))
 
     def test_inventory(self):
-        testutil.create_request('/project/branch/files')
-        assert 'myfilename' in cherrypy.response.body[0]
+        app = self.setUpLoggerhead()
+        res = app.get('/files')
+        res.mustcontain('myfilename')
 
     def test_revision(self):
-        testutil.create_request('/project/branch/revision/' + self.revid)
-        assert 'myfilename' in cherrypy.response.body[0]
+        app = self.setUpLoggerhead()
+        res = app.get('/revision/1')
+        res.mustcontain('myfilename')
 
-class TestWithSimpleTreeAndCache(TestWithSimpleTree):
-    config_template = """
-    testing = True
-    [project]
-        [[branch]]
-            branch_name = 'branch'
-            folder = '%(branch)s'
-            cachepath = '%(branch)s/cache'
-    """
 
 class TestEmptyBranch(BasicTests):
 
     def setUp(self):
         BasicTests.setUp(self)
         self.createBranch()
-        self.setUpLoggerhead()
-
-    def test_index(self):
-        testutil.create_request('/')
-        link = '<a href="/project/branch">branch</a>'
-        assert link in cherrypy.response.body[0].lower()
 
     def test_changes(self):
-        testutil.create_request('/project/branch/changes')
-        assert 'No revisions!' in cherrypy.response.body[0]
-
-class TestEmptyBranchWithCache(TestEmptyBranch):
-    config_template = """
-    testing = True
-    [project]
-        [[branch]]
-            branch_name = 'branch'
-            folder = '%(branch)s'
-            cachepath = '%(branch)s/cache'
-    """
+        app = self.setUpLoggerhead()
+        res = app.get('/changes')
+        res.mustcontain('No revisions!')
 
