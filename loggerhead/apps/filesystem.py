@@ -1,12 +1,10 @@
 import cgi, os, tempfile
 from bzrlib import branch, errors
-from loggerhead.history import History
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
-from loggerhead.changecache import FileChangeCache
 
 
 sql_dir = tempfile.mkdtemp()
@@ -30,17 +28,11 @@ class BranchesFromFileSystemServer(object):
         return response(environ, start_response)
 
     def app_for_branch(self, b, path):
-        b.lock_read()
-        try:
-            _history = History.from_branch(b)
-        finally:
-            b.unlock()
-        _history.use_file_cache(FileChangeCache(_history, sql_dir))
         if not self.folder:
             name = os.path.basename(os.path.abspath(path))
         else:
             name = self.folder
-        h = BranchWSGIApp(_history, name)
+        h = BranchWSGIApp(path, name, {'cachepath': sql_dir})
         self.root.cache[path] = h
         return h.app
 
@@ -49,7 +41,7 @@ class BranchesFromFileSystemServer(object):
         if not os.path.isdir(path):
             raise httpexceptions.HTTPNotFound()
         cached = self.root.cache.get(path)
-        if cached and not cached.history.out_of_date():
+        if cached is not None:
             return cached.app(environ, start_response)
         try:
             b = branch.Branch.open(path)

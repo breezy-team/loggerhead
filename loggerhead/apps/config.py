@@ -86,24 +86,14 @@ class Project (object):
         description = view.history._branch.get_config().get_user_option('description')
         return description
 
-    def _make_history(self, view_name, view_config, folder):
-        h = History.from_folder(folder, view_name)
-        cache_path = view_config.get('cachepath', None)
-        if cache_path is None:
-            # try the project config
-            cache_path = self._config.get('cachepath', None)
-        if cache_path is not None:
-            h.use_file_cache(FileChangeCache(h, cache_path))
-        return h
-
     def _add_view(self, view_name, view_config, folder):
-        h = self._make_history(view_name, view_config, folder)
+        view = BranchWSGIApp(folder, view_name, view_config)
         friendly_name = view_config.get('branch_name', None)
         if friendly_name is None:
-            friendly_name = h.get_config().get_nickname()
+            friendly_name = view.history.get_config().get_nickname()
             if friendly_name is None:
                 friendly_name = view_name
-        view = BranchWSGIApp(h, friendly_name)
+        view.friendly_name = friendly_name
         view.name = view_name
         branch_url = self._get_branch_url(view, view_config)
         if branch_url is not None:
@@ -122,8 +112,6 @@ class Project (object):
             view = self.views_by_name.get(segment)
             if view is None:
                 raise httpexceptions.HTTPNotFound()
-            if view.history.out_of_date():
-                view.history = self._make_history(view.name, view._view_config, view._src_folder)
             return view.app(environ, start_response)
 
 

@@ -195,16 +195,13 @@ class History (object):
         self._lock = threading.RLock()
 
     @classmethod
-    def from_branch(cls, branch, name=None):
+    def from_branch(cls, branch):
         z = time.time()
         self = cls()
         self._branch = branch
         self._last_revid = self._branch.last_revision()
 
-        if name is None:
-            name = self._branch.nick
-        self._name = name
-        self.log = logging.getLogger('loggerhead.%s' % (name,))
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch.nick,))
 
         graph = branch.repository.get_graph()
         parent_map = dict(((key, value) for key, value in
@@ -255,11 +252,11 @@ class History (object):
         return revision_graph
 
     @classmethod
-    def from_folder(cls, path, name=None):
+    def from_folder(cls, path):
         b = bzrlib.branch.Branch.open(path)
         b.lock_read()
         try:
-            return cls.from_branch(b, name)
+            return cls.from_branch(b)
         finally:
             b.unlock()
 

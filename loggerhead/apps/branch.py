@@ -6,6 +6,7 @@ from paste import httpexceptions
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.apps import static_app
+from loggerhead.changecache import FileChangeCache
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -13,7 +14,7 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.bundle_ui import BundleUI
-
+from loggerhead.history import History
 from loggerhead import util
 
 logging.basicConfig()
@@ -21,10 +22,22 @@ logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 
-    def __init__(self, history, friendly_name=None):
-        self.history = history
+    def __init__(self, branch_url, friendly_name=None, config={}):
+        self.branch_url = branch_url
+        self._history = None
+        self._config = config
         self.friendly_name = friendly_name
         self.log = logging.getLogger(friendly_name)
+
+    @property
+    def history(self):
+        if (self._history is None) or self._history.out_of_date():
+            self.log.debug('Reload branch history...')
+            _history = self._history = History.from_folder(self.branch_url)
+            cache_path = self._config.get('cachepath', None)
+            if cache_path is not None:
+                _history.use_file_cache(FileChangeCache(_history, cache_path))
+        return self._history
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
