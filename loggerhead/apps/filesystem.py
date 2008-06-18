@@ -50,7 +50,7 @@ class BranchesFromFileSystemServer(object):
             raise httpexceptions.HTTPNotFound()
         cached = self.root.cache.get(path)
         if cached and not cached.history.out_of_date():
-            return self.root.cache[path](environ, start_response).app(environ, start_response)
+            return cached.app(environ, start_response)
         try:
             b = branch.Branch.open(path)
         except errors.NotBranchError:
