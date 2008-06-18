@@ -1,8 +1,5 @@
 #!/usr/bin/env python2.4
 
-import pkg_resources
-pkg_resources.require("TurboGears")
-
 import logging
 import os
 import sys
@@ -97,13 +94,13 @@ def main():
             value = keytype(value)
             #turbogears.config.update({ key: value })
 
-    ## if not options.foreground:
-    ##     sys.stderr.write('\n')
-    ##     sys.stderr.write('Launching loggerhead into the background.\n')
-    ##     sys.stderr.write('PID file: %s\n' % (pidfile,))
-    ##     sys.stderr.write('\n')
+    if not options.foreground:
+        sys.stderr.write('\n')
+        sys.stderr.write('Launching loggerhead into the background.\n')
+        sys.stderr.write('PID file: %s\n' % (pidfile,))
+        sys.stderr.write('\n')
 
-    ##     daemon.daemonize(pidfile, home)
+        daemon.daemonize(pidfile, home)
 
     setup_logging(home, config, foreground=options.foreground)
 
