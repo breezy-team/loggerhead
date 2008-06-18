@@ -60,8 +60,8 @@ class RevisionUI (object):
             filter_file_id = kw.get('filter_file_id', None)
             start_revid = h.fix_revid(kw.get('start_revid', None))
             query = kw.get('q', None)
-            remember = kw.get('remember', None)
-            compare_revid = kw.get('compare_revid', None)
+            remember = h.fix_revid(kw.get('remember', None))
+            compare_revid = h.fix_revid(kw.get('compare_revid', None))
 
             try:
                 revid, start_revid, revid_list = h.get_view(revid, start_revid, filter_file_id, query)
