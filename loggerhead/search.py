@@ -42,7 +42,6 @@ def search_revisions(branch, query_list=[], suggest=False):
                 revid_list.append(result.text_key[1])
             elif isinstance(result, RevisionHit):
                 revid_list.append(result.revision_key)
-            print result
 
         if len(revid_list) == 0:
             raise errors.NoMatch(query_listo)
