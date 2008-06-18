@@ -18,7 +18,7 @@ from loggerhead.controllers.bundle_ui import BundleUI
 from loggerhead import util
 
 static = os.path.join(
-    os.path.dirname(__file__), 'static')
+    os.path.dirname(os.path.dirname(__file__)), 'static')
 
 static_app = urlparser.make_static(None, static)
 
@@ -30,7 +30,7 @@ class BranchWSGIApp(object):
     def __init__(self, history, friendly_name=None):
         self.history = history
         self.friendly_name = friendly_name
-        self.log = logging.getLogger('hi')
+        self.log = logging.getLogger(friendly_name)
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):

@@ -1,7 +1,7 @@
 import cgi, os, tempfile
 from bzrlib import branch, errors
 from loggerhead.history import History
-from loggerhead.wsgiapp import BranchWSGIApp, static_app
+from loggerhead.apps.branch import BranchWSGIApp, static_app
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
