@@ -35,16 +35,16 @@ class BranchesFromFileSystemServer(object):
         b.lock_read()
         try:
             _history = History.from_branch(b)
-            _history.use_file_cache(FileChangeCache(_history, sql_dir))
-            if not self.folder:
-                name = os.path.basename(os.path.abspath(path))
-            else:
-                name = self.folder
-            h = BranchWSGIApp(_history, name).app
-            self.root.cache[path] = h
-            return h
         finally:
             b.unlock()
+        _history.use_file_cache(FileChangeCache(_history, sql_dir))
+        if not self.folder:
+            name = os.path.basename(os.path.abspath(path))
+        else:
+            name = self.folder
+        h = BranchWSGIApp(_history, name).app
+        self.root.cache[path] = h
+        return h
 
     def __call__(self, environ, start_response):
         path = os.path.join(self.root.folder, self.folder)
@@ -90,4 +90,3 @@ app = make_filter(app, None)
 
 
 httpserver.serve(app, host='127.0.0.1', port='9876')
-
