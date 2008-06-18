@@ -5,9 +5,6 @@ from loggerhead.apps.branch import BranchWSGIApp, static_app
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
-from paste import httpserver
-from paste.httpexceptions import make_middleware
-from paste.translogger import make_filter
 from loggerhead.changecache import FileChangeCache
 
 
@@ -81,12 +78,3 @@ class BranchesFromFileSystemRoot(object):
         else:
             return BranchesFromFileSystemServer(
                 '', self)(environ, start_response)
-
-app = BranchesFromFileSystemRoot('.')
-
-app = app
-app = make_middleware(app)
-app = make_filter(app, None)
-
-
-httpserver.serve(app, host='127.0.0.1', port='9876')
