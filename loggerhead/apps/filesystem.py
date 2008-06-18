@@ -40,16 +40,17 @@ class BranchesFromFileSystemServer(object):
             name = os.path.basename(os.path.abspath(path))
         else:
             name = self.folder
-        h = BranchWSGIApp(_history, name).app
+        h = BranchWSGIApp(_history, name)
         self.root.cache[path] = h
-        return h
+        return h.app
 
     def __call__(self, environ, start_response):
         path = os.path.join(self.root.folder, self.folder)
         if not os.path.isdir(path):
             raise httpexceptions.HTTPNotFound()
-        if path in self.root.cache:
-            return self.root.cache[path](environ, start_response)
+        cached = self.root.cache.get(path)
+        if cached and not cached.history.out_of_date():
+            return self.root.cache[path](environ, start_response).app(environ, start_response)
         try:
             b = branch.Branch.open(path)
         except errors.NotBranchError:
