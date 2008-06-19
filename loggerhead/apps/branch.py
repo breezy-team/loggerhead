@@ -88,7 +88,8 @@ class BranchWSGIApp(object):
         self._environ = environ
         path = request.path_info_pop(environ)
         if not path:
-            raise httpexceptions.HTTPMovedPermanently(self._url_base + '/changes')
+            raise httpexceptions.HTTPMovedPermanently(
+                self._url_base + '/changes')
         if path == 'static':
             return static_app(environ, start_response)
         cls = self.controllers_dict.get(path)
