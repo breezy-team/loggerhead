@@ -28,8 +28,8 @@ form {
 }
 .fr {float:right;}
 .fl {float:left;}
-/*General Content*/
-/*Loggerhead Menu tabs*/
+
+/* Loggerhead Menu tabs */
 ul#menuTabs {
 	width:98%;
 	height:33px;
@@ -67,7 +67,8 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	background:#666 url(../images/bg_Tabs.gif) top center;
 	text-decoration:none;
 }
-/*Search & RSS*/
+
+/* Search & RSS */
 #finderBox {
 	width:300px;
 	float:right;
@@ -97,7 +98,8 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	display:inline;
 	padding:0px 0px 0px 10px;
 }
-/*Loggerhead General Content*/
+
+/* General Content */
 #loggerheadCont {
 	width:98%;
 	padding:10px 1%;
@@ -111,7 +113,7 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	padding:10px 0px 5px 0px;
 }
 #loggerheadCont h1 span {
-	color:#889ea9;
+    color:#889ea9;
 }
 #loggerheadCont p {
 	color:#000;
@@ -135,13 +137,14 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	color:#CC6600;
 	text-decoration:none;		
 }
+
 /*Log Table*/
 #logentries {
 	caption-side:top;
 	width:99%;
 	margin:0px auto 10px auto;
 	padding:0px;
-	background:#ff0;
+	background:#fff;
 	border:none;
 	border-spacing:0px;
 	border-collapse:collapse;
@@ -152,13 +155,13 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 	padding:0px;
 	margin:0px;
 }
-.blueRow, .lightblueRow {
+.blueRow0, .blueRow1 {
 	background:#eef6fa;
 	font:normal 14px/normal sans-serif;	
 	padding:0px;
 	margin:0px;
 }
-.lightblueRow {
+.blueRow1 {
 	background:#f8fbfd;
 }
 .revisionnumber, .expandcell, .diffcell, .downloadcell, .revnro, .expcell, .diffr, .downr {
@@ -170,92 +173,88 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 .expandcell, .expcell {
 	width:28px;	
 }
-.summarycell, .authorcell, .datecell, .summcell, .autcell, .datr {
+.summarycell, .authorcell, .datecell, .summcell, .autcell, .date {
 	padding:4px 8px;
 	border:1px solid #d2d2d2;
 }
 .authorcell, .autcell {
 	width:202px;
 }
-.datecell, .datr {
+.datecell, .date {
 	width:100px;
 }
 .downloadcell, .downr {
 	width:47px;
 }
-.revnro, .expcell, .diffr, .summcell, .autcell, .datr, .downr {
+.revnro, .expcell, .diffr, .summcell, .autcell, .date, .downr {
 	border:none;
 	border-bottom:1px solid #d2d2d2;
 }
-ul#expandrev {
+.revisioninfo {
+    margin-top:4px;
+}
+ul.expandrev {
 	list-style:none;
-	margin:10px 0px 5px 0px;
-	padding:0px;
 	font:normal 11px/normal sans-serif;
 	color:#000;
 }
-ul#expandrev li {
+ul.expandrev li {
 	padding:2px 0px 2px 20px;
 	margin:0px 0px 2px 0px;
 }
-ul#expandrev li.mergefrom {
+ul.expandrev li.mergefrom {
 	background:url(../images/ico_mergefrom.gif) 0px 0px no-repeat;
 }
-ul#expandrev li.committerli {
+ul.expandrev li.committerli {
 	background:url(../images/ico_committer.gif) 2px 0px no-repeat;
 }
-ul#expandrev li.desc {
+ul.expandrev li.desc {
 	background:url(../images/ico_description.gif) 0px 0px no-repeat;
 	color:#666;
 }
-ul#expandrev li.files {
+ul.expandrev li.files {
 	background:url(../images/ico_file.gif) 2px 0px no-repeat;
+    margin-left: 8px;
 }
-/*Pagination Style*/
+
+/* Navigation */
 ul {border:0; margin:0; padding:0;}
 
-ul#pagination {
+ul#pages {
 	float:right;
 }
-#pagination li {
+#pages li {
 	border:0; margin:0; padding:0;
 	font-size:12px;
 	list-style:none;
 	float:left;
 	display:inline;
 }
-#pagination a {
+#pages a {
 	border:solid 1px #DDDDDD;
 	margin-right:2px;
 }
-#pagination .previous-off, #pagination .next-off {
-	color:#666666;
-	display:block;
-	float:left;
-	font-weight:bold;
-	padding:3px 4px;
-}
-#pagination .next a, #pagination .previous a {
+#pages .next a, #pages .previous a {
 	font-weight:bold;
 	border:solid 1px #fff;
 }
-#pagination .active {
+#pages .active {
 	color:#f37b06;
 	font-weight:bold;
 	display:block;
 	float:left;
 	padding:4px 6px;
 }
-#pagination a:link,#pagination a:visited {
+#pages a:link, #pages a:visited {
 	color:#f37b06;
 	display:block;
 	float:left;
 	padding:3px 6px;
 	text-decoration:none;
 }
-#pagination .next a {
+#pages .next a {
 	color:#0f6b97;
 }
-#pagination a:hover{
+#pages a:hover {
 	border:solid 1px #666666;
 }		
