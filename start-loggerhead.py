@@ -125,7 +125,16 @@ def main():
             environ['SCRIPT_NAME'] = webpath
             return app(environ, start_response)
 
-    httpserver.serve(app, host=server_host, port=server_port, threadpool_workers=nworkers)
+    try:
+        httpserver.serve(
+            app, host=server_host, port=server_port,
+            threadpool_workers=nworkers)
+    finally:
+        log.info('Shutdown.')
+        try:
+            os.remove(pidfile)
+        except OSError:
+            pass
 
 
 if __name__ == '__main__':

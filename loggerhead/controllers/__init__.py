@@ -54,6 +54,7 @@ class TemplatedBranchView(object):
                 'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
+            del response.headers['Content-Type']
             vals.update(self.get_values(h, args, kw, response))
 
             self.log.info('/%s: %r secs' % (
