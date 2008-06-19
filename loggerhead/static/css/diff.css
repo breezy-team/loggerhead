@@ -41,7 +41,7 @@ ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#fin
 }
 /*Info Box*/
 #infoContainer {
-	width:770px;
+	width:970px;
 	padding:10px 10px 0px 10px;
 	margin:0px 0px 10px 0px;
 	color:#666;
@@ -50,7 +50,7 @@ ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#fin
 }
 ul#list-files {
 	float:right;
-	width:252px;
+	width:460px;
 	list-style:none;
 	margin:0px;
 	padding:0px;
@@ -58,9 +58,9 @@ ul#list-files {
 	color:#000;
 }
 ul#list-files li {
-	width:232px;
+	width:440px;
 	padding:2px 0px 2px 20px;
-	margin:0px 0px 7px 0px;
+	margin:0px 0px 2px 0px;
 	background:url(../images/ico_file.gif) 2px 0px no-repeat;
 }
 #infTxt {
@@ -68,13 +68,18 @@ ul#list-files li {
 	width:493px;
 	margin:0px 0px 5px 0px;
 }
-.information, .comiter, .timer, .mfrom {
+.information, .comiter, .timer, .mfrom, .revid {
 	clear:both;
 	margin:0px;
 	padding:0px 0px 2px 18px;
 	font:normal 11px/1.3 sans-serif;
 	color:#666;
 	background:url(../images/ico_description.gif) no-repeat top left;
+}
+.revid {
+    
+	padding:1px 0px 0px 18px;
+	margin:0px 10px 5px 0px;
 }
 .comiter, .mfrom {
 	clear:none;
