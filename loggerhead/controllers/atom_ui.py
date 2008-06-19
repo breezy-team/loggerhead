@@ -22,6 +22,8 @@ from loggerhead.controllers import TemplatedBranchView
 
 class AtomUI (TemplatedBranchView):
 
+    template_path = 'loggerhead.templates.atom'
+
     def get_values(self, h, args, kw, response):
         h = self._branch.history
 
