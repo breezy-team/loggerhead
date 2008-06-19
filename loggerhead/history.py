@@ -288,7 +288,6 @@ class History (object):
     def get_config(self):
         return self._branch.get_config()
 
-
     def get_revno(self, revid):
         if revid not in self._revision_info:
             # ghost parent?

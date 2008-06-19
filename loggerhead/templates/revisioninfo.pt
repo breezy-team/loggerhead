@@ -28,7 +28,8 @@
       <td class="children">
         <a title="Show history"
            tal:attributes="title string:Show revision ${merge_point/revno};
-                                        href python:url(['/revision', merge_point.revno])"
+                                        href python:url(['/revision', merge_point.revno], clear=1,
+                                                        start_revid=merge_point.revid)"
            tal:content="python:revno_with_nick(merge_point)">
           ${text}
         </a>
