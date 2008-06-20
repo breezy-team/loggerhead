@@ -25,9 +25,9 @@ from bzrlib.plugin import load_plugins
 load_plugins()
 
 def search_revisions(branch, query_list=[], suggest=False):
-    query_list = [query_list]
     index = _mod_index.open_index_branch(branch)
-    query = [(query_item,) for query_item in query_list]
+    query = query_list.split(' ')
+    query = [(term,) for term in query]
     revid_list = []
     index._branch.lock_read()
     if suggest:
@@ -41,9 +41,6 @@ def search_revisions(branch, query_list=[], suggest=False):
                 revid_list.append(result.text_key[1])
             elif isinstance(result, RevisionHit):
                 revid_list.append(result.revision_key)
-
-        if len(revid_list) == 0:
-            raise errors.NoMatch(query_listo)
 
         return list(sets.Set(revid_list))
     index._branch.unlock()
