@@ -59,10 +59,3 @@ def modified_file_link_log(url, entry, item):
     return _pt('modified-file-link-log').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)
-
-class tg:
-    @staticmethod
-    def url(what):
-        return what
-
-templatefunctions['tg'] =  tg
