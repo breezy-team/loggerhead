@@ -66,25 +66,3 @@ class TestCornerCases(BasicTests):
         # It's not much of an assertion, but we only really care about
         # "assert not crashed".
         res.mustcontain('myfilename')
-
-#    def test_revision_size_limit(self):
-#        self.createBranch()
-#        msg = 'a very exciting commit message'
-#        self.addFileAndCommit('myfilename', msg)
-#
-#        file_in_branch = open(os.path.join(self.bzrbranch, 'myfilename'), 'w')
-#        file_in_branch.write('\n'.join(['line']*100))
-#        file_in_branch.close()
-#        newrevid = self.tree.commit(message='touch 100 lines')
-#
-#        self.setUpLoggerhead()
-#        cherrypy.root._config['line_count_limit'] = 50
-#        testutil.create_request('/project/branch/revision/'+newrevid)
-#
-#        match = re.search(
-#            'Diff of [0-9]+ lines is too long to display richly -- limit '
-#            'is 50 lines\\.',
-#            cherrypy.response.body[0]
-#            )
-#
-#        assert match is not None
