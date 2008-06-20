@@ -45,7 +45,7 @@
       <td class="parents">
         <a title="Show history"
            tal:attributes="title string:Show revision ${parent/revno};
-                           href python:url(['/revision', parent.revno], clear=1)"
+                           href python:url(['/revision', parent.revno], clear=1, start_revid=parent.revno)"
            tal:content="python:revno_with_nick(parent)">
           class="revlink">
           ${text}
