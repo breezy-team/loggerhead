@@ -14,7 +14,7 @@
     <updated tal:content="entry/date/isoformat">
     Z
     </updated>
-    <id tal:content="python:branch.url(['revision', entry.revid])">
+    <id tal:content="python:branch.url(['revision', entry.revno])">
       ID
     </id>
     <author>
@@ -26,6 +26,6 @@
       comment
     </content>
     <link rel="alternate"
-          tal:attributes="href python:branch.url(['revision', entry.revid])" />
+          tal:attributes="href python:branch.url(['revision', entry.revno])" />
   </entry>
 </feed>

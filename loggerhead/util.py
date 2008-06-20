@@ -356,17 +356,25 @@ def fill_in_navigation(navigation):
 
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
+    prev_page_revno = navigation.branch._history.get_revno(
+            navigation.prev_page_revid)
+    next_page_revno = navigation.branch._history.get_revno(
+            navigation.next_page_revid)
+    start_revno = navigation.branch._history.get_revno(navigation.start_revid)
 
     params = { 'filter_file_id': navigation.filter_file_id }
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
-    else:
-        params['start_revid'] = navigation.start_revid
+
+    if getattr(navigation, 'start_revid', None) is not None:
+        params['start_revid'] = start_revno
 
     if navigation.prev_page_revid:
-        navigation.prev_page_url = navigation.branch.url([ navigation.scan_url, navigation.prev_page_revid ], **get_context(**params))
+        navigation.prev_page_url = navigation.branch.context_url(
+            [navigation.scan_url, prev_page_revno], **params)
     if navigation.next_page_revid:
-        navigation.next_page_url = navigation.branch.url([ navigation.scan_url, navigation.next_page_revid ], **get_context(**params))
+        navigation.next_page_url = navigation.branch.context_url(
+            [navigation.scan_url, next_page_revno], **params)
 
 
 def log_exception(log):
@@ -476,6 +484,9 @@ def set_context(map):
 
 def get_context(**overrides):
     """
+    Soon to be deprecated.
+
+
     return a context map that may be overriden by specific values passed in,
     but only contains keys from the list of valid context keys.
 

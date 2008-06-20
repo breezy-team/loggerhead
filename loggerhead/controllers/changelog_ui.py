@@ -57,7 +57,6 @@ class ChangeLogUI (object):
             try:
                 revid, start_revid, revid_list = h.get_view(
                     revid, start_revid, filter_file_id, query)
-                kw['start_revid'] = start_revid
                 util.set_context(kw)
 
                 if (query is not None) and (len(revid_list) == 0):
@@ -100,9 +99,6 @@ class ChangeLogUI (object):
                     if e.author != author:
                         all_same_author = False
                         break
-
-            def url(pathargs, **kw):
-                return self._branch.url(pathargs, **util.get_context(**kw))
 
             vals = {
                 'branch': self._branch,

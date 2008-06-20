@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<a tal:attributes="href python:'javascript:diff_url(\'' + url(['/revision', entry.revid]) + '#' + item.filename + '\')';
+<a tal:attributes="href python:'javascript:diff_url(\'' + url(['/revision', entry.revno]) + '#' + item.filename + '\')';
                    title string:Annotate ${item/filename}"
    tal:content="item/filename" class="filename">
   item/filename
