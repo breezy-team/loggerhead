@@ -7,8 +7,7 @@
       <metal:block fill-slot="header_extras">
         <link rel="alternate" type="application/atom+xml"
               tal:attributes="href python:url(['/atom']);
-                              title string:RSS feed for ${branch/friendly_name}"
-              />
+                              title string:RSS feed for ${branch/friendly_name}" />
       </metal:block>
     </head>
 
@@ -54,24 +53,17 @@
         </p>
         <!-- Table -->        
         <table id="logentries"
-               tal:define="subcolspan python:4-bool(all_same_author)">
-          <tr class="logheader">
-            <td class="revisionnumber">Rev</td>            
-            <td class="expandcell">&nbsp;</td>
-            <td class="summarycell">Summary</td>
-            <td class="authorcell">Author</td>
-            <td class="datecell">Date</td>
-            <td class="diffcell">Diff</td>
-            <td class="downloadcell">Files</td>
-          </tr>
-          <tal:block tal:repeat="entry changes">
+        <p tal:condition="changes"
+           class="changelog">
+          <tal:b content="structure python:collapse_all_button('cl', branch)" />
+        </p>
+
+        <table class="log-entries"
             <a tal:attributes="name string:entry-${entry/revno}"/>
                 <tr tal:attributes="class string:blueRow${entry/parity} revision_log">
                 <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                                 href  python:url(['/revision', entry.revno], clear=1)"
-                   tal:content="python:util.trunc(entry.revno)">
-                  text
-                </a>
+                                                tal:content="python:util.trunc(entry.revno)"></a>
                 </td>            
                 <td class="expcell">
                     <div class="expand_revisioninfo">

@@ -9,7 +9,7 @@
 
       <metal:block fill-slot="header_extras">
         <script type="text/javascript"
-                tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+                tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">
         </script>
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:tg.url('/static/css/diff.css')"/>
@@ -50,26 +50,26 @@
         <div class="links">
           <div tal:condition="python:compare_revid is not None" >
             <b>&#8594;</b>
-            <a tal:attributes="href python:branch.url(['/bundle', revid, compare_revid, 'bundle.txt'])">
+            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(compare_revid), 'bundle.txt'])">
                 download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
             </a>
           </div>
           <div tal:condition="python:(remember is not None) and (compare_revid is None) and (change.revno != remember)" >
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/revision', revid], compare_revid=remember)">
+            <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
               compare with revision <tal:b content="python:history.get_revno(remember)" />
             </a>
           </div>
           <tal:we-are-comparing condition="python:compare_revid is not None">
             <div>
               <b>&#8594;</b>
-              <a tal:attributes="href python:url([ '/revision', compare_revid ], remember=revid, compare_revid=revid)">
+              <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
                 reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
               </a>
             </div>
             <div>
               <b>&#8594;</b>
-              <a tal:attributes="href python:url(['/revision', revid], remember=None, compare_revid=None)">
+              <a tal:attributes="href python:url(['/revision', change.revno], remember=None, compare_revid=None)">
                 stop comparing with revision <tal:b content="python:history.get_revno(compare_revid)" />
               </a>
             </div>

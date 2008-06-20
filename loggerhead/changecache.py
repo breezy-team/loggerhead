@@ -82,6 +82,7 @@ class FakeShelf(object):
             self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
         self.connection.commit()
 
+
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
         self.history = history

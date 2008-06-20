@@ -10,13 +10,13 @@
     <style type="text/css" media="screen, print"
         tal:content="python:'@import url('+tg.url('/static/css/launchpad_slimmer.css')+');'"></style>
     <link rel="stylesheet"
-          tal:attributes="href python:tg.url('/static/css/global.css')" />
+          tal:attributes="href python:branch.static_url('/static/css/global.css')" />
     <script type="text/javascript"
-            tal:attributes="src python:tg.url('/static/javascript/mootools-1.2-core.js')"></script>
+            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-core.js')"></script>
     <script type="text/javascript"
-            tal:attributes="src python:tg.url('/static/javascript/mootools-1.2-more.js')"></script>
+            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
     <script type="text/javascript"
-            tal:attributes="src python:tg.url('/static/javascript/custom.js')"></script>
+            tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
