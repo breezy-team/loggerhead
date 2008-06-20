@@ -1,5 +1,5 @@
-<ul>
+<ul style="list-style:none;">
 <tal:block repeat="term terms">
-<li tal:content="term"></li>
+<li><a tal:attributes="href python:url(['/changes'], q=term)" tal:content="term"></a></li>
 </tal:block>
 </ul>

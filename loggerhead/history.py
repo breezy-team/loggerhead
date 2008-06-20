@@ -471,8 +471,7 @@ class History (object):
             revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
-
-        revid_list = self.get_search_revid_list(query, revid_list)
+        revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]

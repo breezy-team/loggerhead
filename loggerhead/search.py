@@ -36,7 +36,6 @@ def search_revisions(branch, query_list=[], suggest=False):
         terms.sort()
         return terms
     else:
-        print query
         for result in index.search(query):
             if isinstance(result, FileTextHit):
                 revid_list.append(result.text_key[1])

@@ -41,5 +41,6 @@ class SearchUI(TemplatedBranchView):
         query = kwargs['query']
         if len(query) > 0:
             terms = search.search_revisions(h._branch, query, True)
+            terms = [term[0] for term in terms] 
 
         return {'terms':terms}
