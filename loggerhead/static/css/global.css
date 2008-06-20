@@ -173,7 +173,7 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 .expandcell, .expcell {
 	width:28px;	
 }
-.summarycell, .authorcell, .datecell, .summcell, .autcell, .date {
+.summarycell, .authorcell, .datecell, .summcell, .autcell, .date, .timedate, .timedate2 {
 	padding:4px 8px;
 	border:1px solid #d2d2d2;
 }
@@ -183,10 +183,13 @@ ul#menuTabs li a#on:link, ul#menuTabs li a#on:visited, ul#menuTabs a#on:hover {
 .datecell, .date {
 	width:100px;
 }
+.timedate, .timedate2 {
+	width:80px;
+}
 .downloadcell, .downr {
 	width:47px;
 }
-.revnro, .expcell, .diffr, .summcell, .autcell, .date, .downr, .allicones {
+.revnro, .expcell, .diffr, .summcell, .autcell, .date, .downr, .allicones, .timedate2 {
 	border:none;
 	border-bottom:1px solid #d2d2d2;
 }

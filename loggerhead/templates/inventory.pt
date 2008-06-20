@@ -2,31 +2,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
   <head>
     <title metal:fill-slot="title"
-           tal:content="string:${branch/friendly_name} : files for revision ${change/revno}">
-      ${branch.friendly_name} : files for revision ${change.revno}
-    </title>
+           tal:content="string:${branch/friendly_name} : files for revision ${change/revno}"></title>
+    <metal:block fill-slot="header_extras">
+        <link rel="stylesheet" type="text/css" media="all"
+              tal:attributes="href python:branch.static_url('/static/css/files.css')"/>
+    </metal:block>
   </head>
   <body>
 
     <h1 metal:fill-slot="heading">
-      <span class="branch-name" tal:content="branch/friendly_name">
-        ${branch.friendly_name}
-      </span>
-      : files for revision
-      <tal:revno content="change/revno">
-        ${change.revno}
-      </tal:revno>
+      <tal:block content="branch/friendly_name"></tal:block><span>: files for revision <tal:revno content="change/revno"></tal:revno></span>
     </h1>
 
     <div metal:fill-slot="content">
-      <div class="links">
-        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/revision', change.revno], clear=1, start_revid=change.revno)">
-	    view revision </a>
-        </div>
-        <div> <b>&#8594;</b> <a tal:attributes="href python:url(['/changes', change.revno], clear=1, start_revid=change.revno)">
-	    view branch changes </a>
-        </div>
-      </div>
+        <ul id="submenuTabs">
+            <li id="inicio">
+                <a tal:attributes="href python:url(['/revision', change.revno], clear=1, start_revid=change.revno)">view revision</a>
+            </li>
+            <li id="final">
+                <a tal:attributes="href python:url(['/changes', change.revno], clear=1, start_revid=change.revno)">view branch changes</a>
+            </li>
+        </ul>
 
       <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
 
@@ -34,89 +30,69 @@
         <b>folder:</b> <span class="folder" tal:content="path"> ${path} </span>
       </div>
 
-      <table class="inventory" width="100%">
-        <tr class="header">
-          <th class="permissions">
-            Permissions
-          </th>
-          <th>
-            <a tal:attributes="href python:url(['/files', revid], sort='filename')">Filename</a>
-          </th>
-          <th>
-            Latest Rev
-          </th>
-          <th>
-            <a tal:attributes="href python:url(['/files', revid], sort='date')">Last Changed</a>
-          </th>
-          <th>
-            <a tal:attributes="href python:url(['/files', revid], sort='size')">Size</a>
-          </th>
-          <th>
-          </th>
-          <th>
-          </th>
-        </tr>
+      <table id="logentries">
+          <tr class="logheader">
+            <td class="revisionnumber">.</td>
+            <td class="summarycell"><a href="#">Filename</a></td>            
+            <td class="datecell">Latest Rev</td>
+            <td class="datecell"><a href="#">Last Changed</a></td>
+            <td class="timedate"><a href="#">Size</a></td>
+            <td class="expandcell">.</td>
+            <td class="expandcell">.</td>            
+          </tr>
 
-        <tr class="parity1" tal:condition="python:updir">
-          <td class="permissions">drwxr-xr-x</td>
-          <td class="filename directory">
-            <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)">
-              (up)
-            </a>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-        </tr>
+          <tr class="blueRow0" tal:condition="python:updir">
+              <td class="revnro"><a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)"><img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Go up one directory" /></a></td>
+              <td class="summcell" colspan="6"><a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">Up</a></td>
+          </tr>
+          
+          <tal:block repeat="file filelist">
+          <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='directory'">
+              <td class="revnro" tal:condition="python:file.kind=='directory'">
+                  <a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Directory" />
+                  </a>
 
-        <tr tal:repeat="file filelist"
-            tal:attributes="class string:parity${file/parity}">
-          <td class="permissions" tal:content="python:util.fake_permissions(file.kind, file.executable)">
-            ${}
-          </td>
+               </td>
+               <td class="autcell"><a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)" 
+                                      tal:content="file/filename" class="link"></a></td>
+               <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
+                                                                  title string:Show revision ${file/change/revno}"
+                                                                  tal:content="file/change/revno"></a>
+               </td>
+               <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+               <td class="timedate2">.</td>
+               <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
+                                                   title string:Show revision ${file/change/revno}">
+                                    <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
+                               </a>
+            </td>
+              <td class="expcell">.</td>
+            <!--<td class="permissions" tal:content="python:util.fake_permissions(file.kind, file.executable)">
+                      <img tal:condition="python:file.kind=='symlink'"
+                           tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
+                      <img tal:condition="python:file.kind=='file'" 
+                           tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="File" />
           <td tal:attributes="class string:filename ${file/kind}">
-            <a tal:condition="python:file.kind=='directory'"
-               tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)"
-               tal:content="string:${file/filename}/">
-            </a>
             <span tal:condition="python:file.kind=='symlink'"
                   tal:content="string:${file/filename}@">
-              ${file.filename}@
             </span>
             <a tal:condition="python:file.kind=='file'"
                tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id);
                                title string:Annotate ${file/filename}"
                tal:content="string:${file/filename}">
-              ${file.filename}
             </a>
           </td>
           <td class="revision">
             <a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
                                title string:Show revision ${file/change/revno}"
                tal:content="python:util.trunc(file.change.revno, 15)">
-              ${text}
             </a>
-          </td>
-          <td class="date"
-              tal:content="python:util.date_time(file.change.date)">
-            ${}
           </td>
           <td class="size">
             <span tal:condition="python:file.kind=='file'"
                   tal:content="python:util.human_size(file.size)">
-              ${util.human_size(file.size)}
             </span>
-          </td>
-          <td class="changes-link">
-            <a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
-                               title string:Changes affecting ${file/filename}">
-              changes
-            </a>
           </td>
           <td class="download-link">
             <a tal:condition="python:file.kind=='file'"
@@ -124,8 +100,9 @@
                                title string:Download ${file/filename} at revision ${file/change/revno}">
               download
             </a>
-          </td>
+        </td>-->
         </tr>
+        </tal:block>
       </table>
     </div>
 

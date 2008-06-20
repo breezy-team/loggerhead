@@ -8,9 +8,6 @@
       </title>
 
       <metal:block fill-slot="header_extras">
-        <script type="text/javascript"
-                tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">
-        </script>
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:branch.static_url('/static/css/diff.css')"/>
       </metal:block>
