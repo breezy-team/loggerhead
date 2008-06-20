@@ -668,3 +668,13 @@ span.folder {
 .browse-view td.feed {
 	width: 16px;
 }
+
+/*Search Box*/
+#search_terms {
+    display:none;
+    border:solid 1px black;
+    width:300px;
+    overflow:auto;
+    background: #fff;
+}
+
