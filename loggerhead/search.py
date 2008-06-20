@@ -20,27 +20,37 @@ import os
 from bzrlib.plugins.search import errors
 from bzrlib.plugins.search import index as _mod_index
 from bzrlib.plugins.search.index import FileTextHit, RevisionHit
-from bzrlib.transport import get_transport
 from bzrlib.plugin import load_plugins
 load_plugins()
 
-def search_revisions(branch, query_list=[], suggest=False):
+def search_revisions(branch, query_list, suggest=False):
+    """
+    Search using bzr-search plugin to find revisions matching the query.
+    This can either suggest query terms, or revision ids.
+    
+    param branch: branch object to search in
+    param query_list: string to search
+    param suggest: Optional flag to request suggestions instead of results
+    return: A list for results, either revision ids or terms
+    """
     index = _mod_index.open_index_branch(branch)
     query = query_list.split(' ')
     query = [(term,) for term in query]
     revid_list = []
     index._branch.lock_read()
-    if suggest:
-        terms = index.suggest(query)
-        terms = list(terms)
-        terms.sort()
-        return terms
-    else:
-        for result in index.search(query):
-            if isinstance(result, FileTextHit):
-                revid_list.append(result.text_key[1])
-            elif isinstance(result, RevisionHit):
-                revid_list.append(result.revision_key)
 
-        return list(sets.Set(revid_list))
-    index._branch.unlock()
+    try:
+        if suggest:
+            terms = index.suggest(query)
+            terms = list(terms)
+            terms.sort()
+            return terms
+        else:
+            for result in index.search(query):
+                if isinstance(result, FileTextHit):
+                    revid_list.append(result.text_key[1])
+                elif isinstance(result, RevisionHit):
+                    revid_list.append(result.revision_key)
+            return list(sets.Set(revid_list))
+    finally:
+        index._branch.unlock()
