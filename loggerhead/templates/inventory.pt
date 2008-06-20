@@ -51,19 +51,22 @@
               </td>
           </tr>
           
+          <!-- Show this if it's a directory --> 
           <tal:block repeat="file filelist">
           <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='directory'">
               <td class="revnro">
                   <a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)">
-                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Directory" />
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif');
+                                           title string:Go to ${file/filename}" />
                   </a>
 
                </td>
                <td class="autcell"><a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)" 
-                                      tal:content="file/filename" class="link"></a></td>
+                                      tal:content="file/filename" class="link"></a>
+               </td>
                <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
-                                                                  title string:Show revision ${file/change/revno}"
-                                                                  tal:content="file/change/revno"></a>
+                                                   title string:Show revision ${file/change/revno}"
+                                   tal:content="file/change/revno"></a>
                </td>
                <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
                <td class="timedate2">.</td>
@@ -74,18 +77,51 @@
             </td>
               <td class="expcell">.</td>
           </tr>
+          
+          <!-- Show this if it's a symlink --> 
+          <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='symlink'">
+              <td class="revnro">
+                  <a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_flecha.gif')" alt="Symlink" />
+                  </a>
 
+               </td>
+               <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)" 
+                                      tal:content="file/filename" class="link"></a>
+               </td>
+               <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
+                                                   title string:Show revision ${file/change/revno}"
+                                   tal:content="file/change/revno"></a>
+               </td>
+               <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+               <td class="timedate2">.</td>
+               <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
+                                                      title string:Show revision ${file/change/revno}">
+                                        <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif');
+                                                             title string:Show revision ${file/change/revno}" />
+                                   </a>
+            </td>
+              <td class="expcell">.</td>
+          </tr>
+
+          <!-- Show this if it's a regular file --> 
           <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='file'">
             <td class="revnro">
                   <a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)">
-                      <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="File" />
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
+                                           title string:Annotate ${file/filename}"
+                           tal:condition="python:file.executable is False" />
+                      <!-- Show a different icon id the file executable -->
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_file_modify.gif'); 
+                                           title string:Annotate ${file/filename}"
+                           tal:condition="python:file.executable is True" alt="File" />
                   </a>
 
             </td>
             <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)"
                                    tal:content="file/filename" class="link"></a></td>
             <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
-                                                                  title string:Show revision ${file/change/revno}"
+                                                title string:Show revision ${file/change/revno}"
                                 tal:content="file/change/revno"></a>
             </td>
             <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
@@ -107,11 +143,3 @@
     </div>
   </body>
 </html>
-            <!--<td class="permissions" tal:content="python:util.fake_permissions(file.kind, file.executable)">
-                      <img tal:condition="python:file.kind=='symlink'"
-                           tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
-          <td tal:attributes="class string:filename ${file/kind}">
-            <span tal:condition="python:file.kind=='symlink'"
-                  tal:content="string:${file/filename}@">
-            </span>
-        </td>-->
