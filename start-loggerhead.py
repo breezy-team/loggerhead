@@ -6,12 +6,14 @@ import os
 import sys
 from optparse import OptionParser
 
-from loggerhead.apps.config import Root
+from configobj import ConfigObj
+
 from paste import httpserver
 from paste.httpexceptions import make_middleware
 from paste.translogger import make_filter
 
 from loggerhead import daemon, release
+from loggerhead.apps.config import Root
 
 
 def make_handler(config, filename):
@@ -77,7 +79,6 @@ def main():
 
     # read loggerhead config
 
-    from configobj import ConfigObj
     config = ConfigObj(os.path.join(home, 'loggerhead.conf'), encoding='utf-8')
     extra_path = config.get('bzrpath', None)
     if extra_path:
