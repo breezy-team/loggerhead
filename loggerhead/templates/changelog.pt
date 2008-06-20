@@ -44,21 +44,26 @@
                                                             title 'Show revision '+history.get_revno(navigation.last_in_page_revid)"
                                             tal:content="python:history.get_revno(navigation.last_in_page_revid)"></a></p>
         <p class="expand" id="expand_all"><a tal:attributes="href string:javascript:toggle_expand_all('open')">
-            <img tal:attributes="src python:tg.url('/static/images/treeCollapsed.png')"
+            <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                   alt="expand all" /> expand all</a>
         </p>
         <p class="expand" id="collapse_all" style="display:none;"><a tal:attributes="href string:javascript:toggle_expand_all('close')">
-            <img tal:attributes="src python:tg.url('/static/images/treeCollapsed.png')"
+            <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                   alt="collapse all" /> collapse all</a>
         </p>
         <!-- Table -->        
         <table id="logentries"
-        <p tal:condition="changes"
-           class="changelog">
-          <tal:b content="structure python:collapse_all_button('cl', branch)" />
-        </p>
-
-        <table class="log-entries"
+               tal:define="subcolspan python:4-bool(all_same_author)">
+            <tr class="logheader">
+                <td class="revisionnumber">Rev</td>
+                <td class="expandcell">&nbsp;</td>
+                <td class="summarycell">Summary</td>
+                <td class="authorcell">Author</td>
+                <td class="datecell">Date</td>
+                <td class="diffcell">Diff</td>
+                <td class="downloadcell">Files</td>
+            </tr>
+            <tal:block tal:repeat="entry changes">
             <a tal:attributes="name string:entry-${entry/revno}"/>
                 <tr tal:attributes="class string:blueRow${entry/parity} revision_log">
                 <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
@@ -67,7 +72,7 @@
                 </td>            
                 <td class="expcell">
                     <div class="expand_revisioninfo">
-                        <img tal:attributes="src python:tg.url('/static/images/treeCollapsed.png')" 
+                        <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')" 
                              alt="Expand Revision" />
                     </div>
                 </td>
@@ -109,10 +114,10 @@
                 </td>
                 <td class="diffr"><a tal:attributes="title python:'Show diff at revision '+entry.revno;
                                                      href href  python:url(['/revision', entry.revno], clear=1)">
-                                  <img tal:attributes="src python:tg.url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
+                                  <img tal:attributes="src python:branch.static_url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
                 <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
                                                      title string:Files at revision ${entry/revno}">
-                                   <img tal:attributes="src python:tg.url('/static/images/ico_file.gif');
+                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
                                                         alt string:Files" /></a>
                 </td>
             </tr>

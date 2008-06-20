@@ -8,7 +8,7 @@
       Title.
     </title>
     <style type="text/css" media="screen, print"
-        tal:content="python:'@import url('+tg.url('/static/css/launchpad_slimmer.css')+');'"></style>
+        tal:content="python:'@import url('+branch.static_url('/static/css/launchpad_slimmer.css')+');'"></style>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
     <script type="text/javascript"
@@ -33,7 +33,7 @@
       	<div id="finderBox">
         	<label>Jump to revision:</label>
             <input name="" type="text" />
-            <div><a href="http://bazaar.launchpad.net/~loggerhead-team/loggerhead/trunk/atom" title=""><img tal:attributes="src python:tg.url('/static/images/ico_rss.gif')"  alt="RSS" /></a></div>
+            <div><a href="http://bazaar.launchpad.net/~loggerhead-team/loggerhead/trunk/atom" title=""><img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a></div>
         </div>
         <li><a tal:attributes="href python:url('/changes', clear=1);
                                title string:Changes;
