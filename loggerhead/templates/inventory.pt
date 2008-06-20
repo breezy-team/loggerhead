@@ -42,13 +42,18 @@
           </tr>
 
           <tr class="blueRow0" tal:condition="python:updir">
-              <td class="revnro"><a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)"><img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Go up one directory" /></a></td>
-              <td class="summcell" colspan="6"><a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">Up</a></td>
+              <td class="revnro">
+                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Go up one directory" /></a>
+              </td>
+              <td class="summcell" colspan="6">
+                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">Up</a>
+              </td>
           </tr>
           
           <tal:block repeat="file filelist">
           <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='directory'">
-              <td class="revnro" tal:condition="python:file.kind=='directory'">
+              <td class="revnro">
                   <a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)">
                       <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Directory" />
                   </a>
@@ -65,46 +70,48 @@
                <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
                                                    title string:Show revision ${file/change/revno}">
                                     <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
-                               </a>
+                                   </a>
             </td>
               <td class="expcell">.</td>
+          </tr>
+
+          <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='file'">
+            <td class="revnro">
+                  <a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="File" />
+                  </a>
+
+            </td>
+            <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id)"
+                                   tal:content="file/filename" class="link"></a></td>
+            <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
+                                                                  title string:Show revision ${file/change/revno}"
+                                tal:content="file/change/revno"></a>
+            </td>
+            <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+            <td class="timedate2" tal:content="python:util.human_size(file.size)"></td>
+            <td class="expcell"><a tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id);
+                                                   title string:Annotate ${file/filename}">
+                                    <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
+                                   </a>
+            </td>
+            <td class="expcell">
+               <a tal:attributes="href python:url(['/download', file.revid, file.file_id, file.filename]);
+                                  title string:Download ${file/filename} at revision ${file/change/revno}">
+                 <img tal:attributes="src python:branch.static_url('/static/images/ico_file_download.gif')" alt="Download File" />
+               </a>
+            </td>
+         </tr>
+        </tal:block>
+      </table>
+    </div>
+  </body>
+</html>
             <!--<td class="permissions" tal:content="python:util.fake_permissions(file.kind, file.executable)">
                       <img tal:condition="python:file.kind=='symlink'"
                            tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
-                      <img tal:condition="python:file.kind=='file'" 
-                           tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="File" />
           <td tal:attributes="class string:filename ${file/kind}">
             <span tal:condition="python:file.kind=='symlink'"
                   tal:content="string:${file/filename}@">
             </span>
-            <a tal:condition="python:file.kind=='file'"
-               tal:attributes="href python:url(['/annotate', change.revno], file_id=file.file_id);
-                               title string:Annotate ${file/filename}"
-               tal:content="string:${file/filename}">
-            </a>
-          </td>
-          <td class="revision">
-            <a tal:attributes="href python:url(['/revision', file.change.revno], filter_file_id=file.file_id);
-                               title string:Show revision ${file/change/revno}"
-               tal:content="python:util.trunc(file.change.revno, 15)">
-            </a>
-          </td>
-          <td class="size">
-            <span tal:condition="python:file.kind=='file'"
-                  tal:content="python:util.human_size(file.size)">
-            </span>
-          </td>
-          <td class="download-link">
-            <a tal:condition="python:file.kind=='file'"
-               tal:attributes="href python:url(['/download', file.revid, file.file_id, file.filename]);
-                               title string:Download ${file/filename} at revision ${file/change/revno}">
-              download
-            </a>
         </td>-->
-        </tr>
-        </tal:block>
-      </table>
-    </div>
-
-  </body>
-</html>
