@@ -77,9 +77,8 @@ ul#list-files li {
 	background:url(../images/ico_description.gif) no-repeat top left;
 }
 .revid {
-    
-	padding:1px 0px 0px 18px;
-	margin:0px 10px 5px 0px;
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
 }
 .comiter, .mfrom {
 	clear:none;
@@ -133,14 +132,14 @@ ul#list-files li {
 	float:left;
 	width:2%;
 	padding:0px 1%; 
-	border:1px solid #d5d5d5;
-	border-top:none;
+	border-right:1px solid #d5d5d5;
+	border-left:1px solid #d5d5d5;
 	color:#000;
 	background:#f8fbfd;
 	font:normal 12px/1.8 'monospace';	
 	text-align:right;
 }
-.lineCode {
+.lineCode, .removecode, .addcode {
 	float:left;
 	width:43%;
 	padding:0px 1%; 
@@ -148,17 +147,14 @@ ul#list-files li {
 	background:#fff;
 	font:normal 12px/1.8 'monospace';		
 }
-.lineCode span, .lineNumber span {
+.delete, .insert {
 	display:block;
-}
-.lineCode span.removecode {
 	background:#ff7f7f;
 }
-.lineCode span.addcode {
+.insert {
 	background:#92ed92;
 }
-/*Pagination*/
-ul#pagination {
+ul#pages {
 	margin-top:10px;
 }
 /*Foot Links*/

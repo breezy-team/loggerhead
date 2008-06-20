@@ -79,41 +79,6 @@
         <div class="diff"
              tal:condition="change/changes/modified"
              tal:define="uniqs python:{}">
-
-        <div class="lineCode">
-        	<span>&nbsp;</span>
-            <span>from loggerhead import util</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>class RevisionUI (object):</span>
-            <span>&nbsp;</span>
-            <span class="removecode">&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self, branch):</span>
-        </div>
-       	<div class="lineNumber">
-        	<span><strong>old</strong></span>
-            <span>25</span>
-            <span>26</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>27</span>
-            <span>28</span>
-            <span>29</span>
-        </div>
-        <div class="lineCode">
-        	<span>&nbsp;</span>
-            <span>from loggerhead import util</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>&nbsp;</span>
-            <span>class RevisionUI (object):</span>
-            <span>&nbsp;</span>
-            <span class="addcode">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self, branch):</span>
-        </div>        
-        <div class="clear"><!-- --></div>
           <!-- ! side-by-side diff -->
           <tal:block repeat="item change/changes/modified">
 
@@ -121,59 +86,59 @@
                       <div class="diffBox"><a href="#"><img tal:attributes="src python:tg.url('/static/images/treeCollapsed.png');
                                                                             title string:Annotate ${item/filename}" /></a>
                               <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id)" 
-                                 tal:content="item/filename"></a></div>
+                                  tal:content="item/filename"></a></div>
+               <div id="psuedotable">
                <tal:block repeat="chunk item/sbs_chunks">
                  <tal:block repeat="line chunk/diff">
-
+                    <div id="pseudorow">
                     <tal:block condition="line/old_lineno">
-                        <div tal:content="line/old_lineno"></div>
-                        <div tal:content="line/old_line"></div>
+                        <div class="lineNumber" tal:content="python:util.fill_div(line.old_lineno)"></div>
+                        <div tal:attributes="class string:lineCode ${line/old_type}" tal:content="python:util.fill_div(line.old_line)"></div>
                     </tal:block>
 
                     <tal:block condition="not:line/old_lineno">
-                        <div tal:content="line/old_lineno">&nbsp;</div>
-                        <div tal:content="line/old_line"></div>
+                        <div class="lineNumber" tal:content="python:util.fill_div(line.old_lineno)"></div>
+                        <div tal:attributes="class string:lineCode ${line/old_type}" tal:content="python:util.fill_div(line.old_line)"></div>
                     </tal:block>
 
                     <tal:block condition="line/new_lineno">
-                        <div tal:content="line/new_lineno"></div>
-                        <div tal:content="line/new_line"></div>
+                        <div class="lineNumber" tal:content="python:util.fill_div(line.new_lineno)"></div>
+                        <div tal:attributes="class string:lineCode ${line/new_type}" tal:content="python:util.fill_div(line.new_line)"></div>
                     </tal:block>
 
                     <tal:block condition="not:line/new_lineno">
-                        <div tal:content="line/new_lineno">&nbsp;</div>
-                        <div tal:content="line/new_line"></div>
+                        <div class="lineNumber" tal:content="python:util.fill_div(line.new_lineno)"></div>
+                        <div tal:attributes="class string:lineCode ${line/new_type}" tal:content="python:util.fill_div(line.new_line)"></div>
                     </tal:block>
-
+                    <div class="clear"><!-- --></div>
+                    </div>
+                   </tal:block>
                  </tal:block>
-               </tal:block>
+                 </div>
               </tal:u>
             </tal:block>
-
         </div>
 
-        <div tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
-             class="bar">
-          <table>
-            <tr>
-              <td class="buttons">
-                <a tal:condition="navigation/prev_page_revid"
-                   tal:attributes="href navigation/prev_page_url">
-                  &lt; revision
-                  <tal:r content="python:history.get_revno(navigation.prev_page_revid)" />
-                </a>
-	      </td>
- 	      <td class="rbuttons" align="right">
-                <a tal:condition="navigation/next_page_revid"
-                   tal:attributes="href navigation/next_page_url">
-                  revision
-                  <tal:r content="python:history.get_revno(navigation.next_page_revid)" />
-                  &gt;
-                </a>
- 	      </td>
- 	    </tr>
-          </table>
-        </div>
+        <ul tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
+            id="pages">
+            <li tal:condition="navigation/prev_page_revid" 
+                class="previous">
+                <a tal:attributes="href navigation/prev_page_url">&laquo; Previous</a>
+            </li>
+            <!-- FIXME: Leaving this to eventually show page numbers. Can't show all of them,
+                        so some magic has to be done to just show the previous and next N page numbers
+
+            <li class="active">1</li>
+            <tal:block tal:repeat="page_number python:range(navigation.page_count)">
+            <li><a href="#"
+                   tal:content="page_number"></a></li>
+               </tal:block>-->
+            <li tal:condition="navigation/next_page_revid"
+                class="next">
+                <a tal:attributes="href navigation/next_page_url">Next &raquo;</a>
+            </li>
+        </ul>
+
       </div>
     </body>
   </html>

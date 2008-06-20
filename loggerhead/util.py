@@ -33,7 +33,7 @@ import sys
 import threading
 import time
 import traceback
-
+import types
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -235,9 +235,28 @@ def html_clean(s):
     s = s.replace(' ', '&nbsp;')
     return s
 
-
-
 NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'
+
+def fill_div(s):
+    """
+    CSS is stupid. In some cases we need to replace an empty value with
+    a non breaking space (&nbsp;). There has to be a better way of doing this.
+
+    return: the same value recieved if not empty, and a NONBREAKING_SPACE 
+            if not 
+    """
+    if type(s) is int and s is None:
+        return NONBREAKING_SPACE
+    elif type(s) is int and s is not None:
+        return s
+    elif type(s) is types.NoneType:
+        return NONBREAKING_SPACE
+    elif len(s) is 0:
+        return NONBREAKING_SPACE
+    else:
+        return s
+
+
 
 def fixed_width(s):
     """
