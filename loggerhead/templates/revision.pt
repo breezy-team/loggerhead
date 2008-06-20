@@ -9,7 +9,7 @@
 
       <metal:block fill-slot="header_extras">
         <script type="text/javascript"
-                tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+                tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">
         </script>
       </metal:block>
     </head>
@@ -82,21 +82,21 @@
         <table class="diff-option-buttons">
           <tr>
             <td>
-              <tal:b content="structure python:collapse_all_button('file', 'table-row')" />
+              <tal:b content="structure python:collapse_all_button('file', branch, normal='table-row')" />
             </td>
 
             <td class="spacey">
               <a href="javascript:show_sbs()"
                  class="hide-all collapse-style-sbs-show"
                  title="collapse">
-                <img tal:attributes="src python:tg.url('/static/images/nav-small-out.gif')"
+                <img tal:attributes="src python:branch.static_url('/static/images/nav-small-out.gif')"
                      width="22" height="10" class="collapse-triangle" />
                 show side by side
               </a>
               <a href="javascript:show_unified()"
                  class="hide-all collapse-style-unified-show"
                  title="expand">
-                <img tal:attributes="src python:tg.url('/static/images/nav-small-in.gif')"
+                <img tal:attributes="src python:branch.static_url('/static/images/nav-small-in.gif')"
                      width="22" height="10" class="collapse-triangle" />
                 show unified diff
               </a>
@@ -124,7 +124,7 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
+                    <tal:b content="structure python:collapse_button('file', u, branch, normal='table-row')" />
                     <a tal:attributes="href  python:url(['/annotate', change.revno], file_id=item.file_id);
                                        name  string:${item/filename}-s;
                                        title string:Annotate ${item/filename}"
@@ -211,7 +211,7 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
+                    <tal:b content="structure python:collapse_button('file', u, branch, normal='table-row')" />
                     <a tal:attributes="href  python:url(['/annotate', change.revno], file_id=item.file_id);
                                        name  string:${item/filename}-u;
                                        title string:Annotate ${item/filename}"

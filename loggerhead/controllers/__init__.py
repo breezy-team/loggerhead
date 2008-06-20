@@ -15,104 +15,54 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
 
-import logging
-import os
-import re
+import time
 
-import turbogears
-from turbogears import controllers
-from configobj import ConfigObj
+from paste.request import path_info_pop
 
 from loggerhead import util
-from loggerhead.branchview import BranchView
-from loggerhead.history import is_branch
 from loggerhead.templatefunctions import templatefunctions
+from loggerhead.zptsupport import load_template
 
-log = logging.getLogger("loggerhead.controllers")
+class TemplatedBranchView(object):
 
+    template_path = None
 
-def cherrypy_friendly(s):
-    """
-    convert a config section name into a name that pleases cherrypy.
-    """
-    return re.sub(r'[^\w\d_]', '_', s)
+    def __init__(self, branch):
+        self._branch = branch
+        self.log = branch.log
 
+    def default(self, request, response):
+        z = time.time()
+        h = self._branch.history
+        kw = request.GET
+        util.set_context(kw)
 
-class Project (object):
-    def __init__(self, name, config, root_config):
-        self.name = name
-        self.friendly_name = config.get('name', name)
-        self.description = config.get('description', '')
-        self.long_description = config.get('long_description', '')
-        self._config = config
-        self._root_config = root_config
-        
-        self._views = []
-        for view_name in config.sections:
-            log.debug('Configuring (project %s) branch %s...', name, view_name)
-            self._add_view(view_name, config[view_name], config[view_name].get('folder'))
-        
-        self._auto_folder = config.get('auto_publish_folder', None)
-        self._auto_list = []
-        if self._auto_folder is not None:
-            self._recheck_auto_folders()
-    
-    def _recheck_auto_folders(self):
-        if self._auto_folder is None:
-            return
-        auto_list = []
-        # scan a folder for bazaar branches, and add them automatically
-        for path, folders, filenames in os.walk(self._auto_folder):
-            for folder in folders:
-                folder = os.path.join(path, folder)
-                if is_branch(folder):
-                    auto_list.append(folder)
-        auto_list.sort()
-        if auto_list == self._auto_list:
-            # nothing has changed; do nothing.
-            return
+        h._branch.lock_read()
+        try:
+            args = []
+            while 1:
+                arg = path_info_pop(request.environ)
+                if arg is None:
+                    break
+                args.append(arg)
 
-        # rebuild views:
-        log.debug('Rescanning auto-folder for project %s ...', self.name)
-        self._views = []
-        for folder in auto_list:
-            view_name = os.path.basename(folder)
-            log.debug('Auto-configuring (project %s) branch %s...', self.name, view_name)
-            self._add_view(view_name, ConfigObj(), folder)
-        self._auto_list = auto_list
-        
-    def _add_view(self, view_name, view_config, folder):
-        c_view_name = cherrypy_friendly(view_name)
-        view = BranchView(
-            self.name, c_view_name, view_name, folder, view_config,
-            self._config, self._root_config)
-        self._views.append(view)
-        setattr(self, c_view_name, view)
-        
-    views = property(lambda self: self._views)
+            vals = {
+                'branch': self._branch,
+                'util': util,
+                'history': h,
+                'url': self._branch.context_url,
+            }
+            vals.update(templatefunctions)
+            del response.headers['Content-Type']
+            vals.update(self.get_values(h, args, kw, response))
 
+            self.log.info('/%s: %r secs' % (
+                self.__class__.__name__, time.time() - z,))
+            if 'Content-Type' not in response.headers:
+                response.headers['Content-Type'] = 'text/html'
+            template = load_template(self.template_path)
+            template.expand_into(response, **vals)
+        finally:
+            h._branch.unlock()
 
-class Root (controllers.RootController):
-    def __init__(self, config):
-        self._projects = []
-        self._config = config
-        for project_name in self._config.sections:
-            c_project_name = cherrypy_friendly(project_name)
-            project = Project(
-                c_project_name, self._config[project_name], self._config)
-            self._projects.append(project)
-            setattr(self, c_project_name, project)
-        
-    @turbogears.expose(template='zpt:loggerhead.templates.browse')
-    def index(self):
-        for p in self._projects:
-            p._recheck_auto_folders()
-        vals = {
-            'projects': self._projects,
-            'util': util,
-            'title': self._config.get('title', None),
-        }
-        vals.update(templatefunctions)
-        return vals
