@@ -15,29 +15,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import turbogears
-from cherrypy import InternalError
-
+from paste.httpexceptions import HTTPServerError
 from loggerhead import history
 from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
+from loggerhead.controllers import TemplatedBranchView
 from loggerhead import search
 
 
-class SearchUI(object):
+class SearchUI(TemplatedBranchView):
     """
     
     Class to output progressive search result terms.
     """
-    
-    def __init__(self, branch):
-        self._branch = branch
-        self.log = branch.log
 
-    @util.strip_whitespace
-    @turbogears.expose(html='zpt:loggerhead.templates.search')
-    
-    def default(self, *args, **kwargs):
+    template_path = 'loggerhead.templates.search'
+
+    def get_values(self, *args, **kwargs):
         """
         Default method called from the search box as /search URL
 

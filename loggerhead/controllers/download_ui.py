@@ -21,9 +21,8 @@ import logging
 import mimetypes
 import time
 
-import turbogears
-from cherrypy import HTTPRedirect, response
-
+from paste import httpexceptions
+from paste.request import path_info_pop
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -35,16 +34,22 @@ class DownloadUI (object):
         self._branch = branch
         self.log = branch.log
 
-    @turbogears.expose()
-    def default(self, *args, **kw):
+    def default(self, request, response):
         # /download/<rev_id>/<file_id>/[filename]
         z = time.time()
-        h = self._branch.get_history()
-        
+        h = self._branch.history
+
         h._branch.lock_read()
         try:
+            args = []
+            while 1:
+                arg = path_info_pop(request.environ)
+                if arg is None:
+                    break
+                args.append(arg)
+
             if len(args) < 2:
-                raise HTTPRedirect(self._branch.url('/changes'))
+                raise httpexceptions.HTTPMovedPermanently(self._branch.url('../changes'))
 
             revid = h.fix_revid(args[0])
             file_id = args[1]
@@ -57,7 +62,6 @@ class DownloadUI (object):
             response.headers['Content-Type'] = mime_type
             response.headers['Content-Length'] = len(content)
             response.headers['Content-Disposition'] = 'attachment; filename=%s'%(filename,)
-            response.body = content
-            return response.body
+            response.write(content)
         finally:
             h._branch.unlock()

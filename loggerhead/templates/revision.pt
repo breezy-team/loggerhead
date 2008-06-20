@@ -9,7 +9,7 @@
 
       <metal:block fill-slot="header_extras">
         <script type="text/javascript"
-                tal:attributes="src python:tg.url('/static/javascript/collapse.js')">
+                tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">
         </script>
       </metal:block>
     </head>
@@ -33,44 +33,44 @@
         <div class="links">
           <div>
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/files', revid])">
+            <a tal:attributes="href python:url(['/files', change.revno])">
               browse files at revision <tal:b content="change/revno" />
             </a>
           </div>
           <div>
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/changes'], start_revid=revid)">
+            <a tal:attributes="href python:url(['/changes'], start_revid=change.revno)">
               view history from revision <tal:b content="change/revno" />
             </a>
           </div>
           <div tal:condition="python:compare_revid is not None" >
             <b>&#8594;</b>
-            <a tal:attributes="href python:branch.url(['/bundle', revid, compare_revid, 'bundle.txt'])">
+            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(compare_revid), 'bundle.txt'])">
                 download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
             </a>
           </div>
-          <div tal:condition="python:(remember is not None) and (compare_revid is None) and (revid != remember)" >
+          <div tal:condition="python:(remember is not None) and (compare_revid is None) and remember != revid" >
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/revision', revid], compare_revid=remember)">
+            <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
               compare with revision <tal:b content="python:history.get_revno(remember)" />
             </a>
           </div>
           <div  tal:condition="python:remember != revid">
             <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/revision', revid], remember=revid, compare_revid=None)">
+            <a tal:attributes="href python:url(['/revision', change.revno], remember=change.revno, compare_revid=None)">
               compare with another revision
             </a>
           </div>
           <tal:we-are-comparing condition="python:compare_revid is not None">
             <div>
               <b>&#8594;</b>
-              <a tal:attributes="href python:url([ '/revision', compare_revid ], remember=revid, compare_revid=revid)">
+              <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
                 reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
               </a>
             </div>
             <div>
               <b>&#8594;</b>
-              <a tal:attributes="href python:url(['/revision', revid], remember=None, compare_revid=None)">
+              <a tal:attributes="href python:url(['/revision', change.revno], remember=None, compare_revid=None)">
                 stop comparing with revision <tal:b content="python:history.get_revno(compare_revid)" />
               </a>
             </div>
@@ -82,21 +82,21 @@
         <table class="diff-option-buttons">
           <tr>
             <td>
-              <tal:b content="structure python:collapse_all_button('file', 'table-row')" />
+              <tal:b content="structure python:collapse_all_button('file', branch, normal='table-row')" />
             </td>
 
             <td class="spacey">
               <a href="javascript:show_sbs()"
                  class="hide-all collapse-style-sbs-show"
                  title="collapse">
-                <img tal:attributes="src python:tg.url('/static/images/nav-small-out.gif')"
+                <img tal:attributes="src python:branch.static_url('/static/images/nav-small-out.gif')"
                      width="22" height="10" class="collapse-triangle" />
                 show side by side
               </a>
               <a href="javascript:show_unified()"
                  class="hide-all collapse-style-unified-show"
                  title="expand">
-                <img tal:attributes="src python:tg.url('/static/images/nav-small-in.gif')"
+                <img tal:attributes="src python:branch.static_url('/static/images/nav-small-in.gif')"
                      width="22" height="10" class="collapse-triangle" />
                 show unified diff
               </a>
@@ -124,8 +124,8 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
-                    <a tal:attributes="href  python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
+                    <tal:b content="structure python:collapse_button('file', u, branch, normal='table-row')" />
+                    <a tal:attributes="href  python:url(['/annotate', change.revno], file_id=item.file_id);
                                        name  string:${item/filename}-s;
                                        title string:Annotate ${item/filename}"
                        tal:content="item/filename">
@@ -211,8 +211,8 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                 <tr>
                   <th class="filename" colspan="4">
-                    <tal:b content="structure python:collapse_button('file', u, 'table-row')" />
-                    <a tal:attributes="href  python:url(['/annotate', change.revid], file_id=item.file_id);
+                    <tal:b content="structure python:collapse_button('file', u, branch, normal='table-row')" />
+                    <a tal:attributes="href  python:url(['/annotate', change.revno], file_id=item.file_id);
                                        name  string:${item/filename}-u;
                                        title string:Annotate ${item/filename}"
                        tal:content="item/filename">

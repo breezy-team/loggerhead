@@ -9,7 +9,7 @@
     </title>
 
     <link rel="stylesheet"
-          tal:attributes="href python:tg.url('/static/css/zptstyle.css')" />
+          tal:attributes="href python:branch.static_url('/static/css/zptstyle.css')" />
 
     <metal:block metal:define-slot="header_extras" />
   </head>
@@ -32,7 +32,7 @@
             <td align="right" tal:condition="navigation/revid_list|nothing">
               <span tal:condition="navigation/feed" class="rbuttons feed">
                 <a tal:attributes="href python:url(['/atom'])">
-                  <img tal:attributes="src python:tg.url('/static/images/feed-icon-16x16.gif')" />
+                  <img tal:attributes="src python:branch.static_url('/static/images/feed-icon-16x16.gif')" />
                 </a>
               </span>
               <span class="navbuttons">
@@ -74,12 +74,12 @@
     <div class="footer">
       <span class="banner">
         <a href="http://www.bazaar-vcs.org/">
-          <img tal:attributes="src python:tg.url('/static/images/bazaar-banner.png')" />
+          <img tal:attributes="src python:branch.static_url('/static/images/bazaar-banner.png')" />
         </a>
       </span>
       <span class="banner">
         <a href="http://www.lag.net/loggerhead/">
-          <img tal:attributes="src python:tg.url('/static/images/loggerhead-banner.png')" />
+          <img tal:attributes="src python:branch.static_url('/static/images/loggerhead-banner.png')" />
         </a>
       </span>
     </div>

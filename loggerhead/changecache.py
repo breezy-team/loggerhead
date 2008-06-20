@@ -27,7 +27,6 @@ cached a change, it's good forever.
 
 import cPickle
 import os
-import time
 
 from loggerhead import util
 from loggerhead.lockfile import LockFile
@@ -50,8 +49,6 @@ _select_stmt = ("select data from revisiondata where revid = ?"
                 ).replace('?', _param_marker)
 _insert_stmt = ("insert into revisiondata (revid, data) "
                 "values (?, ?)").replace('?', _param_marker)
-_update_stmt = ("update revisiondata set data = ? where revid = ?"
-                ).replace('?', _param_marker)
 
 
 
@@ -80,53 +77,11 @@ class FakeShelf(object):
             return None
         else:
             return self._unserialize(filechange[0])
-    def add(self, revid_obj_pairs, commit=True):
+    def add(self, revid_obj_pairs):
         for  (r, d) in revid_obj_pairs:
             self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
-        if commit:
-            self.connection.commit()
-    def update(self, revid_obj_pairs, commit=True):
-        for  (r, d) in revid_obj_pairs:
-            self.cursor.execute(_update_stmt, (self._serialize(d), r))
-        if commit:
-            self.connection.commit()
-    def count(self):
-        self.cursor.execute(
-            "select count(*) from revisiondata")
-        return self.cursor.fetchone()[0]
-    def close(self, commit=False):
-        if commit:
-            self.connection.commit()
-        self.connection.close()
+        self.connection.commit()
 
-        self.log.info('Building revision cache...')
-        start_time = time.time()
-        last_update = time.time()
-        count = 0
-
-        work = list(self.history.get_revision_history())
-        jump = 100
-        for i in xrange(0, len(work), jump):
-            r = work[i:i + jump]
-            # must call into history so we grab the branch lock (otherwise, lock inversion)
-            self.history.get_changes(r)
-            if self.closed():
-                self.flush()
-                return
-            count += jump
-            now = time.time()
-            if now - start_time > max_time:
-                self.log.info('Cache rebuilding will pause for now.')
-                self.flush()
-                return
-            if now - last_update > 60:
-                self.log.info('Revision cache rebuilding continues: %d/%d' % (min(count, len(work)), len(work)))
-                last_update = time.time()
-                self.flush()
-            # give someone else a chance at the lock
-            time.sleep(1)
-        self.log.info('Revision cache rebuild completed.')
-        self.flush()
 
 class FileChangeCache(object):
     def __init__(self, history, cache_path):
