@@ -366,11 +366,11 @@ def fill_in_navigation(navigation):
         params['q'] = navigation.query
 
     if navigation.prev_page_revid:
-        navigation.prev_page_url = navigation.branch.url([navigation.scan_url,
-            prev_page_revno], **params)
+        navigation.prev_page_url = navigation.branch.context_url(
+            [navigation.scan_url, prev_page_revno], **params)
     if navigation.next_page_revid:
-        navigation.next_page_url = navigation.branch.url([navigation.scan_url,
-            next_page_revno], **params)
+        navigation.next_page_url = navigation.branch.context_url(
+            [navigation.scan_url, next_page_revno], **params)
 
 
 def log_exception(log):
