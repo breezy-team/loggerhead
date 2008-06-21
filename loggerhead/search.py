@@ -50,7 +50,7 @@ def search_revisions(branch, query_list, suggest=False):
                 if isinstance(result, FileTextHit):
                     revid_list.append(result.text_key[1])
                 elif isinstance(result, RevisionHit):
-                    revid_list.append(result.revision_key)
+                    revid_list.append(result.revision_key[0])
             return list(sets.Set(revid_list))
     finally:
         index._branch.unlock()
