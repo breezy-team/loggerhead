@@ -121,11 +121,8 @@ def main():
     app = make_filter(app, None)
 
     if webpath:
-        if not webpath.endswith('/'):
-            webpath += '/'
-        def app(environ, start_response, app=app):
-            environ['SCRIPT_NAME'] = webpath
-            return app(environ, start_response)
+        from paste.deploy.config import PrefixMiddleware
+        app = PrefixMiddleware(translate_forwarded_server=True, prefix=webpath)
 
     try:
         httpserver.serve(
