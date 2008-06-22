@@ -68,13 +68,13 @@ class Project (object):
             self._add_view(view_name, ConfigObj(), folder)
         self._auto_list = auto_list
 
-    def _get_branch_url(self, view, view_config):
+    def _get_branch_url(self, view, view_config, folder):
         url = view_config.get('url', None)
         if url is not None:
             return url
         url = self._config.get('url_prefix', None)
         if url is not None:
-            return posixpath.join(url, self._folder) + '/'
+            return posixpath.join(url, folder) + '/'
         return None
 
     def _get_description(self, view, view_config):
@@ -93,7 +93,7 @@ class Project (object):
                 friendly_name = view_name
         view.friendly_name = friendly_name
         view.name = view_name
-        branch_url = self._get_branch_url(view, view_config)
+        branch_url = self._get_branch_url(view, view_config, folder)
         if branch_url is not None:
             view.branch_url = branch_url
         view.description = self._get_description(view, view_config)
