@@ -875,6 +875,9 @@ class History (object):
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
+        
+        # Always sort by kind to get directories first
+        file_list.sort(key=lambda x: x.kind)
 
         parity = 0
         for file in file_list:
