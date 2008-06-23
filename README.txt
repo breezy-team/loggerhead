@@ -7,6 +7,7 @@ Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
 usual things.
 
+
 GETTING STARTED
 ---------------
 
@@ -15,12 +16,20 @@ server.  So you need these installed -- on Ubuntu you want the
 'python-simpletal' and 'python-paste' packages installed.  You need
 version 1.2 or newer of Paste.
 
-Then simply run the 'serve-branches.py' script of loggerhead from the
-directory containing the branches you want to serve.
+Then simply run the 'serve-branches.py' with the branch you want to
+serve on the command line:
 
-For example:
+    ./serve-branches.py ~/path/to/branch
 
-    XXX
+The script listens on port 8080 so head to http://localhost:8080/ in
+your browser to see the branch.  You can also pass a directory that
+contains branches to the script, and it will serve a very simple
+directory listing at other pages.
+
+You may update the Bazaar branches being viewed at any time.
+Loggerhead will notice and refresh, and Bazaar uses its own branch
+locking to prevent corruption.
+
 
 USING A CONFIG FILE
 -------------------
@@ -35,9 +44,8 @@ Loggerhead can then be started by running::
 
     $ ./start-loggerhead.py
 
-This will run loggerhead in the background.  It listens on port 8080
-by default, so go to http://localhost:8080/ in your browser to see the
-list of bublished branches.
+This will run loggerhead in the background, listening on port 8080 by
+default.
 
 To stop Loggerhead, run::
 
@@ -52,9 +60,6 @@ included with the source.
 A debug and access log are stored in the logs/ folder, relative to
 the location of the start-loggerhead.py script.
 
-You may update the Bazaar branch at any time (for example, from a cron).
-Loggerhead will notice and refresh, and Bazaar uses its own branch
-locking to prevent corruption.
 
 SERVING LOGGERHEAD FROM BEHIND APACHE
 -------------------------------------
@@ -69,6 +74,11 @@ configuration is one way to do this::
         ProxyPassReverse http://127.0.0.1:8080/
     </Location>
 
+If Paste Deploy is installed, the 'serve-branches.py' script can be
+run behind a proxy at the root of a site, but if you're running it at
+some path into the site, you'll need to add a 'prefix' argument to the
+PrefixMiddleware call in the script.  More flexible configuration
+should be added soon...
 
 
 FILES CHANGED CACHE
