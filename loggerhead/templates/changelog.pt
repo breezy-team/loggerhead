@@ -12,7 +12,9 @@
     </head>
 
     <body>
-        <h1 tal:content="string:${branch/friendly_name}"></h1>
+        <tal:block metal:fill-slot="heading">
+        <h1><tal:block content="branch/friendly_name"></tal:block></h1>
+        </tal:block>
 
         <tal:block condition="filter_file_id">
           to
