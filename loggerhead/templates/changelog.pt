@@ -29,8 +29,8 @@
           matching <tal:block content="query" />
         </tal:block>
 
-      <div metal:fill-slot="content">
-
+       <div metal:fill-slot="content">
+           <!-- Something nicer-looking should be done with search -->
         <p tal:condition="search_failed">
           Sorry, no results found for your search.
         </p>
@@ -120,7 +120,7 @@
                           tal:content="python:util._approximatedate(entry.date)"></span>
                 </td>
                 <td class="diffr"><a tal:attributes="title python:'Show diff at revision '+entry.revno;
-                                                     href href  python:url(['/revision', entry.revno], clear=1)">
+                                                     href python:url(['/revision', entry.revno], clear=1)">
                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
                 <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
                                                      title string:Files at revision ${entry/revno}">

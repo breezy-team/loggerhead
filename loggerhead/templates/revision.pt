@@ -4,7 +4,6 @@
     <head>
       <title metal:fill-slot="title"
              tal:content="string:${branch/friendly_name} : revision ${change/revno}">
-        ${branch.friendly_name} : revision ${change.revno}
       </title>
 
       <metal:block fill-slot="header_extras">
@@ -16,7 +15,11 @@
     <body>
 
       <tal:block metal:fill-slot="heading">
-        <h1><tal:block content="branch/friendly_name"></tal:block><span>: <tal:revno content="change/revno"></tal:revno></span></h1>
+        <h1><tal:block content="branch/friendly_name" /><span>: <tal:revno content="change/revno"></tal:revno>
+        <tal:compare-to condition="python:compare_revid is not None">
+          (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
+          </tal:compare-to>
+        </span></h1>
         <ul id="submenuTabs">
             <li id="inicio"><a tal:attributes="href python:url(['/files', change.revno]); 
                                                title string:browse files at revision ${change/revno}"
@@ -25,54 +28,48 @@
                 <a tal:attributes="href python:url(['/revision', change.revno], remember=change.revno, compare_revid=None); 
                                    title string:Compare with another revision"
                    tal:content="string:Compare with another revision"></a></li>       
+            <li tal:condition="python:(remember is not None) and (compare_revid is None) and (change.revno != remember)" >
+                <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
+                compare with revision <tal:b content="python:history.get_revno(remember)" />
+                </a>
+            </li>
             <li id="final"><a tal:attributes="href python:url(['/changes', change.revno]); 
                                   title string:view history from revision ${change/revno}"
                   tal:content="string:view history from revision ${change/revno}"></a></li>
         </ul>
+
+        <tal:we-are-comparing condition="python:compare_revid is not None">
+        <ul id="submenuTabs">
+          <li tal:condition="python:compare_revid is not None" id="inicio">
+            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(compare_revid), 'bundle.txt'])">
+                download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
+            </a>
+          </li>
+          <li>
+              <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
+                reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
+              </a>
+          </li>
+          <li id="final">
+              <a tal:attributes="href python:url(['/revision', change.revno], remember=None, compare_revid=None)">
+                stop comparing with revision <tal:b content="python:history.get_revno(compare_revid)" />
+              </a>
+          </li>
+        </ul>
+        </tal:we-are-comparing>
         
         <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
 
         <p class="expand"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')" 
                              alt="collapse all" /> collapse all</a></p>
-                        <p class="codin"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" 
-                           alt="added" /> added</a></p>
-        <p class="codin"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/deleteCode.gif')" alt="removed" /> removed</a></p>
+                        <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" 
+                           alt="added" /> added</p>
+        <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/deleteCode.gif')" alt="removed" /> removed</p>
         <div class="clear"><!-- --></div>
-        <tal:compare-to condition="python:compare_revid is not None">
-          (compared to revision <tal:b content="python:history.get_revno(compare_revid)" />)
-        </tal:compare-to>
+
       </tal:block>
 
       <div metal:fill-slot="content">
-        <div class="links">
-          <div tal:condition="python:compare_revid is not None" >
-            <b>&#8594;</b>
-            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(compare_revid), 'bundle.txt'])">
-                download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
-            </a>
-          </div>
-          <div tal:condition="python:(remember is not None) and (compare_revid is None) and (change.revno != remember)" >
-            <b>&#8594;</b>
-            <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
-              compare with revision <tal:b content="python:history.get_revno(remember)" />
-            </a>
-          </div>
-          <tal:we-are-comparing condition="python:compare_revid is not None">
-            <div>
-              <b>&#8594;</b>
-              <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
-                reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
-              </a>
-            </div>
-            <div>
-              <b>&#8594;</b>
-              <a tal:attributes="href python:url(['/revision', change.revno], remember=None, compare_revid=None)">
-                stop comparing with revision <tal:b content="python:history.get_revno(compare_revid)" />
-              </a>
-            </div>
-          </tal:we-are-comparing>
-        </div>
-
         <div class="diff"
              tal:condition="change/changes/modified"
              tal:define="uniqs python:{}">
