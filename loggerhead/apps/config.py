@@ -93,7 +93,7 @@ class Project (object):
                 friendly_name = view_name
         view.friendly_name = friendly_name
         view.name = view_name
-        branch_url = self._get_branch_url(view, view_config, folder)
+        branch_url = self._get_branch_url(view, view_config, view_name)
         if branch_url is not None:
             view.branch_url = branch_url
         view.description = self._get_description(view, view_config)
