@@ -20,24 +20,20 @@
     </h1>
 
     <div metal:fill-slot="content">
-      <div class="links">
-        <div>
-          <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
-        </div>
-        <div>
-          <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=change.revno)">view revision</a>
-        </div>
-        <div>
-          <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=change.revno, filter_file_id=file_id)">view changes to this file</a>
-        </div>
-        <div>
-          <b>&#8594;</b>
-          <a tal:attributes="href python:url(['/download', change.revno, file_id, filename])">download file</a>
-        </div>
-      </div>
+        <ul id="submenuTabs">
+            <li id="inicio">
+                <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
+            </li>
+            <li>
+                <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=change.revno)">view revision</a>
+            </li>
+            <li>
+                <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=change.revno, filter_file_id=file_id)">view changes to this file</a>
+            </li>
+            <li id="final">
+                <a tal:attributes="href python:url(['/download', change.revno, file_id, filename])">download file</a>
+            </li>
+        </ul>
 
       <div class="annotate">
         <table id="logentries">
