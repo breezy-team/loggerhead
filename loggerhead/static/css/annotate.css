@@ -60,7 +60,7 @@ ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#fin
 	width:70px;
 	text-align:center;
 }
-.annoComm, annoCommTit {
+.annoComm, .annoCommTit {
 	width:200px;
 }
 .annoLine, .annoCont {
