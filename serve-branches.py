@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
 from paste import httpserver
 from paste.httpexceptions import make_middleware
