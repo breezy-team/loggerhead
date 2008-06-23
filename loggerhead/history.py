@@ -657,7 +657,7 @@ class History (object):
         entry = {
             'revid': revision.revision_id,
             'date': commit_time,
-            'author': revision.committer,
+            'author': revision.get_apparent_author(),
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,
             'comment': revision.message,
