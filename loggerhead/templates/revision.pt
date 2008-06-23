@@ -40,12 +40,7 @@
 
         <tal:we-are-comparing condition="python:compare_revid is not None">
         <ul id="submenuTabs">
-          <li tal:condition="python:compare_revid is not None" id="inicio">
-            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(compare_revid), 'bundle.txt'])">
-                download bundle from <tal:b content="python:history.get_revno(compare_revid)" /> to <tal:b content="change/revno" />
-            </a>
-          </li>
-          <li>
+          <li id="inicio">
               <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
                 reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
               </a>
@@ -59,7 +54,7 @@
         </tal:we-are-comparing>
         
         <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
-
+        <!-- FIXME: This doesn't work yet -->
         <p class="expand"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')" 
                              alt="collapse all" /> collapse all</a></p>
                         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" 
@@ -79,8 +74,9 @@
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                       <div class="diffBox"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
                                                                             title string:Annotate ${item/filename}" /></a>
-                              <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id)" 
-                                  tal:content="item/filename"></a></div>
+                                           <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
+                                                              id string:${item/filename}-s"
+                                              tal:content="item/filename"></a></div>
                <div id="psuedotable">
                <tal:block repeat="chunk item/sbs_chunks">
                  <tal:block repeat="line chunk/diff">
