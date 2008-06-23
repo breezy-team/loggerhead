@@ -657,7 +657,7 @@ class History (object):
         entry = {
             'revid': revision.revision_id,
             'date': commit_time,
-            'author': revision.committer,
+            'author': revision.get_apparent_author(),
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,
             'comment': revision.message,
@@ -870,14 +870,13 @@ class History (object):
             file_list.append(file)
 
         if sort_type == 'filename' or sort_type is None:
-            file_list.sort(key=lambda x: x.filename)
+            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
-        
         # Always sort by kind to get directories first
-        file_list.sort(key=lambda x: x.kind)
+        file_list.sort(key=lambda x: x.kind != 'directory')
 
         parity = 0
         for file in file_list:
