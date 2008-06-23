@@ -7,10 +7,29 @@ Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
 usual things.
 
-To get started, first you need to create a 'loggerhead.conf' file
-specifying the branches you want to view.  A 'loggerhead.conf.example'
-file is included in the source which has comments explaining the
-various options.
+GETTING STARTED
+---------------
+
+Loggerhead depends on SimpleTAL for templating and Paste for the
+server.  So you need these installed -- on Ubuntu you want the
+'python-simpletal' and 'python-paste' packages installed.  You need
+version 1.2 or newer of Paste.
+
+Then simply run the 'serve-branches.py' script of loggerhead from the
+directory containing the branches you want to serve.
+
+For example:
+
+    XXX
+
+USING A CONFIG FILE
+-------------------
+
+Previous versions of Loggerhead read their configuration from a config
+file.  This mode of operation is still supported by the
+'start-loggerhead.py' script.  A 'loggerhead.conf.example' file is
+included in the source which has comments explaining the various
+options.
 
 Loggerhead can then be started by running::
 
@@ -24,6 +43,22 @@ To stop Loggerhead, run::
 
     $ ./stop-loggerhead.py
 
+In the configuration file you can configure projects, and branches per
+project.  The idea is that you could be publishing several (possibly
+unrelated) projects through the same loggerhead instance, and several
+branches for the same project.  See the "loggerhead.conf.example" file
+included with the source.
+
+A debug and access log are stored in the logs/ folder, relative to
+the location of the start-loggerhead.py script.
+
+You may update the Bazaar branch at any time (for example, from a cron).
+Loggerhead will notice and refresh, and Bazaar uses its own branch
+locking to prevent corruption.
+
+SERVING LOGGERHEAD FROM BEHIND APACHE
+-------------------------------------
+
 If you want to view Bazaar branches from your existing Apache
 installation, you'll need to configure Apache to proxy certain
 requests to Loggerhead.  Adding lines like this to you Apache
@@ -34,22 +69,6 @@ configuration is one way to do this::
         ProxyPassReverse http://127.0.0.1:8080/
     </Location>
 
-In the configuration file you can configure projects, and branches per
-project.  The idea is that you could be publishing several (possibly
-unrelated) projects through the same loggerhead instance, and several
-branches for the same project.  See the "loggerhead.conf.example" file
-included with the source.
-
-Although Loggerhead is a TurboGears (http://www.turbogears.org)
-project, don't bother with "dev.cfg" or any of the other TurboGears
-config files.  Loggerhead overrides those values with its own.
-
-A debug and access log are stored in the logs/ folder, relative to
-the location of the start-loggerhead.py script.
-
-You may update the Bazaar branch at any time (for example, from a cron).
-Loggerhead will notice and refresh, and Bazaar uses its own branch
-locking to prevent corruption.
 
 
 FILES CHANGED CACHE
@@ -70,3 +89,6 @@ mailing list at bazaar@lists.canonical.com.  You can join the list at
 subscribe to post, but your first post will be held briefly for manual
 moderation.
 
+Bugs are tracked on Launchpad; start at:
+
+    https://bugs.launchpad.net/loggerhead
