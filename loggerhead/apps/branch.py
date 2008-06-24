@@ -16,8 +16,6 @@ from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.history import History
 from loggerhead import util
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 
@@ -26,7 +24,7 @@ class BranchWSGIApp(object):
         self._history = None
         self._config = config
         self.friendly_name = friendly_name
-        self.log = logging.getLogger(friendly_name)
+        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
 
     @property
     def history(self):

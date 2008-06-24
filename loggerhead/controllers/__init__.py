@@ -57,12 +57,15 @@ class TemplatedBranchView(object):
             del response.headers['Content-Type']
             vals.update(self.get_values(h, args, kw, response))
 
-            self.log.info('/%s: %r secs' % (
+            self.log.info('Getting information for %s: %r secs' % (
                 self.__class__.__name__, time.time() - z,))
             if 'Content-Type' not in response.headers:
                 response.headers['Content-Type'] = 'text/html'
             template = load_template(self.template_path)
+            z = time.time()
             template.expand_into(response, **vals)
+            self.log.info('Rendering %s: %r secs' % (
+                self.__class__.__name__, time.time() - z,))
         finally:
             h._branch.unlock()
 
