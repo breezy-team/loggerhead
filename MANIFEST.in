@@ -1,4 +1,2 @@
-include dev.cfg loggerhead.conf.example README.txt NEWS
-recursive-include loggerhead/templates *.kid
-recursive-include loggerhead/config *.cfg
+include loggerhead.conf.example README.txt NEWS
 recursive-include loggerhead/static *

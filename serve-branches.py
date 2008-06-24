@@ -1,15 +1,30 @@
-from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
+#!/usr/bin/env python
+import sys
+
 from paste import httpserver
-from paste.httpexceptions import make_middleware
-from paste.translogger import make_filter
+from paste.httpexceptions import HTTPExceptionHandler
+from paste.translogger import TransLogger
 
-app = BranchesFromFileSystemRoot('.')
+from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
 
-app = app
-app = make_middleware(app)
-app = make_filter(app, None)
+if len(sys.argv) > 1:
+    path = sys.argv[1]
+else:
+    path = '.'
+
+app = BranchesFromFileSystemRoot(path)
+
+app = HTTPExceptionHandler(app)
+app = TransLogger(app)
+
+try:
+    from paste.deploy.config import PrefixMiddleware
+except ImportError:
+    pass
+else:
+    app = PrefixMiddleware(app)
 
 #from paste.evalexception import EvalException
 #app = EvalException(app)
 
-httpserver.serve(app, host='0.0.0.0', port='9876')
+httpserver.serve(app, host='0.0.0.0', port='8080')
