@@ -37,8 +37,14 @@ class BranchWSGIApp(object):
             if cache_path is not None:
                 # Only import the cache if we're going to use it.
                 # This makes sqlite optional
-                from loggerhead.changecache import FileChangeCache
-                _history.use_file_cache(FileChangeCache(_history, cache_path))
+                try:
+                    from loggerhead.changecache import FileChangeCache
+                except ImportError:
+                    self.log.debug("Couldn't load python-sqlite," 
+                                   " continuing without using a cache")
+                else:
+                    _history.use_file_cache(FileChangeCache(_history, 
+                                                            cache_path))
         return self._history
 
     def url(self, *args, **kw):
