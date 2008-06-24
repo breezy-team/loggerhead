@@ -1,3 +1,5 @@
+var global_timeout_id = null;
+
 window.addEvent('domready', function() 
 {
     var search_box = $('q');
@@ -5,7 +7,11 @@ window.addEvent('domready', function()
     {
         keyup: function()
         {
-            search_box.fireEvent('search', search_box.value, 200);
+	    if (null != global_timeout_id)
+	    {
+	        clearTimeout(global_timeout_id);
+	    }
+            global_timeout_id = setTimeout('$("q").fireEvent("search",$("q").value)',200);
         },
 
         search: function(query)
