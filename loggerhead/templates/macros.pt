@@ -11,6 +11,12 @@
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/zptstyle.css')" />
 
+    <script type="text/javascript"
+            tal:attributes="src python:branch.static_url('/static/javascript/mootools.js')">
+    </script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.static_url('/static/javascript/custom.js')">
+    </script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
