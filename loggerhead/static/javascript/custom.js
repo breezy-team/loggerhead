@@ -16,7 +16,7 @@ window.addEvent('domready', function()
 
         search: function(query)
         {
-            url = 'search?query=' + query;
+            url = global_path + 'search?query=' + query;
 	
 	        var posicion = search_box.getPosition();
 	        var size     = search_box.getSize();

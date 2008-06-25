@@ -21,7 +21,9 @@
   </head>
 
   <body tal:attributes="onload onload|nothing">
-
+      <script language="javascript">
+          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      </script>
     <div class="bar" tal:condition="navigation|nothing">
       <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))">
         <table>
