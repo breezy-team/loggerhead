@@ -25,6 +25,32 @@ from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 
+class BufferingWriter:
+
+    def __init__(self, writefunc, buf_limit):
+        self.bytes = 0
+        self.buf = []
+        self.buflen = 0
+        self.writefunc = writefunc
+        self.bytes_saved = 0
+        self.buf_limit = buf_limit
+
+    def flush(self):
+        chunk = ''.join(self.buf)
+        chunk = re.sub(r'\s*\n\s*', '\n', chunk)
+        chunk = re.sub(r'[ \t]+', ' ', chunk)
+        self.bytes_saved += self.buflen - len(chunk)
+        self.writefunc(chunk)
+        self.buf = []
+        self.buflen = 0
+
+    def write(self, data):
+        self.buf.append(data)
+        self.buflen += len(data)
+        self.bytes += len(data)
+        if self.buflen > self.buf_limit:
+            self.flush()
+
 class TemplatedBranchView(object):
 
     template_path = None
@@ -65,31 +91,12 @@ class TemplatedBranchView(object):
             writer = start_response("200 OK", headers.items())
             template = load_template(self.template_path)
             z = time.time()
-            class BufferingWriter:
-                def __init__(self, writefunc):
-                    self.bytes = 0
-                    self.buf = []
-                    self.buflen = 0
-                    self.writefunc = writefunc
-                    self.bytes_saved = 0
-                def write(self, data):
-                    self.buf.append(data)
-                    self.buflen += len(data)
-                    self.bytes += len(data)
-                    if self.buflen > 1024:
-                        chunk = ''.join(self.buf)
-                        chunk = re.sub(r'\n\s+', '\n', chunk)
-                        chunk = re.sub(r'[ \t]+', ' ', chunk)
-                        chunk = re.sub(r'\s+\n', '\n', chunk)
-                        self.bytes_saved += self.buflen - len(chunk)
-                        self.writefunc(chunk)
-                        self.buf = []
-                        self.buflen = 0
-            w = BufferingWriter(writer)
+            w = BufferingWriter(writer, 8192)
             template.expand_into(w, **vals)
+            w.flush()
             self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
                 self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
-            return [''.join(w.buf)]
+            return []
         finally:
             h._branch.unlock()
 
