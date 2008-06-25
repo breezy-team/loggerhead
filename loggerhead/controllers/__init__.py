@@ -16,6 +16,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import re
 import time
 
 from paste.request import path_info_pop, parse_querystring
@@ -64,23 +65,30 @@ class TemplatedBranchView(object):
             writer = start_response("200 OK", headers.items())
             template = load_template(self.template_path)
             z = time.time()
-            class W:
-                def __init__(self):
+            class BufferingWriter:
+                def __init__(self, writefunc):
                     self.bytes = 0
                     self.buf = []
                     self.buflen = 0
+                    self.writefunc = writefunc
+                    self.bytes_saved = 0
                 def write(self, data):
                     self.buf.append(data)
                     self.buflen += len(data)
                     self.bytes += len(data)
                     if self.buflen > 1024:
-                        writer(''.join(self.buf))
+                        chunk = ''.join(self.buf)
+                        chunk = re.sub(r'\n\s+', '\n', chunk)
+                        chunk = re.sub(r'[ \t]+', ' ', chunk)
+                        chunk = re.sub(r'\s+\n', '\n', chunk)
+                        self.bytes_saved += self.buflen - len(chunk)
+                        self.writefunc(chunk)
                         self.buf = []
                         self.buflen = 0
-            w = W()
+            w = BufferingWriter(writer)
             template.expand_into(w, **vals)
-            self.log.info('Rendering %s: %r secs, %s bytes' % (
-                self.__class__.__name__, time.time() - z, w.bytes))
+            self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
+                self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
             return [''.join(w.buf)]
         finally:
             h._branch.unlock()
