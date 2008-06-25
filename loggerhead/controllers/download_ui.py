@@ -34,7 +34,7 @@ class DownloadUI (object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, environ, start_response):
+    def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
         z = time.time()
         h = self._branch.history

@@ -59,7 +59,7 @@ class TemplatedBranchView(object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, environ, start_response):
+    def __call__(self, environ, start_response):
         z = time.time()
         h = self._branch.history
         kw = dict(parse_querystring(environ))

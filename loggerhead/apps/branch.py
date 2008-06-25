@@ -88,4 +88,4 @@ class BranchWSGIApp(object):
         if cls is None:
             raise httpexceptions.HTTPNotFound()
         c = cls(self)
-        return c.default(environ, start_response)
+        return c(environ, start_response)
