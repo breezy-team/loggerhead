@@ -20,8 +20,6 @@ import os
 from bzrlib.plugins.search import errors
 from bzrlib.plugins.search import index as _mod_index
 from bzrlib.plugins.search.index import FileTextHit, RevisionHit
-from bzrlib.plugin import load_plugins
-load_plugins()
 
 def search_revisions(branch, query_list, suggest=False):
     """
