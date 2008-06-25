@@ -41,6 +41,10 @@ class SearchUI(TemplatedBranchView):
         query = kwargs['query']
         if len(query) > 0:
             terms = search.search_revisions(h._branch, query, True)
-            terms = [term[0] for term in terms] 
+            if terms is not None:
+                terms = [term[0] for term in terms]
+            else:
+                # Should show a 'search is not available' etc box.
+                terms = []
 
         return {'terms':terms}
