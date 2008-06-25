@@ -11,37 +11,37 @@ window.addEvent('domready', function()
         item.getElement( '.expand_revisioninfo' ).addEvent( 'click', function()
             {
                 expander.toggle();
-                if(longDescription.style.display == 'none')
+                if(!expander.open)
                 {
                     longDescription.style.display = 'block';
                     shortDescription.style.display = 'none';
-                    expand_icon.src = expand_icon.alt;
+                    expand_icon.set('src', expand_icon.alt);
                 }
                 else
                 {
                     longDescription.style.display = 'none';
                     shortDescription.style.display = 'block';
-                    expand_icon.src = expand_icon.title;
+                    expand_icon.set('src', expand_icon.title);
                 }
             });
     });
 
-    $$('.diff').each(function(item, i)
+    $$('.diffBox').each(function(item, i)
     {
         // FIXME: Make less redundant
-        var expander = new Fx.Slide( item.getElement( '.diffinfo' ), { duration: 200 } );
-        var expand_icon = item.getElement( '.expand_icon' );
+        var expander = new Fx.Slide( item.getNext( '.diffinfo' ), { duration: 200 } );
+        var expand_icon = item.getElement( '.expand_diff' );
         item.getElement( '.expand_diff' ).addEvent( 'click', function()
             {
                 expander.toggle();
-                /*if(longDescription.style.display == 'none')
+                if(!expander.open)
                 {
-                    expand_icon.src = expand_icon.alt;
+                    expand_icon.set = ('src', expand_icon.alt);
                 }
                 else
                 {
-                    expand_icon.src = expand_icon.title;
-                }*/
+                    expand_icon.set = ('src', expand_icon.title);
+                }
             });
     });
 

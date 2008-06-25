@@ -73,7 +73,8 @@
 
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
                       <div class="diffBox"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                                                title python:branch.static_url('/static/images/treeExpanded.png')"
+                                                                title python:branch.static_url('/static/images/treeExpanded.png');
+                                                                alt python:branch.static_url('/static/images/treeCollapsed.png')"
                                                                 class="expand_diff" />
                                            <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
                                                               id string:${item/filename}-s;
