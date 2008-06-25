@@ -6,7 +6,7 @@ from paste import httpexceptions
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.apps import static_app
-from loggerhead.changecache import FileChangeCache
+
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -33,7 +33,16 @@ class BranchWSGIApp(object):
             _history = self._history = History.from_folder(self.branch_url)
             cache_path = self._config.get('cachepath', None)
             if cache_path is not None:
-                _history.use_file_cache(FileChangeCache(_history, cache_path))
+                # Only import the cache if we're going to use it.
+                # This makes sqlite optional
+                try:
+                    from loggerhead.changecache import FileChangeCache
+                except ImportError:
+                    self.log.debug("Couldn't load python-sqlite," 
+                                   " continuing without using a cache")
+                else:
+                    _history.use_file_cache(FileChangeCache(_history, 
+                                                            cache_path))
         return self._history
 
     def url(self, *args, **kw):
