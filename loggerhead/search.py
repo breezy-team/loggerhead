@@ -17,9 +17,12 @@
 #
 import sets
 import os
-from bzrlib.plugins.search import errors
-from bzrlib.plugins.search import index as _mod_index
-from bzrlib.plugins.search.index import FileTextHit, RevisionHit
+try:
+    from bzrlib.plugins.search import errors
+    from bzrlib.plugins.search import index as _mod_index
+    from bzrlib.plugins.search.index import FileTextHit, RevisionHit
+except ImportError:
+    _mod_index = None
 
 def search_revisions(branch, query_list, suggest=False):
     """
@@ -31,7 +34,12 @@ def search_revisions(branch, query_list, suggest=False):
     param suggest: Optional flag to request suggestions instead of results
     return: A list for results, either revision ids or terms
     """
-    index = _mod_index.open_index_branch(branch)
+    if _mod_index is None:
+        return None # None indicates could-not-search
+    try:
+        index = _mod_index.open_index_branch(branch)
+    except errors.NoSearchIndex:
+        return None # None indicates could-not-search
     query = query_list.split(' ')
     query = [(term,) for term in query]
     revid_list = []
