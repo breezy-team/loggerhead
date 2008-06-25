@@ -23,7 +23,26 @@ window.addEvent('domready', function()
                     shortDescription.style.display = 'block';
                     expand_icon.src = expand_icon.title;
                 }
-            } );
+            });
+    });
+
+    $$('.diff').each(function(item, i)
+    {
+        // FIXME: Make less redundant
+        var expander = new Fx.Slide( item.getElement( '.diffinfo' ), { duration: 200 } );
+        var expand_icon = item.getElement( '.expand_icon' );
+        item.getElement( '.expand_diff' ).addEvent( 'click', function()
+            {
+                expander.toggle();
+                /*if(longDescription.style.display == 'none')
+                {
+                    expand_icon.src = expand_icon.alt;
+                }
+                else
+                {
+                    expand_icon.src = expand_icon.title;
+                }*/
+            });
     });
 
 });

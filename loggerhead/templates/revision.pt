@@ -72,12 +72,14 @@
           <tal:block repeat="item change/changes/modified">
 
               <tal:u define="u python:util.uniq(uniqs, item.file_id)">
-                      <div class="diffBox"><a href="#"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                                                            title string:Annotate ${item/filename}" /></a>
+                      <div class="diffBox"><img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
+                                                                title python:branch.static_url('/static/images/treeExpanded.png')"
+                                                                class="expand_diff" />
                                            <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
-                                                              id string:${item/filename}-s"
+                                                              id string:${item/filename}-s;
+                                                              title string:Annotate ${item/filename}"
                                               tal:content="item/filename"></a></div>
-               <div id="psuedotable">
+               <div id="psuedotable" class="diffinfo">
                <tal:block repeat="chunk item/sbs_chunks">
                  <tal:block repeat="line chunk/diff">
                     <div id="pseudorow">
