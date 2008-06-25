@@ -74,9 +74,6 @@ class BranchWSGIApp(object):
         return self.history.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
-        req = WSGIRequest(environ)
-        response = WSGIResponse()
-        response.headers['Content-Type'] = 'text/plain'
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:
@@ -92,5 +89,6 @@ class BranchWSGIApp(object):
         if cls is None:
             raise httpexceptions.HTTPNotFound()
         c = cls(self)
-        c.default(req, response)
-        return response(environ, start_response)
+        req = WSGIRequest(environ)
+        c.default(req, start_response)
+        return []

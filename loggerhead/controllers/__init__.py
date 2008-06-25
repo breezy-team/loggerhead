@@ -32,7 +32,7 @@ class TemplatedBranchView(object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, request, response):
+    def default(self, request, start_response):
         z = time.time()
         h = self._branch.history
         kw = request.GET
@@ -54,18 +54,26 @@ class TemplatedBranchView(object):
                 'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
-            del response.headers['Content-Type']
-            vals.update(self.get_values(h, args, kw, response))
+            headers = {}
+            vals.update(self.get_values(h, args, kw, headers))
 
             self.log.info('Getting information for %s: %r secs' % (
                 self.__class__.__name__, time.time() - z,))
-            if 'Content-Type' not in response.headers:
-                response.headers['Content-Type'] = 'text/html'
+            if 'Content-Type' not in headers:
+                headers['Content-Type'] = 'text/html'
+            writer = start_response("200 OK", headers.items())
             template = load_template(self.template_path)
             z = time.time()
-            template.expand_into(response, **vals)
-            self.log.info('Rendering %s: %r secs' % (
-                self.__class__.__name__, time.time() - z,))
+            class W:
+                def __init__(self):
+                    self.bytes = 0
+                def write(self, data):
+                    self.bytes += len(data)
+                    writer(data)
+            w = W()
+            template.expand_into(w, **vals)
+            self.log.info('Rendering %s: %r secs, %s bytes' % (
+                self.__class__.__name__, time.time() - z, w.bytes))
         finally:
             h._branch.unlock()
 

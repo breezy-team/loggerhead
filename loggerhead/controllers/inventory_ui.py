@@ -39,7 +39,7 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, args, kw, response):
+    def get_values(self, h, args, kw, headers):
         if len(args) > 0:
             revid = h.fix_revid(args[0])
         else:
