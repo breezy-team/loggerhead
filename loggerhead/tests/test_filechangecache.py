@@ -5,12 +5,12 @@ import tempfile
 
 from loggerhead.changecache import FileChangeCache
 
-class MockEntry:
+class MockEntry(object):
     def __init__(self, revid):
         self.revid = revid
 
 
-class MockHistory:
+class MockHistory(object):
     def __init__(self):
         self.fetched_revids = set()
     def get_file_changes_uncached(self, entries):
