@@ -19,12 +19,11 @@
 
 import logging
 import posixpath
-import time
 
-import turbogears
-from cherrypy import InternalError
+from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
+from loggerhead.controllers import TemplatedBranchView
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -35,75 +34,60 @@ def dirname(path):
     path = posixpath.dirname(path)
     return path
 
-        
-class InventoryUI (object):
 
-    def __init__(self, branch):
-        # BranchView object
-        self._branch = branch
-        self.log = branch.log
+class InventoryUI(TemplatedBranchView):
 
-    @util.strip_whitespace
-    @turbogears.expose(html='loggerhead.templates.inventory')
-    def default(self, *args, **kw):
-        z = time.time()
-        h = self._branch.get_history()
-        util.set_context(kw)
+    template_path = 'loggerhead.templates.inventory'
 
-        h._branch.lock_read()
+    def get_values(self, h, args, kw, response):
+        if len(args) > 0:
+            revid = h.fix_revid(args[0])
+        else:
+            revid = h.last_revid
+
         try:
-            if len(args) > 0:
-                revid = h.fix_revid(args[0])
-            else:
-                revid = h.last_revid
+            inv = h.get_inventory(revid)
+        except:
+            self.log.exception('Exception fetching changes')
+            raise HTTPServerError('Could not fetch changes')
 
-            try:
-                inv = h.get_inventory(revid)
-            except:
-                self.log.exception('Exception fetching changes')
-                raise InternalError('Could not fetch changes')
+        file_id = kw.get('file_id', inv.root.file_id)
+        start_revid = kw.get('start_revid', None)
+        sort_type = kw.get('sort', None)
 
-            file_id = kw.get('file_id', inv.root.file_id)
-            start_revid = kw.get('start_revid', None)
-            sort_type = kw.get('sort', None)
+        # no navbar for revisions
+        navigation = util.Container()
 
-            # no navbar for revisions
-            navigation = util.Container()
+        change = h.get_changes([ revid ])[0]
+        # add parent & merge-point branch-nick info, in case it's useful
+        h.get_branch_nicks([ change ])
 
-            change = h.get_changes([ revid ])[0]
-            # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks([ change ])
+        path = inv.id2path(file_id)
+        if not path.startswith('/'):
+            path = '/' + path
+        idpath = inv.get_idpath(file_id)
+        if len(idpath) > 1:
+            updir = dirname(path)
+            updir_file_id = idpath[-2]
+        else:
+            updir = None
+            updir_file_id = None
+        if updir == '/':
+            updir_file_id = None
 
-            path = inv.id2path(file_id)
-            if not path.startswith('/'):
-                path = '/' + path
-            idpath = inv.get_idpath(file_id)
-            if len(idpath) > 1:
-                updir = dirname(path)
-                updir_file_id = idpath[-2]
-            else:
-                updir = None
-                updir_file_id = None
-            if updir == '/':
-                updir_file_id = None
-
-            vals = {
-                'branch': self._branch,
-                'util': util,
-                'revid': revid,
-                'change': change,
-                'file_id': file_id,
-                'path': path,
-                'updir': updir,
-                'updir_file_id': updir_file_id,
-                'filelist': h.get_filelist(inv, file_id, sort_type),
-                'history': h,
-                'posixpath': posixpath,
-                'navigation': navigation,
-                'start_revid': start_revid,
-            }
-            h.flush_cache()
-            self.log.info('/inventory %r: %r secs' % (revid, time.time() - z))
-            return vals
-        finally:
-            h._branch.unlock()
+        return {
+            'branch': self._branch,
+            'util': util,
+            'revid': revid,
+            'change': change,
+            'file_id': file_id,
+            'path': path,
+            'updir': updir,
+            'updir_file_id': updir_file_id,
+            'filelist': h.get_filelist(inv, file_id, sort_type),
+            'history': h,
+            'posixpath': posixpath,
+            'navigation': navigation,
+            'url': self._branch.context_url,
+            'start_revid': start_revid,
+        }

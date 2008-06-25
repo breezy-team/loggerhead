@@ -1,0 +1,16 @@
+<tal:block>
+  <a tal:attributes="class string:hide-all collapse-${group}-hideall;
+                     href string:javascript:collapseAllDisplay('${group}','none')">
+    <img tal:attributes="src python:branch.static_url('/static/images/nav-small-down.gif')"
+         width="10" height="10" alt="collapse"
+         class="collapse-triangle" />
+    collapse all
+  </a>
+  <a tal:attributes="class string:hide-all collapse-${group}-showall;
+                     href string:javascript:collapseAllDisplay('${group}','${normal}')">
+    <img tal:attributes="src python:branch.static_url('/static/images/nav-small-right.gif')"
+         width="10" height="10" alt="expand"
+         class="collapse-triangle" />
+    expand all
+  </a>
+</tal:block>

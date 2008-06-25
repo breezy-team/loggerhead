@@ -102,3 +102,25 @@ function debug(s) {
     console.log("[" + ds + "] " + s);
 }
 
+function diff_url(url) {
+    if (document.cookie.indexOf('diff=unified') >= 0) {
+        this.location.href = url + "-u";
+    } else {
+        this.location.href = url + "-s";
+    }
+}
+
+function show_sbs() {
+	collapseDisplay('style', 'sbs', 'table');
+	collapseDisplay('style', 'unified', 'none');
+	document.cookie='diff=sbs';
+}
+function show_unified() {
+	collapseDisplay('style', 'unified', 'table');
+	collapseDisplay('style', 'sbs', 'none');
+	document.cookie='diff=unified';
+}
+function load() {
+	sortCollapseElements();
+	if (document.cookie.indexOf('diff=unified') >= 0) { show_unified(); }
+}

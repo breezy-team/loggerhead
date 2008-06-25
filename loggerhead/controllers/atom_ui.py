@@ -17,37 +17,23 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import turbogears
-
-from loggerhead import util
+from loggerhead.controllers import TemplatedBranchView
 
 
-class AtomUI (object):
-    
-    def __init__(self, branch):
-        # BranchView object
-        self._branch = branch
-        self.log = branch.log
+class AtomUI (TemplatedBranchView):
 
-    @turbogears.expose(template='loggerhead.templates.atom', format="xml", content_type="application/atom+xml")
-    def default(self, *args):
-        h = self._branch.get_history()
+    template_path = 'loggerhead.templates.atom'
 
-        h._branch.lock_read()
-        try:
-            pagesize = int(self._branch.config.get('pagesize', '20'))
+    def get_values(self, h, args, kw, response):
+        h = self._branch.history
 
-            revid_list = h.get_file_view(h.last_revid, None)
-            entries = list(h.get_changes(list(revid_list)[:pagesize]))
+        pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
-            vals = {
-                'branch': self._branch,
-                'changes': entries,
-                'util': util,
-                'history': h,
-                'updated': entries[0].date.isoformat() + 'Z',
-            }
-            h.flush_cache()
-            return vals
-        finally:
-            h._branch.unlock()
+        revid_list = h.get_file_view(h.last_revid, None)
+        entries = list(h.get_changes(list(revid_list)[:pagesize]))
+
+        response.headers['Content-Type'] = 'application/atom+xml'
+        return {
+            'changes': entries,
+            'updated': entries[0].date.isoformat() + 'Z',
+        }

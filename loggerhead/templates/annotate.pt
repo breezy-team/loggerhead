@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+          "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+  <head>
+    <title metal:fill-slot="title"
+           tal:content="string:${branch/friendly_name} : contents of ${path}
+                        at revision ${change/revno}">
+    </title>
+  </head>
+
+  <body>
+
+    <h1 metal:fill-slot="heading">
+      <span class="branch-name" tal:content="branch/friendly_name"></span>
+      :
+      <span class="annotate-path" tal:content="path"></span>
+      (revision <tal:revno content="change/revno"></tal:revno>)
+    </h1>
+
+    <div metal:fill-slot="content">
+      <div class="links">
+        <div>
+          <b>&#8594;</b>
+          <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
+        </div>
+        <div>
+          <b>&#8594;</b>
+          <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=change.revno)">view revision</a>
+        </div>
+        <div>
+          <b>&#8594;</b>
+          <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=change.revno, filter_file_id=file_id)">view changes to this file</a>
+        </div>
+        <div>
+          <b>&#8594;</b>
+          <a tal:attributes="href python:url(['/download', change.revno, file_id, filename])">download file</a>
+        </div>
+      </div>
+
+      <div class="annotate">
+        <table>
+          <tr>
+            <th class="lineno"> Line# </th>
+            <th class="revision"> Revision </th>
+            <th class="text"> Contents </th>
+          </tr>
+
+          <tr tal:repeat="line contents"
+              tal:attributes="class string:parity${line/parity}">
+            <td tal:attributes="class string:lineno ${line/status}">
+              <a tal:attributes="name string:L${line/lineno}"
+                 tal:content="line/lineno"></a>
+            </td>
+            <td tal:attributes="class string:revno ${line/status}">
+              <a tal:condition="python:line.status=='changed'"
+                 tal:content="python:util.trunc(line.change.revno)"
+                 tal:attributes="href python:url(['/revision'], clear=1, start_revid=line.change.revno, filter_file_id=file_id);
+                                 title python:'%s by %s, on %s (%s)'%(line.change.revno, util.hide_email(line.change.author), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
+            </td>
+            <td tal:attributes="class string:text ${line/status}"
+                tal:content="line/text">
+            </td>
+          </tr>
+        </table>
+      </div>
+
+    </div>
+  </body>
+</html>

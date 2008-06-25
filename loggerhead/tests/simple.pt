@@ -1,0 +1,8 @@
+<html>
+<head>
+<title tal:content="title">simple test page title</title>
+</head>
+<body>
+<div>Hello, <span tal:replace="name">name</span></div>
+</body>
+</html>
