@@ -96,7 +96,7 @@
                                                            class string:link"
                                            tal:content="entry/comment"></a>
                                      </div>
-                                <div class="revisioninfo">
+                                <div class="revisioninfo" style="display:none;">
                                     <ul class="expandrev">
                	                        <li class="mergefrom" tal:repeat="parent python:entry.parents[1:]">
                                             <span class="revnolink">
