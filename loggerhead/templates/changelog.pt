@@ -50,7 +50,7 @@
                   alt="expand all" /> expand all</a>
         </p>
         <p class="expand" id="collapse_all" style="display:none;"><a tal:attributes="href string:javascript:toggle_expand_all('close')">
-            <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
+            <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
                   alt="collapse all" /> collapse all</a>
         </p>
         <!-- Table -->        
@@ -74,8 +74,13 @@
                 </td>            
                 <td class="expcell">
                     <div class="expand_revisioninfo">
-                        <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')" 
-                             alt="Expand Revision" />
+                        <!-- So, this is interesting. I'm using "alt" to have the correct URL for the image of the expanded icon
+                             and "title" tag for the contracted URL of the image. This is a bit of a hack, but it's better than
+                             other approaches I tried  :)  -->
+                        <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
+                                             alt python:branch.static_url('/static/images/treeExpanded.png');
+                                             title python:branch.static_url('/static/images/treeCollapsed.png')" 
+                             class="expand_icon" />
                     </div>
                 </td>
                 <td class="summcell"><div tal:attributes="class string:short_description">

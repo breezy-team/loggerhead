@@ -29,13 +29,18 @@
         </ul>      
     </div>
     <!-- Loggerhead Content Area -->
-      <ul id="menuTabs">
+    <ul id="menuTabs">
+        <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
+                                                                   file_id=getattr(navigation, 'file_id', None))">
       	<div id="finderBox">
         	<label>Jump to revision:</label>
-            <input name="" type="text" />
+            <input name="q" type="search" />
             <div><a tal:attributes="href python:url(['/atom']);
-                                    title string:RSS feed for ${branch/friendly_name}"><img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a></div>
+                                    title string:RSS feed for ${branch/friendly_name}">
+                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a>
+            </div>
         </div>
+        </form>
         <li><a tal:attributes="href python:url('/changes', clear=1);
                                title string:Changes;
                                id string:on">Changes</a></li>
