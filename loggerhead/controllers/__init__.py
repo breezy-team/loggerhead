@@ -67,14 +67,21 @@ class TemplatedBranchView(object):
             class W:
                 def __init__(self):
                     self.bytes = 0
+                    self.buf = []
+                    self.buflen = 0
                 def write(self, data):
+                    self.buf.append(data)
+                    self.buflen += len(data)
                     self.bytes += len(data)
-                    writer(data)
+                    if self.buflen > 1024:
+                        writer(''.join(self.buf))
+                        self.buf = []
+                        self.buflen = 0
             w = W()
             template.expand_into(w, **vals)
             self.log.info('Rendering %s: %r secs, %s bytes' % (
                 self.__class__.__name__, time.time() - z, w.bytes))
-            return []
+            return [''.join(w.buf)]
         finally:
             h._branch.unlock()
 
