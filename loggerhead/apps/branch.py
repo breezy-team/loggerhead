@@ -90,5 +90,4 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPNotFound()
         c = cls(self)
         req = WSGIRequest(environ)
-        c.default(req, start_response)
-        return []
+        return c.default(req, start_response)

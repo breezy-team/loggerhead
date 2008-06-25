@@ -74,6 +74,7 @@ class TemplatedBranchView(object):
             template.expand_into(w, **vals)
             self.log.info('Rendering %s: %r secs, %s bytes' % (
                 self.__class__.__name__, time.time() - z, w.bytes))
+            return []
         finally:
             h._branch.unlock()
 

@@ -34,7 +34,7 @@ class DownloadUI (object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, request, response):
+    def default(self, request, start_response):
         # /download/<rev_id>/<file_id>/[filename]
         z = time.time()
         h = self._branch.history
@@ -59,9 +59,12 @@ class DownloadUI (object):
                 mime_type = 'application/octet-stream'
 
             self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
-            response.headers['Content-Type'] = mime_type
-            response.headers['Content-Length'] = len(content)
-            response.headers['Content-Disposition'] = 'attachment; filename=%s'%(filename,)
-            response.write(content)
+            headers = [
+                ('Content-Type', mime_type),
+                ('Content-Length', len(content)),
+                ('Content-Disposition', 'attachment; filename=%s'%(filename,)),
+                ]
+            start_response('200 OK', headers)
+            return [content]
         finally:
             h._branch.unlock()
