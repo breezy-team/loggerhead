@@ -3,7 +3,6 @@ import urllib
 
 from paste import request
 from paste import httpexceptions
-from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.apps import static_app
 from loggerhead.changecache import FileChangeCache
@@ -89,5 +88,4 @@ class BranchWSGIApp(object):
         if cls is None:
             raise httpexceptions.HTTPNotFound()
         c = cls(self)
-        req = WSGIRequest(environ)
-        return c.default(req, start_response)
+        return c.default(environ, start_response)

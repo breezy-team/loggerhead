@@ -34,7 +34,7 @@ class DownloadUI (object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, request, start_response):
+    def default(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
         z = time.time()
         h = self._branch.history
@@ -43,7 +43,7 @@ class DownloadUI (object):
         try:
             args = []
             while 1:
-                arg = path_info_pop(request.environ)
+                arg = path_info_pop(environ)
                 if arg is None:
                     break
                 args.append(arg)

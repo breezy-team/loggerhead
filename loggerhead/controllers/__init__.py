@@ -18,7 +18,7 @@
 
 import time
 
-from paste.request import path_info_pop
+from paste.request import path_info_pop, parse_querystring
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
@@ -32,17 +32,17 @@ class TemplatedBranchView(object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, request, start_response):
+    def default(self, environ, start_response):
         z = time.time()
         h = self._branch.history
-        kw = request.GET
+        kw = dict(parse_querystring(environ))
         util.set_context(kw)
 
         h._branch.lock_read()
         try:
             args = []
             while 1:
-                arg = path_info_pop(request.environ)
+                arg = path_info_pop(environ)
                 if arg is None:
                     break
                 args.append(arg)
