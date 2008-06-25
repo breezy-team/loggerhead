@@ -476,6 +476,9 @@ class History (object):
                 revid = revid_list[0]
             return revid, start_revid, revid_list
         else:
+            # XXX: This should return a message saying that the search could
+            # not be completed due to either missing the plugin or missing a
+            # search index.
             return None, None, []
 
     @with_branch_lock
