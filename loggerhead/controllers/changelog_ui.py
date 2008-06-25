@@ -27,7 +27,7 @@ class ChangeLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.changelog'
 
-    def get_values(self, h, args, kw, response):
+    def get_values(self, h, args, kw, headers):
         if args:
             revid = h.fix_revid(args[0])
         else:

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import logging
 import sys
 
 from paste import httpserver
@@ -6,6 +7,10 @@ from paste.httpexceptions import HTTPExceptionHandler
 from paste.translogger import TransLogger
 
 from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
+
+
+logging.basicConfig()
+logging.getLogger().setLevel(logging.DEBUG)
 
 if len(sys.argv) > 1:
     path = sys.argv[1]
