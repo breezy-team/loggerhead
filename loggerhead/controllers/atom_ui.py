@@ -24,7 +24,7 @@ class AtomUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.atom'
 
-    def get_values(self, h, args, kw, response):
+    def get_values(self, h, args, kw, headers):
         h = self._branch.history
 
         pagesize = int(20)#self._branch.config.get('pagesize', '20'))
@@ -32,7 +32,7 @@ class AtomUI (TemplatedBranchView):
         revid_list = h.get_file_view(h.last_revid, None)
         entries = list(h.get_changes(list(revid_list)[:pagesize]))
 
-        response.headers['Content-Type'] = 'application/atom+xml'
+        headers['Content-Type'] = 'application/atom+xml'
         return {
             'changes': entries,
             'updated': entries[0].date.isoformat() + 'Z',

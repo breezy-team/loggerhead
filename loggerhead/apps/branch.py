@@ -3,10 +3,9 @@ import urllib
 
 from paste import request
 from paste import httpexceptions
-from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.apps import static_app
-from loggerhead.changecache import FileChangeCache
+
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -16,8 +15,6 @@ from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.history import History
 from loggerhead import util
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 
@@ -26,7 +23,7 @@ class BranchWSGIApp(object):
         self._history = None
         self._config = config
         self.friendly_name = friendly_name
-        self.log = logging.getLogger(friendly_name)
+        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
 
     @property
     def history(self):
@@ -35,7 +32,16 @@ class BranchWSGIApp(object):
             _history = self._history = History.from_folder(self.branch_url)
             cache_path = self._config.get('cachepath', None)
             if cache_path is not None:
-                _history.use_file_cache(FileChangeCache(_history, cache_path))
+                # Only import the cache if we're going to use it.
+                # This makes sqlite optional
+                try:
+                    from loggerhead.changecache import FileChangeCache
+                except ImportError:
+                    self.log.debug("Couldn't load python-sqlite," 
+                                   " continuing without using a cache")
+                else:
+                    _history.use_file_cache(FileChangeCache(_history, 
+                                                            cache_path))
         return self._history
 
     def url(self, *args, **kw):
@@ -76,9 +82,6 @@ class BranchWSGIApp(object):
         return self.history.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
-        req = WSGIRequest(environ)
-        response = WSGIResponse()
-        response.headers['Content-Type'] = 'text/plain'
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:
@@ -94,5 +97,4 @@ class BranchWSGIApp(object):
         if cls is None:
             raise httpexceptions.HTTPNotFound()
         c = cls(self)
-        c.default(req, response)
-        return response(environ, start_response)
+        return c(environ, start_response)

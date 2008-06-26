@@ -16,13 +16,40 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import re
 import time
 
-from paste.request import path_info_pop
+from paste.request import path_info_pop, parse_querystring
 
 from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
+
+class BufferingWriter(object):
+
+    def __init__(self, writefunc, buf_limit):
+        self.bytes = 0
+        self.buf = []
+        self.buflen = 0
+        self.writefunc = writefunc
+        self.bytes_saved = 0
+        self.buf_limit = buf_limit
+
+    def flush(self):
+        chunk = ''.join(self.buf)
+        chunk = re.sub(r'\s*\n\s*', '\n', chunk)
+        chunk = re.sub(r'[ \t]+', ' ', chunk)
+        self.bytes_saved += self.buflen - len(chunk)
+        self.writefunc(chunk)
+        self.buf = []
+        self.buflen = 0
+
+    def write(self, data):
+        self.buf.append(data)
+        self.buflen += len(data)
+        self.bytes += len(data)
+        if self.buflen > self.buf_limit:
+            self.flush()
 
 class TemplatedBranchView(object):
 
@@ -32,17 +59,17 @@ class TemplatedBranchView(object):
         self._branch = branch
         self.log = branch.log
 
-    def default(self, request, response):
+    def __call__(self, environ, start_response):
         z = time.time()
         h = self._branch.history
-        kw = request.GET
+        kw = dict(parse_querystring(environ))
         util.set_context(kw)
 
         h._branch.lock_read()
         try:
             args = []
             while 1:
-                arg = path_info_pop(request.environ)
+                arg = path_info_pop(environ)
                 if arg is None:
                     break
                 args.append(arg)
@@ -54,14 +81,21 @@ class TemplatedBranchView(object):
                 'url': self._branch.context_url,
             }
             vals.update(templatefunctions)
-            del response.headers['Content-Type']
-            vals.update(self.get_values(h, args, kw, response))
+            headers = {}
+            vals.update(self.get_values(h, args, kw, headers))
 
-            self.log.info('/%s: %r secs' % (
+            self.log.info('Getting information for %s: %r secs' % (
                 self.__class__.__name__, time.time() - z,))
-            if 'Content-Type' not in response.headers:
-                response.headers['Content-Type'] = 'text/html'
+            if 'Content-Type' not in headers:
+                headers['Content-Type'] = 'text/html'
+            writer = start_response("200 OK", headers.items())
             template = load_template(self.template_path)
-            template.expand_into(response, **vals)
+            z = time.time()
+            w = BufferingWriter(writer, 8192)
+            template.expand_into(w, **vals)
+            w.flush()
+            self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
+                self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
+            return []
         finally:
             h._branch.unlock()
