@@ -134,15 +134,31 @@ function toggle_expand_all(action)
     $$('.revision_log').each(function(item, i)
     {
     	var colapsable = item.colapsable;
-        var expander = item.getElement('.revisioninfo').get('slide');
-        var shortDescription = item.getElement( '.short_description' );
-        var longDescription = item.getElement( '.long_description' );
         if(action == 'close')
         {
             $('expand_all').setStyle('display','block');
             $('collapse_all').setStyle('display','none');
             colapsable.close();
+        }
+        else if(action == 'open')
+        {
+            $('expand_all').setStyle('display','none');
+            $('collapse_all').setStyle('display','block');
+            colapsable.open();
+        }
+    });
+}
 
+function toggle_expand_all_revisionview(action)
+{
+    $$('.diffBox').each(function(item, i)
+    {
+    	var colapsable = item.colapsable;
+        if(action == 'close')
+        {
+            $('expand_all').setStyle('display','block');
+            $('collapse_all').setStyle('display','none');
+            colapsable.close();
         }
         else if(action == 'open')
         {
