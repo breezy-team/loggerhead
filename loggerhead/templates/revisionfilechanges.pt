@@ -24,11 +24,7 @@
     <td class="files"
         tal:define="filename python:removed[0];
                     file_id  python:removed[1]">
-      <a tal:attributes="href  python:url(['/annotate', entry.revid], file_id=file_id);
-                         title string:Annotate ${filename}"
-         tal:content="filename" class="filename">
-        filename
-      </a>
+      <tal:block content="filename" />
     </td>
   </tr>
   <tr tal:repeat="renamed entry/changes/renamed">
