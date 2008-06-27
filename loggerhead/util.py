@@ -246,13 +246,13 @@ def fill_div(s):
             if not 
     """
     if type(s) is int and s is None:
-        return NONBREAKING_SPACE
+        return '&nbsp;'
     elif type(s) is int and s is not None:
         return s
     elif type(s) is types.NoneType:
-        return NONBREAKING_SPACE
+        return '&nbsp;'
     elif len(s) is 0:
-        return NONBREAKING_SPACE
+        return '&nbsp;'
     else:
         return s
 

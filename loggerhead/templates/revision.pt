@@ -90,23 +90,31 @@
                  <tal:block repeat="line chunk/diff">
                     <div id="pseudorow">
                     <tal:block condition="line/old_lineno">
-                        <div class="lineNumber" tal:content="python:util.fill_div(line.old_lineno)"></div>
-                        <div tal:attributes="class string:lineCode ${line/old_type}" tal:content="python:util.fill_div(line.old_line)"></div>
+                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.old_lineno)" /></div>
+                        <div tal:attributes="class string:lineCode ${line/old_type}">
+                            <tal:block replace="structure python:util.fill_div(line.old_line)" />
+                        </div>
                     </tal:block>
 
                     <tal:block condition="not:line/old_lineno">
-                        <div class="lineNumber" tal:content="python:util.fill_div(line.old_lineno)"></div>
-                        <div tal:attributes="class string:lineCode ${line/old_type}" tal:content="python:util.fill_div(line.old_line)"></div>
+                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.old_lineno)" /></div>
+                        <div tal:attributes="class string:lineCode ${line/old_type}">
+                            <tal:block replace="structure python:util.fill_div(line.old_line)" />
+                        </div>
                     </tal:block>
 
                     <tal:block condition="line/new_lineno">
-                        <div class="lineNumber" tal:content="python:util.fill_div(line.new_lineno)"></div>
-                        <div tal:attributes="class string:lineCode ${line/new_type}" tal:content="python:util.fill_div(line.new_line)"></div>
+                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.new_lineno)" /></div>
+                        <div tal:attributes="class string:lineCode ${line/new_type}">
+                            <tal:block replace="structure python:util.fill_div(line.new_line)" />
+                        </div>
                     </tal:block>
 
                     <tal:block condition="not:line/new_lineno">
-                        <div class="lineNumber" tal:content="python:util.fill_div(line.new_lineno)"></div>
-                        <div tal:attributes="class string:lineCode ${line/new_type}" tal:content="python:util.fill_div(line.new_line)"></div>
+                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.new_lineno)" /></div>
+                        <div tal:attributes="class string:lineCode ${line/new_type}">
+                            <tal:block replace="structure python:util.fill_div(line.new_line)" />
+                        </div>
                     </tal:block>
                     <div class="clear"><!-- --></div>
                     </div>

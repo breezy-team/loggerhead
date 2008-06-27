@@ -112,7 +112,9 @@ def _make_side_by_side(chunk_list):
         for line in chunk.diff:
             # Add <wbr/> every X characters so we can wrap properly
             wrap_line = re.findall(r'.{%d}|.+$' % 78, line.line)
-            wrapped_line = wrap_char.join(wrap_line)
+            wrap_lines = [util.html_clean(_line) for _line in wrap_line]
+            wrapped_line = wrap_char.join(wrap_lines)
+
             if line.type == 'context':
                 if len(delete_list) or len(insert_list):
                     _process_side_by_side_buffers(line_list, delete_list, 
@@ -784,21 +786,27 @@ class History (object):
                 old_lineno = lines[0]
                 new_lineno = lines[1]
             elif line.startswith(' '):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                 type='context', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, 
+                                                 new_lineno=new_lineno,
+                                                 type='context', 
+                                                 line=line[1:]))
                 old_lineno += 1
                 new_lineno += 1
             elif line.startswith('+'):
-                chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                 type='insert', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=None, 
+                                                 new_lineno=new_lineno,
+                                                 type='insert', line=line[1:]))
                 new_lineno += 1
             elif line.startswith('-'):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                 type='delete', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, 
+                                                 new_lineno=None,
+                                                 type='delete', line=line[1:]))
                 old_lineno += 1
             else:
-                chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
-                                                 type='unknown', line=util.fixed_width(repr(line))))
+                chunk.diff.append(util.Container(old_lineno=None, 
+                                                 new_lineno=None,
+                                                 type='unknown', 
+                                                 line=repr(line)))
         if chunk is not None:
             chunks.append(chunk)
         return chunks
