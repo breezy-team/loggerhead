@@ -1,4 +1,5 @@
 var global_timeout_id = null;
+var global_search_request = null;
 
 window.addEvent('domready', function() 
 {
@@ -18,6 +19,12 @@ window.addEvent('domready', function()
         {
             url = global_path + 'search?query=' + query;
 	
+            if ($defined(global_search_request))
+            {
+                global_search_request.cancel();
+            }
+            global_search_request = new Request({'url':url,'method':'get','onComplete':cool_search});
+            global_search_request.send('');
 	        var posicion = search_box.getPosition();
 	        var size     = search_box.getSize();
 
