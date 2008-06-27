@@ -8,11 +8,18 @@ window.addEvent('domready', function()
     {
         keyup: function()
         {
-	    if (null != global_timeout_id)
-	    {
-	        clearTimeout(global_timeout_id);
-	    }
-            global_timeout_id = setTimeout('$("q").fireEvent("search",$("q").value)',200);
+            if($('q').value == '')
+            {
+                $('search_terms').setStyle('display','none');
+            }
+            else
+            {
+	            if (null != global_timeout_id)
+	            {
+	                clearTimeout(global_timeout_id);
+	            }
+                    global_timeout_id = setTimeout('$("q").fireEvent("search",$("q").value)',200);
+            }
         },
 
         search: function(query)
