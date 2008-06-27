@@ -107,19 +107,27 @@ def _make_side_by_side(chunk_list):
     out_chunk_list = []
     for chunk in chunk_list:
         line_list = []
+        wrap_char = '<wbr/>'
         delete_list, insert_list = [], []
         for line in chunk.diff:
+            # Add <wbr/> every X characters so we can wrap properly
+            wrap_line = re.findall(r'.{%d}|.+$' % 78, line.line)
+            wrapped_line = wrap_char.join(wrap_line)
             if line.type == 'context':
                 if len(delete_list) or len(insert_list):
-                    _process_side_by_side_buffers(line_list, delete_list, insert_list)
+                    _process_side_by_side_buffers(line_list, delete_list, 
+                                                  insert_list)
                     delete_list, insert_list = [], []
-                line_list.append(util.Container(old_lineno=line.old_lineno, new_lineno=line.new_lineno,
-                                                old_line=line.line, new_line=line.line,
-                                                old_type=line.type, new_type=line.type))
+                line_list.append(util.Container(old_lineno=line.old_lineno, 
+                                                new_lineno=line.new_lineno,
+                                                old_line=wrapped_line, 
+                                                new_line=wrapped_line,
+                                                old_type=line.type, 
+                                                new_type=line.type))
             elif line.type == 'delete':
-                delete_list.append((line.old_lineno, line.line, line.type))
+                delete_list.append((line.old_lineno, wrapped_line, line.type))
             elif line.type == 'insert':
-                insert_list.append((line.new_lineno, line.line, line.type))
+                insert_list.append((line.new_lineno, wrapped_line, line.type))
         if len(delete_list) or len(insert_list):
             _process_side_by_side_buffers(line_list, delete_list, insert_list)
         out_chunk_list.append(util.Container(diff=line_list))
