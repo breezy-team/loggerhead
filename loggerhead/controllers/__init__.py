@@ -25,7 +25,7 @@ from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 
-class BufferingWriter:
+class BufferingWriter(object):
 
     def __init__(self, writefunc, buf_limit):
         self.bytes = 0

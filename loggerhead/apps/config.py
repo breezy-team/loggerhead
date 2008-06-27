@@ -23,7 +23,7 @@ log = logging.getLogger("loggerhead.controllers")
 
 from loggerhead.history import is_branch
 
-class Project (object):
+class Project(object):
     def __init__(self, name, config, root_config):
         self.name = name
         self.friendly_name = config.get('name', name)
@@ -128,7 +128,7 @@ class Root(object):
     def browse(self, response):
         for p in self.projects:
             p._recheck_auto_folders()
-        class branch:
+        class branch(object):
             @staticmethod
             def static_url(path):
                 return self._static_url_base + path
