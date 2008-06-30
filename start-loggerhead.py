@@ -50,9 +50,9 @@ def setup_logging(home, config, foreground):
     access_log.setLevel(logging.INFO)
     access_log.setFormatter(f)
 
+    logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(debug_log)
-    logging.getLogger('turbogears.access').addHandler(access_log)
-    logging.getLogger('turbogears.controllers').setLevel(logging.INFO)
+    logging.getLogger('wsgi').addHandler(access_log)
 
     if foreground:
         logging.getLogger('').addHandler(stdout_log)
