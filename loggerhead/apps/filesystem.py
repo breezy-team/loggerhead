@@ -2,7 +2,7 @@ import cgi
 import os
 import tempfile
 
-from bzrlib import branch, errors
+from bzrlib import branch, errors, lru_cache
 
 from paste.request import path_info_pop
 from paste.wsgiwrappers import WSGIRequest, WSGIResponse
@@ -37,7 +37,7 @@ class BranchesFromFileSystemServer(object):
             name = os.path.basename(os.path.abspath(path))
         else:
             name = self.folder
-        h = BranchWSGIApp(path, name, {'cachepath': sql_dir})
+        h = BranchWSGIApp(path, name, {'cachepath': sql_dir}, self.root.graph_cache)
         self.root.cache[path] = h
         return h.app
 
@@ -68,6 +68,7 @@ class BranchesFromFileSystemServer(object):
 class BranchesFromFileSystemRoot(object):
     def __init__(self, folder):
         self.cache = {}
+        self.graph_cache = lru_cache.LRUCache()
         self.folder = folder
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']

@@ -2,12 +2,12 @@ import logging
 import urllib
 
 import bzrlib.branch
+import bzrlib.lru_cache
 
 from paste import request
 from paste import httpexceptions
 
 from loggerhead.apps import static_app
-
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -20,14 +20,17 @@ from loggerhead import util
 
 class BranchWSGIApp(object):
 
-    def __init__(self, branch_url, friendly_name=None, config={}):
+    def __init__(self, branch_url, friendly_name=None, config={}, graph_cache=None):
         self.branch_url = branch_url
         self._config = config
         self.friendly_name = friendly_name
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
+        if graph_cache is None:
+            graph_cache = bzrlib.lru_cache.LRUCache()
+        self.graph_cache = graph_cache
 
     def get_history(self, b):
-        _history = History.from_branch(b)
+        _history = History.from_branch(b, self.graph_cache)
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.

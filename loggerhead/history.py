@@ -192,14 +192,17 @@ class History (object):
         self._lock = threading.RLock()
 
     @classmethod
-    def from_branch(cls, branch):
+    def from_branch(cls, branch, graph_cache):
         z = time.time()
         self = cls()
         self._branch = branch
         self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
         self._last_revid = branch.last_revision()
-        d = compute_whole_history_data(branch)
+        d = graph_cache.get(self._last_revid)
+        if d is None:
+            d = compute_whole_history_data(branch)
+            graph_cache[self._last_revid] = d
         (self._revision_graph, self._full_history, self._revision_info,
          self._revno_revid, self._merge_sort, self._where_merged) = d
         return self
@@ -208,17 +211,6 @@ class History (object):
     def from_folder(cls, path):
         b = bzrlib.branch.Branch.open(path)
         return cls.from_branch(b)
-
-    def out_of_date(self):
-        # the branch may have been upgraded on disk, in which case we're stale.
-        newly_opened = bzrlib.branch.Branch.open(self._branch.base)
-        if self._branch.__class__ is not \
-               newly_opened.__class__:
-            return True
-        if self._branch.repository.__class__ is not \
-               newly_opened.repository.__class__:
-            return True
-        return self._branch.last_revision() != self._last_revid
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache

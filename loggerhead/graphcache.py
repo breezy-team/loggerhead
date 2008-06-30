@@ -1,0 +1,64 @@
+# Cache the whole history data needed by loggerhead about a branch.
+
+import logging
+import time
+
+import bzrlib.revision
+import bzrlib.tsort
+
+
+def _strip_NULL_ghosts(revision_graph):
+    """
+    Copied over from bzrlib meant as a temporary workaround deprecated 
+    methods.
+    """
+    # Filter ghosts, and null:
+    if bzrlib.revision.NULL_REVISION in revision_graph:
+        del revision_graph[bzrlib.revision.NULL_REVISION]
+    for key, parents in revision_graph.items():
+        revision_graph[key] = tuple(parent for parent in parents if parent
+            in revision_graph)
+    return revision_graph
+
+
+def compute_whole_history_data(branch):
+    z = time.time()
+
+    last_revid = branch.last_revision()
+
+    log = logging.getLogger('loggerhead.%s' % (branch.nick,))
+
+    graph = branch.repository.get_graph()
+    parent_map = dict(((key, value) for key, value in
+         graph.iter_ancestry([last_revid]) if value is not None))
+
+    _revision_graph = _strip_NULL_ghosts(parent_map)
+    _full_history = []
+    _revision_info = {}
+    _revno_revid = {}
+    if bzrlib.revision.is_null(last_revid):
+        _merge_sort = []
+    else:
+        _merge_sort = bzrlib.tsort.merge_sort(
+            _revision_graph, last_revid, generate_revno=True)
+
+    for (seq, revid, merge_depth, revno, end_of_merge) in _merge_sort:
+        _full_history.append(revid)
+        revno_str = '.'.join(str(n) for n in revno)
+        _revno_revid[revno_str] = revid
+        _revision_info[revid] = (
+            seq, revid, merge_depth, revno_str, end_of_merge)
+
+    # cache merge info
+    _where_merged = {}
+
+    for revid in _revision_graph.keys():
+        if _revision_info[revid][2] == 0:
+            continue
+        for parent in _revision_graph[revid]:
+            _where_merged.setdefault(parent, set()).add(revid)
+
+    log.info('built revision graph cache: %r secs' % (time.time() - z,))
+
+    return (_revision_graph, _full_history, _revision_info,
+            _revno_revid, _merge_sort, _where_merged)
