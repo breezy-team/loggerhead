@@ -37,9 +37,9 @@ class BranchesFromFileSystemServer(object):
             name = os.path.basename(os.path.abspath(path))
         else:
             name = self.folder
-        h = BranchWSGIApp(path, name, {'cachepath': sql_dir}, self.root.graph_cache)
-        self.root.cache[path] = h
-        return h.app
+        branch_app = BranchWSGIApp(
+            path, name, {'cachepath': sql_dir}, self.root.graph_cache)
+        return branch_app.app
 
     def __call__(self, environ, start_response):
         path = os.path.join(self.root.folder, self.folder)
@@ -67,7 +67,6 @@ class BranchesFromFileSystemServer(object):
 
 class BranchesFromFileSystemRoot(object):
     def __init__(self, folder):
-        self.cache = {}
         self.graph_cache = lru_cache.LRUCache()
         self.folder = folder
     def __call__(self, environ, start_response):
