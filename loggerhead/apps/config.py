@@ -80,30 +80,36 @@ class Project(object):
             return posixpath.join(url, folder) + '/'
         return None
 
-    def _get_description(self, view, view_config):
+    def _get_description(self, view, view_config, history):
         description = view_config.get('description', None)
         if description is not None:
             return description
-        description = view.history._branch.get_config().get_user_option('description')
+        description = history._branch.get_config().get_user_option('description')
         return description
 
     def _add_view(self, view_name, view_config, folder):
         view = BranchWSGIApp(folder, view_name, view_config, self.graph_cache)
-        friendly_name = view_config.get('branch_name', None)
-        if friendly_name is None:
-            friendly_name = view.history.get_config().get_nickname()
+        b = bzrlib.branch.Branch.open(folder)
+        b.lock_read()
+        try:
+            history = view.get_history(b)
+            friendly_name = view_config.get('branch_name', None)
             if friendly_name is None:
-                friendly_name = view_name
-        view.friendly_name = friendly_name
-        view.name = view_name
-        branch_url = self._get_branch_url(view, view_config, view_name)
-        if branch_url is not None:
-            view.branch_url = branch_url
-        view.description = self._get_description(view, view_config)
-        view._src_folder = folder
-        view._view_config = view_config
-        self.views.append(view)
-        self.views_by_name[view_name] = view
+                friendly_name = history.get_config().get_nickname()
+                if friendly_name is None:
+                    friendly_name = view_name
+            view.friendly_name = friendly_name
+            view.name = view_name
+            branch_url = self._get_branch_url(view, view_config, view_name)
+            if branch_url is not None:
+                view.branch_url = branch_url
+            view.description = self._get_description(view, view_config, history)
+            view._src_folder = folder
+            view._view_config = view_config
+            self.views.append(view)
+            self.views_by_name[view_name] = view
+        finally:
+            b.unlock()
 
     def call(self, environ, start_response):
         segment = path_info_pop(environ)
