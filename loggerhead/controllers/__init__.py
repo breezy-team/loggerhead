@@ -55,13 +55,14 @@ class TemplatedBranchView(object):
 
     template_path = None
 
-    def __init__(self, branch):
+    def __init__(self, branch, history):
         self._branch = branch
+        self._history = history
         self.log = branch.log
 
     def __call__(self, environ, start_response):
         z = time.time()
-        h = self._branch.history
+        h = self._history
         kw = dict(parse_querystring(environ))
         util.set_context(kw)
 

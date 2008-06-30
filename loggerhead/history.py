@@ -37,6 +37,7 @@ from StringIO import StringIO
 
 from loggerhead import util
 from loggerhead.util import decorator
+from loggerhead.graphcache import compute_whole_history_data
 
 import bzrlib
 import bzrlib.branch
@@ -46,9 +47,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
-
-with_branch_lock = util.with_lock('_lock', 'branch')
 
 
 @decorator
@@ -198,68 +196,19 @@ class History (object):
         z = time.time()
         self = cls()
         self._branch = branch
-        self._last_revid = self._branch.last_revision()
+        self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
-        self.log = logging.getLogger('loggerhead.%s' % (self._branch.nick,))
-
-        graph = branch.repository.get_graph()
-        parent_map = dict(((key, value) for key, value in
-             graph.iter_ancestry([self._last_revid]) if value is not None))
-
-        self._revision_graph = self._strip_NULL_ghosts(parent_map)
-        self._full_history = []
-        self._revision_info = {}
-        self._revno_revid = {}
-        if bzrlib.revision.is_null(self._last_revid):
-            self._merge_sort = []
-        else:
-            self._merge_sort = bzrlib.tsort.merge_sort(
-                self._revision_graph, self._last_revid, generate_revno=True)
-
-        for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
-            self._full_history.append(revid)
-            revno_str = '.'.join(str(n) for n in revno)
-            self._revno_revid[revno_str] = revid
-            self._revision_info[revid] = (
-                seq, revid, merge_depth, revno_str, end_of_merge)
-
-        # cache merge info
-        self._where_merged = {}
-
-        for revid in self._revision_graph.keys():
-            if self._revision_info[revid][2] == 0:
-                continue
-            for parent in self._revision_graph[revid]:
-                self._where_merged.setdefault(parent, set()).add(revid)
-
-        self.log.info('built revision graph cache: %r secs' % (time.time() - z,))
+        self._last_revid = branch.last_revision()
+        d = compute_whole_history_data(branch)
+        (self._revision_graph, self._full_history, self._revision_info,
+         self._revno_revid, self._merge_sort, self._where_merged) = d
         return self
-
-    @staticmethod
-    def _strip_NULL_ghosts(revision_graph):
-        """
-        Copied over from bzrlib meant as a temporary workaround deprecated 
-        methods.
-        """
-
-        # Filter ghosts, and null:
-        if bzrlib.revision.NULL_REVISION in revision_graph:
-            del revision_graph[bzrlib.revision.NULL_REVISION]
-        for key, parents in revision_graph.items():
-            revision_graph[key] = tuple(parent for parent in parents if parent
-                in revision_graph)
-        return revision_graph
 
     @classmethod
     def from_folder(cls, path):
         b = bzrlib.branch.Branch.open(path)
-        b.lock_read()
-        try:
-            return cls.from_branch(b)
-        finally:
-            b.unlock()
+        return cls.from_branch(b)
 
-    @with_branch_lock
     def out_of_date(self):
         # the branch may have been upgraded on disk, in which case we're stale.
         newly_opened = bzrlib.branch.Branch.open(self._branch.base)
@@ -280,7 +229,6 @@ class History (object):
 
     last_revid = property(lambda self: self._last_revid, None, None)
 
-    @with_branch_lock
     def get_config(self):
         return self._branch.get_config()
 
@@ -321,7 +269,6 @@ class History (object):
                 return
             revid = parents[0]
 
-    @with_branch_lock
     def get_short_revision_history_by_fileid(self, file_id):
         # wow.  is this really the only way we can get this list?  by
         # man-handling the weave store directly? :-0
@@ -332,7 +279,6 @@ class History (object):
         revids = [r for r in self._full_history if r in w_revids]
         return revids
 
-    @with_branch_lock
     def get_revision_history_since(self, revid_list, date):
         # if a user asks for revisions starting at 01-sep, they mean inclusive,
         # so start at midnight on 02-sep.
@@ -346,7 +292,6 @@ class History (object):
         index = -index
         return revid_list[index:]
 
-    @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
@@ -406,7 +351,6 @@ class History (object):
             revid = self._revno_revid[revid]
         return revid
 
-    @with_branch_lock
     def get_file_view(self, revid, file_id):
         """
         Given a revid and optional path, return a (revlist, revid) for
@@ -426,7 +370,6 @@ class History (object):
             revlist = list(self.get_revids_from(None, revid))
         return revlist
 
-    @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
@@ -479,11 +422,9 @@ class History (object):
         else:
             return None, None, []
 
-    @with_branch_lock
     def get_inventory(self, revid):
         return self._branch.repository.get_revision_inventory(revid)
 
-    @with_branch_lock
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
@@ -492,7 +433,6 @@ class History (object):
             path = '/' + path
         return path
 
-    @with_branch_lock
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
@@ -571,7 +511,6 @@ class History (object):
                 else:
                     p.branch_nick = '(missing)'
 
-    @with_branch_lock
     def get_changes(self, revid_list):
         """Return a list of changes objects for the given revids.
 
@@ -598,8 +537,6 @@ class History (object):
 
         return changes
 
-    @with_branch_lock
-    @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
@@ -670,7 +607,6 @@ class History (object):
 
         return [self.parse_delta(delta) for delta in delta_list]
 
-    @with_branch_lock
     def get_file_changes(self, entries):
         if self._file_change_cache is None:
             return self.get_file_changes_uncached(entries)
@@ -683,7 +619,6 @@ class History (object):
         for entry, changes in zip(entries, changes_list):
             entry.changes = changes
 
-    @with_branch_lock
     def get_change_with_diff(self, revid, compare_revid=None):
         change = self.get_changes([revid])[0]
 
@@ -702,7 +637,6 @@ class History (object):
 
         return change
 
-    @with_branch_lock
     def get_file(self, file_id, revid):
         "returns (path, filename, data)"
         inv = self.get_inventory(revid)
@@ -835,7 +769,6 @@ class History (object):
             for m in change.changes.modified:
                 m.sbs_chunks = _make_side_by_side(m.chunks)
 
-    @with_branch_lock
     def get_filelist(self, inv, file_id, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
@@ -888,7 +821,6 @@ class History (object):
 
     _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b\x0e-\x1f]')
 
-    @with_branch_lock
     def annotate_file(self, file_id, revid):
         z = time.time()
         lineno = 1

@@ -356,11 +356,11 @@ def fill_in_navigation(navigation):
 
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
-    prev_page_revno = navigation.branch.history.get_revno(
+    prev_page_revno = navigation.history.get_revno(
             navigation.prev_page_revid)
-    next_page_revno = navigation.branch.history.get_revno(
+    next_page_revno = navigation.history.get_revno(
             navigation.next_page_revid)
-    start_revno = navigation.branch._history.get_revno(navigation.start_revid)
+    start_revno = navigation.history.get_revno(navigation.start_revid)
 
     params = { 'filter_file_id': navigation.filter_file_id }
     if getattr(navigation, 'query', None) is not None:
