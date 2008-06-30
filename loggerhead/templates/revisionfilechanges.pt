@@ -1,6 +1,5 @@
 <tal:block>
-
-<div tal:repeat="added entry/changes/added">
+<ul tal:repeat="added entry/changes/added">
     <tal:block condition="repeat/added/start">
         <li class="desc">files added:</li>
     </tal:block>
@@ -11,9 +10,9 @@
                            title string:Annotate ${filename}"
            tal:content="filename" class="link"></a>
     </li>
-</div>
+</ul>
 
-<div tal:repeat="removed entry/changes/removed">
+<ul tal:repeat="removed entry/changes/removed">
     <tal:block condition="repeat/removed/start">
         <li class="desc">files removed:</li>
     </tal:block>
@@ -22,9 +21,9 @@
                     file_id  python:removed[1]">
       <tal:block content="filename" />
     </li>
-</div>
+</ul>
 
-<div tal:repeat="renamed entry/changes/renamed">
+<ul tal:repeat="renamed entry/changes/renamed">
     <tal:block condition="repeat/renamed/start">
         <li class="desc">files renamed:</li>
     </tal:block>
@@ -44,13 +43,12 @@
         new_filename
       </a>
     </li>
-</div>
+</ul>
 
-<div tal:repeat="item entry/changes/modified">
+<ul tal:repeat="item entry/changes/modified">
     <tal:block condition="repeat/item/start">
         <li class="desc">files modified:</li>
     </tal:block>
     <tal:b content="structure python:modified_file_link(url, entry, item)" />
-</div>
-
+</ul>
 </tal:block>

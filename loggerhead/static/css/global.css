@@ -29,6 +29,10 @@ form {
 .fr {float:right;}
 .fl {float:left;}
 
+ul {
+    list-style:none;
+}
+
 /* Loggerhead Menu tabs */
 ul#menuTabs {
 	width:98%;
