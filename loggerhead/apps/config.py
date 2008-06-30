@@ -7,6 +7,8 @@ import logging
 import os
 import posixpath
 
+import bzrlib.lru_cache
+
 from configobj import ConfigObj
 
 from paste.request import path_info_pop
@@ -24,13 +26,14 @@ log = logging.getLogger("loggerhead.controllers")
 from loggerhead.history import is_branch
 
 class Project(object):
-    def __init__(self, name, config, root_config):
+    def __init__(self, name, config, root_config, graph_cache):
         self.name = name
         self.friendly_name = config.get('name', name)
         self.description = config.get('description', '')
         self.long_description = config.get('long_description', '')
         self._config = config
         self._root_config = root_config
+        self.graph_cache = graph_cache
 
         self.views = []
         self.views_by_name = {}
@@ -85,7 +88,7 @@ class Project(object):
         return description
 
     def _add_view(self, view_name, view_config, folder):
-        view = BranchWSGIApp(folder, view_name, view_config)
+        view = BranchWSGIApp(folder, view_name, view_config, self.graph_cache)
         friendly_name = view_config.get('branch_name', None)
         if friendly_name is None:
             friendly_name = view.history.get_config().get_nickname()
@@ -119,9 +122,10 @@ class Root(object):
         self.projects = []
         self.config = config
         self.projects_by_name = {}
+        graph_cache = bzrlib.lru_cache.LRUCache()
         for project_name in self.config.sections:
             project = Project(
-                project_name, self.config[project_name], self.config)
+                project_name, self.config[project_name], self.config, graph_cache)
             self.projects.append(project)
             self.projects_by_name[project_name] = project
 
