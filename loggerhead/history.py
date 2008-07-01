@@ -187,13 +187,16 @@ class History (object):
         self._branch = branch
         self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
-        self._last_revid = branch.last_revision()
-        d = whole_history_data_cache.get(self._last_revid)
-        if d is None:
-            d = compute_whole_history_data(branch)
-            whole_history_data_cache[self._last_revid] = d
+        self.last_revid = branch.last_revision()
+
+        whole_history_data = whole_history_data_cache.get(self.last_revid)
+        if whole_history_data is None:
+            whole_history_data = compute_whole_history_data(branch)
+            whole_history_data_cache[self.last_revid] = whole_history_data
+
         (self._revision_graph, self._full_history, self._revision_info,
-         self._revno_revid, self._merge_sort, self._where_merged) = d
+         self._revno_revid, self._merge_sort, self._where_merged
+         ) = whole_history_data
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
@@ -201,8 +204,6 @@ class History (object):
     @property
     def has_revisions(self):
         return not bzrlib.revision.is_null(self.last_revid)
-
-    last_revid = property(lambda self: self._last_revid, None, None)
 
     def get_config(self):
         return self._branch.get_config()
@@ -213,9 +214,6 @@ class History (object):
             return 'unknown'
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return revno_str
-
-    def get_revision_history(self):
-        return self._full_history
 
     def get_revids_from(self, revid_list, start_revid):
         """
@@ -305,7 +303,7 @@ class History (object):
         if date is not None:
             if revid_list is None:
                 # if no limit to the query was given, search only the direct-parent path.
-                revid_list = list(self.get_revids_from(None, self._last_revid))
+                revid_list = list(self.get_revids_from(None, self.last_revid))
             return self.get_revision_history_since(revid_list, date)
 
     revno_re = re.compile(r'^[\d\.]+$')
@@ -321,7 +319,7 @@ class History (object):
         if revid is None:
             return revid
         if revid == 'head:':
-            return self._last_revid
+            return self.last_revid
         if self.revno_re.match(revid):
             revid = self._revno_revid[revid]
         return revid
@@ -335,7 +333,7 @@ class History (object):
         If file_id is None, the entire revision history is the list scope.
         """
         if revid is None:
-            revid = self._last_revid
+            revid = self.last_revid
         if file_id is not None:
             # since revid is 'start_revid', possibly should start the path
             # tracing from revid... FIXME
@@ -370,7 +368,7 @@ class History (object):
         contain vital context for future url navigation.
         """
         if start_revid is None:
-            start_revid = self._last_revid
+            start_revid = self.last_revid
 
         if query is None:
             revid_list = self.get_file_view(start_revid, file_id)
