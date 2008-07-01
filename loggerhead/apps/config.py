@@ -88,11 +88,11 @@ class Project(object):
         return description
 
     def _add_view(self, view_name, view_config, folder):
-        view = BranchWSGIApp(folder, view_name, view_config, self.graph_cache)
         b = bzrlib.branch.Branch.open(folder)
+        view = BranchWSGIApp(b, view_name, view_config, self.graph_cache)
         b.lock_read()
         try:
-            history = view.get_history(b)
+            history = view.get_history()
             friendly_name = view_config.get('branch_name', None)
             if friendly_name is None:
                 friendly_name = history.get_config().get_nickname()

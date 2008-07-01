@@ -10,54 +10,64 @@ from paste import httpexceptions
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
-from loggerhead.history import is_branch
 
 sql_dir = tempfile.mkdtemp()
+
+
+class DirectoryListing(object):
+
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, environ, start_response):
+        request = WSGIRequest(environ)
+        response = WSGIResponse()
+        listing = [d for d in os.listdir(self.path) if not d.startswith('.')]
+        response.headers['Content-Type'] = 'text/html'
+        print >> response, '<html><body>'
+        for d in sorted(listing):
+            if os.path.isdir(os.path.join(self.path, d)):
+                d = cgi.escape(d)
+                print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
+        print >> response, '</body></html>'
+        return response(environ, start_response)
+
 
 class BranchesFromFileSystemServer(object):
     def __init__(self, folder, root):
         self.folder = folder
         self.root = root
 
-    def directory_listing(self, path, environ, start_response):
-        request = WSGIRequest(environ)
-        response = WSGIResponse()
-        listing = [d for d in os.listdir(path) if not d.startswith('.')]
-        response.headers['Content-Type'] = 'text/html'
-        print >> response, '<html><body>'
-        for d in sorted(listing):
-            if os.path.isdir(os.path.join(path, d)):
-                d = cgi.escape(d)
-                print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
-        print >> response, '</body></html>'
-        return response(environ, start_response)
-
-    def app_for_branch_path(self, path):
+    def app_for_branch(self, branch):
         if not self.folder:
             name = os.path.basename(os.path.abspath(self.root.folder))
         else:
             name = self.folder
         branch_app = BranchWSGIApp(
-            path, name, {'cachepath': sql_dir}, self.root.graph_cache)
+            branch, name, {'cachepath': sql_dir}, self.root.graph_cache)
         return branch_app.app
+
+    def app_for_non_branch(self, environ):
+        segment = path_info_pop(environ)
+        if segment is None:
+            raise httpexceptions.HTTPMovedPermanently(
+                environ['SCRIPT_NAME'] + '/')
+        elif segment == '':
+            return DirectoryListing(os.path.join(self.root.folder, self.folder))
+        else:
+            relpath = os.path.join(self.folder, segment)
+            return BranchesFromFileSystemServer(relpath, self.root)
 
     def __call__(self, environ, start_response):
         path = os.path.join(self.root.folder, self.folder)
         if not os.path.isdir(path):
             raise httpexceptions.HTTPNotFound()
-        if is_branch(path):
-            return self.app_for_branch_path(path)(environ, start_response)
+        try:
+            b = branch.Branch.open(path)
+        except errors.NotBranchError:
+            return self.app_for_non_branch(environ)(environ, start_response)
         else:
-            segment = path_info_pop(environ)
-            if segment is None:
-                raise httpexceptions.HTTPMovedPermanently(
-                    environ['SCRIPT_NAME'] + '/')
-            elif segment == '':
-                return self.directory_listing(path, environ, start_response)
-            else:
-                relpath = os.path.join(self.folder, segment)
-                return BranchesFromFileSystemServer(relpath, self.root)(
-                    environ, start_response)
+            return self.app_for_branch(b)(environ, start_response)
 
 
 class BranchesFromFileSystemRoot(object):

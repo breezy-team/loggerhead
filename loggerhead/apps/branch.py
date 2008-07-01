@@ -20,8 +20,8 @@ from loggerhead import util
 
 class BranchWSGIApp(object):
 
-    def __init__(self, branch_url, friendly_name=None, config={}, graph_cache=None):
-        self.branch_url = branch_url
+    def __init__(self, branch, friendly_name=None, config={}, graph_cache=None):
+        self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
@@ -29,8 +29,8 @@ class BranchWSGIApp(object):
             graph_cache = bzrlib.lru_cache.LRUCache()
         self.graph_cache = graph_cache
 
-    def get_history(self, b):
-        _history = History(b, self.graph_cache)
+    def get_history(self):
+        _history = History(self.branch, self.graph_cache)
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
@@ -80,7 +80,7 @@ class BranchWSGIApp(object):
         return change.date
 
     def branch_url(self):
-        return self.history.get_config().get_user_option('public_branch')
+        return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
         self._url_base = environ['SCRIPT_NAME']
@@ -97,10 +97,9 @@ class BranchWSGIApp(object):
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
-        b = bzrlib.branch.Branch.open(self.branch_url)
-        b.lock_read()
+        self.branch.lock_read()
         try:
-            c = cls(self, self.get_history(b))
+            c = cls(self, self.get_history())
             return c(environ, start_response)
         finally:
-            b.unlock()
+            self.branch.unlock()
