@@ -27,12 +27,9 @@ import cgi
 import datetime
 import logging
 import re
-import sha
 import struct
-import sys
 import threading
 import time
-import traceback
 
 
 log = logging.getLogger("loggerhead.controllers")
@@ -142,26 +139,10 @@ class Container (object):
         return out
 
 
-def clean_revid(revid):
-    if revid == 'missing':
-        return revid
-    return sha.new(revid).hexdigest()
-
-
-def obfuscate(text):
-    return ''.join([ '&#%d;' % ord(c) for c in text ])
-
-
 def trunc(text, limit=10):
     if len(text) <= limit:
         return text
     return text[:limit] + '...'
-
-
-def to_utf8(s):
-    if isinstance(s, unicode):
-        return s.encode('utf-8')
-    return s
 
 
 STANDARD_PATTERN = re.compile(r'^(.*?)\s*<(.*?)>\s*$')
@@ -230,15 +211,6 @@ def fake_permissions(kind, executable):
     if executable:
         return '-rwxr-xr-x'
     return '-rw-r--r--'
-
-
-def if_present(format, value):
-    """
-    format a value using a format string, if the value exists and is not None.
-    """
-    if value is None:
-        return ''
-    return format % value
 
 
 def b64(s):
@@ -343,11 +315,6 @@ def fill_in_navigation(navigation):
             [navigation.scan_url, next_page_revno], **params)
 
 
-def log_exception(log):
-    for line in ''.join(traceback.format_exception(*sys.exc_info())).split('\n'):
-        log.debug(line)
-
-
 def decorator(unbound):
     def new_decorator(f):
         g = unbound(f)
@@ -375,7 +342,6 @@ def with_lock(lockname, debug_name=None):
                 getattr(self, lockname).release()
         return locked
     return _decorator
-
 
 
 @decorator
