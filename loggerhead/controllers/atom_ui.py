@@ -25,7 +25,6 @@ class AtomUI (TemplatedBranchView):
     template_path = 'loggerhead.templates.atom'
 
     def get_values(self, h, args, kw, headers):
-        h = self._branch.history
 
         pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 

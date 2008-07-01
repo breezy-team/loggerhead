@@ -178,6 +178,8 @@ class History (object):
     for a particular branch, open it, read-lock it, wrap a History object
     around it, serve the request, throw the History object away, unlock the
     branch and throw it away.
+
+    :ivar _file_change_cache: xx
     """
 
     def __init__(self, branch, whole_history_data_cache):
