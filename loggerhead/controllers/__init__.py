@@ -55,48 +55,45 @@ class TemplatedBranchView(object):
 
     template_path = None
 
-    def __init__(self, branch):
+    def __init__(self, branch, history):
         self._branch = branch
+        self._history = history
         self.log = branch.log
 
     def __call__(self, environ, start_response):
         z = time.time()
-        h = self._branch.history
+        h = self._history
         kw = dict(parse_querystring(environ))
         util.set_context(kw)
 
-        h._branch.lock_read()
-        try:
-            args = []
-            while 1:
-                arg = path_info_pop(environ)
-                if arg is None:
-                    break
-                args.append(arg)
+        args = []
+        while 1:
+            arg = path_info_pop(environ)
+            if arg is None:
+                break
+            args.append(arg)
 
-            vals = {
-                'branch': self._branch,
-                'util': util,
-                'history': h,
-                'url': self._branch.context_url,
-            }
-            vals.update(templatefunctions)
-            headers = {}
-            vals.update(self.get_values(h, args, kw, headers))
+        vals = {
+            'branch': self._branch,
+            'util': util,
+            'history': h,
+            'url': self._branch.context_url,
+        }
+        vals.update(templatefunctions)
+        headers = {}
+        vals.update(self.get_values(h, args, kw, headers))
 
-            self.log.info('Getting information for %s: %r secs' % (
-                self.__class__.__name__, time.time() - z,))
-            if 'Content-Type' not in headers:
-                headers['Content-Type'] = 'text/html'
-            writer = start_response("200 OK", headers.items())
-            template = load_template(self.template_path)
-            z = time.time()
-            w = BufferingWriter(writer, 8192)
-            template.expand_into(w, **vals)
-            w.flush()
-            self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
-                self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
-            return []
-        finally:
-            h._branch.unlock()
+        self.log.info('Getting information for %s: %r secs' % (
+            self.__class__.__name__, time.time() - z,))
+        if 'Content-Type' not in headers:
+            headers['Content-Type'] = 'text/html'
+        writer = start_response("200 OK", headers.items())
+        template = load_template(self.template_path)
+        z = time.time()
+        w = BufferingWriter(writer, 8192)
+        template.expand_into(w, **vals)
+        w.flush()
+        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
+            self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
+        return []
 
