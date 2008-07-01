@@ -3,18 +3,18 @@
 import logging
 import time
 
-import bzrlib.revision
-import bzrlib.tsort
+from bzrlib.revision import is_null, NULL_REVISION
+from bzrlib.tsort import merge_sort
 
 
 def _strip_NULL_ghosts(revision_graph):
     """
-    Copied over from bzrlib meant as a temporary workaround deprecated 
-    methods.
+    Copied over from bzrlib meant as a temporary workaround for
+    deprecated methods.
     """
     # Filter ghosts, and null:
-    if bzrlib.revision.NULL_REVISION in revision_graph:
-        del revision_graph[bzrlib.revision.NULL_REVISION]
+    if NULL_REVISION in revision_graph:
+        del revision_graph[NULL_REVISION]
     for key, parents in revision_graph.items():
         revision_graph[key] = tuple(parent for parent in parents if parent
             in revision_graph)
@@ -36,10 +36,10 @@ def compute_whole_history_data(branch):
     _full_history = []
     _revision_info = {}
     _revno_revid = {}
-    if bzrlib.revision.is_null(last_revid):
+    if is_null(last_revid):
         _merge_sort = []
     else:
-        _merge_sort = bzrlib.tsort.merge_sort(
+        _merge_sort = merge_sort(
             _revision_graph, last_revid, generate_revno=True)
 
     for (seq, revid, merge_depth, revno, end_of_merge) in _merge_sort:
@@ -49,7 +49,6 @@ def compute_whole_history_data(branch):
         _revision_info[revid] = (
             seq, revid, merge_depth, revno_str, end_of_merge)
 
-    # cache merge info
     _where_merged = {}
 
     for revid in _revision_graph.keys():

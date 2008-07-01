@@ -36,7 +36,6 @@ import time
 from StringIO import StringIO
 
 from loggerhead import util
-from loggerhead.util import decorator
 from loggerhead.graphcache import compute_whole_history_data
 
 import bzrlib
@@ -47,19 +46,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
-
-@decorator
-def with_bzrlib_read_lock(unbound):
-    def bzrlib_read_locked(self, *args, **kw):
-        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
-        self._branch.repository.lock_read()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._branch.repository.unlock()
-            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
-    return bzrlib_read_locked
 
 
 # bzrlib's UIFactory is not thread-safe
@@ -189,7 +175,6 @@ class History (object):
 
     def __init__(self):
         self._file_change_cache = None
-        self._lock = threading.RLock()
 
     @classmethod
     def from_branch(cls, branch, graph_cache):
@@ -206,11 +191,6 @@ class History (object):
         (self._revision_graph, self._full_history, self._revision_info,
          self._revno_revid, self._merge_sort, self._where_merged) = d
         return self
-
-    @classmethod
-    def from_folder(cls, path):
-        b = bzrlib.branch.Branch.open(path)
-        return cls.from_branch(b)
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
