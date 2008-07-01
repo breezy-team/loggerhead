@@ -1,3 +1,5 @@
+"""Serve branches at urls that mimic the file system layout."""
+
 import cgi
 import os
 import tempfile

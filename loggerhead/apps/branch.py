@@ -1,3 +1,5 @@
+"""The WSGI application for serving a Bazaar branch."""
+
 import logging
 import urllib
 

@@ -1,7 +1,8 @@
-# A server that recreates (modulo cherrypy bugs :) the url parsing
-# from the old, loggerhead.conf approach.
+"""A server that uses a loggerhead.conf file.
 
-# It's all a bit horrible really.
+We recreate the branch discovery and url scheme of the old branchview
+code.  It's all a bit horrible really.
+"""
 
 import logging
 import os
@@ -26,6 +27,11 @@ log = logging.getLogger("loggerhead.controllers")
 from loggerhead.history import is_branch
 
 class Project(object):
+    """A project contains the branches.
+
+    There is some complication because we don't want to hold on to the
+    branches when they are not being browsed."""
+
     def __init__(self, name, config, root_config, graph_cache):
         self.name = name
         self.friendly_name = config.get('name', name)
@@ -143,6 +149,8 @@ class Project(object):
 
 
 class Root(object):
+    """The root of the server -- renders as the browse view,
+    dispatches to Project above for each 'project'."""
 
     def __init__(self, config):
         self.projects = []
@@ -156,6 +164,9 @@ class Root(object):
             self.projects_by_name[project_name] = project
 
     def browse(self, response):
+        # This is insanely complicated because we want to open and
+        # lock all the branches, render the view and then unlock the
+        # branches again.
         for p in self.projects:
             p._recheck_auto_folders()
         class branch(object):
@@ -187,7 +198,8 @@ class Root(object):
                 v.branch.unlock()
 
     def __call__(self, environ, start_response):
-        self._static_url_base = environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        self._static_url_base = environ['loggerhead.static.url'] = \
+                                environ['SCRIPT_NAME']
         segment = path_info_pop(environ)
         if segment is None:
             raise httpexceptions.HTTPMovedPermanently(

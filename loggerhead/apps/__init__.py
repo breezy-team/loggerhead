@@ -1,4 +1,5 @@
-#
+"""WSGI applications for serving Bazaar branches."""
+
 import os
 
 from paste import urlparser, fileapp
