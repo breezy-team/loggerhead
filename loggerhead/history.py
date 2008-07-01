@@ -36,7 +36,7 @@ import time
 from StringIO import StringIO
 
 from loggerhead import util
-from loggerhead.graphcache import compute_whole_history_data
+from loggerhead.wholehistory import compute_whole_history_data
 
 import bzrlib
 import bzrlib.branch
@@ -172,25 +172,28 @@ class _RevListToTimestamps(object):
 
 
 class History (object):
+    """Decorate a branch to provide information for rendering.
 
-    def __init__(self):
+    History objects are expected to be short lived -- when serving a request
+    for a particular branch, open it, read-lock it, wrap a History object
+    around it, serve the request, throw the History object away, unlock the
+    branch and throw it away.
+    """
+
+    def __init__(self, branch, whole_history_data_cache):
+        assert branch.is_locked(), (
+            "Can only construct a History object with a read-locked branch.")
         self._file_change_cache = None
-
-    @classmethod
-    def from_branch(cls, branch, graph_cache):
-        z = time.time()
-        self = cls()
         self._branch = branch
         self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
         self._last_revid = branch.last_revision()
-        d = graph_cache.get(self._last_revid)
+        d = whole_history_data_cache.get(self._last_revid)
         if d is None:
             d = compute_whole_history_data(branch)
-            graph_cache[self._last_revid] = d
+            whole_history_data_cache[self._last_revid] = d
         (self._revision_graph, self._full_history, self._revision_info,
          self._revno_revid, self._merge_sort, self._where_merged) = d
-        return self
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache

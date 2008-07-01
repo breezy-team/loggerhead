@@ -30,7 +30,7 @@ class BranchWSGIApp(object):
         self.graph_cache = graph_cache
 
     def get_history(self, b):
-        _history = History.from_branch(b, self.graph_cache)
+        _history = History(b, self.graph_cache)
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
