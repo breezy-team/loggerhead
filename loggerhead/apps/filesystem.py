@@ -10,7 +10,7 @@ from paste import httpexceptions
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
-
+from loggerhead.history import is_branch
 
 sql_dir = tempfile.mkdtemp()
 
@@ -32,9 +32,9 @@ class BranchesFromFileSystemServer(object):
         print >> response, '</body></html>'
         return response(environ, start_response)
 
-    def app_for_branch(self, b, path):
+    def app_for_branch_path(self, path):
         if not self.folder:
-            name = os.path.basename(os.path.abspath(path))
+            name = os.path.basename(os.path.abspath(self.root.folder))
         else:
             name = self.folder
         branch_app = BranchWSGIApp(
@@ -45,12 +45,9 @@ class BranchesFromFileSystemServer(object):
         path = os.path.join(self.root.folder, self.folder)
         if not os.path.isdir(path):
             raise httpexceptions.HTTPNotFound()
-        cached = self.root.cache.get(path)
-        if cached is not None:
-            return cached.app(environ, start_response)
-        try:
-            b = branch.Branch.open(path)
-        except errors.NotBranchError:
+        if is_branch(path):
+            return self.app_for_branch_path(path)(environ, start_response)
+        else:
             segment = path_info_pop(environ)
             if segment is None:
                 raise httpexceptions.HTTPMovedPermanently(
@@ -61,14 +58,14 @@ class BranchesFromFileSystemServer(object):
                 relpath = os.path.join(self.folder, segment)
                 return BranchesFromFileSystemServer(relpath, self.root)(
                     environ, start_response)
-        else:
-            return self.app_for_branch(b, path)(environ, start_response)
 
 
 class BranchesFromFileSystemRoot(object):
+
     def __init__(self, folder):
         self.graph_cache = lru_cache.LRUCache()
         self.folder = folder
+
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         if environ['PATH_INFO'].startswith('/static/'):

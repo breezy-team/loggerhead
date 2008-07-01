@@ -38,7 +38,7 @@ class BranchWSGIApp(object):
             try:
                 from loggerhead.changecache import FileChangeCache
             except ImportError:
-                self.log.debug("Couldn't load python-sqlite," 
+                self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
             else:
                 _history.use_file_cache(
