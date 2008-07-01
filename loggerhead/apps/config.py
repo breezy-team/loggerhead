@@ -35,8 +35,8 @@ class Project(object):
         self._root_config = root_config
         self.graph_cache = graph_cache
 
-        self.views = []
-        self.views_by_name = {}
+        self.view_names = []
+        self.view_data_by_name = {}
         for view_name in config.sections:
             log.debug('Configuring (project %s) branch %s...', name, view_name)
             self._add_view(
@@ -63,8 +63,8 @@ class Project(object):
             return
 
         # rebuild views:
+        self.view_names = []
         log.debug('Rescanning auto-folder for project %s ...', self.name)
-        self._views = []
         for folder in auto_list:
             view_name = os.path.basename(folder)
             log.debug('Auto-configuring (project %s) branch %s...', self.name, view_name)
@@ -98,28 +98,48 @@ class Project(object):
                 friendly_name = history.get_config().get_nickname()
                 if friendly_name is None:
                     friendly_name = view_name
-            view.friendly_name = friendly_name
-            view.name = view_name
+            self.view_data_by_name[view_name] = {
+                'branch_path': folder,
+                'args': (view_name, view_config, self.graph_cache),
+                'description': self._get_description(view, view_config, history),
+                '_src_folder': folder,
+                '_view_config': view_config,
+                'friendly_name': friendly_name,
+                'name': view_name,
+                }
             branch_url = self._get_branch_url(view, view_config, view_name)
             if branch_url is not None:
-                view.branch_url = branch_url
-            view.description = self._get_description(view, view_config, history)
-            view._src_folder = folder
-            view._view_config = view_config
-            self.views.append(view)
-            self.views_by_name[view_name] = view
+                self.view_data_by_name[view_name]['branch_url'] = branch_url
+            self.view_names.append(view_name)
         finally:
             b.unlock()
+
+    def view_named(self, name):
+        view_data = self.view_data_by_name.get(name)
+        if view_data is None:
+            return None
+        view_data = view_data.copy()
+        branch_path = view_data.pop('branch_path')
+        args = view_data.pop('args')
+        b = bzrlib.branch.Branch.open(branch_path)
+        b.lock_read()
+        view = BranchWSGIApp(b, *args)
+        for k in view_data:
+            setattr(view, k, view_data[k])
+        return view
 
     def call(self, environ, start_response):
         segment = path_info_pop(environ)
         if not segment:
             raise httpexceptions.HTTPNotFound()
         else:
-            view = self.views_by_name.get(segment)
+            view = self.view_named(segment)
             if view is None:
                 raise httpexceptions.HTTPNotFound()
-            return view.app(environ, start_response)
+            try:
+                return view.app(environ, start_response)
+            finally:
+                view.branch.unlock()
 
 
 class Root(object):
@@ -142,16 +162,29 @@ class Root(object):
             @staticmethod
             def static_url(path):
                 return self._static_url_base + path
-        vals = {
-            'projects': self.projects,
-            'util': util,
-            'title': self.config.get('title', None),
-            'branch': branch,
-        }
-        vals.update(templatefunctions)
-        response.headers['Content-Type'] = 'text/html'
-        template = load_template('loggerhead.templates.browse')
-        template.expand_into(response, **vals)
+        views_by_project = {}
+        all_views = []
+        try:
+            for p in self.projects:
+                views_by_project[p] = []
+                for vn in p.view_names:
+                    v = p.view_named(vn)
+                    all_views.append(v)
+                    views_by_project[p].append(v)
+            vals = {
+                'projects': self.projects,
+                'util': util,
+                'title': self.config.get('title', None),
+                'branch': branch,
+                'views_by_project': views_by_project,
+            }
+            vals.update(templatefunctions)
+            response.headers['Content-Type'] = 'text/html'
+            template = load_template('loggerhead.templates.browse')
+            template.expand_into(response, **vals)
+        finally:
+            for v in all_views:
+                v.branch.unlock()
 
     def __call__(self, environ, start_response):
         self._static_url_base = environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
