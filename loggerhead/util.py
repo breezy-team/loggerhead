@@ -187,40 +187,6 @@ def hide_email(email):
     return '%s at %s' % (username, domains[0])
 
 
-def triple_factors(min_value=1):
-    factors = (1, 3)
-    index = 0
-    n = 1
-    while True:
-        if n >= min_value:
-            yield n * factors[index]
-        index += 1
-        if index >= len(factors):
-            index = 0
-            n *= 10
-
-
-def scan_range(pos, max, pagesize=1):
-    """
-    given a position in a maximum range, return a list of negative and positive
-    jump factors for an hgweb-style triple-factor geometric scan.
-
-    for example, with pos=20 and max=500, the range would be:
-    [ -10, -3, -1, 1, 3, 10, 30, 100, 300 ]
-
-    i admit this is a very strange way of jumping through revisions.  i didn't
-    invent it. :)
-    """
-    out = []
-    for n in triple_factors(pagesize + 1):
-        if n > max:
-            return out
-        if pos + n < max:
-            out.append(n)
-        if pos - n >= 0:
-            out.insert(0, -n)
-
-
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
