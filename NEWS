@@ -1,6 +1,48 @@
 What's changed in loggerhead?
 =============================
 
+1.6 [unreleased]
+----------------
+
+    - Loggerhead is no longer a TurboGears application, but rather a
+      WSGI application built using Paste (see http://wsgi.org/ and
+      http://pythonpaste.org/ for more about WSGI and Paste). XXX more.
+
+    - zpt.cleaner_urls bug 138021 ("loggerhead should generate links
+      based on revision numbers and file paths").  XXX more.
+
+    - The scripts no longer insist on Python 2.4 -- loggerhead works
+      fine with 2.5.
+
+    - Bazaar as of version 1.5 has improved in performance enough that
+      the revision cache no longer gave any noticeable benefit, so it
+      was removed (the files-changed cache is still useful).
+
+    - The templates were rewritten in Zope's TAL markup, powered by
+      the simpleTAL library -- improving both the performance and
+      memory consumption of rendering by a factor of around 3 for
+      large pages over the old Kid templates.
+
+    - Loggerhead's poorly performing text index was disabled.
+
+    - Loggerhead no longer depends on bzrlib functions deprecated in
+      Bazaar 1.5 and removed in 1.6 (Martin Albisetti).
+
+    - The daemonization code was made more regular, fixing bugs
+      #139161 ("Starting loggerhead process may not close its stdin
+      and stdout properly") and #211526 ("Codebrowse log directory has
+      unnecessarily permissive permissions")
+
+    - Some confusion about what the 'file_id' query argument means was
+      cleared up: filter_file_id now means "filter revisions to those
+      that affect this file" in all views and file_id means "examine
+      this file/directory" in the annotate and inventory views.
+
+    - Dates are present more compactly.
+
+    - The loggerhead.conf file can specify which network interface to
+      bind to (Mattias Eriksson)
+
 1.2.1  [06mar2008]
 ------------------
 

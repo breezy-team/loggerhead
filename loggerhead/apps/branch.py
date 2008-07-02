@@ -1,43 +1,51 @@
+"""The WSGI application for serving a Bazaar branch."""
+
 import logging
 import urllib
 
+import bzrlib.branch
+import bzrlib.lru_cache
+
 from paste import request
 from paste import httpexceptions
-from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 
 from loggerhead.apps import static_app
-from loggerhead.changecache import FileChangeCache
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
-from loggerhead.controllers.bundle_ui import BundleUI
 from loggerhead.history import History
 from loggerhead import util
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
 
 class BranchWSGIApp(object):
 
-    def __init__(self, branch_url, friendly_name=None, config={}):
-        self.branch_url = branch_url
-        self._history = None
+    def __init__(self, branch, friendly_name=None, config={}, graph_cache=None):
+        self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
-        self.log = logging.getLogger(friendly_name)
+        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
+        if graph_cache is None:
+            graph_cache = bzrlib.lru_cache.LRUCache()
+        self.graph_cache = graph_cache
 
-    @property
-    def history(self):
-        if (self._history is None) or self._history.out_of_date():
-            self.log.debug('Reload branch history...')
-            _history = self._history = History.from_folder(self.branch_url)
-            cache_path = self._config.get('cachepath', None)
-            if cache_path is not None:
-                _history.use_file_cache(FileChangeCache(_history, cache_path))
-        return self._history
+    def get_history(self):
+        _history = History(self.branch, self.graph_cache)
+        cache_path = self._config.get('cachepath', None)
+        if cache_path is not None:
+            # Only import the cache if we're going to use it.
+            # This makes sqlite optional
+            try:
+                from loggerhead.changecache import FileChangeCache
+            except ImportError:
+                self.log.debug("Couldn't load python-sqlite,"
+                               " continuing without using a cache")
+            else:
+                _history.use_file_cache(
+                    FileChangeCache(_history, cache_path))
+        return _history
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
@@ -66,21 +74,17 @@ class BranchWSGIApp(object):
         'revision': RevisionUI,
         'download': DownloadUI,
         'atom': AtomUI,
-        'bundle': BundleUI,
         }
 
     def last_updated(self):
-        h = self.history
+        h = self.get_history()
         change = h.get_changes([ h.last_revid ])[0]
         return change.date
 
     def branch_url(self):
-        return self.history.get_config().get_user_option('public_branch')
+        return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
-        req = WSGIRequest(environ)
-        response = WSGIResponse()
-        response.headers['Content-Type'] = 'text/plain'
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:
@@ -95,6 +99,9 @@ class BranchWSGIApp(object):
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
-        c = cls(self)
-        c.default(req, response)
-        return response(environ, start_response)
+        self.branch.lock_read()
+        try:
+            c = cls(self, self.get_history())
+            return c(environ, start_response)
+        finally:
+            self.branch.unlock()

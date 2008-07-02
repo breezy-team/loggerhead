@@ -30,7 +30,7 @@ class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
 
-    def get_values(self, h, args, kw, response):
+    def get_values(self, h, args, kw, headers):
 
         if len(args) > 0:
             revid = h.fix_revid(args[0])
@@ -52,7 +52,7 @@ class RevisionUI(TemplatedBranchView):
         navigation = util.Container(
             revid_list=revid_list, revid=revid, start_revid=start_revid,
             filter_file_id=filter_file_id, pagesize=1,
-            scan_url='/revision', branch=self._branch, feed=True)
+            scan_url='/revision', branch=self._branch, feed=True, history=h)
         if query is not None:
             navigation.query = query
         util.fill_in_navigation(navigation)

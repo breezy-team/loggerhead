@@ -2,9 +2,10 @@
 
 import logging
 import logging.handlers
+from optparse import OptionParser
 import os
 import sys
-from optparse import OptionParser
+import urlparse
 
 from configobj import ConfigObj
 
@@ -49,9 +50,9 @@ def setup_logging(home, config, foreground):
     access_log.setLevel(logging.INFO)
     access_log.setFormatter(f)
 
+    logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(debug_log)
-    logging.getLogger('turbogears.access').addHandler(access_log)
-    logging.getLogger('turbogears.controllers').setLevel(logging.INFO)
+    logging.getLogger('wsgi').addHandler(access_log)
 
     if foreground:
         logging.getLogger('').addHandler(stdout_log)
@@ -121,11 +122,11 @@ def main():
     app = make_filter(app, None)
 
     if webpath:
-        if not webpath.endswith('/'):
-            webpath += '/'
-        def app(environ, start_response, app=app):
-            environ['SCRIPT_NAME'] = webpath
-            return app(environ, start_response)
+        scheme, netloc, path, blah, blah, blah = urlparse.urlparse(webpath)
+        def app(environ, start_response, orig=app):
+            environ['SCRIPT_NAME'] = path
+            environ['HTTP_HOST'] = netloc
+            return orig(environ, start_response)
 
     try:
         httpserver.serve(

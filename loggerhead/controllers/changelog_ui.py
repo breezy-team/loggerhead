@@ -27,7 +27,7 @@ class ChangeLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.changelog'
 
-    def get_values(self, h, args, kw, response):
+    def get_values(self, h, args, kw, headers):
         if args:
             revid = h.fix_revid(args[0])
         else:
@@ -66,7 +66,7 @@ class ChangeLogUI(TemplatedBranchView):
         navigation = util.Container(
             pagesize=pagesize, revid=revid, start_revid=start_revid,
             revid_list=revid_list, filter_file_id=filter_file_id,
-            scan_url='/changes', branch=self._branch, feed=True)
+            scan_url='/changes', branch=self._branch, feed=True, history=h)
         if query is not None:
             navigation.query = query
         util.fill_in_navigation(navigation)

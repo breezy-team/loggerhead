@@ -1,11 +1,14 @@
-# A server that recreates (modulo cherrypy bugs :) the url parsing
-# from the old, loggerhead.conf approach.
+"""A server that uses a loggerhead.conf file.
 
-# It's all a bit horrible really.
+We recreate the branch discovery and url scheme of the old branchview
+code.  It's all a bit horrible really.
+"""
 
 import logging
 import os
 import posixpath
+
+import bzrlib.lru_cache
 
 from configobj import ConfigObj
 
@@ -23,17 +26,23 @@ log = logging.getLogger("loggerhead.controllers")
 
 from loggerhead.history import is_branch
 
-class Project (object):
-    def __init__(self, name, config, root_config):
+class Project(object):
+    """A project contains the branches.
+
+    There is some complication because we don't want to hold on to the
+    branches when they are not being browsed."""
+
+    def __init__(self, name, config, root_config, graph_cache):
         self.name = name
         self.friendly_name = config.get('name', name)
         self.description = config.get('description', '')
         self.long_description = config.get('long_description', '')
         self._config = config
         self._root_config = root_config
+        self.graph_cache = graph_cache
 
-        self.views = []
-        self.views_by_name = {}
+        self.view_names = []
+        self.view_data_by_name = {}
         for view_name in config.sections:
             log.debug('Configuring (project %s) branch %s...', name, view_name)
             self._add_view(
@@ -60,91 +69,137 @@ class Project (object):
             return
 
         # rebuild views:
+        self.view_names = []
         log.debug('Rescanning auto-folder for project %s ...', self.name)
-        self._views = []
         for folder in auto_list:
             view_name = os.path.basename(folder)
             log.debug('Auto-configuring (project %s) branch %s...', self.name, view_name)
             self._add_view(view_name, ConfigObj(), folder)
         self._auto_list = auto_list
 
-    def _get_branch_url(self, view, view_config):
+    def _get_branch_url(self, view, view_config, folder):
         url = view_config.get('url', None)
         if url is not None:
             return url
         url = self._config.get('url_prefix', None)
         if url is not None:
-            return posixpath.join(url, self._folder) + '/'
+            return posixpath.join(url, folder) + '/'
         return None
 
-    def _get_description(self, view, view_config):
+    def _get_description(self, view, view_config, history):
         description = view_config.get('description', None)
         if description is not None:
             return description
-        description = view.history._branch.get_config().get_user_option('description')
+        description = history._branch.get_config().get_user_option('description')
         return description
 
     def _add_view(self, view_name, view_config, folder):
-        view = BranchWSGIApp(folder, view_name, view_config)
-        friendly_name = view_config.get('branch_name', None)
-        if friendly_name is None:
-            friendly_name = view.history.get_config().get_nickname()
+        b = bzrlib.branch.Branch.open(folder)
+        view = BranchWSGIApp(b, view_name, view_config, self.graph_cache)
+        b.lock_read()
+        try:
+            history = view.get_history()
+            friendly_name = view_config.get('branch_name', None)
             if friendly_name is None:
-                friendly_name = view_name
-        view.friendly_name = friendly_name
-        view.name = view_name
-        branch_url = self._get_branch_url(view, view_config)
-        if branch_url is not None:
-            view.branch_url = branch_url
-        view.description = self._get_description(view, view_config)
-        view._src_folder = folder
-        view._view_config = view_config
-        self.views.append(view)
-        self.views_by_name[view_name] = view
+                friendly_name = history.get_config().get_nickname()
+                if friendly_name is None:
+                    friendly_name = view_name
+            self.view_data_by_name[view_name] = {
+                'branch_path': folder,
+                'args': (view_name, view_config, self.graph_cache),
+                'description': self._get_description(view, view_config, history),
+                '_src_folder': folder,
+                '_view_config': view_config,
+                'friendly_name': friendly_name,
+                'name': view_name,
+                }
+            branch_url = self._get_branch_url(view, view_config, view_name)
+            if branch_url is not None:
+                self.view_data_by_name[view_name]['branch_url'] = branch_url
+            self.view_names.append(view_name)
+        finally:
+            b.unlock()
+
+    def view_named(self, name):
+        view_data = self.view_data_by_name.get(name)
+        if view_data is None:
+            return None
+        view_data = view_data.copy()
+        branch_path = view_data.pop('branch_path')
+        args = view_data.pop('args')
+        b = bzrlib.branch.Branch.open(branch_path)
+        b.lock_read()
+        view = BranchWSGIApp(b, *args)
+        for k in view_data:
+            setattr(view, k, view_data[k])
+        return view
 
     def call(self, environ, start_response):
         segment = path_info_pop(environ)
         if not segment:
             raise httpexceptions.HTTPNotFound()
         else:
-            view = self.views_by_name.get(segment)
+            view = self.view_named(segment)
             if view is None:
                 raise httpexceptions.HTTPNotFound()
-            return view.app(environ, start_response)
+            try:
+                return view.app(environ, start_response)
+            finally:
+                view.branch.unlock()
 
 
 class Root(object):
+    """The root of the server -- renders as the browse view,
+    dispatches to Project above for each 'project'."""
 
     def __init__(self, config):
         self.projects = []
         self.config = config
         self.projects_by_name = {}
+        graph_cache = bzrlib.lru_cache.LRUCache()
         for project_name in self.config.sections:
             project = Project(
-                project_name, self.config[project_name], self.config)
+                project_name, self.config[project_name], self.config, graph_cache)
             self.projects.append(project)
             self.projects_by_name[project_name] = project
 
     def browse(self, response):
+        # This is insanely complicated because we want to open and
+        # lock all the branches, render the view and then unlock the
+        # branches again.
         for p in self.projects:
             p._recheck_auto_folders()
-        class branch:
+        class branch(object):
             @staticmethod
             def static_url(path):
                 return self._static_url_base + path
-        vals = {
-            'projects': self.projects,
-            'util': util,
-            'title': self.config.get('title', None),
-            'branch': branch,
-        }
-        vals.update(templatefunctions)
-        response.headers['Content-Type'] = 'text/html'
-        template = load_template('loggerhead.templates.browse')
-        template.expand_into(response, **vals)
+        views_by_project = {}
+        all_views = []
+        try:
+            for p in self.projects:
+                views_by_project[p] = []
+                for vn in p.view_names:
+                    v = p.view_named(vn)
+                    all_views.append(v)
+                    views_by_project[p].append(v)
+            vals = {
+                'projects': self.projects,
+                'util': util,
+                'title': self.config.get('title', None),
+                'branch': branch,
+                'views_by_project': views_by_project,
+            }
+            vals.update(templatefunctions)
+            response.headers['Content-Type'] = 'text/html'
+            template = load_template('loggerhead.templates.browse')
+            template.expand_into(response, **vals)
+        finally:
+            for v in all_views:
+                v.branch.unlock()
 
     def __call__(self, environ, start_response):
-        self._static_url_base = environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        self._static_url_base = environ['loggerhead.static.url'] = \
+                                environ['SCRIPT_NAME']
         segment = path_info_pop(environ)
         if segment is None:
             raise httpexceptions.HTTPMovedPermanently(

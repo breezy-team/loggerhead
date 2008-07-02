@@ -45,7 +45,7 @@
               </th>
               <th />
             </tr>
-            <tal:block repeat="view project/views">
+            <tal:block repeat="view python:views_by_project[project]">
               <tr>
                 <td class="name">
                   <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)"
@@ -58,7 +58,7 @@
                   ${view.description}
                 </td>
                 <td class="last-update"
-                    tal:content="python:view.history.has_revisions and util._approximatedate(view.last_updated()) or '(no revisions)'"></td>
+                    tal:content="python:view.get_history().has_revisions and util._approximatedate(view.last_updated()) or '(no revisions)'"></td>
                 <td class="feed">
                   <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name + '/atom')"
                      title="atom feed">
