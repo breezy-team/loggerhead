@@ -673,7 +673,7 @@ span.folder {
 #search_terms {
     display:none;
     border:solid 1px black;
-    width:300px;
+    width:180px;
     overflow:auto;
     background: #fff;
 }

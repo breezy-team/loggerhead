@@ -58,3 +58,8 @@ function cool_search(response)
 	$('search_terms').setStyle('left',posicion.x);
 	$('search_terms').setStyle('top',posicion.y + size.y);
 }
+
+function hide_search()
+{
+    $('search_terms').setStyle('display','none');
+}
