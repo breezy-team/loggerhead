@@ -61,5 +61,5 @@ function cool_search(response)
 
 function hide_search()
 {
-    $('search_terms').setStyle('display','none');
+    hide_div = setTimeout("$('search_terms').setStyle('display','none')", 300);
 }
