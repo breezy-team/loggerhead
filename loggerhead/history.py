@@ -35,6 +35,7 @@ import threading
 import time
 from StringIO import StringIO
 
+from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
 
@@ -46,7 +47,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
@@ -387,13 +387,15 @@ class History (object):
             revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
-
-        revid_list = self.get_search_revid_list(query, revid_list)
+        revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
             return revid, start_revid, revid_list
         else:
+            # XXX: This should return a message saying that the search could
+            # not be completed due to either missing the plugin or missing a
+            # search index.
             return None, None, []
 
     def get_inventory(self, revid):

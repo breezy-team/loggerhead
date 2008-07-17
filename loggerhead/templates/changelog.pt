@@ -9,8 +9,7 @@
       <metal:block fill-slot="header_extras">
         <link rel="alternate" type="application/atom+xml"
               tal:attributes="href python:url(['/atom']);
-                              title string:RSS feed for ${branch/friendly_name}"
-              />
+                              title string:RSS feed for ${branch/friendly_name}"/>
 
         <script type="text/javascript"
                 tal:attributes="src python:branch.static_url('/static/javascript/collapse.js')">

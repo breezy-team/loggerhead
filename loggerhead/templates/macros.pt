@@ -11,11 +11,19 @@
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/zptstyle.css')" />
 
+    <script type="text/javascript"
+            tal:attributes="src python:branch.static_url('/static/javascript/mootools.js')">
+    </script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.static_url('/static/javascript/custom.js')">
+    </script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
   <body tal:attributes="onload onload|nothing">
-
+      <script language="javascript">
+          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      </script>
     <div class="bar" tal:condition="navigation|nothing">
       <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), file_id=getattr(navigation, 'file_id', None))">
         <table>
@@ -25,7 +33,7 @@
                 <a tal:attributes="href python:url('/changes', clear=1)"> changes </a>
                 <a tal:attributes="href python:url('/files', clear=1)"> files </a>
                 <span class="search">
-                  search: <input type="text" name="q" />
+                    search: <input type="text" name="q" id="q" autocomplete="off" onblur="hide_search();" />
                 </span>
               </span>
             </td>
@@ -56,11 +64,12 @@
                   &#187;
                 </tal:arrow>
               </span>
-            </td>
-          </tr>
+          </td>
+      </tr>
         </table>
       </form>
-    </div>
+  </div>
+  <div id="search_terms"></div>
 
     <h1 metal:define-slot="heading">
       Heading
