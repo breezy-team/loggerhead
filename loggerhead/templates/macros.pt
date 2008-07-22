@@ -28,7 +28,7 @@
             <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
             <div><a tal:attributes="href python:url(['/atom']);
                                     title string:RSS feed for ${branch/friendly_name}"> 
-                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" /></a>
+                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" class="rssfeed"/></a>
             </div>
           </div>
         </form>
