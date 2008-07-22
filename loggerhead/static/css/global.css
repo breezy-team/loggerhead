@@ -21,6 +21,9 @@ form {
 	margin:0;
 	padding:0;
 }
+tr td {
+    vertical-align:top
+}
 .clear {
 	clear:both;
 	font-size:0px;
