@@ -47,7 +47,7 @@
                   <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Go up one directory" /></a>
               </td>
               <td class="summcell" colspan="6">
-                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">Up</a>
+                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">..</a>
               </td>
           </tr>
           
