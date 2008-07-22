@@ -30,6 +30,7 @@ import re
 import struct
 import threading
 import time
+import types
 
 log = logging.getLogger("loggerhead.controllers")
 
