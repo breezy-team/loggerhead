@@ -27,10 +27,10 @@
         <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
                                                                    file_id=getattr(navigation, 'file_id', None))">
       	<div id="finderBox">
-            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" />
+            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
             <div><a tal:attributes="href python:url(['/atom']);
-                                    title string:RSS feed for ${branch/friendly_name}">
-                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a>
+                                    title string:RSS feed for ${branch/friendly_name}"> 
+                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" /></a>
             </div>
         </div>
         </form>
@@ -39,7 +39,7 @@
                                id string:on">Changes</a></li>
         <li><a tal:attributes="href  python:url('/files', clear=1);
                                title string:Files">Files</a></li>
-        <li><a tal:attributes="href string:#;
+        <li><a tal:attributes="href string:https://help.launchpad.net/Loggerhead;
                                title string:Help">Help</a></li>       
       </ul>
       <div id="loggerheadCont">
@@ -54,7 +54,7 @@
       Content.
     </div>
 
-    <p class="fl">Launchpad runs <a href="#" class="link">Loggerhead</a> on <a href="#" class="link">Bazaar</a> branches</p>
+    <p class="fl">Launchpad runs <a href="https://launchpad.net/loggerhead" class="link">Loggerhead</a> on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
     </div>
   </body>
 </html>
