@@ -35,8 +35,9 @@ import threading
 import time
 from StringIO import StringIO
 
+from loggerhead import search
 from loggerhead import util
-from loggerhead.util import decorator
+from loggerhead.wholehistory import compute_whole_history_data
 
 import bzrlib
 import bzrlib.branch
@@ -46,23 +47,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
-
-with_branch_lock = util.with_lock('_lock', 'branch')
-
-
-@decorator
-def with_bzrlib_read_lock(unbound):
-    def bzrlib_read_locked(self, *args, **kw):
-        #self.log.debug('-> %r bzr lock', id(threading.currentThread()))
-        self._branch.repository.lock_read()
-        try:
-            return unbound(self, *args, **kw)
-        finally:
-            self._branch.repository.unlock()
-            #self.log.debug('<- %r bzr lock', id(threading.currentThread()))
-    return bzrlib_read_locked
-
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
@@ -107,29 +91,19 @@ def _make_side_by_side(chunk_list):
     out_chunk_list = []
     for chunk in chunk_list:
         line_list = []
-        wrap_char = '<wbr/>'
         delete_list, insert_list = [], []
         for line in chunk.diff:
-            # Add <wbr/> every X characters so we can wrap properly
-            wrap_line = re.findall(r'.{%d}|.+$' % 78, line.line)
-            wrap_lines = [util.html_clean(_line) for _line in wrap_line]
-            wrapped_line = wrap_char.join(wrap_lines)
-
             if line.type == 'context':
                 if len(delete_list) or len(insert_list):
-                    _process_side_by_side_buffers(line_list, delete_list, 
-                                                  insert_list)
+                    _process_side_by_side_buffers(line_list, delete_list, insert_list)
                     delete_list, insert_list = [], []
-                line_list.append(util.Container(old_lineno=line.old_lineno, 
-                                                new_lineno=line.new_lineno,
-                                                old_line=wrapped_line, 
-                                                new_line=wrapped_line,
-                                                old_type=line.type, 
-                                                new_type=line.type))
+                line_list.append(util.Container(old_lineno=line.old_lineno, new_lineno=line.new_lineno,
+                                                old_line=line.line, new_line=line.line,
+                                                old_type=line.type, new_type=line.type))
             elif line.type == 'delete':
-                delete_list.append((line.old_lineno, wrapped_line, line.type))
+                delete_list.append((line.old_lineno, line.line, line.type))
             elif line.type == 'insert':
-                insert_list.append((line.new_lineno, wrapped_line, line.type))
+                insert_list.append((line.new_lineno, line.line, line.type))
         if len(delete_list) or len(insert_list):
             _process_side_by_side_buffers(line_list, delete_list, insert_list)
         out_chunk_list.append(util.Container(diff=line_list))
@@ -198,88 +172,33 @@ class _RevListToTimestamps(object):
 
 
 class History (object):
+    """Decorate a branch to provide information for rendering.
 
-    def __init__(self):
+    History objects are expected to be short lived -- when serving a request
+    for a particular branch, open it, read-lock it, wrap a History object
+    around it, serve the request, throw the History object away, unlock the
+    branch and throw it away.
+
+    :ivar _file_change_cache: xx
+    """
+
+    def __init__(self, branch, whole_history_data_cache):
+        assert branch.is_locked(), (
+            "Can only construct a History object with a read-locked branch.")
         self._file_change_cache = None
-        self._lock = threading.RLock()
-
-    @classmethod
-    def from_branch(cls, branch):
-        z = time.time()
-        self = cls()
         self._branch = branch
-        self._last_revid = self._branch.last_revision()
+        self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
-        self.log = logging.getLogger('loggerhead.%s' % (self._branch.nick,))
+        self.last_revid = branch.last_revision()
 
-        graph = branch.repository.get_graph()
-        parent_map = dict(((key, value) for key, value in
-             graph.iter_ancestry([self._last_revid]) if value is not None))
+        whole_history_data = whole_history_data_cache.get(self.last_revid)
+        if whole_history_data is None:
+            whole_history_data = compute_whole_history_data(branch)
+            whole_history_data_cache[self.last_revid] = whole_history_data
 
-        self._revision_graph = self._strip_NULL_ghosts(parent_map)
-        self._full_history = []
-        self._revision_info = {}
-        self._revno_revid = {}
-        if bzrlib.revision.is_null(self._last_revid):
-            self._merge_sort = []
-        else:
-            self._merge_sort = bzrlib.tsort.merge_sort(
-                self._revision_graph, self._last_revid, generate_revno=True)
-
-        for (seq, revid, merge_depth, revno, end_of_merge) in self._merge_sort:
-            self._full_history.append(revid)
-            revno_str = '.'.join(str(n) for n in revno)
-            self._revno_revid[revno_str] = revid
-            self._revision_info[revid] = (
-                seq, revid, merge_depth, revno_str, end_of_merge)
-
-        # cache merge info
-        self._where_merged = {}
-
-        for revid in self._revision_graph.keys():
-            if self._revision_info[revid][2] == 0:
-                continue
-            for parent in self._revision_graph[revid]:
-                self._where_merged.setdefault(parent, set()).add(revid)
-
-        self.log.info('built revision graph cache: %r secs' % (time.time() - z,))
-        return self
-
-    @staticmethod
-    def _strip_NULL_ghosts(revision_graph):
-        """
-        Copied over from bzrlib meant as a temporary workaround deprecated 
-        methods.
-        """
-
-        # Filter ghosts, and null:
-        if bzrlib.revision.NULL_REVISION in revision_graph:
-            del revision_graph[bzrlib.revision.NULL_REVISION]
-        for key, parents in revision_graph.items():
-            revision_graph[key] = tuple(parent for parent in parents if parent
-                in revision_graph)
-        return revision_graph
-
-    @classmethod
-    def from_folder(cls, path):
-        b = bzrlib.branch.Branch.open(path)
-        b.lock_read()
-        try:
-            return cls.from_branch(b)
-        finally:
-            b.unlock()
-
-    @with_branch_lock
-    def out_of_date(self):
-        # the branch may have been upgraded on disk, in which case we're stale.
-        newly_opened = bzrlib.branch.Branch.open(self._branch.base)
-        if self._branch.__class__ is not \
-               newly_opened.__class__:
-            return True
-        if self._branch.repository.__class__ is not \
-               newly_opened.repository.__class__:
-            return True
-        return self._branch.last_revision() != self._last_revid
+        (self._revision_graph, self._full_history, self._revision_info,
+         self._revno_revid, self._merge_sort, self._where_merged
+         ) = whole_history_data
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
@@ -288,9 +207,6 @@ class History (object):
     def has_revisions(self):
         return not bzrlib.revision.is_null(self.last_revid)
 
-    last_revid = property(lambda self: self._last_revid, None, None)
-
-    @with_branch_lock
     def get_config(self):
         return self._branch.get_config()
 
@@ -300,9 +216,6 @@ class History (object):
             return 'unknown'
         seq, revid, merge_depth, revno_str, end_of_merge = self._revision_info[revid]
         return revno_str
-
-    def get_revision_history(self):
-        return self._full_history
 
     def get_revids_from(self, revid_list, start_revid):
         """
@@ -331,18 +244,15 @@ class History (object):
                 return
             revid = parents[0]
 
-    @with_branch_lock
     def get_short_revision_history_by_fileid(self, file_id):
         # wow.  is this really the only way we can get this list?  by
         # man-handling the weave store directly? :-0
         # FIXME: would be awesome if we could get, for a folder, the list of
         # revisions where items within that folder changed.
-        w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
-        w_revids = w.versions()
-        revids = [r for r in self._full_history if r in w_revids]
-        return revids
+        possible_keys = [(file_id, revid) for revid in self._full_history]
+        existing_keys = self._branch.repository.texts.get_parent_map(possible_keys)
+        return [revid for _, revid in existing_keys.iterkeys()]
 
-    @with_branch_lock
     def get_revision_history_since(self, revid_list, date):
         # if a user asks for revisions starting at 01-sep, they mean inclusive,
         # so start at midnight on 02-sep.
@@ -356,7 +266,6 @@ class History (object):
         index = -index
         return revid_list[index:]
 
-    @with_branch_lock
     def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
@@ -395,7 +304,7 @@ class History (object):
         if date is not None:
             if revid_list is None:
                 # if no limit to the query was given, search only the direct-parent path.
-                revid_list = list(self.get_revids_from(None, self._last_revid))
+                revid_list = list(self.get_revids_from(None, self.last_revid))
             return self.get_revision_history_since(revid_list, date)
 
     revno_re = re.compile(r'^[\d\.]+$')
@@ -411,12 +320,11 @@ class History (object):
         if revid is None:
             return revid
         if revid == 'head:':
-            return self._last_revid
+            return self.last_revid
         if self.revno_re.match(revid):
             revid = self._revno_revid[revid]
         return revid
 
-    @with_branch_lock
     def get_file_view(self, revid, file_id):
         """
         Given a revid and optional path, return a (revlist, revid) for
@@ -426,7 +334,7 @@ class History (object):
         If file_id is None, the entire revision history is the list scope.
         """
         if revid is None:
-            revid = self._last_revid
+            revid = self.last_revid
         if file_id is not None:
             # since revid is 'start_revid', possibly should start the path
             # tracing from revid... FIXME
@@ -436,7 +344,6 @@ class History (object):
             revlist = list(self.get_revids_from(None, revid))
         return revlist
 
-    @with_branch_lock
     def get_view(self, revid, start_revid, file_id, query=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
@@ -462,7 +369,7 @@ class History (object):
         contain vital context for future url navigation.
         """
         if start_revid is None:
-            start_revid = self._last_revid
+            start_revid = self.last_revid
 
         if query is None:
             revid_list = self.get_file_view(start_revid, file_id)
@@ -480,20 +387,20 @@ class History (object):
             revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
-
-        revid_list = self.get_search_revid_list(query, revid_list)
+        revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
             return revid, start_revid, revid_list
         else:
+            # XXX: This should return a message saying that the search could
+            # not be completed due to either missing the plugin or missing a
+            # search index.
             return None, None, []
 
-    @with_branch_lock
     def get_inventory(self, revid):
         return self._branch.repository.get_revision_inventory(revid)
 
-    @with_branch_lock
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
@@ -502,7 +409,6 @@ class History (object):
             path = '/' + path
         return path
 
-    @with_branch_lock
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
@@ -581,7 +487,6 @@ class History (object):
                 else:
                     p.branch_nick = '(missing)'
 
-    @with_branch_lock
     def get_changes(self, revid_list):
         """Return a list of changes objects for the given revids.
 
@@ -608,8 +513,6 @@ class History (object):
 
         return changes
 
-    @with_branch_lock
-    @with_bzrlib_read_lock
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
@@ -680,7 +583,6 @@ class History (object):
 
         return [self.parse_delta(delta) for delta in delta_list]
 
-    @with_branch_lock
     def get_file_changes(self, entries):
         if self._file_change_cache is None:
             return self.get_file_changes_uncached(entries)
@@ -693,7 +595,6 @@ class History (object):
         for entry, changes in zip(entries, changes_list):
             entry.changes = changes
 
-    @with_branch_lock
     def get_change_with_diff(self, revid, compare_revid=None):
         change = self.get_changes([revid])[0]
 
@@ -712,7 +613,6 @@ class History (object):
 
         return change
 
-    @with_branch_lock
     def get_file(self, file_id, revid):
         "returns (path, filename, data)"
         inv = self.get_inventory(revid)
@@ -786,27 +686,21 @@ class History (object):
                 old_lineno = lines[0]
                 new_lineno = lines[1]
             elif line.startswith(' '):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, 
-                                                 new_lineno=new_lineno,
-                                                 type='context', 
-                                                 line=line[1:]))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
+                                                 type='context', line=util.fixed_width(line[1:])))
                 old_lineno += 1
                 new_lineno += 1
             elif line.startswith('+'):
-                chunk.diff.append(util.Container(old_lineno=None, 
-                                                 new_lineno=new_lineno,
-                                                 type='insert', line=line[1:]))
+                chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
+                                                 type='insert', line=util.fixed_width(line[1:])))
                 new_lineno += 1
             elif line.startswith('-'):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, 
-                                                 new_lineno=None,
-                                                 type='delete', line=line[1:]))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
+                                                 type='delete', line=util.fixed_width(line[1:])))
                 old_lineno += 1
             else:
-                chunk.diff.append(util.Container(old_lineno=None, 
-                                                 new_lineno=None,
-                                                 type='unknown', 
-                                                 line=repr(line)))
+                chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
+                                                 type='unknown', line=util.fixed_width(repr(line))))
         if chunk is not None:
             chunks.append(chunk)
         return chunks
@@ -851,7 +745,6 @@ class History (object):
             for m in change.changes.modified:
                 m.sbs_chunks = _make_side_by_side(m.chunks)
 
-    @with_branch_lock
     def get_filelist(self, inv, file_id, sort_type=None):
         """
         return the list of all files (and their attributes) within a given
@@ -890,6 +783,7 @@ class History (object):
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
+        
         # Always sort by kind to get directories first
         file_list.sort(key=lambda x: x.kind != 'directory')
 
@@ -903,7 +797,6 @@ class History (object):
 
     _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b\x0e-\x1f]')
 
-    @with_branch_lock
     def annotate_file(self, file_id, revid):
         z = time.time()
         lineno = 1

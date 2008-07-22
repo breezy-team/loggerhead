@@ -23,7 +23,9 @@ What's changed in loggerhead?
       memory consumption of rendering by a factor of around 3 for
       large pages over the old Kid templates.
 
-    - Loggerhead's poorly performing text index was disabled.
+    - Loggerhead's poorly performing text index was disabled. bzr-search
+      is now used if the plugin is installed and a text index is present
+      on the branch being viewed. (Martin Albisetti, Robert Collins).
 
     - Loggerhead no longer depends on bzrlib functions deprecated in
       Bazaar 1.5 and removed in 1.6 (Martin Albisetti).

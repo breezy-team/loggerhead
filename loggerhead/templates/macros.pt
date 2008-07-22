@@ -7,8 +7,6 @@
     <title metal:define-slot="title">
       Title.
     </title>
-    <style type="text/css" media="screen, print"
-        tal:content="python:'@import url('+branch.static_url('/static/css/launchpad_slimmer.css')+');'"></style>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
     <script type="text/javascript"
@@ -17,6 +15,9 @@
             tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
+      <script language="javascript">
+          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      </script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
@@ -33,8 +34,9 @@
         <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
                                                                    file_id=getattr(navigation, 'file_id', None))">
       	<div id="finderBox">
-        	<label>Jump to revision:</label>
-            <input name="q" type="search" />
+            <span class="search">
+                search: <input type="text" name="q" id="q" autocomplete="off" onblur="hide_search();" />
+            </span>
             <div><a tal:attributes="href python:url(['/atom']);
                                     title string:RSS feed for ${branch/friendly_name}">
                  <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a>
@@ -50,6 +52,8 @@
                                title string:Help">Help</a></li>       
       </ul>
       <div id="loggerheadCont">
+    
+     <div id="search_terms"></div>
 
     <h1 metal:define-slot="heading">
       Heading

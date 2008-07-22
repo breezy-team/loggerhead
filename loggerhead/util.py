@@ -27,13 +27,9 @@ import cgi
 import datetime
 import logging
 import re
-import sha
 import struct
-import sys
 import threading
 import time
-import traceback
-import types
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -142,26 +138,10 @@ class Container (object):
         return out
 
 
-def clean_revid(revid):
-    if revid == 'missing':
-        return revid
-    return sha.new(revid).hexdigest()
-
-
-def obfuscate(text):
-    return ''.join([ '&#%d;' % ord(c) for c in text ])
-
-
 def trunc(text, limit=10):
     if len(text) <= limit:
         return text
     return text[:limit] + '...'
-
-
-def to_utf8(s):
-    if isinstance(s, unicode):
-        return s.encode('utf-8')
-    return s
 
 
 STANDARD_PATTERN = re.compile(r'^(.*?)\s*<(.*?)>\s*$')
@@ -185,40 +165,6 @@ def hide_email(email):
     if len(domains) >= 2:
         return '%s at %s' % (username, domains[-2])
     return '%s at %s' % (username, domains[0])
-
-
-def triple_factors(min_value=1):
-    factors = (1, 3)
-    index = 0
-    n = 1
-    while True:
-        if n >= min_value:
-            yield n * factors[index]
-        index += 1
-        if index >= len(factors):
-            index = 0
-            n *= 10
-
-
-def scan_range(pos, max, pagesize=1):
-    """
-    given a position in a maximum range, return a list of negative and positive
-    jump factors for an hgweb-style triple-factor geometric scan.
-
-    for example, with pos=20 and max=500, the range would be:
-    [ -10, -3, -1, 1, 3, 10, 30, 100, 300 ]
-
-    i admit this is a very strange way of jumping through revisions.  i didn't
-    invent it. :)
-    """
-    out = []
-    for n in triple_factors(pagesize + 1):
-        if n > max:
-            return out
-        if pos + n < max:
-            out.append(n)
-        if pos - n >= 0:
-            out.insert(0, -n)
 
 
 # only do this if unicode turns out to be a problem
@@ -276,13 +222,13 @@ def fixed_width(s):
     return s.expandtabs().replace(' ', NONBREAKING_SPACE)
 
 
-def if_present(format, value):
-    """
-    format a value using a format string, if the value exists and is not None.
-    """
-    if value is None:
-        return ''
-    return format % value
+def fake_permissions(kind, executable):
+    # fake up unix-style permissions given only a "kind" and executable bit
+    if kind == 'directory':
+        return 'drwxr-xr-x'
+    if executable:
+        return '-rwxr-xr-x'
+    return '-rw-r--r--'
 
 
 def b64(s):
@@ -367,16 +313,11 @@ def fill_in_navigation(navigation):
     navigation.last_in_page_revid = get_offset(navigation.pagesize - 1)
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
-    prev_page_revno = navigation.branch.history.get_revno(
+    prev_page_revno = navigation.history.get_revno(
             navigation.prev_page_revid)
-    next_page_revno = navigation.branch.history.get_revno(
+    next_page_revno = navigation.history.get_revno(
             navigation.next_page_revid)
-    start_revno = navigation.branch._history.get_revno(navigation.start_revid)
-
-    prev_page_revno = navigation.branch._history.get_revno(
-            navigation.prev_page_revid)
-    next_page_revno = navigation.branch._history.get_revno(
-            navigation.next_page_revid)
+    start_revno = navigation.history.get_revno(navigation.start_revid)
 
     params = { 'filter_file_id': navigation.filter_file_id }
     if getattr(navigation, 'query', None) is not None:
@@ -391,11 +332,6 @@ def fill_in_navigation(navigation):
     if navigation.next_page_revid:
         navigation.next_page_url = navigation.branch.context_url(
             [navigation.scan_url, next_page_revno], **params)
-
-
-def log_exception(log):
-    for line in ''.join(traceback.format_exception(*sys.exc_info())).split('\n'):
-        log.debug(line)
 
 
 def decorator(unbound):
@@ -425,7 +361,6 @@ def with_lock(lockname, debug_name=None):
                 getattr(self, lockname).release()
         return locked
     return _decorator
-
 
 
 @decorator
