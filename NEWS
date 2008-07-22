@@ -4,6 +4,8 @@ What's changed in loggerhead?
 1.6 [unreleased]
 ----------------
 
+    - New ninja theme sponsored by Canonical (Martin Albisetti)
+
     - Loggerhead is no longer a TurboGears application, but rather a
       WSGI application built using Paste (see http://wsgi.org/ and
       http://pythonpaste.org/ for more about WSGI and Paste). XXX more.
