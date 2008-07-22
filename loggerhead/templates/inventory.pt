@@ -32,20 +32,17 @@
 
       <table id="logentries">
           <tr class="logheader">
-            <td class="revisionnumber">.</td>
+            <td class="revisionnumber"></td>
             <td class="summarycell"><a href="#">Filename</a></td>            
             <td class="datecell">Latest Rev</td>
             <td class="datecell"><a href="#">Last Changed</a></td>
             <td class="timedate"><a href="#">Size</a></td>
-            <td class="expandcell">.</td>
-            <td class="expandcell">.</td>            
+            <td class="expandcell"></td>
+            <td class="expandcell"></td>            
           </tr>
 
           <tr class="blueRow0" tal:condition="python:updir">
-              <td class="revnro">
-                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)">
-                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" alt="Go up one directory" /></a>
-              </td>
+              <td class="revnro"></td>
               <td class="summcell" colspan="6">
                   <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">..</a>
               </td>
@@ -69,13 +66,13 @@
                                    tal:content="file/change/revno"></a>
                </td>
                <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
-               <td class="timedate2">.</td>
+               <td class="timedate2"></td>
                <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
                                                    title string:Show revision ${file/change/revno}">
                                     <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
                                    </a>
             </td>
-              <td class="expcell">.</td>
+              <td class="expcell"></td>
           </tr>
           
           <!-- Show this if it's a symlink --> 
@@ -101,7 +98,7 @@
                                                              title string:Show revision ${file/change/revno}" />
                                    </a>
             </td>
-              <td class="expcell">.</td>
+              <td class="expcell"></td>
           </tr>
 
           <!-- Show this if it's a regular file --> 
