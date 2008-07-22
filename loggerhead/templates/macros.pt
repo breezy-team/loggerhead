@@ -22,21 +22,12 @@
   </head>
 
 <body>
-	<div id="topline"></div>
-    <div id="locationbar" xml:lang="en" lang="en" dir="ltr">
-        <strong id="yourlocation">Your location:</strong>
-        <ul id="menuroot">
-	        <li lpm:mid="root" class="item"><a href="https://launchpad.net/" class="breadcrumb container" id="homebreadcrumb"><em><span>Home</span></em></a></li>
-        </ul>      
-    </div>
     <!-- Loggerhead Content Area -->
     <ul id="menuTabs">
         <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
                                                                    file_id=getattr(navigation, 'file_id', None))">
       	<div id="finderBox">
-            <span class="search">
-                search: <input type="text" name="q" id="q" autocomplete="off" onblur="hide_search();" />
-            </span>
+            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" />
             <div><a tal:attributes="href python:url(['/atom']);
                                     title string:RSS feed for ${branch/friendly_name}">
                  <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"  alt="RSS" /></a>
