@@ -49,6 +49,8 @@
     <tal:block condition="repeat/item/start">
         <li class="desc">files modified:</li>
     </tal:block>
-    <tal:b content="structure python:modified_file_link(url, entry, item)" />
+      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=item.file_id);
+                         title string:Annotate ${item/filename}"
+         tal:content="item/filename"/>
 </ul>
 </tal:block>
