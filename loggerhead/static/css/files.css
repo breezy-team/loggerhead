@@ -57,6 +57,7 @@ ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#fin
 	background:url(../images/ico_description.gif) no-repeat top left;
 }
 .revid {
+    float:left;
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
 }
@@ -79,4 +80,9 @@ ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#fin
 }
 .mfrom {
 	background:url(../images/ico_mergefrom.gif) no-repeat top left;
+}
+.information {
+    clear:both;
+    width:100%;
+    position:relative;
 }
