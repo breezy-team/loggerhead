@@ -13,20 +13,12 @@
 
     <body>
         <tal:block metal:fill-slot="heading">
-        <h1><tal:block content="branch/friendly_name"></tal:block></h1>
-        </tal:block>
-
-        <tal:block condition="filter_file_id">
-          to
-          <span class="filename"
-                tal:content="python:history.get_path(revid, filter_file_id)">
-          </span>
-        </tal:block>
-        <tal:block condition="viewing_from">
-          from <tal:block content="python:history.get_revno(start_revid)" />
-        </tal:block>
-        <tal:block condition="query">
-          matching <tal:block content="query" />
+         <h1>
+          <tal:block content="branch/friendly_name"></tal:block> 
+          <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
+          <tal:block condition="viewing_from">from <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
+          <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+         </h1>
         </tal:block>
 
        <div metal:fill-slot="content">
