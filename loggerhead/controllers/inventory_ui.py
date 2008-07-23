@@ -90,5 +90,5 @@ class InventoryUI(TemplatedBranchView):
             'navigation': navigation,
             'url': self._branch.context_url,
             'start_revid': start_revid,
-            'fileview_active':True,
+            'fileview_active': True,
         }
