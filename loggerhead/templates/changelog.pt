@@ -14,9 +14,9 @@
     <body>
         <tal:block metal:fill-slot="heading">
          <h1>
-          <tal:block content="branch/friendly_name"></tal:block> 
+          <tal:block content="branch/friendly_name"></tal:block>: changes
           <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
-          <tal:block condition="viewing_from">from <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
+          <tal:block condition="start_revid">from revision <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
           <tal:block condition="query">matching <tal:block content="query" /></tal:block>
          </h1>
         </tal:block>
@@ -31,12 +31,14 @@
           No revisions!
         </p>
 
-        <p class="fr revnolink">Revision <a tal:attributes="href #
+        <p class="fr revnolink">From Revision <a tal:attributes="href #
                                                             title python:'Show revision '+history.get_revno(revid)" 
-                                            tal:content="python:history.get_revno(revid)"></a> to 
-                                         <a tal:attributes="href # 
-                                                            title 'Show revision '+history.get_revno(navigation.last_in_page_revid)"
-                                            tal:content="python:history.get_revno(navigation.last_in_page_revid)"></a></p>
+                                tal:content="python:history.get_revno(revid)"></a>
+          <tal:block tal:condition="python:navigation.last_in_page_revid is not None"> to
+          <a tal:attributes="href # 
+                             title 'Show revision '+history.get_revno(navigation.last_in_page_revid)"
+             tal:content="python:history.get_revno(navigation.last_in_page_revid)"></a>
+         </tal:block></p>
         <p class="expand" id="expand_all"><a tal:attributes="href string:javascript:toggle_expand_all('open')">
             <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                   alt="expand all" /> expand all</a>
