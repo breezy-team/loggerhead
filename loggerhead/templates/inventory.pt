@@ -26,9 +26,9 @@
 
       <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
 
-      <div class="inventory-path">
-        <b>folder:</b> <span class="folder" tal:content="path"> ${path} </span>
-      </div>
+      <h1 class="inventory-path">
+          <b>Path:</b> <span class="folder" tal:content="path"/>
+      </h1>
 
       <table id="logentries">
           <tr class="logheader">
