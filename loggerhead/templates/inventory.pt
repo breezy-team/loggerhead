@@ -16,10 +16,10 @@
 
     <div metal:fill-slot="content">
         <ul id="submenuTabs">
-            <li id="inicio">
+            <li id="first">
                 <a tal:attributes="href python:url(['/revision', change.revno], clear=1, start_revid=change.revno)">view revision</a>
             </li>
-            <li id="final">
+            <li id="last">
                 <a tal:attributes="href python:url(['/changes', change.revno], clear=1, start_revid=change.revno)">view branch changes</a>
             </li>
         </ul>

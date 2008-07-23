@@ -21,7 +21,7 @@
           </tal:compare-to>
         </span></h1>
         <ul id="submenuTabs">
-            <li id="inicio"><a tal:attributes="href python:url(['/files', change.revno]); 
+            <li id="first"><a tal:attributes="href python:url(['/files', change.revno]); 
                                                title string:browse files at revision ${change/revno}"
                                tal:content="string:browse files at revision ${change/revno}"></a></li>
             <li tal:condition="python:remember != change.revno">
@@ -33,19 +33,19 @@
                 compare with revision <tal:b content="python:history.get_revno(remember)" />
                 </a>
             </li>
-            <li id="final"><a tal:attributes="href python:url(['/changes', change.revno]); 
+            <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]); 
                                   title string:view history from revision ${change/revno}"
                   tal:content="string:view history from revision ${change/revno}"></a></li>
         </ul>
 
         <tal:we-are-comparing condition="python:compare_revid is not None">
         <ul id="submenuTabs">
-          <li id="inicio">
+          <li id="first">
               <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
                 reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
               </a>
           </li>
-          <li id="final">
+          <li id="last">
               <a tal:attributes="href python:url(['/revision', change.revno], remember=None, compare_revid=None)">
                 stop comparing with revision <tal:b content="python:history.get_revno(compare_revid)" />
               </a>

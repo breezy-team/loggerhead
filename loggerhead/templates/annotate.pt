@@ -21,7 +21,7 @@
 
     <div metal:fill-slot="content">
         <ul id="submenuTabs">
-            <li id="inicio">
+            <li id="first">
                 <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
             </li>
             <li>
@@ -30,7 +30,7 @@
             <li>
                 <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=change.revno, filter_file_id=file_id)">view changes to this file</a>
             </li>
-            <li id="final">
+            <li id="last">
                 <a tal:attributes="href python:url(['/download', change.revno, file_id, filename])">download file</a>
             </li>
         </ul>

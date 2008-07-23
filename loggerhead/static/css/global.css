@@ -109,10 +109,10 @@ ul#submenuTabs li a:hover {
 	background:#d18b39;
 	text-decoration:underline;
 }
-ul#submenuTabs li#inicio a, ul#submenuTabs li#inicio a:link, ul#submenuTabs li#inicio a:visited, ul#submenuTabs li#inicio a:hover {
+ul#submenuTabs li#first a, ul#submenuTabs li#first a:link, ul#submenuTabs li#first a:visited, ul#submenuTabs li#first a:hover {
 	background:#d18b39 url(../images/bg_submenuTabs.gif) top left no-repeat;
 }
-ul#submenuTabs li#final a, ul#submenuTabs li#final a:link, ul#submenuTabs li#final a:visited, ul#submenuTabs li#final a:hover {
+ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last a:visited, ul#submenuTabs li#last a:hover {
 	background:#d18b39 url(../images/bg_submenuTabs.gif) bottom right no-repeat;
 }
 
