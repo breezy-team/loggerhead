@@ -87,6 +87,9 @@ ul#list-files li {
 .diffBox a, .diffBox a:link, .diffBox a:visited, .diffBox a:hover {
 	text-decoration:none;
 }
+.diff {
+    margin: 2em 0 2em 0;
+}
 .lineNumber {
 	float:left;
 	width:2%;
