@@ -11,7 +11,8 @@
   <body>
 
     <h1 metal:fill-slot="heading">
-      <tal:block content="branch/friendly_name"></tal:block><span>: files for revision <tal:revno content="change/revno"></tal:revno></span>
+        <tal:block content="branch/friendly_name" />: viewing 
+        <span><tal:block content="path" /></span> for revision <span><tal:revno content="change/revno"></tal:revno></span>
     </h1>
 
     <div metal:fill-slot="content">
@@ -25,10 +26,6 @@
         </ul>
 
       <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
-
-      <h1 class="inventory-path">
-          <b>Path:</b> <span class="folder" tal:content="path"/>
-      </h1>
 
       <table id="logentries">
           <tr class="logheader">
