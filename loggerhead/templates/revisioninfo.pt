@@ -9,7 +9,7 @@
         </div>
         <div class="mto" tal:repeat="merge_point change/merge_points">
             <a tal:attributes="title string:Merged In ${merge_point/revno};
-                               href python:url(['/revision', merge_point/revno], clear=1)"
+                               href python:url(['/revision', merge_point.revno], clear=1)"
                tal:content="python:revno_with_nick(merge_point)"></a>
         </div>
         <div class="revid" tal:content="string:RevisionID: ${change/revid}"></div>
