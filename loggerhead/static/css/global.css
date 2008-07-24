@@ -260,8 +260,11 @@ ul.expandrev li {
 	padding:2px 0px 2px 20px;
 	margin:0px 0px 2px 0px;
 }
-ul.expandrev li.mergefrom {
+ul.expandrev li.mfrom {
 	background:url(../images/ico_mergefrom.gif) 0px 0px no-repeat;
+}
+ul.expandrev li.mto {
+	background:url(../images/ico_mergeto.gif) 0px 0px no-repeat;
 }
 ul.expandrev li.committerli {
 	background:url(../images/ico_committer.gif) 2px 0px no-repeat;
