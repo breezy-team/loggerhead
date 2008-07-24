@@ -113,6 +113,10 @@ ul#list-files li {
 .insert {
 	background:#92ed92;
 }
+.separate {
+    height: 4em;
+    background: #e3e3e3;
+}
 ul#pages {
 	margin-top:10px;
 }

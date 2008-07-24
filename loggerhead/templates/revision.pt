@@ -87,7 +87,16 @@
                                               tal:content="item/filename"></a></div>
                <div id="psuedotable" class="diffinfo">
                <tal:block repeat="chunk item/sbs_chunks">
-                 <tal:block repeat="line chunk/diff">
+
+                <tal:block condition="not:repeat/chunk/start">
+                 <div class="lineNumber separate"></div>
+                 <div class="lineCode separate"></div>
+                 <div class="lineNumber separate"></div>
+                 <div class="lineCode separate"></div>
+                 <div class="clear"><!-- --></div>
+                </tal:block>
+
+                <tal:block repeat="line chunk/diff">
                     <div id="pseudorow">
                     <tal:block condition="line/old_lineno">
                     <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.old_lineno)" /></div>
