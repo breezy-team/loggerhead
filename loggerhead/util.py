@@ -189,20 +189,17 @@ def fill_div(s):
     CSS is stupid. In some cases we need to replace an empty value with
     a non breaking space (&nbsp;). There has to be a better way of doing this.
 
-    return: the same value recieved if not empty, and a NONBREAKING_SPACE 
-            if not 
+    return: the same value recieved if not empty, and a '&nbsp;' if it is.
     """
-    if type(s) is int and s is None:
+
+    if s is None:
         return '&nbsp;'
-    elif type(s) is int and s is not None:
+    elif isinstance(s, int):
         return s
-    elif type(s) is types.NoneType:
-        return '&nbsp;'
-    elif len(s) is 0:
+    elif not s.strip():
         return '&nbsp;'
     else:
         return s
-
 
 
 def fixed_width(s):
