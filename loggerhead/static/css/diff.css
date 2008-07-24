@@ -19,8 +19,12 @@ ul#list-files {
 ul#list-files li {
 	width:440px;
 	padding:2px 0px 2px 20px;
-	margin:0px 0px 2px 0px;
+	margin:0px 0px 2px 8px;
 	background:url(../images/ico_file.gif) 2px 0px no-repeat;
+}
+ul#list-files li.desc {
+    margin-left: 0;
+	background:url(../images/ico_description.gif) 0px 0px no-repeat;
 }
 #infTxt {
 	float:left;
