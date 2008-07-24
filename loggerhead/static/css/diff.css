@@ -104,7 +104,7 @@ ul#list-files li.desc {
 	border-left:1px solid #d5d5d5;
 	color:#000;
 	background:#f8fbfd;
-	font:normal 12px/1.8 'monospace';	
+	font:normal 12px/1.8 monospace;
 	text-align:right;
 }
 .lineCode, .removecode, .addcode {
@@ -113,7 +113,7 @@ ul#list-files li.desc {
 	padding:0px 1%; 
 	color:#000;
 	background:#fff;
-	font:normal 12px/1.8 'monospace';
+	font:normal 12px/1.8 monospace;
 }
 .delete, .insert {
 	display:block;
