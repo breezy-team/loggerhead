@@ -7,7 +7,7 @@
                                href python:url(['/revision', parent.revno], clear=1)"
                tal:content="python:revno_with_nick(parent)"></a>
         </div>
-        <div class="mfrom" tal:repeat="merge_point change/merge_points">
+        <div class="mto" tal:repeat="merge_point change/merge_points">
             <a tal:attributes="title string:Merged In ${merge_point/revno};
                                href python:url(['/revision', merge_point/revno], clear=1)"
                tal:content="python:revno_with_nick(merge_point)"></a>

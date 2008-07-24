@@ -27,7 +27,7 @@ ul#list-files li {
 	width:493px;
 	margin:0px 0px 5px 0px;
 }
-.information, .comiter, .timer, .mfrom, .revid {
+.information, .comiter, .timer, .mfrom, .mto, .revid {
 	clear:both;
 	margin:0px;
 	padding:0px 0px 2px 18px;
@@ -39,8 +39,7 @@ ul#list-files li {
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
 }
-.comiter, .mfrom {
-	clear:none;
+.comiter, .mfrom, .mto {
 	color:#000;
 	padding:1px 0px 0px 18px;
 	margin:0px 10px 5px 0px;
@@ -58,6 +57,9 @@ ul#list-files li {
 }
 .mfrom {
 	background:url(../images/ico_mergefrom.gif) no-repeat top left;
+}
+.mto {
+	background:url(../images/ico_mergeto.gif) no-repeat top left;
 }
 /**/
 #loggerheadCont p.expand, #loggerheadCont p.expand a, #loggerheadCont p.expand a:link, #loggerheadCont p.expand a:visited, #loggerheadCont p.expand a:hover {
