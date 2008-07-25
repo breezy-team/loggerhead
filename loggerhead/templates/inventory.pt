@@ -40,7 +40,7 @@
           </tr>
           </thead>
           <tr class="blueRow0" tal:condition="python:updir">
-              <td class="summcell" colspan="5">
+              <td class="summcell" colspan="6">
                   <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">..</a>
               </td>
           </tr>
