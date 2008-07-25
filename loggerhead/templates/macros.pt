@@ -47,8 +47,6 @@
                                title string:Files;
                                id string:on">Files</a></li>
         </tal:block>
-        <li><a tal:attributes="href string:https://help.launchpad.net/Loggerhead;
-                               title string:Help">Help</a></li>       
       </ul>
       <div id="loggerheadCont">
     
@@ -57,7 +55,7 @@
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Launchpad runs <a href="https://launchpad.net/loggerhead" class="link">Loggerhead</a> on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
+        <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
     </div>
   </body>
 </html>

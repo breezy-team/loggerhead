@@ -93,27 +93,27 @@ ul#submenuTabs li a:link, ul#submenuTabs li a:visited {
 	text-align:center;
 	color:#fff;
 	text-decoration:none;
-	background:#d18b39;
+	background:#2f40a5;
 }
 ul#submenuTabs li {
 	float:left;
 	display:inline;
 	margin-left:1px;
 	color:#fff;
-	background:#d18b39;
+	background:#2f40a5;
 }
 ul#submenuTabs li a:hover {
 	float:left;
 	display:inline;
 	color:#fff;
-	background:#d18b39;
+	background:#2f40a5;
 	text-decoration:underline;
 }
 ul#submenuTabs li#first a, ul#submenuTabs li#first a:link, ul#submenuTabs li#first a:visited, ul#submenuTabs li#first a:hover {
-	background:#d18b39 url(../images/bg_submenuTabs.gif) top left no-repeat;
+	background:#2f40a5 url(../images/bg_submenuTabs.gif) top left no-repeat;
 }
 ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last a:visited, ul#submenuTabs li#last a:hover {
-	background:#d18b39 url(../images/bg_submenuTabs.gif) bottom right no-repeat;
+	background:#2f40a5 url(../images/bg_submenuTabs.gif) bottom right no-repeat;
 }
 
 /* Search & RSS */
