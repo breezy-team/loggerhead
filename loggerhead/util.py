@@ -191,6 +191,7 @@ def fill_div(s):
 
     return: the same value recieved if not empty, and a '&nbsp;' if it is.
     """
+    
 
     if s is None:
         return '&nbsp;'
@@ -199,6 +200,10 @@ def fill_div(s):
     elif not s.strip():
         return '&nbsp;'
     else:
+        try:
+            s = s.decode('utf-8')
+        except UnicodeDecodeError:
+            s = s.decode('iso-8859-15')
         return s
 
 
