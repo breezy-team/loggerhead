@@ -23,7 +23,7 @@ setup(
 # for some reason, distutils can't find bzr.
 #        "bzr >= 0.13",
     ],
-    scripts = ["start-loggerhead.py", "stop-loggerhead.py"],
+    scripts = ["start-loggerhead", "stop-loggerhead"],
     zip_safe=False,
     packages=find_packages(),
     package_data = find_package_data(where='loggerhead',
