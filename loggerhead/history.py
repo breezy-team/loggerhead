@@ -793,7 +793,13 @@ class History (object):
                 revid=revid, change=change_dict[revid])
             file_list.append(file)
 
-        file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
+        if sort_type == 'filename' or sort_type is None:
+            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
+        elif sort_type == 'size':
+            file_list.sort(key=lambda x: x.size)
+        elif sort_type == 'date':
+            file_list.sort(key=lambda x: x.change.date)
+        
         # Always sort by kind to get directories first
         file_list.sort(key=lambda x: x.kind != 'directory')
 
