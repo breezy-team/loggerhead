@@ -1,0 +1,23 @@
+Section: devel
+Priority: optional
+Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
+Uploaders: Jelmer Vernooij <jelmer@samba.org>
+Homepage: https://launchpad.net/loggerhead
+Build-Depends-Indep: bzr (>= 1.5)
+Build-Depends: python-central (>= 0.5), cdbs (>= 0.4.43), debhelper (>= 5.0.37.2), python-dev
+Standards-Version: 3.8.0
+XS-Python-Version: >= 2.4
+Vcs-Bzr: http://bzr.debian.org/pkg-bazaar/loggerhead/unstable/
+DM-Upload-Allowed: yes
+
+Package: loggerhead
+Architecture: all
+Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal
+Enhances: bzr
+Recommends: bzr-search
+XB-Python-Version: ${python:Versions}
+Description: Web server for Bazaar
+ Loggerhead is a web viewer for projects in the Bazaar version control system. 
+ It can be used to navigate a branch history, annotate files, view patches, 
+ perform searches, etc. It's heavily based on bazaar-webserve, which is itself 
+ based on hgweb for Mercurial.

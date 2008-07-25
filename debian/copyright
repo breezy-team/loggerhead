@@ -1,0 +1,38 @@
+This package was debianized by Jelmer Vernooij
+<jelmer@samba.org> on Fr 25. Jul 22:45:27 CEST 2008.
+
+It was downloaded from http://launchpad.net/loggerhead
+The tarball was created by running:
+
+bzr export -r100 loggerhead-0.0.1~bzr100.tar.gz http://launchpad.net/loggerhead
+
+Copyright (C) 2005  Matt Mackall <mpm@selenic.com>
+Copyright (C) 2005  Jake Edge <jake@edge2.net>
+Copyright (C) 2006  Robey Pointer <robey@lag.net>
+Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
+Copyright (C) 2005-2008  Canonical Ltd
+Copyright (C) 2008  Robert Collins
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License with
+the Debian GNU/Linux distribution in file /usr/share/common-licenses/GPL;
+if not, write to the Free Software Foundation, Inc., 51 Franklin St,
+Fifth Floor, Boston, MA 02110-1301, USA.
+
+On Debian systems, the full text of the GPL can be found in
+/usr/share/common-licenses/GPL
+
+Mootools is:
+
+Copyright (c) 2006-2008 Valerio Proietti, <http://mad4milk.net>.
+
+MIT Style License
