@@ -29,10 +29,10 @@
 
       <table id="logentries">
           <tr class="logheader">
-            <th class="summarycell">Filename</th>
+            <th class="summarycell"><a tal:attributes="href python:url(['/files', revid], sort='filename')">Filename</a></th>
             <th class="datecell">Latest Rev</th>
-            <th class="datecell">Last Changed</th>
-            <th class="timedate">Size</th>
+            <th class="datecell"><a tal:attributes="href python:url(['/files', revid], sort='date')">Last Changed</a></th>
+            <th class="timedate"><a tal:attributes="href python:url(['/files', revid], sort='size')">Size</a></th>
             <th class="expandcell"></th>
             <th class="expandcell"></th>
           </tr>
