@@ -13,7 +13,7 @@ from paste import httpexceptions
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
 
-sql_dir = tempfile.mkdtemp()
+sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 
 class DirectoryListing(object):
