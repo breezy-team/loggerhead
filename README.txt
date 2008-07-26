@@ -42,14 +42,14 @@ options.
 
 Loggerhead can then be started by running::
 
-    $ ./start-loggerhead.py
+    $ ./start-loggerhead
 
 This will run loggerhead in the background, listening on port 8080 by
 default.
 
 To stop Loggerhead, run::
 
-    $ ./stop-loggerhead.py
+    $ ./stop-loggerhead
 
 In the configuration file you can configure projects, and branches per
 project.  The idea is that you could be publishing several (possibly
