@@ -17,8 +17,10 @@ Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal
 Enhances: bzr
 Recommends: bzr-search
 XB-Python-Version: ${python:Versions}
-Description: Web server for Bazaar
- Loggerhead is a web viewer for projects in the Bazaar version control system. 
- It can be used to navigate a branch history, annotate files, view patches, 
- perform searches, etc. It's heavily based on bazaar-webserve, which is itself 
+Description: Web viewer for Bazaar
+ This is a web viewer for projects in the Bazaar version control system. 
+ It can be used to navigate a branch history, annotate files, view patches and
+ perform searches. 
+ .
+ It's heavily based on bazaar-webserve, which is itself 
  based on hgweb for Mercurial.
