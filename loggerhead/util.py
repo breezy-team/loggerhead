@@ -1,4 +1,6 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
+#                     (Authored by Martin Albisetti <argentina@gmail.com)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #

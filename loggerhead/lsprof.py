@@ -1,3 +1,5 @@
+
+#
 # this is copied from the lsprof distro because somehow
 # it is not installed by distutils
 # I made one modification to profile so that it returns a pair

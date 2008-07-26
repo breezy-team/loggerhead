@@ -1,6 +1,6 @@
-# Copyright (C) 2008  Canonical Ltd
-# Authored by Martin Albisetti <argentina@gmail.com>
 #
+# Copyright (C) 2008  Canonical Ltd.
+#                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2008  Robert Collins
 #
 # This program is free software; you can redistribute it and/or modify
