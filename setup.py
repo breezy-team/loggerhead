@@ -23,12 +23,14 @@ setup(
 # for some reason, distutils can't find bzr.
 #        "bzr >= 0.13",
     ],
-    scripts = ["start-loggerhead", "stop-loggerhead"],
+    scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
     zip_safe=False,
     packages=find_packages(),
     package_data = find_package_data(where='loggerhead',
                                      package='loggerhead'),
 #    data_files = find_package_data(where='loggerhead', package='loggerhead'),
+    data_files=[('share/man/man1', 
+                    ['start-loggerhead.1', 'stop-loggerhead.1'])],
     keywords = [
         'turbogears.app',
     ],
