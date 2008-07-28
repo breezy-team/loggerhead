@@ -32,7 +32,7 @@ import re
 import struct
 import threading
 import time
-
+import types
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -184,9 +184,30 @@ def html_clean(s):
     s = s.replace(' ', '&nbsp;')
     return s
 
-
-
 NONBREAKING_SPACE = u'\N{NO-BREAK SPACE}'
+
+def fill_div(s):
+    """
+    CSS is stupid. In some cases we need to replace an empty value with
+    a non breaking space (&nbsp;). There has to be a better way of doing this.
+
+    return: the same value recieved if not empty, and a '&nbsp;' if it is.
+    """
+    
+
+    if s is None:
+        return '&nbsp;'
+    elif isinstance(s, int):
+        return s
+    elif not s.strip():
+        return '&nbsp;'
+    else:
+        try:
+            s = s.decode('utf-8')
+        except UnicodeDecodeError:
+            s = s.decode('iso-8859-15')
+        return s
+
 
 def fixed_width(s):
     """
@@ -294,6 +315,7 @@ def fill_in_navigation(navigation):
             return None
         return navigation.revid_list[navigation.position + offset]
 
+    navigation.last_in_page_revid = get_offset(navigation.pagesize - 1)
     navigation.prev_page_revid = get_offset(-1 * navigation.pagesize)
     navigation.next_page_revid = get_offset(1 * navigation.pagesize)
     prev_page_revno = navigation.history.get_revno(

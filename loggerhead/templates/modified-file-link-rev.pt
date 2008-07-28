@@ -1,14 +1,7 @@
 <tal:block>
-  <a class="collapse-style-sbs-content filename"
+<li class="files"><a 
      tal:attributes="href  string:#${item/filename}-s;
                      title string:Jump to ${item/filename} below"
      tal:content="item/filename" >
-    item/filename
-  </a>
-  <a class="collapse-style-unified-content filename"
-     tal:attributes="href  string:#${item/filename}-u;
-                     title string:Jump to ${item/filename} below"
-     tal:content="item/filename" >
-    item/filename
-  </a>
+</a></li>
 </tal:block>

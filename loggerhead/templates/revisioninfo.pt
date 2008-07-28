@@ -1,89 +1,23 @@
-<div class="revision-info">
-  <table>
-    <tr>
-      <th class="author">
-        committed by:
-      </th>
-      <td class="author"
-          tal:content="python:util.hide_email(change.author)">
-        author@email
-      </td>
-    </tr>
-    <tr>
-      <th class="date">
-        date:
-      </th>
-      <td class="date"
-          tal:content="python:util.date_time(change.date)">
-        date
-      </td>
-    </tr>
-
-    <tr tal:repeat="merge_point change/merge_points">
-      <th class="children">
-        <tal:block condition="repeat/merge_point/start">
-          merged in:
-        </tal:block>
-      </th>
-      <td class="children">
-        <a title="Show history"
-           tal:attributes="title string:Show revision ${merge_point/revno};
-                                        href python:url(['/revision', merge_point.revno], clear=1,
-                                                        start_revid=merge_point.revid)"
-           tal:content="python:revno_with_nick(merge_point)">
-          ${text}
-        </a>
-      </td>
-    </tr>
-
-    <tr tal:repeat="parent python:change.parents[1:]">
-      <th class="parents">
-        <tal:block condition="repeat/parent/start">
-          merged from:
-        </tal:block>
-      </th>
-      <td class="parents">
-        <a title="Show history"
-           tal:attributes="title string:Show revision ${parent/revno};
-                           href python:url(['/revision', parent.revno], clear=1, start_revid=parent.revno)"
-           tal:content="python:revno_with_nick(parent)">
-          class="revlink">
-          ${text}
-        </a>
-      </td>
-    </tr>
-
-    <tr>
-      <th class="description">
-        description:
-      </th>
-      <td class="description">
-        <span tal:repeat="line change/comment_clean">
-          <tal:line replace="structure line" />
-          <br />
-        </span>
-      </td>
-    </tr>
-
-    <tr>
-      <th class="revid">
-        revision id:
-      </th>
-      <td class="revid">
-          <span tal:content="python:change.revid">
-              revid
-        </span>
-      </td>
-    </tr>
-
-    <tal:block condition="nocall:modified_file_link">
-      <tr class="divider">
-        <th>
-        </th>
-        <td>
-        </td>
-      </tr>
-      <tal:block content="structure python:file_change_summary(url, change, modified_file_link)" />
-    </tal:block>
-  </table>
+<div id="infoContainer" class="revision-info">
+    <div id="infTxt">
+        <div class="comiter" tal:content="python:util.hide_email(change.author)"></div>
+        <div class="timer" tal:content="python:util.date_time(change.date)"></div>
+        <div class="mfrom" tal:repeat="parent python:change.parents[1:]">
+            <a tal:attributes="title string:Merged From ${parent/revno};
+                               href python:url(['/revision', parent.revno], clear=1)"
+               tal:content="python:revno_with_nick(parent)"></a>
+        </div>
+        <div class="mto" tal:repeat="merge_point change/merge_points">
+            <a tal:attributes="title string:Merged In ${merge_point/revno};
+                               href python:url(['/revision', merge_point.revno], clear=1)"
+               tal:content="python:revno_with_nick(merge_point)"></a>
+        </div>
+        <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
+        <div class="information" tal:content="change/comment"></div>
+    </div>
+    <ul id="list-files">
+        <tal:block condition="nocall:modified_file_link">
+        <tal:block content="structure python:file_change_summary(url, change, modified_file_link)" /></tal:block>
+    </ul>
+    <div class="clear"><!-- --></div>
 </div>
