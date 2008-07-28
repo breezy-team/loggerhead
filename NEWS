@@ -4,6 +4,11 @@ What's changed in loggerhead?
 1.6 [unreleased]
 ----------------
 
+    - New ninja theme sponsored by Canonical (Martin Albisetti)
+
+    - Remove the .py extension requiered by the Debian Policy.
+      (Jelmer Vernooij)
+
     - Loggerhead is no longer a TurboGears application, but rather a
       WSGI application built using Paste (see http://wsgi.org/ and
       http://pythonpaste.org/ for more about WSGI and Paste). XXX more.
@@ -23,7 +28,9 @@ What's changed in loggerhead?
       memory consumption of rendering by a factor of around 3 for
       large pages over the old Kid templates.
 
-    - Loggerhead's poorly performing text index was disabled.
+    - Loggerhead's poorly performing text index was disabled. bzr-search
+      is now used if the plugin is installed and a text index is present
+      on the branch being viewed. (Martin Albisetti, Robert Collins).
 
     - Loggerhead no longer depends on bzrlib functions deprecated in
       Bazaar 1.5 and removed in 1.6 (Martin Albisetti).

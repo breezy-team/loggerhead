@@ -32,7 +32,6 @@ def dirname(path):
     path = posixpath.dirname(path)
     return path
 
-
 class AnnotateUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.annotate'
@@ -71,4 +70,5 @@ class AnnotateUI (TemplatedBranchView):
             'navigation': navigation,
             'change': h.get_changes([ revid ])[0],
             'contents': list(h.annotate_file(file_id, revid)),
+            'fileview_active': True,
         }
