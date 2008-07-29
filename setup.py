@@ -12,50 +12,39 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+"""Loggerhead is a web viewer for projects in bazaar"""
 
-from setuptools import setup, find_packages
-from turbogears.finddata import find_package_data
-
+from distutils.core import setup, Command
+from distutils.command.install_data import install_data
+from distutils.dep_util import newer
+from distutils.log import info
+import glob
 import os
-execfile(os.path.join("loggerhead", "release.py"))
+import sys
 
+
+if sys.version_info < (2, 4):
+    sys.stderr.write("[ERROR] Not a supported Python version. Need 2.4+\n")
+    sys.exit(1)
+
+class InstallData(install_data):
+    def run(self):
+        install_data.run(self)
 
 setup(
-    name="loggerhead",
-    version=version,
-    
-    description=description,
-    author=author,
-    author_email=email,
-    url=url,
-    download_url=download_url,
-    license=license,
-    maintainer="Michael Hudson",
-    maintainer_email="michael.hudson@canonical.com",
-    
-    install_requires = [
-        "TurboGears >= 1.0b1",
-# for some reason, distutils can't find bzr.
-#        "bzr >= 0.13",
-    ],
+    name = "loggerhead",
+    version = "1.6",
+    description = "Loggerhead is a web viewer for projects in bazaar",
+    license = "GNU GPL v2 or later",
+    maintainer = "Michael Hudson",
+    maintainer_email = "michael.hudson@canonical.com",
     scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
-    zip_safe=False,
-    packages=find_packages(),
-    package_data = find_package_data(where='loggerhead',
-                                     package='loggerhead'),
-#    data_files = find_package_data(where='loggerhead', package='loggerhead'),
-    data_files=[('share/man/man1', 
-                    ['start-loggerhead.1', 'stop-loggerhead.1'])],
-    keywords = [
-        'turbogears.app',
-    ],
-    classifiers = [
-        'Development Status :: 3 - Alpha',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Framework :: TurboGears',
-        'Framework :: TurboGears :: Applications',
-    ],
-    test_suite = 'nose.collector',
+    packages = ["loggerhead",
+               ],
+    data_files=[
+                ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1']),
+                ('share/doc/loggerhead', ['loggerhead.conf.example'])
+               ],
+    cmdclass={'install_data':InstallData}
     )
     
