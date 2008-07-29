@@ -21,6 +21,7 @@ from distutils.log import info
 import glob
 import os
 import sys
+import loggerhead
 
 
 if sys.version_info < (2, 4):
@@ -33,7 +34,7 @@ class InstallData(install_data):
 
 setup(
     name = "loggerhead",
-    version = "1.6",
+    version = loggerhead.__version__,
     description = "Loggerhead is a web viewer for projects in bazaar",
     license = "GNU GPL v2 or later",
     maintainer = "Michael Hudson",
