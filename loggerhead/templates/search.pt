@@ -1,0 +1,8 @@
+<ul style="list-style:none; list-style-display:inline; padding:2px; max-height:450px;">
+<tal:block repeat="term terms" condition="python: len(terms) > 0">
+    <li><a tal:attributes="href python:url(['/changes'], q=term)" tal:content="term"></a></li>
+</tal:block>
+<tal:block condition="python: len(terms) == 0">
+    <li>No results found.</li>
+</tal:block>
+</ul>

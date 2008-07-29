@@ -1,0 +1,29 @@
+.TH START-LOGGERHEAD "1" "July 2008" "start-loggerhead 1.2.1" "User Commands"
+.SH NAME
+start-loggerhead \- start a loggerhead server
+.SH SYNOPSIS
+.B start-loggerhead
+[\fIoptions\fR]
+.SH DESCRIPTION
+Loggerhead is a web viewer for projects in bazaar. It can be used to navigate 
+a branch history, annotate files, view patches, perform searches, etc. It's 
+heavily based on bazaar-webserve, which is itself based on hgweb for Mercurial.
+.PP
+The start-loggerhead command starts a new standalone loggerhead server.
+.SH OPTIONS
+.TP
+\fB\-\-version\fR
+show program's version number and exit
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-f\fR, \fB\-\-foreground\fR
+run in the foreground; don't daemonize
+.TP
+\fB\-C\fR, \fB\-\-check\fR
+only start if not already running (useful for cron jobs)
+.SH "LICENSE"
+GNU GPLv2 or later.
+.SH "SEE ALSO"
+https://launchpad.net/loggerhead

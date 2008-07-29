@@ -1,4 +1,6 @@
 #
+# Copyright (C) 2008  Canonical Ltd. 
+#                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 # Copyright (C) 2005  Jake Edge <jake@edge2.net>
@@ -35,6 +37,7 @@ import threading
 import time
 from StringIO import StringIO
 
+from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
 
@@ -46,7 +49,6 @@ import bzrlib.progress
 import bzrlib.revision
 import bzrlib.tsort
 import bzrlib.ui
-
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
@@ -91,19 +93,29 @@ def _make_side_by_side(chunk_list):
     out_chunk_list = []
     for chunk in chunk_list:
         line_list = []
+        wrap_char = '<wbr/>'
         delete_list, insert_list = [], []
         for line in chunk.diff:
+            # Add <wbr/> every X characters so we can wrap properly
+            wrap_line = re.findall(r'.{%d}|.+$' % 78, line.line)
+            wrap_lines = [util.html_clean(_line) for _line in wrap_line]
+            wrapped_line = wrap_char.join(wrap_lines)
+
             if line.type == 'context':
                 if len(delete_list) or len(insert_list):
-                    _process_side_by_side_buffers(line_list, delete_list, insert_list)
+                    _process_side_by_side_buffers(line_list, delete_list, 
+                                                  insert_list)
                     delete_list, insert_list = [], []
-                line_list.append(util.Container(old_lineno=line.old_lineno, new_lineno=line.new_lineno,
-                                                old_line=line.line, new_line=line.line,
-                                                old_type=line.type, new_type=line.type))
+                line_list.append(util.Container(old_lineno=line.old_lineno, 
+                                                new_lineno=line.new_lineno,
+                                                old_line=wrapped_line, 
+                                                new_line=wrapped_line,
+                                                old_type=line.type, 
+                                                new_type=line.type))
             elif line.type == 'delete':
-                delete_list.append((line.old_lineno, line.line, line.type))
+                delete_list.append((line.old_lineno, wrapped_line, line.type))
             elif line.type == 'insert':
-                insert_list.append((line.new_lineno, line.line, line.type))
+                insert_list.append((line.new_lineno, wrapped_line, line.type))
         if len(delete_list) or len(insert_list):
             _process_side_by_side_buffers(line_list, delete_list, insert_list)
         out_chunk_list.append(util.Container(diff=line_list))
@@ -387,13 +399,15 @@ class History (object):
             revid_list = self.get_file_view(start_revid, file_id)
         else:
             revid_list = None
-
-        revid_list = self.get_search_revid_list(query, revid_list)
+        revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
                 revid = revid_list[0]
             return revid, start_revid, revid_list
         else:
+            # XXX: This should return a message saying that the search could
+            # not be completed due to either missing the plugin or missing a
+            # search index.
             return None, None, []
 
     def get_inventory(self, revid):
@@ -684,21 +698,27 @@ class History (object):
                 old_lineno = lines[0]
                 new_lineno = lines[1]
             elif line.startswith(' '):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=new_lineno,
-                                                 type='context', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, 
+                                                 new_lineno=new_lineno,
+                                                 type='context', 
+                                                 line=line[1:]))
                 old_lineno += 1
                 new_lineno += 1
             elif line.startswith('+'):
-                chunk.diff.append(util.Container(old_lineno=None, new_lineno=new_lineno,
-                                                 type='insert', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=None, 
+                                                 new_lineno=new_lineno,
+                                                 type='insert', line=line[1:]))
                 new_lineno += 1
             elif line.startswith('-'):
-                chunk.diff.append(util.Container(old_lineno=old_lineno, new_lineno=None,
-                                                 type='delete', line=util.fixed_width(line[1:])))
+                chunk.diff.append(util.Container(old_lineno=old_lineno, 
+                                                 new_lineno=None,
+                                                 type='delete', line=line[1:]))
                 old_lineno += 1
             else:
-                chunk.diff.append(util.Container(old_lineno=None, new_lineno=None,
-                                                 type='unknown', line=util.fixed_width(repr(line))))
+                chunk.diff.append(util.Container(old_lineno=None, 
+                                                 new_lineno=None,
+                                                 type='unknown', 
+                                                 line=repr(line)))
         if chunk is not None:
             chunks.append(chunk)
         return chunks

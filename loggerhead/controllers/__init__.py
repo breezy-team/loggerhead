@@ -65,7 +65,6 @@ class TemplatedBranchView(object):
         h = self._history
         kw = dict(parse_querystring(environ))
         util.set_context(kw)
-
         args = []
         while 1:
             arg = path_info_pop(environ)
@@ -96,4 +95,3 @@ class TemplatedBranchView(object):
         self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
             self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
         return []
-
