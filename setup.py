@@ -41,6 +41,7 @@ setup(
     scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
     packages = ["loggerhead",
                ],
+    package_data = {"loggerhead":["templates/*"]},
     data_files=[
                 ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1']),
                 ('share/doc/loggerhead', ['loggerhead.conf.example'])
