@@ -14,3 +14,4 @@
 
 """Just a simple container to turn this into a python package."""
 __version__ = '1.6'
+required_bzrlib = (1, 6)
