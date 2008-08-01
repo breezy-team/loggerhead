@@ -21,8 +21,7 @@
           <tr tal:attributes="class string:blueRow${file/parity}">
               <td class="autcell">
                       <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
-               <a tal:attributes="href dir" tal:content="dir" />
-               </td>
+               <a tal:attributes="href string:${dir}/files" tal:content="dir" /></td>
                <td class="date">FIXME: last revno here!</td>
                <td class="date">FIXME: changed date here!</td>
           </tr>
