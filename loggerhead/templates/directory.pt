@@ -1,0 +1,21 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+  <head>
+    <title metal:fill-slot="title"
+           tal:content="string:Browsing ${path}"></title>
+  </head>
+  <body>
+    <h1 metal:fill-slot="heading">
+      Hi.
+    </h1>
+
+    <div metal:fill-slot="content">
+      <ul>
+        <li tal:repeat="dir dirs">
+          <a tal:attributes="href dir" tal:content="dir">
+          </a>
+        </li>
+      </ul>
+    </div>
+  </body>
+</html>
