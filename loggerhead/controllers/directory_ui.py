@@ -26,7 +26,7 @@ class DirectoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.directory'
 
-    def __init__(self, static_url_base, path):
+    def __init__(self, static_url_base, path, name):
         class branch(object):
             @staticmethod
             def static_url(path):
@@ -35,6 +35,7 @@ class DirectoryUI(TemplatedBranchView):
         self._branch = branch
         self._history = None
         self._path = path
+        self._name = name
         self._static_url_base = static_url_base
         self.log = logging.getLogger('')
 
@@ -44,5 +45,6 @@ class DirectoryUI(TemplatedBranchView):
                    and os.path.isdir(os.path.join(self._path, d))]
         return {
             'dirs': listing,
-            'path': self._path
+            'path': self._path,
+            'name': self._name,
             }

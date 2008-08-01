@@ -1,21 +1,23 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+<html xmlns="http://www.w3.org/1999/xhtml" >
   <head>
-    <title metal:fill-slot="title"
-           tal:content="string:Browsing ${path}"></title>
+    <title tal:content="string:Browsing ${name}"></title>
+    <link rel="stylesheet"
+          tal:attributes="href python:branch.static_url('/static/css/global.css')" />
   </head>
   <body>
-    <h1 metal:fill-slot="heading">
-      Hi.
-    </h1>
+    <div id="loggerheadCont">
+      <h1 tal:content="string:Browsing ${name}">
+        Hi.
+      </h1>
 
-    <div metal:fill-slot="content">
       <ul>
         <li tal:repeat="dir dirs">
           <a tal:attributes="href dir" tal:content="dir">
           </a>
         </li>
       </ul>
+      <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
     </div>
   </body>
 </html>

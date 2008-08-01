@@ -36,7 +36,11 @@ class BranchesFromFileSystemServer(object):
             raise httpexceptions.HTTPMovedPermanently(
                 environ['SCRIPT_NAME'] + '/')
         elif segment == '':
-            return DirectoryUI(environ['loggerhead.static.url'], self.path)
+            if self.name:
+                name = self.name
+            else:
+                name = os.path.basename(os.path.abspath(self.path))
+            return DirectoryUI(environ['loggerhead.static.url'], self.path, name)
         else:
             new_path = os.path.join(self.path, segment)
             if self.name:
