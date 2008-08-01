@@ -42,6 +42,7 @@ class DirectoryUI(TemplatedBranchView):
         listing = [d for d in os.listdir(self._path)
                    if not d.startswith('.')
                    and os.path.isdir(os.path.join(self._path, d))]
+        listing.sort(key=lambda x: x.lower())
         return {
             'dirs': listing,
             'path': self._path
