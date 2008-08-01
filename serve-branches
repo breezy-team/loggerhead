@@ -16,36 +16,81 @@
 """Search for branches underneath a directory and serve them all."""
 
 import logging
+import os
 import sys
+
+from optparse import OptionParser
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler
 from paste.translogger import TransLogger
 
-from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
+from loggerhead import __version__
+from loggerhead.apps.filesystem import (
+    BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
 
 
-logging.basicConfig()
-logging.getLogger().setLevel(logging.DEBUG)
+def command_line_parser():
+    parser = OptionParser("%prog [options] <path>")
+    parser.set_defaults(
+        user_dirs=False,
+        show_version=False,
+        )
+    parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
+                      help="Serve user directories as ~user.")
+    parser.add_option("--trunk-dir", metavar="DIR",
+                      help="The directory that contains the trunk branches.")
+    parser.add_option("--version", action="store_true", dest="show_version",
+                      help="Print the software version and exit")
+    return parser
 
-if len(sys.argv) > 1:
-    path = sys.argv[1]
-else:
-    path = '.'
 
-app = BranchesFromFileSystemRoot(path)
+def main(args):
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.DEBUG)
 
-app = HTTPExceptionHandler(app)
-app = TransLogger(app)
+    parser = command_line_parser()
+    (options, args) = parser.parse_args(sys.argv[1:])
 
-try:
-    from paste.deploy.config import PrefixMiddleware
-except ImportError:
-    pass
-else:
-    app = PrefixMiddleware(app)
+    if options.show_version:
+        print "loggerhead %s" % __version__
+        sys.exit(0)
 
-#from paste.evalexception import EvalException
-#app = EvalException(app)
+    if len(args) > 1:
+        parser.print_help()
+        sys.exit(1)
+    elif len(args) == 1:
+        [path] = args
+    else:
+        path = '.'
 
-httpserver.serve(app, host='0.0.0.0', port='8080')
+    if not os.path.isdir(path):
+        print "%s is not a directory" % path
+        sys.exit(1)
+
+    if options.trunk_dir and not options.user_dirs:
+        print "--trunk-dir is only valid with --user-dirs"
+        sys.exit(1)
+
+    if options.user_dirs:
+        if not options.trunk_dir:
+            print "You didn't specify a directory for the trunk directories."
+            sys.exit(1)
+        app = UserBranchesFromFileSystemRoot(path, options.trunk_dir)
+    else:
+        app = BranchesFromFileSystemRoot(path)
+    app = HTTPExceptionHandler(app)
+    app = TransLogger(app)
+
+    try:
+        from paste.deploy.config import PrefixMiddleware
+    except ImportError:
+        pass
+    else:
+        app = PrefixMiddleware(app)
+
+    httpserver.serve(app, host='0.0.0.0', port='8080')
+
+
+if __name__ == "__main__":
+    main(sys.argv)
