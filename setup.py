@@ -15,11 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
 """Loggerhead is a web viewer for projects in bazaar"""
 
+
 from distutils.core import setup
-from distutils.command.install_data import install_data
-import os
 import loggerhead
 
 
@@ -31,12 +31,10 @@ setup(
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
     scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
-    packages = ["loggerhead",
-               ],
-    package_data = {"loggerhead":["templates/*"]},
-    data_files=[
-                ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1']),
-                ('share/doc/loggerhead', ['loggerhead.conf.example'])
-               ],
+    packages = ["loggerhead"],
+    package_data = {"loggerhead":["templates/*.pt"]},
+    data_files = [
+        ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1']),
+        ('share/doc/loggerhead', ['loggerhead.conf.example']),
+        ],
     )
-    

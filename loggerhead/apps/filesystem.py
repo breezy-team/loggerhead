@@ -36,15 +36,16 @@ class DirectoryListing(object):
 
 
 class BranchesFromFileSystemServer(object):
-    def __init__(self, folder, root):
-        self.folder = folder
+    def __init__(self, path, root, name=None):
+        self.path = path
         self.root = root
+        self.name = name
 
     def app_for_branch(self, branch):
-        if not self.folder:
-            name = os.path.basename(os.path.abspath(self.root.folder))
+        if not self.name:
+            name = branch.nick
         else:
-            name = self.folder
+            name = self.name
         branch_app = BranchWSGIApp(
             branch, name, {'cachepath': sql_dir}, self.root.graph_cache)
         return branch_app.app
@@ -55,17 +56,20 @@ class BranchesFromFileSystemServer(object):
             raise httpexceptions.HTTPMovedPermanently(
                 environ['SCRIPT_NAME'] + '/')
         elif segment == '':
-            return DirectoryListing(os.path.join(self.root.folder, self.folder))
+            return DirectoryListing(self.path)
         else:
-            relpath = os.path.join(self.folder, segment)
-            return BranchesFromFileSystemServer(relpath, self.root)
+            new_path = os.path.join(self.path, segment)
+            if self.name:
+                new_name = os.path.join(self.name, segment)
+            else:
+                new_name = segment
+            return BranchesFromFileSystemServer(new_path, self.root, new_name)
 
     def __call__(self, environ, start_response):
-        path = os.path.join(self.root.folder, self.folder)
-        if not os.path.isdir(path):
+        if not os.path.isdir(self.path):
             raise httpexceptions.HTTPNotFound()
         try:
-            b = branch.Branch.open(path)
+            b = branch.Branch.open(self.path)
         except errors.NotBranchError:
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
@@ -88,4 +92,33 @@ class BranchesFromFileSystemRoot(object):
             return favicon_app(environ, start_response)
         else:
             return BranchesFromFileSystemServer(
-                '', self)(environ, start_response)
+                self.folder, self)(environ, start_response)
+
+
+class UserBranchesFromFileSystemRoot(object):
+
+    def __init__(self, folder, trunk_dir):
+        self.graph_cache = lru_cache.LRUCache()
+        self.folder = folder
+        self.trunk_dir = trunk_dir
+
+    def __call__(self, environ, start_response):
+        environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        path_info= environ['PATH_INFO']
+        if path_info.startswith('/static/'):
+            segment = path_info_pop(environ)
+            assert segment == 'static'
+            return static_app(environ, start_response)
+        elif path_info == '/favicon.ico':
+            return favicon_app(environ, start_response)
+        else:
+            # segments starting with ~ are user branches
+            if path_info.startswith('/~'):
+                segment = path_info_pop(environ)
+                new_path = os.path.join(self.folder, segment[1:])
+                return BranchesFromFileSystemServer(
+                    new_path, self, segment)(environ, start_response)
+            else:
+                new_path = os.path.join(self.folder, self.trunk_dir)
+                return BranchesFromFileSystemServer(
+                    new_path, self)(environ, start_response)
