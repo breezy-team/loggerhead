@@ -16,9 +16,19 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from loggerhead.controllers import TemplatedBranchView
 import logging
 import os
+
+from bzrlib import branch
+from bzrlib import errors
+
+from loggerhead.controllers import TemplatedBranchView
+
+class DirEntry(object):
+    def __init__(self, dirname, parity, branch):
+        self.dirname = dirname
+        self.parity = parity
+        self.branch = branch
 
 class DirectoryUI(TemplatedBranchView):
     """
@@ -44,8 +54,17 @@ class DirectoryUI(TemplatedBranchView):
                    if not d.startswith('.')
                    and os.path.isdir(os.path.join(self._path, d))]
         listing.sort(key=lambda x: x.lower())
+        dirs = []
+        parity = 0
+        for d in listing:
+            p = os.path.join(self._path, d)
+            try:
+                b = branch.Branch.open(p)
+            except errors.NotBranchError:
+                b = None
+            dirs.append(DirEntry(d, parity, b))
+            parity = 1 - parity
         return {
-            'dirs': listing,
-            'path': self._path,
+            'dirs': dirs,
             'name': self._name,
             }

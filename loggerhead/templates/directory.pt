@@ -20,11 +20,15 @@
           </tr>
           
           <tal:block repeat="dir dirs">
-            <tr tal:attributes="class string:blueRow${file/parity}">
+            <tr tal:attributes="class string:blueRow${dir/parity}">
               <td class="autcell">
                 <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
-                <a tal:attributes="href string:${dir}/files" tal:content="dir" /></td>
-              <td class="date">FIXME: last revno here!</td>
+                <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
+              <td class="date">
+                <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno">
+                  last revno here!
+                </tal:block>
+              </td>
               <td class="date">FIXME: changed date here!</td>
             </tr>
           </tal:block>
