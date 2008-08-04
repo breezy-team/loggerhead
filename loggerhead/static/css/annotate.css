@@ -1,0 +1,30 @@
+/*table*/
+.annoLineTit, .annoLine, .annoRevTit, .annoRev, .annoComm, .annoCommTit, .annoContTit, .annoCont {
+	padding:4px;
+	width:45px;
+	border:1px solid #d2d2d2;
+}
+.annoLine, .annoRev, .annoComm, .annoCont {
+	padding:5px 0px;
+	border:none;	
+}
+.annoLine {
+	width:37px;
+	padding:5px 4px;
+}
+.annoContTit, .annoCont {
+	width:auto;
+}
+.annoRevTit, .annoRev {
+	width:70px;
+	text-align:center;
+}
+.annoComm, .annoCommTit {
+	width:200px;
+}
+.annoLine, .annoCont {
+	font:normal 12px/normal monospace;
+}
+.annoLine {
+	text-align:right;
+}

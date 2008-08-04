@@ -9,9 +9,7 @@
   <body>
 
     <h1 metal:fill-slot="heading" style="padding-bottom: 1em">
-      <tal:title condition="title" content="title">
-        ${title}
-      </tal:title>
+      <tal:title condition="title" content="title" />
       <tal:no-title condition="not:title">
         bazaar branches in loggerhead
       </tal:no-title>
@@ -21,28 +19,18 @@
       <div class="browse-project"
            tal:repeat="project projects">
         <div class="browse-project-name"
-             tal:content="project/friendly_name">
-          ${project.friendly_name}
-        </div>
+             tal:content="project/friendly_name"></div>
 
         <div class="browse-project-description"
              tal:condition="python:len(project.long_description) > 0"
-             tal:content="structure project/long_description">
-          ${XML(project.long_description)}
-        </div>
+             tal:content="structure project/long_description"></div>
 
         <div class="browse-view">
           <table>
             <tr class="heading">
-              <th>
-                Name
-              </th>
-              <th>
-                Description
-              </th>
-              <th>
-                Last change
-              </th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Last change</th>
               <th />
             </tr>
             <tal:block repeat="view python:views_by_project[project]">

@@ -1,5 +1,5 @@
-# Copyright (C) 2008  Canonical Ltd
-# Authored by Martin Albisetti <argentina@gmail.com>
+# Copyright (C) 2008  Canonical Ltd.
+#                     (Authored by Martin Albisetti <argentina@gmail.com>)
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
