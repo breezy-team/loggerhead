@@ -30,7 +30,9 @@
                     last revno here!
                   </tal:block>
                 </td>
-                <td class="date">FIXME: changed date here!</td>
+                <td class="date" tal:content="dir/last_change">
+                  FIXME: changed date here!
+                </td>
               </tr>
             </tal:branch-row>
             <tal:non-branch-row tal:condition="not:dir/branch">
@@ -40,7 +42,7 @@
                   <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
                 <td class="date">
                 </td>
-                <td class="date">
+                <td class="date" tal:content="dir/last_change">
                   FIXME: changed date here!
                 </td>
               </tr>

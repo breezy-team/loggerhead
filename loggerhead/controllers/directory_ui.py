@@ -29,6 +29,7 @@ class DirEntry(object):
         self.dirname = dirname
         self.parity = parity
         self.branch = branch
+        self.last_change = "FIXME"
 
 class DirectoryUI(TemplatedBranchView):
     """
