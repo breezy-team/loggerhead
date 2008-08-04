@@ -26,7 +26,9 @@
                   <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" />
                   <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
                 <td class="date">
-                  <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno" />
+                  <a tal:attributes="href string:${dir/dirname}/revision/${dir/branch/revno};
+                                     title string:Show revision ${dir/branch/revno}"
+                     tal:content="dir/branch/revno"></a>
                 </td>
                 <td class="date" tal:content="python:util.date_time(dir.last_change)"></td>
               </tr>
