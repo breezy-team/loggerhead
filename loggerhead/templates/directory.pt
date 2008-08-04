@@ -3,7 +3,7 @@
   <head>
     <title tal:content="string:Browsing ${name}"></title>
     <link rel="stylesheet"
-          tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+          tal:attributes="href python:static_url('/static/css/global.css')" />
   </head>
   <body>
     <div id="loggerheadCont">
@@ -23,7 +23,7 @@
             <tal:branch-row tal:condition="dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="autcell">
-                  <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" />
+                  <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" />
                   <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
                 <td class="date">
                   <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno" />
@@ -34,7 +34,7 @@
             <tal:non-branch-row tal:condition="not:dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="autcell">
-                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" />
                   <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
                 <td class="date">
                 </td>

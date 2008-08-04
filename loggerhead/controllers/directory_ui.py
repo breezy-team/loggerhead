@@ -21,7 +21,6 @@ import logging
 import os
 
 from bzrlib import branch
-from bzrlib import errors
 
 from loggerhead.controllers import TemplatedBranchView
 
@@ -30,7 +29,8 @@ class DirEntry(object):
         self.dirname = dirname
         self.parity = parity
         self.branch = branch
-        self.last_change =  datetime.datetime.fromtimestamp(
+        if branch is not None:
+            self.last_change =  datetime.datetime.fromtimestamp(
                 branch.repository.get_revision(branch.last_revision()).timestamp)
 
 class DirectoryUI(TemplatedBranchView):
@@ -40,12 +40,9 @@ class DirectoryUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.directory'
 
     def __init__(self, static_url_base, path, name):
-        class branch(object):
-            @staticmethod
-            def static_url(path):
-                return self._static_url_base + path
+        class _branch(object):
             context_url = 1
-        self._branch = branch
+        self._branch = _branch
         self._history = None
         self._path = path
         self._name = name
@@ -59,6 +56,8 @@ class DirectoryUI(TemplatedBranchView):
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
+        def static_url(path):
+            return self._static_url_base + path
         for d in listing:
             p = os.path.join(self._path, d)
             try:
@@ -70,4 +69,5 @@ class DirectoryUI(TemplatedBranchView):
         return {
             'dirs': dirs,
             'name': self._name,
+            'static_url': static_url,
             }
