@@ -15,9 +15,6 @@
 
 """A script for stopping the loggerhead process."""
 
-import pkg_resources
-pkg_resources.require("TurboGears")
-
 import os
 import sys
 
