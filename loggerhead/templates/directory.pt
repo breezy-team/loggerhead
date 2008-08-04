@@ -1,32 +1,55 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+<html xmlns="http://www.w3.org/1999/xhtml" >
   <head>
-    <title metal:fill-slot="title"
-           tal:content="string:Browsing ${path}"></title>
+    <title tal:content="string:Browsing ${name}"></title>
+    <link rel="stylesheet"
+          tal:attributes="href python:branch.static_url('/static/css/global.css')" />
   </head>
   <body>
-    <h1 metal:fill-slot="heading">
-      Hi.
-    </h1>
+    <div id="loggerheadCont">
+      <h1 tal:content="string:Browsing ${name}">
+        Hi.
+      </h1>
 
-    <div metal:fill-slot="content">
-      <table id="logentries">
+      <div >
+        <table id="logentries">
           <tr class="logheader">
             <th class="summarycell">Filename</th>
             <th class="datecell">Latest Rev</th>
             <th class="datecell">Last Changed</th>
           </tr>
-
+          
           <tal:block repeat="dir dirs">
-          <tr tal:attributes="class string:blueRow${file/parity}">
-              <td class="autcell">
-                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
-               <a tal:attributes="href string:${dir}/files" tal:content="dir" /></td>
-               <td class="date">FIXME: last revno here!</td>
-               <td class="date">FIXME: changed date here!</td>
-          </tr>
-        </tal:block>
-      </table>
+            <tal:branch-row tal:condition="dir/branch">
+              <tr tal:attributes="class string:blueRow${dir/parity}">
+                <td class="autcell">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
+                <td class="date">
+                  <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno">
+                    last revno here!
+                  </tal:block>
+                </td>
+                <td class="date" tal:content="dir/last_change">
+                  FIXME: changed date here!
+                </td>
+              </tr>
+            </tal:branch-row>
+            <tal:non-branch-row tal:condition="not:dir/branch">
+              <tr tal:attributes="class string:blueRow${dir/parity}">
+                <td class="autcell">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
+                <td class="date">
+                </td>
+                <td class="date" tal:content="dir/last_change">
+                  FIXME: changed date here!
+                </td>
+              </tr>
+            </tal:non-branch-row>
+          </tal:block>
+        </table>
+      </div>
     </div>
   </body>
 </html>

@@ -16,9 +16,20 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from loggerhead.controllers import TemplatedBranchView
 import logging
 import os
+
+from bzrlib import branch
+from bzrlib import errors
+
+from loggerhead.controllers import TemplatedBranchView
+
+class DirEntry(object):
+    def __init__(self, dirname, parity, branch):
+        self.dirname = dirname
+        self.parity = parity
+        self.branch = branch
+        self.last_change = "FIXME"
 
 class DirectoryUI(TemplatedBranchView):
     """
@@ -26,7 +37,7 @@ class DirectoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.directory'
 
-    def __init__(self, static_url_base, path):
+    def __init__(self, static_url_base, path, name):
         class branch(object):
             @staticmethod
             def static_url(path):
@@ -35,6 +46,7 @@ class DirectoryUI(TemplatedBranchView):
         self._branch = branch
         self._history = None
         self._path = path
+        self._name = name
         self._static_url_base = static_url_base
         self.log = logging.getLogger('')
 
@@ -43,7 +55,17 @@ class DirectoryUI(TemplatedBranchView):
                    if not d.startswith('.')
                    and os.path.isdir(os.path.join(self._path, d))]
         listing.sort(key=lambda x: x.lower())
+        dirs = []
+        parity = 0
+        for d in listing:
+            p = os.path.join(self._path, d)
+            try:
+                b = branch.Branch.open(p)
+            except:
+                b = None
+            dirs.append(DirEntry(d, parity, b))
+            parity = 1 - parity
         return {
-            'dirs': listing,
-            'path': self._path
+            'dirs': dirs,
+            'name': self._name,
             }
