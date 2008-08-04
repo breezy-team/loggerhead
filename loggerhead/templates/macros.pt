@@ -32,7 +32,7 @@
             </div>
           </div>
         </form>
-        
+
         <tal:block tal:condition="not:fileview_active">
         <li><a tal:attributes="href python:url('/changes', clear=1);
                                title string:Changes;
@@ -49,7 +49,7 @@
         </tal:block>
       </ul>
       <div id="loggerheadCont">
-    
+
          <div id="search_terms"></div>
 
         <h1 metal:define-slot="heading"></h1>

@@ -15,8 +15,16 @@
   <body>
 
     <h1 metal:fill-slot="heading">
-        <tal:block content="branch/friendly_name"></tal:block>
-        <span>: <span tal:content="path"></span> (revision <tal:revno content="change/revno"></tal:revno>)</span>
+      <tal:has-link condition="branch/branch_link">
+        <a tal:attributes="href branch/branch_link"
+           tal:content="branch/friendly_name">
+          nice/branch/name
+        </a>
+      </tal:has-link>
+      <tal:no-link condition="not: branch/branch_link">
+        <tal:branch-name replace="branch/friendly_name" />
+      </tal:no-link>
+      <span>: <span tal:content="path"></span> (revision <tal:revno content="change/revno"></tal:revno>)</span>
     </h1>
 
     <div metal:fill-slot="content">

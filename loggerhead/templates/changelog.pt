@@ -14,7 +14,16 @@
     <body>
         <tal:block metal:fill-slot="heading">
          <h1>
-          <tal:block content="branch/friendly_name"></tal:block>: changes
+           <tal:has-link condition="branch/branch_link">
+             <a tal:attributes="href branch/branch_link"
+                tal:content="branch/friendly_name">
+               nice/branch/name
+             </a>
+           </tal:has-link>
+           <tal:no-link condition="not: branch/branch_link">
+             <tal:branch-name replace="branch/friendly_name" />
+           </tal:no-link>
+           : changes
           <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
           <tal:block condition="start_revid">from revision <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
           <tal:block condition="query">matching <tal:block content="query" /></tal:block>
