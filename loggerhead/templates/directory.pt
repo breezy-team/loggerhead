@@ -11,13 +11,24 @@
         Hi.
       </h1>
 
-      <ul>
-        <li tal:repeat="dir dirs">
-          <a tal:attributes="href dir" tal:content="dir">
-          </a>
-        </li>
-      </ul>
-      <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
+    <div metal:fill-slot="content">
+      <table id="logentries">
+          <tr class="logheader">
+            <th class="summarycell">Filename</th>
+            <th class="datecell">Latest Rev</th>
+            <th class="datecell">Last Changed</th>
+          </tr>
+
+          <tal:block repeat="dir dirs">
+          <tr tal:attributes="class string:blueRow${file/parity}">
+              <td class="autcell">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+               <a tal:attributes="href string:${dir}/files" tal:content="dir" /></td>
+               <td class="date">FIXME: last revno here!</td>
+               <td class="date">FIXME: changed date here!</td>
+          </tr>
+        </tal:block>
+      </table>
     </div>
   </body>
 </html>
