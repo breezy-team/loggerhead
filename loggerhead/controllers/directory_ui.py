@@ -60,7 +60,7 @@ class DirectoryUI(TemplatedBranchView):
             p = os.path.join(self._path, d)
             try:
                 b = branch.Branch.open(p)
-            except errors.NotBranchError:
+            except:
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity

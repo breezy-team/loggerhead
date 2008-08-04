@@ -20,17 +20,31 @@
           </tr>
           
           <tal:block repeat="dir dirs">
-            <tr tal:attributes="class string:blueRow${dir/parity}">
-              <td class="autcell">
-                <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
-                <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
-              <td class="date">
-                <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno">
-                  last revno here!
-                </tal:block>
-              </td>
-              <td class="date">FIXME: changed date here!</td>
-            </tr>
+            <tal:branch-row tal:condition="dir/branch">
+              <tr tal:attributes="class string:blueRow${dir/parity}">
+                <td class="autcell">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
+                <td class="date">
+                  <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno">
+                    last revno here!
+                  </tal:block>
+                </td>
+                <td class="date">FIXME: changed date here!</td>
+              </tr>
+            </tal:branch-row>
+            <tal:non-branch-row tal:condition="not:dir/branch">
+              <tr tal:attributes="class string:blueRow${dir/parity}">
+                <td class="autcell">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
+                <td class="date">
+                </td>
+                <td class="date">
+                  FIXME: changed date here!
+                </td>
+              </tr>
+            </tal:non-branch-row>
           </tal:block>
         </table>
       </div>
