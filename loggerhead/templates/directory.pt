@@ -23,16 +23,12 @@
             <tal:branch-row tal:condition="dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="autcell">
-                  <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif')" />
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" />
                   <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
                 <td class="date">
-                  <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno">
-                    last revno here!
-                  </tal:block>
+                  <tal:block tal:condition="dir/branch" tal:content="dir/branch/revno" />
                 </td>
-                <td class="date" tal:content="dir/last_change">
-                  FIXME: changed date here!
-                </td>
+                <td class="date" tal:content="python:util.date_time(dir.last_change)"></td>
               </tr>
             </tal:branch-row>
             <tal:non-branch-row tal:condition="not:dir/branch">

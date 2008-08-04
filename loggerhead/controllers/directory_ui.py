@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import datetime
 import logging
 import os
 
@@ -29,7 +30,8 @@ class DirEntry(object):
         self.dirname = dirname
         self.parity = parity
         self.branch = branch
-        self.last_change = "FIXME"
+        self.last_change =  datetime.datetime.fromtimestamp(
+                branch.repository.get_revision(branch.last_revision()).timestamp)
 
 class DirectoryUI(TemplatedBranchView):
     """
