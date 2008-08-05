@@ -15,7 +15,17 @@
     <body>
 
       <tal:block metal:fill-slot="heading">
-        <h1><tal:block content="branch/friendly_name" /><span>: <tal:revno content="change/revno"></tal:revno>
+        <h1>
+          <tal:has-link condition="branch/branch_link">
+            <a tal:attributes="href branch/branch_link"
+               tal:content="branch/friendly_name">
+              nice/branch/name
+            </a>
+          </tal:has-link>
+          <tal:no-link condition="not: branch/branch_link">
+            <tal:branch-name replace="branch/friendly_name" />
+          </tal:no-link>
+          <span>: <tal:revno content="change/revno"></tal:revno>
         <tal:compare-to condition="python:compare_revid is not None">
           (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
           </tal:compare-to>
