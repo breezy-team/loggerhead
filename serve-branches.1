@@ -1,0 +1,29 @@
+.TH LOGGERHEAD "1" "August 2008" "loggerhead 1.6" "User Commands"
+.SH NAME
+loggerhead \- manual page for loggerhead 1.6
+.SH SYNOPSIS
+.B serve-branches
+[\fIoptions\fR] \fI<path>\fR
+.SH DESCRIPTION
+Loggerhead is a web viewer for projects in bazaar. It can be used to navigate 
+a branch history, annotate files, view patches, perform searches, etc. It's 
+heavily based on bazaar-webserve, which is itself based on hgweb for Mercurial.
+.PP
+The serve-branches command runs a standalone loggerhead server in the foreground.
+.SH OPTIONS
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show this help message and exit
+.TP
+\fB\-\-user\-dirs\fR
+Serve user directories as ~user.
+.TP
+\fB\-\-trunk\-dir\fR=\fIDIR\fR
+The directory that contains the trunk branches.
+.TP
+\fB\-\-version\fR
+Print the software version and exit
+.SH "LICENSE"
+GNU GPLv2 or later.
+.SH "SEE ALSO"
+https://launchpad.net/loggerhead
