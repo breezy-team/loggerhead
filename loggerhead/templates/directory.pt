@@ -14,16 +14,26 @@
       <div >
         <table id="logentries">
           <tr class="logheader">
-            <th class="summarycell">Filename</th>
+            <th class="summarycell" colspan="2">Filename</th>
             <th class="datecell">Latest Rev</th>
             <th class="datecell">Last Changed</th>
           </tr>
           
+          <tr class="blueRow0" tal:condition="python:name != '/'">
+            <td  class="autcell icocell">
+            </td>
+            <td class="summcell" colspan="3">
+              <a href="..">..</a>
+            </td>
+          </tr>
           <tal:block repeat="dir dirs">
+
             <tal:branch-row tal:condition="dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
-                <td class="autcell">
+                <td class="autcell icocell">
                   <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" />
+                </td>
+                <td class="autcell">
                   <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
                 <td class="date">
                   <a tal:attributes="href string:${dir/dirname}/revision/${dir/branch/revno};
@@ -35,8 +45,10 @@
             </tal:branch-row>
             <tal:non-branch-row tal:condition="not:dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
-                <td class="autcell">
+                <td class="autcell icocell">
                   <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" />
+                </td>
+                <td class="autcell">
                   <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
                 <td class="date">
                 </td>

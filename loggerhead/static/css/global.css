@@ -235,6 +235,9 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .authorcell, .autcell {
 	width:202px;
 }
+.icocell {
+        width:32px;
+}
 .datecell, .date {
 	width:110px;
 }
