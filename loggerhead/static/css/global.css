@@ -18,11 +18,11 @@ img {
 	outline:none;
 }
 form {
-	margin:0;
-	padding:0;
+  margin: 0;
+  padding: 0;
 }
 tr td {
-    vertical-align:top
+  vertical-align: top;
 }
 .clear {
 	clear:both;
@@ -228,18 +228,15 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .expandcell, .expcell {
 	width:28px;	
 }
-.summarycell, .authorcell, .datecell, .summcell, .autcell, .date, .timedate, .timedate2 {
-	padding:4px 8px;
-	border:1px solid #d2d2d2;
-}
-.authorcell, .autcell {
-	width:202px;
+.summarycell, .authorcell, .datecell, .timedate{
+  padding:4px 8px;
+  border:1px solid #d2d2d2;
 }
 .icocell {
-        width:32px;
+  width: 22px;
 }
 .datecell, .date {
-	width:110px;
+  width: 180px;
 }
 .timedate, .timedate2 {
 	width:80px;
@@ -247,9 +244,10 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .downloadcell, .downr {
 	width:47px;
 }
-.revnro, .expcell, .diffr, .summcell, .autcell, .date, .downr, .allicones, .timedate2 {
-	border:none;
-	border-bottom:1px solid #d2d2d2;
+.revnro, .expcell, .diffr, .summcell, .autcell, .icocell, .date, .downr, .allicones, .timedate2 {
+  border: 0;
+  padding: 4px 8px;
+  border-bottom:1px solid #d2d2d2;
 }
 .revisioninfo {
     margin-top:4px;
