@@ -39,14 +39,14 @@ class BranchesFromFileSystemServer(object):
             if self.name:
                 name = self.name
             else:
-                name = os.path.basename(os.path.abspath(self.path))
+                name = '/'
             return DirectoryUI(environ['loggerhead.static.url'], self.path, name)
         else:
             new_path = os.path.join(self.path, segment)
             if self.name:
                 new_name = os.path.join(self.name, segment)
             else:
-                new_name = segment
+                new_name = '/' + segment
             return BranchesFromFileSystemServer(new_path, self.root, new_name)
 
     def __call__(self, environ, start_response):
