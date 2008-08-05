@@ -229,11 +229,11 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 	width:28px;	
 }
 .summarycell, .authorcell, .datecell, .timedate{
-  padding:4px 8px;
-  border:1px solid #d2d2d2;
+  padding: 4px 8px;
+  border: 1px solid #d2d2d2;
 }
 .icocell {
-  width: 22px;
+  width: 18px;
 }
 .datecell, .date {
   width: 180px;
@@ -246,7 +246,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 }
 .revnro, .expcell, .diffr, .summcell, .autcell, .icocell, .date, .downr, .allicones, .timedate2 {
   border: 0;
-  padding: 4px 8px;
+  padding: 4px 4px;
   border-bottom:1px solid #d2d2d2;
 }
 .revisioninfo {
