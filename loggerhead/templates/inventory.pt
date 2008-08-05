@@ -11,8 +11,17 @@
   <body>
 
     <h1 metal:fill-slot="heading">
-        <tal:block content="branch/friendly_name" />: viewing 
-        <span><tal:block content="path" /></span> for revision <span><tal:revno content="change/revno"></tal:revno></span>
+      <tal:has-link condition="branch/branch_link">
+        <a tal:attributes="href branch/branch_link"
+           tal:content="branch/friendly_name">
+          nice/branch/name
+        </a>
+      </tal:has-link>
+      <tal:no-link condition="not: branch/branch_link">
+        <tal:branch-name replace="branch/friendly_name" />
+      </tal:no-link>
+      : viewing
+      <span tal:content="path" /> for revision <span tal:content="change/revno"/>
     </h1>
 
     <div metal:fill-slot="content">
@@ -39,7 +48,8 @@
 
           <tr class="blueRow0" tal:condition="python:updir">
               <td class="summcell" colspan="6">
-                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">..</a>
+                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder_up.gif')" />..</a>
               </td>
           </tr>
           

@@ -1,38 +1,18 @@
 """Serve branches at urls that mimic the file system layout."""
 
-import cgi
 import os
 import tempfile
 
 from bzrlib import branch, errors, lru_cache
 
 from paste.request import path_info_pop
-from paste.wsgiwrappers import WSGIRequest, WSGIResponse
 from paste import httpexceptions
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
+from loggerhead.controllers.directory_ui import DirectoryUI
 
 sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
-
-
-class DirectoryListing(object):
-
-    def __init__(self, path):
-        self.path = path
-
-    def __call__(self, environ, start_response):
-        request = WSGIRequest(environ)
-        response = WSGIResponse()
-        listing = [d for d in os.listdir(self.path) if not d.startswith('.')]
-        response.headers['Content-Type'] = 'text/html'
-        print >> response, '<html><body>'
-        for d in sorted(listing):
-            if os.path.isdir(os.path.join(self.path, d)):
-                d = cgi.escape(d)
-                print >> response, '<li><a href="%s/">%s</a></li>' % (d, d)
-        print >> response, '</body></html>'
-        return response(environ, start_response)
 
 
 class BranchesFromFileSystemServer(object):
@@ -56,13 +36,17 @@ class BranchesFromFileSystemServer(object):
             raise httpexceptions.HTTPMovedPermanently(
                 environ['SCRIPT_NAME'] + '/')
         elif segment == '':
-            return DirectoryListing(self.path)
+            if self.name:
+                name = self.name
+            else:
+                name = '/'
+            return DirectoryUI(environ['loggerhead.static.url'], self.path, name)
         else:
             new_path = os.path.join(self.path, segment)
             if self.name:
                 new_name = os.path.join(self.name, segment)
             else:
-                new_name = segment
+                new_name = '/' + segment
             return BranchesFromFileSystemServer(new_path, self.root, new_name)
 
     def __call__(self, environ, start_response):
