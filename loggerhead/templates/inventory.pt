@@ -48,7 +48,8 @@
 
           <tr class="blueRow0" tal:condition="python:updir">
               <td class="summcell" colspan="6">
-                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">..</a>
+                  <a tal:attributes="href python:url(['/files', revid], file_id=updir_file_id)" class="link">
+                      <img tal:attributes="src python:branch.static_url('/static/images/ico_folder_up.gif')" />..</a>
               </td>
           </tr>
           
