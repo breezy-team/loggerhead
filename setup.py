@@ -40,7 +40,8 @@ setup(
                                   "static/javascript/*", 
                                   "static/images/*"]},
     data_files = [
-        ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1']),
+        ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1', 
+                           'serve-branches.1']),
         ('share/doc/loggerhead', ['loggerhead.conf.example']),
         ],
     )
