@@ -186,7 +186,6 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 	padding:0px 11px 0px 0px;
 	margin:0px 2px 0px 0px;
 	font-weight:bold;
-	background:url(../images/ico_link.gif) right top no-repeat;
 }
 .revnolink a, .revnolink a:visited, .revnolink a:link, .revnolink a:hover {
 	color:#CC6600;
