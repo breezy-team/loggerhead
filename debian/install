@@ -1,1 +1,1 @@
-debian/loggerhead.init	etc/init.d/loggerhead
+debian/loggerhead.conf etc/

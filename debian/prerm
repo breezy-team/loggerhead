@@ -1,3 +1,4 @@
 #!/bin/sh -e
+#DEBHELPER#
 
-invoke-rc.d loggerhead stop || exit 0
+invoke-rc.d loggerhead stop

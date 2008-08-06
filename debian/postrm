@@ -1,7 +1,2 @@
 #!/bin/sh -e
-
-if [ "$1" = "purge" ]
-then
-	update-rc.d bitlbee remove > /dev/null 2>&1 || true
-	rm -f /etc/default/loggerhead
-fi
+#DEBHELPER#
