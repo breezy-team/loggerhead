@@ -75,6 +75,15 @@ class InventoryUI(TemplatedBranchView):
         if updir == '/':
             updir_file_id = None
 
+        # Create breadcrumb trail
+        dir_parts = path.strip('/').split('/')
+        breadcrumbs = []
+        for index, dir_name in enumerate(dir_parts):
+            breadcrumbs.append({
+                'dir_name': dir_name,
+                'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            })
+
         return {
             'branch': self._branch,
             'util': util,
@@ -91,4 +100,5 @@ class InventoryUI(TemplatedBranchView):
             'url': self._branch.context_url,
             'start_revid': start_revid,
             'fileview_active': True,
+            'breadcrumbs': breadcrumbs,
         }

@@ -21,7 +21,12 @@
         <tal:branch-name replace="branch/friendly_name" />
       </tal:no-link>
       : viewing
-      <span tal:content="path" /> for revision <span tal:content="change/revno"/>
+      <ul tal:repeat="crumb breadcrumbs">
+          <li>
+            <a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" />
+          </li>
+      </ul>
+      for revision <span tal:content="change/revno"/>
     </h1>
 
     <div metal:fill-slot="content">
