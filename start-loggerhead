@@ -44,10 +44,9 @@ def make_handler(config, filename):
     return h
 
 
-def setup_logging(home, config, foreground):
+def setup_logging(logdir, config, foreground):
     # i hate that stupid logging config format, so just set up logging here.
 
-    log_folder = os.path.join(home, 'logs')
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
 
@@ -79,6 +78,7 @@ def main():
     home = os.path.realpath(os.path.dirname(__file__))
     default_pidfile = os.path.join(home, 'loggerhead.pid')
     default_configfile = os.path.join(home, 'loggerhead.conf')
+    default_log_folder = os.path.join(home, 'logs')
     parser = OptionParser(usage='usage: %prog [options]', version='%prog ' + release.version)
     parser.add_option('-f', '--foreground', action='store_true', dest='foreground', default=False,
                       help="run in the foreground; don't daemonize")
@@ -86,8 +86,10 @@ def main():
                       help="only start if not already running (useful for cron jobs)")
     parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
                       help="override pidfile location")
-    parser.add_option('-c', '--configfile', dest="configfile", default=default_configfile,
+    parser.add_option('-c', '--config-file', dest="configfile", default=default_configfile,
                       help="override configuration file location")
+    parser.add_option('-L', '--log-folder', dest="log-folder", default=default_log_folder,
+                      help="override log file directory")
     options, args = parser.parse_args()
     if len(args) > 0:
         parser.error('No filename arguments are used, only options.')
@@ -129,7 +131,7 @@ def main():
 
         daemon.daemonize(options.pidfile, home)
 
-    setup_logging(home, config, foreground=options.foreground)
+    setup_logging(options.log_folder, config, foreground=options.foreground)
 
     log = logging.getLogger('loggerhead')
     log.info('Starting up...')
