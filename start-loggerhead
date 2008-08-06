@@ -79,7 +79,7 @@ def main():
     default_pidfile = os.path.join(home, 'loggerhead.pid')
     default_configfile = os.path.join(home, 'loggerhead.conf')
     default_log_folder = os.path.join(home, 'logs')
-    parser = OptionParser(usage='usage: %prog [options]', version='%prog ' + release.version)
+    parser = OptionParser(usage='usage: %prog [options]', version='%prog')
     parser.add_option('-f', '--foreground', action='store_true', dest='foreground', default=False,
                       help="run in the foreground; don't daemonize")
     parser.add_option('-C', '--check', action='store_true', dest='check', default=False,
