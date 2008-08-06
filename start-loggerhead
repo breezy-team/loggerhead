@@ -76,23 +76,23 @@ def setup_logging(home, config, foreground):
 
 
 def main():
+    home = os.path.realpath(os.path.dirname(__file__))
+    default_pidfile = os.path.join(home, 'loggerhead.pid')
     parser = OptionParser(usage='usage: %prog [options]', version='%prog ' + release.version)
     parser.add_option('-f', '--foreground', action='store_true', dest='foreground', default=False,
                       help="run in the foreground; don't daemonize")
     parser.add_option('-C', '--check', action='store_true', dest='check', default=False,
                       help="only start if not already running (useful for cron jobs)")
+    parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
+                      help="override pidfile location")
     options, args = parser.parse_args()
     if len(args) > 0:
         parser.error('No filename arguments are used, only options.')
 
-
-    home = os.path.realpath(os.path.dirname(__file__))
-    pidfile = os.path.join(home, 'loggerhead.pid')
-
     if options.check:
-        if daemon.is_running(pidfile):
+        if daemon.is_running(options.pidfile):
             sys.exit(0)
-        sys.stderr.write('Did not find loggerhead running in %r; restarting...\n' % (pidfile,))
+        sys.stderr.write('Did not find loggerhead running in %r; restarting...\n' % (options.pidfile,))
 
     # read loggerhead config
 
@@ -121,10 +121,10 @@ def main():
     if not options.foreground:
         sys.stderr.write('\n')
         sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % (pidfile,))
+        sys.stderr.write('PID file: %s\n' % (options.pidfile,))
         sys.stderr.write('\n')
 
-        daemon.daemonize(pidfile, home)
+        daemon.daemonize(options.pidfile, home)
 
     setup_logging(home, config, foreground=options.foreground)
 
@@ -151,7 +151,7 @@ def main():
     finally:
         log.info('Shutdown.')
         try:
-            os.remove(pidfile)
+            os.remove(options.pidfile)
         except OSError:
             pass
 
