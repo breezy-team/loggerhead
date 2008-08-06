@@ -1,0 +1,71 @@
+#! /bin/sh
+### BEGIN INIT INFO
+# Provides:          loggerhead
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      1
+### END INIT INFO
+#
+# Init script for loggerhead Debian package. Based on skeleton init script:
+#
+# Version:	@(#)skeleton  2.85-23  28-Jul-2004  miquels@cistron.nl
+#
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+DESC="Loggerhead Bazaar Branch Browser"
+NAME=loggerhead
+PIDFILE=/var/run/$NAME.pid
+SCRIPTNAME=/etc/init.d/$NAME
+
+# Gracefully exit if the package has been removed.
+[ -x /usr/sbin/start-loggerhead ] || exit 0
+
+# Read config file if it is present.
+if [ -r /etc/default/$NAME ]; then
+	. /etc/default/$NAME
+fi
+
+[ "$LOGGERHEAD_DISABLED" = "1" ] && exit 0
+
+
+#
+#	Function that starts the daemon/service.
+#
+d_start() {
+	start-loggerhead -p $PIDFILE -c /etc/loggerhead.conf
+}
+
+#
+#	Function that stops the daemon/service.
+#
+d_stop() {
+	stop-loggerhead -p $PIDFILE
+}
+
+
+case "$1" in
+  start)
+	echo -n "Starting $DESC: $NAME"
+	d_start
+	echo "."
+	;;
+  stop)
+	echo -n "Stopping $DESC: $NAME"
+	d_stop
+	echo "."
+	;;
+  restart|force-reload)
+	echo -n "Restarting $DESC: $NAME"
+	d_stop
+	sleep 1
+	d_start
+	echo "."
+	;;
+  *)
+	echo "Usage: $SCRIPTNAME {start|stop|restart|force-reload}" >&2
+	exit 1
+	;;
+esac
+
+exit 0
