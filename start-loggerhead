@@ -106,8 +106,6 @@ def main():
     if extra_path:
         sys.path.insert(0, extra_path)
 
-    #turbogears.update_config(configfile="dev.cfg", modulename="loggerhead.config")
-
     potential_overrides = [ ('server.socket_port', int),
                             ('server.webpath', str),
                             ('server.thread_pool', int),
@@ -121,7 +119,6 @@ def main():
         value = config.get(key, None)
         if value is not None:
             value = keytype(value)
-            #turbogears.config.update({ key: value })
 
     if not options.foreground:
         sys.stderr.write('\n')
