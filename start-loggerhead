@@ -29,7 +29,7 @@ from paste import httpserver
 from paste.httpexceptions import make_middleware
 from paste.translogger import make_filter
 
-from loggerhead import daemon, release
+from loggerhead import daemon
 from loggerhead.apps.config import Root
 
 
