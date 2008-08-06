@@ -44,7 +44,7 @@ def make_handler(config, filename):
     return h
 
 
-def setup_logging(logdir, config, foreground):
+def setup_logging(log_folder, config, foreground):
     # i hate that stupid logging config format, so just set up logging here.
 
     if not os.path.exists(log_folder):
@@ -85,11 +85,11 @@ def main():
     parser.add_option('-C', '--check', action='store_true', dest='check', default=False,
                       help="only start if not already running (useful for cron jobs)")
     parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
-                      help="override pidfile location")
+                      type=str, help="override pidfile location")
     parser.add_option('-c', '--config-file', dest="configfile", default=default_configfile,
-                      help="override configuration file location")
-    parser.add_option('-L', '--log-folder', dest="log-folder", default=default_log_folder,
-                      help="override log file directory")
+					  type=str, help="override configuration file location")
+    parser.add_option('-L', '--log-folder', dest="log_folder", default=default_log_folder,
+                      type=str, help="override log file directory")
     options, args = parser.parse_args()
     if len(args) > 0:
         parser.error('No filename arguments are used, only options.')
