@@ -257,13 +257,19 @@ class History (object):
             revid = parents[0]
 
     def get_short_revision_history_by_fileid(self, file_id):
-        # wow.  is this really the only way we can get this list?  by
-        # man-handling the weave store directly? :-0
         # FIXME: would be awesome if we could get, for a folder, the list of
-        # revisions where items within that folder changed.
-        possible_keys = [(file_id, revid) for revid in self._full_history]
-        existing_keys = self._branch.repository.texts.get_parent_map(possible_keys)
-        return [revid for _, revid in existing_keys.iterkeys()]
+        # revisions where items within that folder changed.i
+        try:
+            # FIXME: Workaround for bzr versions prior to 1.6b3. 
+            # Remove me eventually pretty please  :)
+            w = self._branch.repository.weave_store.get_weave(file_id, self._branch.repository.get_transaction())
+            w_revids = w.versions() 
+            revids = [r for r in self._full_history if r in w_revids] 
+        except AttributeError:
+            possible_keys = [(file_id, revid) for revid in self._full_history]
+            existing_keys = self._branch.repository.texts.get_parent_map(possible_keys)
+            revids = [revid for _, revid in existing_keys.iterkeys()]
+        return revids
 
     def get_revision_history_since(self, revid_list, date):
         # if a user asks for revisions starting at 01-sep, they mean inclusive,
