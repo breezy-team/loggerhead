@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+update-rc.d loggerhead defaults > /dev/null 2>&1
+
+invoke-rc.d loggerhead start
