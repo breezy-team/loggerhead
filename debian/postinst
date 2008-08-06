@@ -1,4 +1,2 @@
 #!/bin/sh -e
 #DEBHELPER#
-
-invoke-rc.d loggerhead start
