@@ -33,14 +33,14 @@ fi
 #	Function that starts the daemon/service.
 #
 d_start() {
-	start-loggerhead -p $PIDFILE -c /etc/loggerhead.conf -L /var/log/loggerhead
+	start-stop-daemon -p $PIDFILE -S -- start-loggerhead -p $PIDFILE -c /etc/loggerhead.conf -L /var/log/loggerhead
 }
 
 #
 #	Function that stops the daemon/service.
 #
 d_stop() {
-	stop-loggerhead -p $PIDFILE
+	start-stop-daemon -p $PIDFILE -K -- stop-loggerhead -p $PIDFILE
 }
 
 
