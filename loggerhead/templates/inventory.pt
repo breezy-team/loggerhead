@@ -21,11 +21,8 @@
         <tal:branch-name replace="branch/friendly_name" />
       </tal:no-link>
       : viewing
-      <ul tal:repeat="crumb breadcrumbs">
-          <li>
-            <a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" />
-          </li>
-      </ul>
+      <!-- This is all one one line to get the spacing right -->
+      <tal:block repeat="crumb breadcrumbs"><span>/<a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" class="breadcrumb" tal:content="crumb/dir_name" /></span></tal:block>
       for revision <span tal:content="change/revno"/>
     </h1>
 
