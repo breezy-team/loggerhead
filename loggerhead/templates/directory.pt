@@ -10,7 +10,7 @@
       <h1>
         Browsing
         <!-- This is all one one line to get the spacing right -->
-        <span tal:repeat="crumb breadcrumbs">/<a tal:attributes="href string:/${crumb/path}" class="breadcrumb" tal:content="crumb/dir_name" /></span>
+        <span tal:repeat="crumb breadcrumbs" class="breadcrumb">/<a tal:attributes="href string:/${crumb/path}" tal:content="crumb/dir_name" /></span>
       </h1>
 
       <div >
