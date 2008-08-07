@@ -66,8 +66,17 @@ class DirectoryUI(TemplatedBranchView):
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
+        # Create breadcrumb trail
+        dir_parts = self._name.strip('/').split('/')
+        breadcrumbs = []
+        for index, dir_name in enumerate(dir_parts):
+            breadcrumbs.append({
+                'dir_name': dir_name,
+                'path': '/'.join(dir_parts[:index + 1]),
+            })
         return {
             'dirs': dirs,
             'name': self._name,
             'static_url': static_url,
+            'breadcrumbs': breadcrumbs,
             }

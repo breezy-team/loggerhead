@@ -7,8 +7,10 @@
   </head>
   <body>
     <div id="loggerheadCont">
-      <h1 tal:content="string:Browsing ${name}">
-        Hi.
+      <h1>
+        Browsing
+        <!-- This is all one one line to get the spacing right -->
+        <span tal:repeat="crumb breadcrumbs">/<a tal:attributes="href string:/${crumb/path}" class="breadcrumb" tal:content="crumb/dir_name" /></span>
       </h1>
 
       <div >
