@@ -75,11 +75,33 @@ class InventoryUI(TemplatedBranchView):
         if updir == '/':
             updir_file_id = None
 
-        # Create breadcrumb trail
+        # Is our root directory itself a branch?
+        # TODO: This needs to be detected
+        if False:
+            outer_breadcrumbs = []
+            root_name = self._branch.friendly_name
+            root_suffix = 'files'
+        else:
+            # Create breadcrumb trail for the path leading up to the branch
+            outer_breadcrumbs = []
+            dir_parts = self._branch.friendly_name.strip('/').split('/')
+            for index, dir_name in enumerate(dir_parts):
+                outer_breadcrumbs.append({
+                    'dir_name': dir_name,
+                    'path': '/'.join(dir_parts[:index + 1]),
+                    'suffix': '',
+                })
+            # The branch link itself needs this or it will browse to the revision
+            # view instead of the file view
+            outer_breadcrumbs[-1]['suffix'] = '/files'
+            root_name = '(root)'
+            root_suffix = ''
+
+        # Create breadcrumb trail for the path within the branch
         dir_parts = path.strip('/').split('/')
-        breadcrumbs = []
+        inner_breadcrumbs = []
         for index, dir_name in enumerate(dir_parts):
-            breadcrumbs.append({
+            inner_breadcrumbs.append({
                 'dir_name': dir_name,
                 'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
             })
@@ -100,5 +122,8 @@ class InventoryUI(TemplatedBranchView):
             'url': self._branch.context_url,
             'start_revid': start_revid,
             'fileview_active': True,
-            'breadcrumbs': breadcrumbs,
+            'outer_breadcrumbs': outer_breadcrumbs,
+            'inner_breadcrumbs': inner_breadcrumbs,
+            'root_name': root_name,
+            'root_suffix': root_suffix,
         }
