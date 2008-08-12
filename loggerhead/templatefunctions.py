@@ -84,5 +84,5 @@ def feed_link(branch):
     return _pt('feed-link').expand(branch=branch, **templatefunctions)
 
 @templatefunc
-def menu(branch):
-    return _pt('menu').expand(branch=branch, **templatefunctions)
+def menu(branch, url):
+    return _pt('menu').expand(branch=branch, url=url, **templatefunctions)
