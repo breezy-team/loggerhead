@@ -17,7 +17,6 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.search_ui import SearchUI
-from loggerhead.controllers.bundle_ui import BundleUI
 from loggerhead.history import History
 from loggerhead import util
 
@@ -79,7 +78,6 @@ class BranchWSGIApp(object):
         'download': DownloadUI,
         'atom': AtomUI,
         'search': SearchUI,
-        'bundle': BundleUI,
         }
 
     def last_updated(self):
