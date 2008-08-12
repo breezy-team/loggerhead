@@ -25,7 +25,7 @@
         <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
                                                                    file_id=getattr(navigation, 'file_id', None))">
       	  <div id="finderBox">
-            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
+            <tal:search-box replace="structure python:search_box()" />
             <div><a tal:attributes="href python:url(['/atom']);
                                     title string:RSS feed for ${branch/friendly_name}"> 
                  <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" class="rssfeed"/></a>
