@@ -1,2 +1,5 @@
-<label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
+<tal:search-box>
+  <label>search:</label>
+  <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" />
+</tal:search-box>
 
