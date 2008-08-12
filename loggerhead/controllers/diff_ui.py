@@ -38,9 +38,7 @@ log = logging.getLogger("loggerhead.controllers")
 class DiffUI(object):
     """
 
-    Class to output a diff for a single file. This is mainly aimed at
-    using it through AJAX, as it doesn't present it within the rest of the
-    template.
+    Class to output a diff for a single file or revisions.
     """
     
     def __init__(self, branch, history):
@@ -56,7 +54,6 @@ class DiffUI(object):
         """
 
         z = time.time()
-        s = StringIO()
         
         args = []
         while 1:
@@ -81,17 +78,21 @@ class DiffUI(object):
         revtree1 = repo.revision_tree(revid_from)
         revtree2 = repo.revision_tree(revid_to)
         
-        show_diff_trees(revtree1, revtree2, s, 
+        diff_content_stream = StringIO()
+        show_diff_trees(revtree1, revtree2, diff_content_stream, 
                         old_label='', new_label='')
 
-        content = s.getvalue()
+        content = diff_content_stream.getvalue()
 
         self.log.info('/diff %r:%r in %r secs' % (revid_from, revid_to, 
                                                   time.time() - z))
 
-        filename = 'revision.diff'
+        revno1 = self._history.get_revno(revid_from)
+        revno2 = self._history.get_revno(revid_to)
+        filename = '%s_%s.diff' % (revno1, revno2)
         headers = [
             ('Content-Type', 'application/octet-stream'),
+            ('Content-Length', len(content)),
             ('Content-Disposition', 'attachment; filename=%s'%(filename,)),
             ]
         start_response('200 OK', headers)
