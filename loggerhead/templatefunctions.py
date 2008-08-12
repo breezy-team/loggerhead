@@ -79,3 +79,6 @@ def modified_file_link_log(url, entry, item):
 def search_box():
     return _pt('search-box').expand(**templatefunctions)
 
+@templatefunc
+def feed_link(branch):
+    return _pt('feed-link').expand(branch=branch, **templatefunctions)
