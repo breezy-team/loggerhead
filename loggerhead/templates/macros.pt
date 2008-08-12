@@ -21,7 +21,7 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-      <tal:menu replace="structure python:menu(branch)" />
+      <tal:menu replace="structure python:menu(branch, url)" />
       <div id="loggerheadCont">
 
          <div id="search_terms"></div>
