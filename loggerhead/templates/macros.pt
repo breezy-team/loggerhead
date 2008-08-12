@@ -21,7 +21,8 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-      <tal:menu replace="structure python:menu(branch, url)" />
+      <tal:menu define="fileview_active fileview_active"
+                replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 
          <div id="search_terms"></div>
