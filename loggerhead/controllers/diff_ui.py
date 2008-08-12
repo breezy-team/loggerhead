@@ -1,3 +1,20 @@
+# Copyright (C) 2008  Canonical Ltd.
+#                     (Authored by Martin Albisetti <argentina@gmail.com>)
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 
 from cStringIO import StringIO
 import logging
@@ -33,7 +50,7 @@ class DiffUI(object):
 
     
     def __call__(self, environ, start_response):
-        # /diff/<rev_id>?compare_to=<rev_id>
+        # /diff/<rev_id>/<rev_id>
         """
         Default method called from /diff URL.
         """
@@ -47,7 +64,7 @@ class DiffUI(object):
             if arg is None:
                 break
             args.append(arg)
-        
+
         revid_from = args[0]
         # Convert a revno to a revid if we get a revno
         revid_from = self._history.fix_revid(revid_from)
@@ -65,10 +82,7 @@ class DiffUI(object):
         revtree2 = repo.revision_tree(revid_to)
         
         show_diff_trees(revtree1, revtree2, s, 
-                               specific_files=None,
-                               external_diff_options=None,
-                               old_label=old_label'', new_label='',
-                               extra_trees=None, using=None)
+                        old_label='', new_label='')
 
         content = s.getvalue()
 
