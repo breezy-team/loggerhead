@@ -48,9 +48,16 @@
                   tal:content="string:view history from revision ${change/revno}"></a></li>
         </ul>
 
+          <div>
+            <b>&#8594;</b>
+            <a tal:attributes="href python:branch.url(['/bundle', change.revno, history.get_revno(navigation.prev_page_revid), 'bundle.txt'])">
+                download bundle from <tal:b content="python: history.get_revno(navigation.prev_page_revid)" /> to <tal:b content="change/revno" />
+            </a>
+          </div>
         <tal:we-are-comparing condition="python:compare_revid is not None">
         <ul id="submenuTabs">
           <li id="first">
+
               <a tal:attributes="href python:url([ '/revision', history.get_revno(compare_revid) ], remember=change.revno, compare_revid=change.revno)">
                 reverse the comparison (<tal:b content="change/revno" /> to <tal:b content="python:history.get_revno(compare_revid)" />)
               </a>
