@@ -82,3 +82,7 @@ def search_box():
 @templatefunc
 def feed_link(branch):
     return _pt('feed-link').expand(branch=branch, **templatefunctions)
+
+@templatefunc
+def menu(branch):
+    return _pt('menu').expand(branch=branch, **templatefunctions)

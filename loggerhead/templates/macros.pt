@@ -21,30 +21,7 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-    <ul id="menuTabs">
-        <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
-                                                                   file_id=getattr(navigation, 'file_id', None))">
-          <div id="finderBox">
-            <tal:search-box replace="structure python:search_box()" />
-            <tal:feed-link replace="structure python:feed_link(branch)" />
-          </div>
-        </form>
-
-        <tal:block tal:condition="not:fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes;
-                               id string:on">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files">Files</a></li>
-        </tal:block>
-        <tal:block tal:condition="fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files;
-                               id string:on">Files</a></li>
-        </tal:block>
-      </ul>
+      <tal:menu replace="structure python:menu(branch)" />
       <div id="loggerheadCont">
 
          <div id="search_terms"></div>
