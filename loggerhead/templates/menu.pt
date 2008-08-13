@@ -1,14 +1,13 @@
 <tal:menu>
     <ul id="menuTabs">
-        <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
-                                                                   file_id=getattr(navigation, 'file_id', None))">
-          <div id="finderBox">
-            <tal:search-box replace="structure python:search_box()" />
-            <div>
-              <tal:feed-link replace="structure python:feed_link(branch)" />
-            </div>
+        <div id="finderBox">
+          <tal:search-box define="navigation navigation"
+                          replace="structure python:search_box(branch,
+                                   navigation)" />
+          <div>
+            <tal:feed-link replace="structure python:feed_link(branch)" />
           </div>
-        </form>
+        </div>
 
         <tal:changes-active tal:condition="not:fileview_active">
         <li><a tal:attributes="href python:url('/changes', clear=1);
