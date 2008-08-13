@@ -76,8 +76,7 @@ class InventoryUI(TemplatedBranchView):
             updir_file_id = None
 
         # Is our root directory itself a branch?
-        # TODO: This needs to be detected
-        if False:
+        if self._branch.is_root:
             outer_breadcrumbs = []
             root_name = self._branch.friendly_name
             root_suffix = 'files'
