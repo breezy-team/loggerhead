@@ -26,7 +26,7 @@
                         replace="structure python:search_box(branch,
                                  navigation)" />
         <div>
-          <tal:feed-link replace="structure python:feed_link(branch)" />
+          <tal:feed-link replace="structure python:feed_link(branch, url)" />
         </div>
       </div>
 
