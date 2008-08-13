@@ -43,6 +43,10 @@
                 compare with revision <tal:b content="python:history.get_revno(remember)" />
                 </a>
             </li>
+            <li>
+            <a tal:condition="python:navigation.next_page_revid is not None"
+                   tal:attributes="href python:url(['/diff', history.get_revno(navigation.next_page_revid), change.revno], clear=1)">Download Diff</a>
+            </li>
             <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]); 
                                   title string:view history from revision ${change/revno}"
                   tal:content="string:view history from revision ${change/revno}"></a></li>
