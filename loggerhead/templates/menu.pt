@@ -4,7 +4,9 @@
                                                                    file_id=getattr(navigation, 'file_id', None))">
           <div id="finderBox">
             <tal:search-box replace="structure python:search_box()" />
-            <tal:feed-link replace="structure python:feed_link(branch)" />
+            <div>
+              <tal:feed-link replace="structure python:feed_link(branch)" />
+            </div>
           </div>
         </form>
 
