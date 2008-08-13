@@ -21,16 +21,25 @@
 
 <body>
     <!-- Loggerhead Content Area -->
+      <div id="finderBox">
+         <tal:search-box define="navigation navigation"
+                        replace="structure python:search_box(branch,
+                                 navigation)" />
+        <div>
+          <tal:feed-link replace="structure python:feed_link(branch)" />
+        </div>
+      </div>
+
       <tal:menu define="fileview_active fileview_active"
                 replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 
-         <div id="search_terms"></div>
+        <div id="search_terms"></div>
 
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
         <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
-    </div>
+      </div>
   </body>
 </html>

@@ -1,14 +1,5 @@
 <tal:menu>
     <ul id="menuTabs">
-        <div id="finderBox">
-          <tal:search-box define="navigation navigation"
-                          replace="structure python:search_box(branch,
-                                   navigation)" />
-          <div>
-            <tal:feed-link replace="structure python:feed_link(branch)" />
-          </div>
-        </div>
-
         <tal:changes-active tal:condition="not:fileview_active">
         <li><a tal:attributes="href python:url('/changes', clear=1);
                                title string:Changes;
