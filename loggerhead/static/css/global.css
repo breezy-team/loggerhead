@@ -120,7 +120,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 #finderBox {
 	width:300px;
 	float:right;
-	padding:0px;
+	padding: 10px 0px 0px 0px;
 }
 #finderBox label {
 	float:left;
