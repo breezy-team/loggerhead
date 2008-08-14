@@ -13,9 +13,18 @@
     </head>
 
     <body>
-
       <tal:block metal:fill-slot="heading">
-        <h1><tal:block content="branch/friendly_name" /><span>: <tal:revno content="change/revno"></tal:revno>
+        <h1>
+          <tal:has-link condition="branch/branch_link">
+            <a tal:attributes="href branch/branch_link"
+               tal:content="branch/friendly_name">
+              nice/branch/name
+            </a>
+          </tal:has-link>
+          <tal:no-link condition="not: branch/branch_link">
+            <tal:branch-name replace="branch/friendly_name" />
+          </tal:no-link>
+          <span>: <tal:revno content="change/revno"></tal:revno>
         <tal:compare-to condition="python:compare_revid is not None">
           (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
           </tal:compare-to>
@@ -32,6 +41,12 @@
                 <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
                 compare with revision <tal:b content="python:history.get_revno(remember)" />
                 </a>
+            </li>
+            <li>
+            <a tal:condition="python:len(change.parents) > 0 and compare_revid is None"
+                   tal:attributes="href python:url(['/diff', change.revno], clear=1)">Download Diff</a>
+            <a tal:condition="python:compare_revid is not None"
+                   tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">Download Diff</a>
             </li>
             <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]); 
                                   title string:view history from revision ${change/revno}"

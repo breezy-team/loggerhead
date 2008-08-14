@@ -21,43 +21,25 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-    <ul id="menuTabs">
-        <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
-                                                                   file_id=getattr(navigation, 'file_id', None))">
-      	  <div id="finderBox">
-            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
-            <div><a tal:attributes="href python:url(['/atom']);
-                                    title string:RSS feed for ${branch/friendly_name}"> 
-                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" class="rssfeed"/></a>
-            </div>
-          </div>
-        </form>
-        
-        <tal:block tal:condition="not:fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes;
-                               id string:on">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files">Files</a></li>
-        </tal:block>
-        <tal:block tal:condition="fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files;
-                               id string:on">Files</a></li>
-        </tal:block>
-        <li><a tal:attributes="href string:https://help.launchpad.net/Loggerhead;
-                               title string:Help">Help</a></li>       
-      </ul>
+      <div id="finderBox">
+         <tal:search-box define="navigation navigation"
+                        replace="structure python:search_box(branch,
+                                 navigation)" />
+        <div>
+          <tal:feed-link replace="structure python:feed_link(branch, url)" />
+        </div>
+      </div>
+
+      <tal:menu define="fileview_active fileview_active"
+                replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
-    
-         <div id="search_terms"></div>
+
+        <div id="search_terms"></div>
 
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Launchpad runs <a href="https://launchpad.net/loggerhead" class="link">Loggerhead</a> on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
-    </div>
+        <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
+      </div>
   </body>
 </html>

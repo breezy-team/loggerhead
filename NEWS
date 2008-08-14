@@ -4,7 +4,11 @@ What's changed in loggerhead?
 1.6 [unreleased]
 ----------------
 
+    - Default sqlite interface is now sqlite3. (Robert Collins)
+
     - New ninja theme sponsored by Canonical (Martin Albisetti)
+
+    - Added COPYING file and clarified copyright headers (John Arbash Meinel)
 
     - Remove the .py extension requiered by the Debian Policy.
       (Jelmer Vernooij)
@@ -57,7 +61,6 @@ What's changed in loggerhead?
       cache.
 
 1.2  [04mar2008]
-----------------
 
     - Michael Hudson <michael.hudson@canonical.com> has mostly taken
       over the maintenance of loggerhead.

@@ -17,16 +17,19 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.search_ui import SearchUI
+from loggerhead.controllers.diff_ui import DiffUI
 from loggerhead.history import History
 from loggerhead import util
 
 
 class BranchWSGIApp(object):
 
-    def __init__(self, branch, friendly_name=None, config={}, graph_cache=None):
+    def __init__(self, branch, friendly_name=None, config={},
+                 graph_cache=None, branch_link=None):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
+        self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
         if graph_cache is None:
             graph_cache = bzrlib.lru_cache.LRUCache()
@@ -76,6 +79,7 @@ class BranchWSGIApp(object):
         'download': DownloadUI,
         'atom': AtomUI,
         'search': SearchUI,
+        'diff': DiffUI,
         }
 
     def last_updated(self):
