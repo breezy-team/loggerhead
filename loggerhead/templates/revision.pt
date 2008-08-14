@@ -46,7 +46,7 @@
             <li>
             <a tal:condition="python:len(change.parents) > 0 and compare_revid is None"
                    tal:attributes="href python:url(['/diff', change.revno], clear=1)">Download Diff</a>
-            <a tal:condition="python:len(change.parents) > 0 and compare_revid is not None"
+            <a tal:condition="python:compare_revid is not None"
                    tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">Download Diff</a>
             </li>
             <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]); 
