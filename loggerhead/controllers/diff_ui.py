@@ -67,12 +67,11 @@ class DiffUI(object):
         revid_from = self._history.fix_revid(revid_from)
         change = self._history.get_changes([revid_from])[0]
 
-        revid_to = args[1]
-
-        if revid_to is None:
-            revid_to = change.parents[0].revid 
+        if len(args) is 2:
+            revid_to = self._history.fix_revid(args[1])
         else:
-            revid_to = self._history.fix_revid(revid_to)
+            revid_to = change.parents[0].revid 
+
 
         repo = self._branch.branch.repository
         revtree1 = repo.revision_tree(revid_from)
