@@ -59,7 +59,10 @@ def date_day(value):
 
 
 def date_time(value):
-    return value.strftime('%Y-%m-%d %T')
+    if value is not None:
+        return value.strftime('%Y-%m-%d %T')
+    else:
+        return 'N/A'
 
 
 def _displaydate(date):

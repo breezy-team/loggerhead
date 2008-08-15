@@ -74,3 +74,17 @@ def modified_file_link_log(url, entry, item):
     return _pt('modified-file-link-log').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)
+
+@templatefunc
+def search_box(branch, navigation):
+    return _pt('search-box').expand(branch=branch, navigation=navigation,
+        **templatefunctions)
+
+@templatefunc
+def feed_link(branch, url):
+    return _pt('feed-link').expand(branch=branch, url=url, **templatefunctions)
+
+@templatefunc
+def menu(branch, url, fileview_active=False):
+    return _pt('menu').expand(branch=branch, url=url,
+        fileview_active=fileview_active, **templatefunctions)

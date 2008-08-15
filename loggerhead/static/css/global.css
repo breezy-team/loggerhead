@@ -18,11 +18,11 @@ img {
 	outline:none;
 }
 form {
-	margin:0;
-	padding:0;
+  margin: 0;
+  padding: 0;
 }
 tr td {
-    vertical-align:top
+  vertical-align: top;
 }
 .clear {
 	clear:both;
@@ -120,7 +120,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 #finderBox {
 	width:300px;
 	float:right;
-	padding:0px;
+	padding: 10px 0px 0px 0px;
 }
 #finderBox label {
 	float:left;
@@ -186,7 +186,6 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 	padding:0px 11px 0px 0px;
 	margin:0px 2px 0px 0px;
 	font-weight:bold;
-	background:url(../images/ico_link.gif) right top no-repeat;
 }
 .revnolink a, .revnolink a:visited, .revnolink a:link, .revnolink a:hover {
 	color:#CC6600;
@@ -228,15 +227,15 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .expandcell, .expcell {
 	width:28px;	
 }
-.summarycell, .authorcell, .datecell, .summcell, .autcell, .date, .timedate, .timedate2 {
-	padding:4px 8px;
-	border:1px solid #d2d2d2;
+.summarycell, .authorcell, .datecell, .timedate{
+  padding: 4px 8px;
+  border: 1px solid #d2d2d2;
 }
-.authorcell, .autcell {
-	width:202px;
+.icocell {
+  width: 18px;
 }
 .datecell, .date {
-	width:110px;
+  width: 180px;
 }
 .timedate, .timedate2 {
 	width:80px;
@@ -244,9 +243,10 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .downloadcell, .downr {
 	width:47px;
 }
-.revnro, .expcell, .diffr, .summcell, .autcell, .date, .downr, .allicones, .timedate2 {
-	border:none;
-	border-bottom:1px solid #d2d2d2;
+.revnro, .expcell, .diffr, .summcell, .autcell, .icocell, .date, .downr, .allicones, .timedate2 {
+  border: 0;
+  padding: 4px 4px;
+  border-bottom:1px solid #d2d2d2;
 }
 .revisioninfo {
     margin-top:4px;

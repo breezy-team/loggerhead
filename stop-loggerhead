@@ -15,19 +15,24 @@
 
 """A script for stopping the loggerhead process."""
 
-import pkg_resources
-pkg_resources.require("TurboGears")
-
 import os
 import sys
+from optparse import OptionParser
 
 home = os.path.realpath(os.path.dirname(__file__))
-pidfile = os.path.join(home, 'loggerhead.pid')
+default_pidfile = os.path.join(home, 'loggerhead.pid')
+parser = OptionParser(usage='usage: %prog [options]', version='%prog')
+parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
+				  help="override pidfile location")
+
+options, args = parser.parse_args()
+if len(args) > 0:
+	parser.error('No filename arguments are used, only options.')
 
 try:
-    f = open(pidfile, 'r')
+    f = open(options.pidfile, 'r')
 except IOError, e:
-    print 'No pid file found.'
+    print 'Pid file %s not found.' % options.pidfile
     sys.exit(1)
 
 pid = int(f.readline())

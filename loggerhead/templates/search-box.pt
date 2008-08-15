@@ -1,0 +1,10 @@
+<tal:search-box>
+  <form tal:attributes="action python:branch.url('/changes',
+                            start_revid=getattr(navigation,
+                            'start_revid', None),
+                            file_id=getattr(navigation, 'file_id', None))">
+    <label>search:</label>
+    <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" />
+  </form>
+</tal:search-box>
+
