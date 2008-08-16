@@ -75,36 +75,16 @@ class InventoryUI(TemplatedBranchView):
         if updir == '/':
             updir_file_id = None
 
-        # Is our root directory itself a branch?
-        if self._branch.is_root:
-            outer_breadcrumbs = []
-            root_name = self._branch.friendly_name
-            root_suffix = 'files'
-        else:
-            # Create breadcrumb trail for the path leading up to the branch
-            outer_breadcrumbs = []
-            dir_parts = self._branch.friendly_name.strip('/').split('/')
-            for index, dir_name in enumerate(dir_parts):
-                outer_breadcrumbs.append({
-                    'dir_name': dir_name,
-                    'path': '/'.join(dir_parts[:index + 1]),
-                    'suffix': '',
-                })
-            # The branch link itself needs this or it will browse to the revision
-            # view instead of the file view
-            outer_breadcrumbs[-1]['suffix'] = '/files'
-            root_name = '(root)'
-            root_suffix = ''
+        # Directory Breadcrumbs
+        (directory_breadcrumbs, root_name, root_suffix) = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'files'))
 
         # Create breadcrumb trail for the path within the branch
-        dir_parts = path.strip('/').split('/')
-        inner_breadcrumbs = []
-        for index, dir_name in enumerate(dir_parts):
-            inner_breadcrumbs.append({
-                'dir_name': dir_name,
-                'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
-            })
-
+        branch_breadcrumbs = util.branch_breadcrumbs(path, inv)
+        
         return {
             'branch': self._branch,
             'util': util,
@@ -121,8 +101,8 @@ class InventoryUI(TemplatedBranchView):
             'url': self._branch.context_url,
             'start_revid': start_revid,
             'fileview_active': True,
-            'outer_breadcrumbs': outer_breadcrumbs,
-            'inner_breadcrumbs': inner_breadcrumbs,
+            'directory_breadcrumbs': directory_breadcrumbs,
+            'branch_breadcrumbs': branch_breadcrumbs,
             'root_name': root_name,
             'root_suffix': root_suffix,
         }

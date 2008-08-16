@@ -18,12 +18,10 @@
         </a>
       </tal:has-link>
       <span tal:condition="not: branch/branch_link">
-        <!-- This is all one one line to get the spacing right -->
-        <span class="breadcrumb"><a tal:attributes="href string:/${root_suffix}" tal:content="root_name" /></span><span tal:repeat="crumb outer_breadcrumbs" class="breadcrumb">/<a tal:attributes="href string:/${crumb/path}${crumb/suffix}" tal:content="crumb/dir_name" /></span>
+        <span metal:use-macro="breadcrumbs/directory" />
       </span>
       : viewing
-      <!-- This is all one one line to get the spacing right -->
-      <span tal:repeat="crumb inner_breadcrumbs" class="breadcrumb">/<a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" /></span>
+      <span metal:use-macro="breadcrumbs/branch" />
       for revision <span tal:content="change/revno"/>
     </h1>
 

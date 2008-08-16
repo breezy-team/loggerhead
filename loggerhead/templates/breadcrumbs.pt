@@ -1,0 +1,22 @@
+<html>
+<body>
+<!--
+    Breadcrumbs macros
+-->
+<!--
+    These are all defined on one line in order to get the spacing looking right
+    in the output
+-->
+
+<!-- Branch breadcrumbs (for the path within the branch) -->
+<span metal:define-macro="branch">
+    <span tal:repeat="crumb branch_breadcrumbs" class="breadcrumb">/<a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" /></span>
+</span>
+
+<!-- Directory breadcrumbs (for the path leading up to the branch) -->
+<span metal:define-macro="directory">
+    <span class="breadcrumb"><a tal:attributes="href string:/${root_suffix}" tal:content="root_name" /></span><span tal:repeat="crumb directory_breadcrumbs" class="breadcrumb">/<a tal:attributes="href string:/${crumb/path}${crumb/suffix}" tal:content="crumb/dir_name" /></span>
+</span>
+
+</body>
+</html>

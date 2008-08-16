@@ -341,6 +341,59 @@ def fill_in_navigation(navigation):
         navigation.next_page_url = navigation.branch.context_url(
             [navigation.scan_url, next_page_revno], **params)
 
+def directory_breadcrumbs(path, is_root, view):
+    """
+    Generate breadcrumb information from the directory path given
+    
+    The path given should be a path up to any branch that is currently being
+    served
+    
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    is_root -- Whether or not loggerhead is serving a branch at its root
+    view -- The type of view we are showing (files, changes etc)
+    """
+    # Is our root directory itself a branch?
+    if is_root:
+        breadcrumbs = []
+        root_name = path
+        root_suffix = 'files'
+    else:
+        # Create breadcrumb trail for the path leading up to the branch
+        breadcrumbs = []
+        dir_parts = path.strip('/').split('/')
+        for index, dir_name in enumerate(dir_parts):
+            breadcrumbs.append({
+                'dir_name': dir_name,
+                'path': '/'.join(dir_parts[:index + 1]),
+                'suffix': '',
+            })
+        # The branch link itself needs this or it will browse to the revision
+        # view instead of the file view
+        breadcrumbs[-1]['suffix'] = '/' + view
+        root_name = '(root)'
+        root_suffix = ''
+        
+    return (breadcrumbs, root_name, root_suffix)
+
+def branch_breadcrumbs(path, inv):
+    """
+    Generate breadcrumb information from the branch path given
+    
+    The path given should be a path that exists within a branch
+    
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    inv -- Inventory to get file information from
+    """
+    dir_parts = path.strip('/').split('/')
+    inner_breadcrumbs = []
+    for index, dir_name in enumerate(dir_parts):
+        inner_breadcrumbs.append({
+            'dir_name': dir_name,
+            'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+        })
+    return inner_breadcrumbs
 
 def decorator(unbound):
     def new_decorator(f):
