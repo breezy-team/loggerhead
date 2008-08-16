@@ -355,28 +355,35 @@ def directory_breadcrumbs(path, is_root, view):
     """
     # Is our root directory itself a branch?
     if is_root:
-        breadcrumbs = []
-        root_name = path
-        root_suffix = 'files'
+        if view == 'directory':
+            directory = 'files'
+        breadcrumbs = [{
+            'dir_name': path,
+            'path': '',
+            'suffix': view,
+        }]
     else:
         # Create breadcrumb trail for the path leading up to the branch
-        breadcrumbs = []
-        dir_parts = path.strip('/').split('/')
-        for index, dir_name in enumerate(dir_parts):
-            breadcrumbs.append({
-                'dir_name': dir_name,
-                'path': '/'.join(dir_parts[:index + 1]),
-                'suffix': '',
-            })
-        # The branch link itself needs this or it will browse to the revision
-        # view instead of the file view
-        breadcrumbs[-1]['suffix'] = '/' + view
-        root_name = '(root)'
-        root_suffix = ''
-        
-    return (breadcrumbs, root_name, root_suffix)
+        breadcrumbs = [{
+            'dir_name': "(root)",
+            'path': '',
+            'suffix': '',
+        }]
+        if path != '/':
+            dir_parts = path.strip('/').split('/')
+            for index, dir_name in enumerate(dir_parts):
+                breadcrumbs.append({
+                    'dir_name': dir_name,
+                    'path': '/'.join(dir_parts[:index + 1]),
+                    'suffix': '',
+                })
+            # If we are not in the directory view, the last crumb is a branch,
+            # so we need to specify a view
+            if view != 'directory':
+                breadcrumbs[-1]['suffix'] = '/' + view
+    return breadcrumbs
 
-def branch_breadcrumbs(path, inv):
+def branch_breadcrumbs(path, inv, view):
     """
     Generate breadcrumb information from the branch path given
     
@@ -385,6 +392,7 @@ def branch_breadcrumbs(path, inv):
     Arguments:
     path -- The path to convert into breadcrumbs
     inv -- Inventory to get file information from
+    view -- The type of view we are showing (files, changes etc)
     """
     dir_parts = path.strip('/').split('/')
     inner_breadcrumbs = []
@@ -392,6 +400,7 @@ def branch_breadcrumbs(path, inv):
         inner_breadcrumbs.append({
             'dir_name': dir_name,
             'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            'suffix': '/' + view ,
         })
     return inner_breadcrumbs
 

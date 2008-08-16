@@ -9,8 +9,7 @@
     <div id="loggerheadCont">
       <h1>
         Browsing
-        <!-- This is all one one line to get the spacing right -->
-        <span class="breadcrumb"><a href="/">(root)</a></span><span tal:repeat="crumb breadcrumbs" class="breadcrumb">/<a tal:attributes="href string:/${crumb/path}" tal:content="crumb/dir_name" /></span>
+        <span metal:use-macro="breadcrumbs/directory" />
       </h1>
 
       <div >

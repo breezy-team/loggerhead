@@ -9,13 +9,13 @@
 -->
 
 <!-- Branch breadcrumbs (for the path within the branch) -->
-<span metal:define-macro="branch">
-    <span tal:repeat="crumb branch_breadcrumbs" class="breadcrumb">/<a tal:attributes="href python:url(['/files', change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" /></span>
+<span metal:define-macro="branch" class="breadcrumb">
+    <tal:block repeat="crumb branch_breadcrumbs">/<a tal:attributes="href python:url([crumb['suffix'], change.revno], file_id=crumb['file_id'])" tal:content="crumb/dir_name" tal:condition="not:repeat/crumb/end" /><span tal:replace="crumb/dir_name" tal:condition="repeat/crumb/end" /></tal:block>
 </span>
 
 <!-- Directory breadcrumbs (for the path leading up to the branch) -->
-<span metal:define-macro="directory">
-    <span class="breadcrumb"><a tal:attributes="href string:/${root_suffix}" tal:content="root_name" /></span><span tal:repeat="crumb directory_breadcrumbs" class="breadcrumb">/<a tal:attributes="href string:/${crumb/path}${crumb/suffix}" tal:content="crumb/dir_name" /></span>
+<span metal:define-macro="directory" class="breadcrumb">
+    <tal:block repeat="crumb directory_breadcrumbs"><span tal:condition="not:repeat/crumb/start">/</span><a tal:attributes="href string:/${crumb/path}${crumb/suffix}" tal:content="crumb/dir_name" /></tal:block>
 </span>
 
 </body>

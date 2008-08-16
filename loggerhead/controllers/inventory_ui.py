@@ -76,14 +76,13 @@ class InventoryUI(TemplatedBranchView):
             updir_file_id = None
 
         # Directory Breadcrumbs
-        (directory_breadcrumbs, root_name, root_suffix) = (
-            util.directory_breadcrumbs(
+        directory_breadcrumbs = util.directory_breadcrumbs(
                 self._branch.friendly_name,
                 self._branch.is_root,
-                'files'))
+                'files')
 
         # Create breadcrumb trail for the path within the branch
-        branch_breadcrumbs = util.branch_breadcrumbs(path, inv)
+        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
         
         return {
             'branch': self._branch,
@@ -103,6 +102,4 @@ class InventoryUI(TemplatedBranchView):
             'fileview_active': True,
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
-            'root_name': root_name,
-            'root_suffix': root_suffix,
         }

@@ -62,6 +62,21 @@ class AnnotateUI (TemplatedBranchView):
             path = h.get_path(revid, file_id)
         filename = os.path.basename(path)
 
+        # Directory Breadcrumbs
+        directory_breadcrumbs = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'files'))
+
+        # Create breadcrumb trail for the path within the branch
+        try:
+            inv = h.get_inventory(revid)
+        except:
+            self.log.exception('Exception fetching changes')
+            raise HTTPServerError('Could not fetch changes')
+        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
+
         return {
             'revid': revid,
             'file_id': file_id,
@@ -71,4 +86,6 @@ class AnnotateUI (TemplatedBranchView):
             'change': h.get_changes([ revid ])[0],
             'contents': list(h.annotate_file(file_id, revid)),
             'fileview_active': True,
+            'directory_breadcrumbs': directory_breadcrumbs,
+            'branch_breadcrumbs': branch_breadcrumbs,
         }

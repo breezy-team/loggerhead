@@ -86,6 +86,13 @@ class ChangeLogUI(TemplatedBranchView):
                     all_same_author = False
                     break
 
+        # Directory Breadcrumbs
+        directory_breadcrumbs = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'changes'))
+
         return {
             'branch': self._branch,
             'changes': changes,
@@ -100,4 +107,5 @@ class ChangeLogUI(TemplatedBranchView):
             'search_failed': search_failed,
             'all_same_author': all_same_author,
             'url': self._branch.context_url,
+            'directory_breadcrumbs': directory_breadcrumbs,
         }
