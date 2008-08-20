@@ -106,7 +106,8 @@
                                                 <a tal:attributes="href python:url(['/changes', parent.revno])"
                                                    tal:content="parent/revno"></a>
                                             </span>
-                                            <a tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
+                                            <a tal:condition="parent.branch_nick"
+                                               tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
                                                tal:content="python:'(' + parent.branch_nick + ')'"
                                                 title="Show history" class="link"></a>
                                         </li>
