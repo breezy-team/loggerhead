@@ -44,6 +44,8 @@ def command_line_parser():
                       help="Port Loggerhead should listen on. 8080 is the default one.")
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
+    parser.add_option("--prefix", dest="user_prefix",
+                      help="Specify host prefix.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     return parser
@@ -86,12 +88,17 @@ def main(args):
     app = HTTPExceptionHandler(app)
     app = TransLogger(app)
 
+    if not options.user_prefix:
+        prefix = '/'
+    else:
+        prefix = options.user_prefix
+
     try:
         from paste.deploy.config import PrefixMiddleware
     except ImportError:
         pass
     else:
-        app = PrefixMiddleware(app)
+        app = PrefixMiddleware(app, prefix=prefix)
     
     if not options.user_port:
         port = '8080'
