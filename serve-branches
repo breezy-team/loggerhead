@@ -40,6 +40,10 @@ def command_line_parser():
                       help="Serve user directories as ~user.")
     parser.add_option("--trunk-dir", metavar="DIR",
                       help="The directory that contains the trunk branches.")
+    parser.add_option("--port", dest="user_port",
+                      help="Port Loggerhead should listen on. 8080 is the default one.")
+    parser.add_option("--host", dest="user_host",
+                      help="Host Loggerhead should listen on.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     return parser
@@ -88,8 +92,18 @@ def main(args):
         pass
     else:
         app = PrefixMiddleware(app)
+    
+    if not options.user_port:
+        port = '8080'
+    else:
+        port = options.user_port
 
-    httpserver.serve(app, host='0.0.0.0', port='8080')
+    if not options.user_host:
+        host = '0.0.0.0'
+    else:
+        host = options.user_host
+
+    httpserver.serve(app, host=host, port=port)
 
 
 if __name__ == "__main__":
