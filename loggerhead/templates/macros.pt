@@ -39,7 +39,7 @@
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Loggerhead is a web-based interface for <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
+        <p class="fl">Loggerhead is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
       </div>
   </body>
 </html>
