@@ -41,7 +41,7 @@ def command_line_parser():
     parser.add_option("--trunk-dir", metavar="DIR",
                       help="The directory that contains the trunk branches.")
     parser.add_option("--port", dest="user_port",
-                      help="Port Loggerhead should listen on. 8080 is the default one.")
+                      help="Port Loggerhead should listen on (defaults to 8080).")
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
     parser.add_option("--prefix", dest="user_prefix",
