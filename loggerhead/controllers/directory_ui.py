@@ -30,8 +30,12 @@ class DirEntry(object):
         self.parity = parity
         self.branch = branch
         if branch is not None:
-            self.last_change =  datetime.datetime.fromtimestamp(
-                branch.repository.get_revision(branch.last_revision()).timestamp)
+            # If a branch is empty, bzr raises an exception when trying this
+            try:
+                self.last_change =  datetime.datetime.fromtimestamp(
+                    branch.repository.get_revision(branch.last_revision()).timestamp)
+            except:
+                self.last_change = None
 
 class DirectoryUI(TemplatedBranchView):
     """

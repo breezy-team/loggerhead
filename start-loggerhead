@@ -36,9 +36,9 @@ from loggerhead.apps.config import Root
 def make_handler(config, filename):
     roll = config.get('log.roll', 'never')
     if roll == 'daily':
-        h = logging.handlers.TimedRotatingFileHandler(filename, 'midnight', 0, 100)
+        h = logging.handlers.TimedRotatingFileHandler(filename, 'midnight', 1, 100)
     elif roll == 'weekly':
-        h = logging.handlers.TimedRotatingFileHandler(filename, 'W0', 0, 100)
+        h = logging.handlers.TimedRotatingFileHandler(filename, 'W0', 1, 100)
     else:
         h = logging.FileHandler(filename)
     return h

@@ -1,0 +1,19 @@
+<tal:menu>
+    <ul id="menuTabs">
+        <tal:changes-active tal:condition="not:fileview_active">
+        <li><a tal:attributes="href python:url('/changes', clear=1);
+                               title string:Changes;
+                               id string:on">Changes</a></li>
+        <li><a tal:attributes="href python:url('/files', clear=1);
+                               title string:Files">Files</a></li>
+        </tal:changes-active>
+        <tal:fileview-active tal:condition="fileview_active">
+        <li><a tal:attributes="href python:url('/changes', clear=1);
+                               title string:Changes">Changes</a></li>
+        <li><a tal:attributes="href python:url('/files', clear=1);
+                               title string:Files;
+                               id string:on">Files</a></li>
+        </tal:fileview-active>
+      </ul>
+</tal:menu>
+

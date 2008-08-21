@@ -1,8 +1,13 @@
 What's changed in loggerhead?
 =============================
 
-1.6 [unreleased]
+1.6 [15Aug2008]
 ----------------
+
+    - Download a diffs between revisions. (Martin Albisetti)
+
+    - Modified templates to make loggerhead's theme easier to
+      change. (Paul Hummer)
 
     - Default sqlite interface is now sqlite3. (Robert Collins)
 
@@ -13,12 +18,15 @@ What's changed in loggerhead?
     - Remove the .py extension requiered by the Debian Policy.
       (Jelmer Vernooij)
 
+    - New startup script serve-branches will serve Loggerhead without
+      the need of configuration, and allow you to browse through directories
+      and branches. (Michael Hudson)
+
     - Loggerhead is no longer a TurboGears application, but rather a
       WSGI application built using Paste (see http://wsgi.org/ and
-      http://pythonpaste.org/ for more about WSGI and Paste). XXX more.
+      http://pythonpaste.org/ for more about WSGI and Paste).
 
-    - zpt.cleaner_urls bug 138021 ("loggerhead should generate links
-      based on revision numbers and file paths").  XXX more.
+    - URLs now use revision numbers instead of revision ids (Martin Albisetti)
 
     - The scripts no longer insist on Python 2.4 -- loggerhead works
       fine with 2.5.
