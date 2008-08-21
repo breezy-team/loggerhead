@@ -21,6 +21,3 @@ Description: Web viewer for Bazaar
  This is a web viewer for projects in the Bazaar version control system. 
  It can be used to navigate a branch history, annotate files, view patches and
  perform searches. 
- .
- It's heavily based on bazaar-webserve, which is itself 
- based on hgweb for Mercurial.
