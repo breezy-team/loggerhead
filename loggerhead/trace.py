@@ -20,6 +20,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import os
+import logging
+import sys
 
 def make_handler(config, filename):
     roll = config.get('log.roll', 'never')
@@ -38,8 +41,8 @@ def setup_logging(log_folder, config, foreground):
     if not os.path.exists(log_folder):
         os.mkdir(log_folder)
 
-    f = logging.Formatter('%(levelname)-.3s [%(asctime)s.%(msecs)03d] %(name)s: %(message)s',
-                          '%Y%m%d-%H:%M:%S')
+    f = logging.Formatter('%(levelname)-.3s [%(asctime)s.%(msecs)03d]'
+                          ' %(name)s: %(message)s','%Y%m%d-%H:%M:%S')
     debug_log = make_handler(config, os.path.join(log_folder, 'debug.log'))
     debug_log.setLevel(logging.DEBUG)
     debug_log.setFormatter(f)
@@ -52,10 +55,17 @@ def setup_logging(log_folder, config, foreground):
     access_log = make_handler(config, os.path.join(log_folder, 'access.log'))
     access_log.setLevel(logging.INFO)
     access_log.setFormatter(f)
+    
+    f = logging.Formatter('[%(asctime)s.%(msecs)03d] %(message)s',
+                          '%Y%m%d-%H:%M:%S')
+    error_log = make_handler(config, os.path.join(log_folder, 'error.log'))
+    error_log.setLevel(logging.ERROR)
+    error_log.setFormatter(f)
 
     logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(debug_log)
     logging.getLogger('wsgi').addHandler(access_log)
+    logging.getLogger('').addHandler(error_log)
 
     if foreground:
         logging.getLogger('').addHandler(stdout_log)
