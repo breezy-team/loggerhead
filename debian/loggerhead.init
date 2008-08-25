@@ -21,13 +21,8 @@ SCRIPTNAME=/etc/init.d/$NAME
 # Gracefully exit if the package has been removed.
 [ -x /usr/bin/start-loggerhead ] || exit 0
 
-# Read config file if it is present.
-if [ -r /etc/default/$NAME ]; then
-	. /etc/default/$NAME
-fi
-
-[ "$LOGGERHEAD_DISABLED" = "1" ] && exit 0
-
+# Check if configuration file is present
+[ ! -f /etc/loggerhead.conf ] && exit 0
 
 #
 #	Function that starts the daemon/service.

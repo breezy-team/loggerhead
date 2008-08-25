@@ -1,0 +1,10 @@
+loggerhead for Debian
+=====================
+
+To use loggerhead, please copy the example configuration file from 
+/usr/share/doc/loggerhead/examples to /etc/loggerhead.conf and modify it for 
+your local environment.
+
+After this, you should be able to start loggerhead.
+
+ -- Jelmer Vernooij <jelmer@samba.org>, Mo 25. Aug 15:06:25 CEST 2008 
