@@ -1,6 +1,14 @@
 What's changed in loggerhead?
 =============================
 
+dev [future]
+
+    - Added --port, --host and --prefix options to serve-branches
+      script. (Martin Albisetti)
+
+    - Fixed broken template for project browsing with start-loggerhead
+      (Martin Albisett)
+
 1.6 [15Aug2008]
 ----------------
 
