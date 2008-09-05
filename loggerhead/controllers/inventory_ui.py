@@ -20,7 +20,9 @@
 import logging
 import posixpath
 
-from paste.httpexceptions import HTTPServerError
+from paste.httpexceptions import HTTPNotFound, HTTPServerError
+
+from bzrlib.revision import is_null as is_null_rev
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -44,6 +46,10 @@ class InventoryUI(TemplatedBranchView):
             revid = h.fix_revid(args[0])
         else:
             revid = h.last_revid
+
+        if is_null_rev(revid):
+            #XXX: try to print a nicer error without throwing an exception.
+            raise HTTPNotFound('This branch does not have any revisions yet.')
 
         try:
             inv = h.get_inventory(revid)
