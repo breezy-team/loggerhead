@@ -24,10 +24,13 @@ class BranchesFromFileSystemServer(object):
     def app_for_branch(self, branch):
         if not self.name:
             name = branch.nick
+            is_root = True
         else:
             name = self.name
+            is_root = False
         branch_app = BranchWSGIApp(
-            branch, name, {'cachepath': sql_dir}, self.root.graph_cache)
+            branch, name, {'cachepath': sql_dir}, self.root.graph_cache,
+            is_root=is_root)
         return branch_app.app
 
     def app_for_non_branch(self, environ):

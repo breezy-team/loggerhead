@@ -32,7 +32,7 @@ import re
 import struct
 import threading
 import time
-import types
+
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -340,6 +340,71 @@ def fill_in_navigation(navigation):
     if navigation.next_page_revid:
         navigation.next_page_url = navigation.branch.context_url(
             [navigation.scan_url, next_page_revno], **params)
+
+
+def directory_breadcrumbs(path, is_root, view):
+    """
+    Generate breadcrumb information from the directory path given
+
+    The path given should be a path up to any branch that is currently being
+    served
+
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    is_root -- Whether or not loggerhead is serving a branch at its root
+    view -- The type of view we are showing (files, changes etc)
+    """
+    # Is our root directory itself a branch?
+    if is_root:
+        if view == 'directory':
+            directory = 'files'
+        breadcrumbs = [{
+            'dir_name': path,
+            'path': '',
+            'suffix': view,
+        }]
+    else:
+        # Create breadcrumb trail for the path leading up to the branch
+        breadcrumbs = [{
+            'dir_name': "(root)",
+            'path': '',
+            'suffix': '',
+        }]
+        if path != '/':
+            dir_parts = path.strip('/').split('/')
+            for index, dir_name in enumerate(dir_parts):
+                breadcrumbs.append({
+                    'dir_name': dir_name,
+                    'path': '/'.join(dir_parts[:index + 1]),
+                    'suffix': '',
+                })
+            # If we are not in the directory view, the last crumb is a branch,
+            # so we need to specify a view
+            if view != 'directory':
+                breadcrumbs[-1]['suffix'] = '/' + view
+    return breadcrumbs
+
+
+def branch_breadcrumbs(path, inv, view):
+    """
+    Generate breadcrumb information from the branch path given
+
+    The path given should be a path that exists within a branch
+
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    inv -- Inventory to get file information from
+    view -- The type of view we are showing (files, changes etc)
+    """
+    dir_parts = path.strip('/').split('/')
+    inner_breadcrumbs = []
+    for index, dir_name in enumerate(dir_parts):
+        inner_breadcrumbs.append({
+            'dir_name': dir_name,
+            'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            'suffix': '/' + view ,
+        })
+    return inner_breadcrumbs
 
 
 def decorator(unbound):

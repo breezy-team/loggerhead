@@ -28,6 +28,7 @@ def _pt(name):
 
 
 templatefunctions['macros'] = _pt('macros').macros
+templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 @templatefunc
 def file_change_summary(url, entry, modified_file_link):
