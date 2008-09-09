@@ -29,9 +29,10 @@ from loggerhead.controllers import TemplatedBranchView
 log = logging.getLogger("loggerhead.controllers")
 
 def dirname(path):
-    while path.endswith('/'):
-        path = path[:-1]
-    path = posixpath.dirname(path)
+    if path is not None:
+        while path.endswith('/'):
+            path = path[:-1]
+        path = posixpath.dirname(path)
     return path
 
 
@@ -39,11 +40,7 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, args, kw, headers):
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
+    def get_values(self, h, revid, path, kwargs, headers):
 
         try:
             inv = h.get_inventory(revid)
@@ -51,9 +48,9 @@ class InventoryUI(TemplatedBranchView):
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
 
-        file_id = kw.get('file_id', inv.root.file_id)
-        start_revid = kw.get('start_revid', None)
-        sort_type = kw.get('sort', None)
+        file_id = kwargs.get('file_id', inv.root.file_id)
+        start_revid = kwargs.get('start_revid', None)
+        sort_type = kwargs.get('sort', None)
 
         # no navbar for revisions
         navigation = util.Container()
@@ -62,9 +59,9 @@ class InventoryUI(TemplatedBranchView):
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([ change ])
 
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
-            path = '/' + path
+        if path is not None:
+            if not path.startswith('/'):
+                path = '/' + path
         idpath = inv.get_idpath(file_id)
         if len(idpath) > 1:
             updir = dirname(path)

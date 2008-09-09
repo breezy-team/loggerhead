@@ -31,7 +31,7 @@ class SearchUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.search'
 
-    def get_values(self, h, args, kwargs, response):
+    def get_values(self, h, revid, path, kwargs, response):
         """
         Default method called from the search box as /search URL
 

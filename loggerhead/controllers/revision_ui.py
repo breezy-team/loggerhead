@@ -30,21 +30,17 @@ class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
 
-    def get_values(self, h, args, kw, headers):
+    def get_values(self, h, revid, path, kwargs, headers):
 
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = None
-
-        filter_file_id = kw.get('filter_file_id', None)
-        start_revid = h.fix_revid(kw.get('start_revid', None))
-        query = kw.get('q', None)
-        remember = h.fix_revid(kw.get('remember', None))
-        compare_revid = h.fix_revid(kw.get('compare_revid', None))
+        filter_file_id = kwargs.get('filter_file_id', None)
+        start_revid = h.fix_revid(kwargs.get('start_revid', None))
+        query = kwargs.get('q', None)
+        remember = h.fix_revid(kwargs.get('remember', None))
+        compare_revid = h.fix_revid(kwargs.get('compare_revid', None))
 
         try:
-            revid, start_revid, revid_list = h.get_view(revid, start_revid, filter_file_id, query)
+            revid, start_revid, revid_list = h.get_view(revid, start_revid, 
+                                                        filter_file_id, query)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -68,7 +64,8 @@ class RevisionUI(TemplatedBranchView):
                 line_count += len(chunk.diff)
 
         # let's make side-by-side diff be the default
-        side_by_side = not kw.get('unified', False)
+        # FIXME: not currently in use. Should be
+        side_by_side = not kwargs.get('unified', False)
         if side_by_side:
             h.add_side_by_side([ change ])
 

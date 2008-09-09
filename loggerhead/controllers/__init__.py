@@ -63,14 +63,23 @@ class TemplatedBranchView(object):
     def __call__(self, environ, start_response):
         z = time.time()
         h = self._history
-        kw = dict(parse_querystring(environ))
-        util.set_context(kw)
+        kwargs = dict(parse_querystring(environ))
+        util.set_context(kwargs)
         args = []
         while 1:
             arg = path_info_pop(environ)
             if arg is None:
                 break
             args.append(arg)
+        
+        if len(args) > 0:
+            revid = h.fix_revid(args[0])
+        else:
+            revid = h.last_revid
+
+        path = None
+        if len(args) > 1:
+            path = args[1]
 
         vals = {
             'branch': self._branch,
@@ -80,7 +89,7 @@ class TemplatedBranchView(object):
         }
         vals.update(templatefunctions)
         headers = {}
-        vals.update(self.get_values(h, args, kw, headers))
+        vals.update(self.get_values(h, revid, path, kwargs, headers))
 
         self.log.info('Getting information for %s: %r secs' % (
             self.__class__.__name__, time.time() - z,))
@@ -92,6 +101,7 @@ class TemplatedBranchView(object):
         w = BufferingWriter(writer, 8192)
         template.expand_into(w, **vals)
         w.flush()
-        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
-            self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
+        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % 
+            (self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 
+                100.0*w.bytes_saved/w.bytes))
         return []

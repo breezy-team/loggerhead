@@ -27,23 +27,22 @@ class ChangeLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.changelog'
 
-    def get_values(self, h, args, kw, headers):
-        if args:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = None
+    def get_values(self, h, revid, path, kwargs, headers):
 
-        filter_file_id = kw.get('filter_file_id', None)
-        query = kw.get('q', None)
-        start_revid = h.fix_revid(kw.get('start_revid', None))
+        filter_file_id = kwargs.get('filter_file_id', None)
+        query = kwargs.get('q', None)
+        start_revid = h.fix_revid(kwargs.get('start_revid', None))
         orig_start_revid = start_revid
         pagesize = 20#int(config.get('pagesize', '20'))
         search_failed = False
 
+        if filter_file_id is None and path is not None:
+            filter_file_id = h.get_file_id(revid, path)
+
         try:
             revid, start_revid, revid_list = h.get_view(
                 revid, start_revid, filter_file_id, query)
-            util.set_context(kw)
+            util.set_context(kwargs)
 
             if (query is not None) and (len(revid_list) == 0):
                 search_failed = True
@@ -74,18 +73,6 @@ class ChangeLogUI(TemplatedBranchView):
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks(changes)
 
-        # does every change on this page have the same committer?  if so,
-        # tell the template to show committer info in the "details block"
-        # instead of on each line.
-        all_same_author = True
-
-        if changes:
-            author = changes[0].author
-            for e in changes[1:]:
-                if e.author != author:
-                    all_same_author = False
-                    break
-
         return {
             'branch': self._branch,
             'changes': changes,
@@ -98,6 +85,5 @@ class ChangeLogUI(TemplatedBranchView):
             'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
             'query': query,
             'search_failed': search_failed,
-            'all_same_author': all_same_author,
             'url': self._branch.context_url,
         }
