@@ -2,6 +2,7 @@
 
 import logging
 import urllib
+import sys
 
 import bzrlib.branch
 import bzrlib.lru_cache
@@ -93,6 +94,7 @@ class BranchWSGIApp(object):
     def app(self, environ, start_response):
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
+        environ['FRIENDLY_NAME'] = self.friendly_name
         if self._static_url_base is None:
             self._static_url_base = self._url_base
         self._environ = environ
@@ -109,5 +111,9 @@ class BranchWSGIApp(object):
         try:
             c = cls(self, self.get_history())
             return c(environ, start_response)
+        except:
+            environ['exc_info'] = sys.exc_info()
+            environ['branch'] = self
+            raise
         finally:
             self.branch.unlock()

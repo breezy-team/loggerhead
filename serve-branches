@@ -28,13 +28,14 @@ from paste.translogger import TransLogger
 from loggerhead import __version__
 from loggerhead.apps.filesystem import (
     BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
-
+from loggerhead.apps.error import ErrorHandlerApp
 
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
     parser.set_defaults(
         user_dirs=False,
         show_version=False,
+        log_folder=None,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -42,13 +43,12 @@ def command_line_parser():
                       help="The directory that contains the trunk branches.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
+    parser.add_option('--log-folder', dest="log_folder", 
+                      type=str, help="The directory to place log files")
     return parser
 
 
 def main(args):
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-
     parser = command_line_parser()
     (options, args) = parser.parse_args(sys.argv[1:])
 
@@ -79,8 +79,26 @@ def main(args):
         app = UserBranchesFromFileSystemRoot(path, options.trunk_dir)
     else:
         app = BranchesFromFileSystemRoot(path)
+    
+    # setup_logging()
+    logging.basicConfig()
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logger = getattr(app, 'log', logging.getLogger('loggerhead'))
+    if options.log_folder:
+        logfile_path = os.path.join(options.log_folder, 'serve-branches.log')
+    else:
+        logfile_path = 'serve-branches.log'
+    logfile = logging.FileHandler(logfile_path, 'a')
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                  ' %(message)s')
+    logfile.setFormatter(formatter)
+    logfile.setLevel(logging.DEBUG)
+    logger.addHandler(logfile)
+    # setup_logging() #end
+    app = ErrorHandlerApp(app)
     app = HTTPExceptionHandler(app)
-    app = TransLogger(app)
+    app = TransLogger(app, logger=logger)
+
 
     try:
         from paste.deploy.config import PrefixMiddleware

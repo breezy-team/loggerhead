@@ -32,6 +32,7 @@ from paste.translogger import make_filter
 from loggerhead import daemon
 from loggerhead.apps.config import Root
 from loggerhead.trace import make_handler, setup_logging
+from loggerhead.apps.error import ErrorHandlerApp
 
 def main():
     home = os.path.realpath(os.path.dirname(__file__))
@@ -96,7 +97,8 @@ def main():
 
     app = app
     app = make_middleware(app)
-    app = make_filter(app, None)
+    app = make_filter(app, None, logger_name=log.name+'.access')
+    app = ErrorHandlerApp(app)
 
     if webpath:
         scheme, netloc, path, blah, blah, blah = urlparse.urlparse(webpath)
