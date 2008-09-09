@@ -422,7 +422,7 @@ class History (object):
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
-        path = self._branch.repository.get_revision_inventory(revid).id2path(file_id)
+        path = self.get_inventory(revid).id2path(file_id)
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return path
@@ -430,7 +430,7 @@ class History (object):
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
-        return self._branch.repository.get_revision_inventory(revid).path2id(path)
+        return self.get_inventory(revid).path2id(path)
 
     def get_merge_point_list(self, revid):
         """
