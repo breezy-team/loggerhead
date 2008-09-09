@@ -8,6 +8,10 @@ dev [future]
 
     - Fixed broken template for project browsing with start-loggerhead
       (Martin Albisett)
+    
+    - Added error hanlding middleware. (Guillermo Gonzalez)
+    
+    - Fix Bug# 243415. Also minor improvements to logging in serve-branches and start-loggerhead. (Guillermo Gonzalez)
 
 1.6 [15Aug2008]
 ----------------
