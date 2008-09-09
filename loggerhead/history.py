@@ -199,6 +199,7 @@ class History (object):
             "Can only construct a History object with a read-locked branch.")
         self._file_change_cache = None
         self._branch = branch
+        self._inventory_cache = {}
         self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
         self.last_revid = branch.last_revision()
@@ -211,6 +212,7 @@ class History (object):
         (self._revision_graph, self._full_history, self._revision_info,
          self._revno_revid, self._merge_sort, self._where_merged
          ) = whole_history_data
+
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
@@ -417,7 +419,10 @@ class History (object):
             return None, None, []
 
     def get_inventory(self, revid):
-        return self._branch.repository.get_revision_inventory(revid)
+        if revid not in self._inventory_cache:
+            self._inventory_cache[revid] = (
+                self._branch.repository.get_revision_inventory(revid))
+        return self._inventory_cache[revid]
 
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
