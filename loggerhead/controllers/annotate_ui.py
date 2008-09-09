@@ -20,7 +20,7 @@
 import os
 import posixpath
 
-from paste.httpexceptions import HTTPBadRequest
+from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
 from loggerhead import util

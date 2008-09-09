@@ -1,5 +1,4 @@
 import cgi
-import unittest
 import os
 import tempfile
 import shutil
@@ -9,7 +8,6 @@ import bzrlib.bzrdir
 import bzrlib.osutils
 from configobj import ConfigObj
 
-from loggerhead.history import History
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
 
