@@ -559,19 +559,15 @@ class History (object):
         trees = dict((t.get_revision_id(), t) for
                      t in self._branch.repository.revision_trees(required_trees))
         ret = []
-        self._branch.repository.lock_read()
-        try:
-            for revision in revisions:
-                if not revision.parents:
-                    old_tree = self._branch.repository.revision_tree(
-                        bzrlib.revision.NULL_REVISION)
-                else:
-                    old_tree = trees[revision.parents[0].revid]
-                tree = trees[revision.revid]
-                ret.append(tree.changes_from(old_tree))
-            return ret
-        finally:
-            self._branch.repository.unlock()
+        for revision in revisions:
+            if not revision.parents:
+                old_tree = self._branch.repository.revision_tree(
+                    bzrlib.revision.NULL_REVISION)
+            else:
+                old_tree = trees[revision.parents[0].revid]
+            tree = trees[revision.revid]
+            ret.append(tree.changes_from(old_tree))
+        return ret
 
     def _change_from_revision(self, revision):
         """
