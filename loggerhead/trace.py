@@ -56,16 +56,15 @@ def setup_logging(log_folder, config, foreground):
     access_log.setLevel(logging.INFO)
     access_log.setFormatter(f)
     
-    f = logging.Formatter('[%(asctime)s.%(msecs)03d] %(message)s',
-                          '%Y%m%d-%H:%M:%S')
     error_log = make_handler(config, os.path.join(log_folder, 'error.log'))
     error_log.setLevel(logging.ERROR)
     error_log.setFormatter(f)
 
     logging.getLogger('').setLevel(logging.DEBUG)
     logging.getLogger('').addHandler(debug_log)
-    logging.getLogger('wsgi').addHandler(access_log)
-    logging.getLogger('').addHandler(error_log)
+    logging.getLogger('loggerhead.access').addHandler(access_log)
+    logging.getLogger('loggerhead').setLevel(logging.ERROR)
+    logging.getLogger('loggerhead').addHandler(error_log)
 
     if foreground:
         logging.getLogger('').addHandler(stdout_log)
