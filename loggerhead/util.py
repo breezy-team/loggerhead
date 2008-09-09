@@ -32,7 +32,7 @@ import re
 import struct
 import threading
 import time
-import types
+
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -341,13 +341,14 @@ def fill_in_navigation(navigation):
         navigation.next_page_url = navigation.branch.context_url(
             [navigation.scan_url, next_page_revno], **params)
 
+
 def directory_breadcrumbs(path, is_root, view):
     """
     Generate breadcrumb information from the directory path given
-    
+
     The path given should be a path up to any branch that is currently being
     served
-    
+
     Arguments:
     path -- The path to convert into breadcrumbs
     is_root -- Whether or not loggerhead is serving a branch at its root
@@ -383,12 +384,13 @@ def directory_breadcrumbs(path, is_root, view):
                 breadcrumbs[-1]['suffix'] = '/' + view
     return breadcrumbs
 
+
 def branch_breadcrumbs(path, inv, view):
     """
     Generate breadcrumb information from the branch path given
-    
+
     The path given should be a path that exists within a branch
-    
+
     Arguments:
     path -- The path to convert into breadcrumbs
     inv -- Inventory to get file information from
@@ -403,6 +405,7 @@ def branch_breadcrumbs(path, inv, view):
             'suffix': '/' + view ,
         })
     return inner_breadcrumbs
+
 
 def decorator(unbound):
     def new_decorator(f):
