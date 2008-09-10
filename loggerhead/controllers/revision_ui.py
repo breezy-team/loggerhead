@@ -72,6 +72,13 @@ class RevisionUI(TemplatedBranchView):
         if side_by_side:
             h.add_side_by_side([ change ])
 
+        # Directory Breadcrumbs
+        directory_breadcrumbs = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'changes'))
+
         return {
             'branch': self._branch,
             'revid': revid,
@@ -89,4 +96,5 @@ class RevisionUI(TemplatedBranchView):
             'line_count': line_count,
             'line_count_limit': line_count_limit,
             'show_plain_diffs': line_count > line_count_limit,
+            'directory_breadcrumbs': directory_breadcrumbs,
         }

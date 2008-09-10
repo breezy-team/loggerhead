@@ -199,6 +199,7 @@ class History (object):
             "Can only construct a History object with a read-locked branch.")
         self._file_change_cache = None
         self._branch = branch
+        self._inventory_cache = {}
         self.log = logging.getLogger('loggerhead.%s' % (branch.nick,))
 
         self.last_revid = branch.last_revision()
@@ -211,6 +212,7 @@ class History (object):
         (self._revision_graph, self._full_history, self._revision_info,
          self._revno_revid, self._merge_sort, self._where_merged
          ) = whole_history_data
+
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
@@ -417,12 +419,15 @@ class History (object):
             return None, None, []
 
     def get_inventory(self, revid):
-        return self._branch.repository.get_revision_inventory(revid)
+        if revid not in self._inventory_cache:
+            self._inventory_cache[revid] = (
+                self._branch.repository.get_revision_inventory(revid))
+        return self._inventory_cache[revid]
 
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
-        path = self._branch.repository.get_revision_inventory(revid).id2path(file_id)
+        path = self.get_inventory(revid).id2path(file_id)
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return path
@@ -430,7 +435,7 @@ class History (object):
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
-        return self._branch.repository.get_revision_inventory(revid).path2id(path)
+        return self.get_inventory(revid).path2id(path)
 
     def get_merge_point_list(self, revid):
         """
@@ -559,19 +564,15 @@ class History (object):
         trees = dict((t.get_revision_id(), t) for
                      t in self._branch.repository.revision_trees(required_trees))
         ret = []
-        self._branch.repository.lock_read()
-        try:
-            for revision in revisions:
-                if not revision.parents:
-                    old_tree = self._branch.repository.revision_tree(
-                        bzrlib.revision.NULL_REVISION)
-                else:
-                    old_tree = trees[revision.parents[0].revid]
-                tree = trees[revision.revid]
-                ret.append(tree.changes_from(old_tree))
-            return ret
-        finally:
-            self._branch.repository.unlock()
+        for revision in revisions:
+            if not revision.parents:
+                old_tree = self._branch.repository.revision_tree(
+                    bzrlib.revision.NULL_REVISION)
+            else:
+                old_tree = trees[revision.parents[0].revid]
+            tree = trees[revision.revid]
+            ret.append(tree.changes_from(old_tree))
+        return ret
 
     def _change_from_revision(self, revision):
         """
