@@ -28,7 +28,9 @@ from paste.translogger import TransLogger
 from loggerhead import __version__
 from loggerhead.apps.filesystem import (
     BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
+
 
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
@@ -47,10 +49,13 @@ def command_line_parser():
                       help="Host Loggerhead should listen on.")
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
-    parser.add_option("--version", action="store_true", dest="show_version",
-                      help="Print the software version and exit")
+    parser.add_option("--reload", action="store_true", dest="reload",
+                      help="Restarts the application when changing python"
+                           " files. Only used for development purposes.")
     parser.add_option('--log-folder', dest="log_folder", 
                       type=str, help="The directory to place log files")
+    parser.add_option("--version", action="store_true", dest="show_version",
+                      help="Print the software version and exit")
     return parser
 
 
@@ -77,6 +82,12 @@ def main(args):
     if options.trunk_dir and not options.user_dirs:
         print "--trunk-dir is only valid with --user-dirs"
         sys.exit(1)
+        
+    if options.reload:
+        if Reloader.is_installed():
+            Reloader.install()
+        else:
+            return Reloader.restart_with_reloader()
 
     if options.user_dirs:
         if not options.trunk_dir:
@@ -104,7 +115,6 @@ def main(args):
     app = ErrorHandlerApp(app)
     app = HTTPExceptionHandler(app)
     app = TransLogger(app, logger=logger)
-
 
     if not options.user_prefix:
         prefix = '/'
