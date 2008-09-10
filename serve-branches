@@ -28,8 +28,8 @@ from paste.translogger import TransLogger
 from loggerhead import __version__
 from loggerhead.apps.filesystem import (
     BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.util import Reloader
 
-_reloader_environ_key = 'PYTHON_RELOADER_SHOULD_RUN'
 
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
@@ -48,7 +48,8 @@ def command_line_parser():
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
     parser.add_option("--reload", action="store_true", dest="reload",
-                      help="Use a file monitor to restart the application")
+                      help="Restarts the application when changing python"
+                           " files. Only used for development purposes.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     return parser
@@ -82,11 +83,10 @@ def main(args):
         sys.exit(1)
         
     if options.reload:
-        if os.environ.get(_reloader_environ_key):
-            from paste import reloader
-            reloader.install(int(1))
+        if Reloader.is_installed():
+            Reloader.install()
         else:
-            return restart_with_reloader()
+            return Reloader.restart_with_reloader()
 
     if options.user_dirs:
         if not options.trunk_dir:
@@ -121,40 +121,6 @@ def main(args):
         host = options.user_host
 
     httpserver.serve(app, host=host, port=port)
-    
-
-def restart_with_reloader():
-    print 'Starting subprocess with file monitor'
-    while 1:
-        args = [sys.executable] + sys.argv
-        new_environ = os.environ.copy()
-        new_environ[_reloader_environ_key] = 'true'
-        proc = None
-        try:
-            try:
-                import paste.script.serve
-                import subprocess
-                paste.script.serve._turn_sigterm_into_systemexit()
-                proc = subprocess.Popen(args, env=new_environ)
-                exit_code = proc.wait()
-                proc = None
-            except KeyboardInterrupt:
-                print '^C caught in monitor process'
-                return 1
-        finally:
-            if (proc is not None
-                and hasattr(os, 'kill')):
-                import signal
-                try:
-                    os.kill(proc.pid, signal.SIGTERM)
-                except (OSError, IOError):
-                    pass
-            
-        # Reloader always exits with code 3; but if we are
-        # a monitor, any exit code will restart
-        if exit_code != 3:
-            return exit_code
-        print '-'*20, 'Restarting', '-'*20
 
 
 if __name__ == "__main__":

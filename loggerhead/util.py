@@ -33,6 +33,9 @@ import struct
 import threading
 import time
 import types
+import sys
+import os
+import subprocess
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -445,3 +448,66 @@ def get_context(**overrides):
     overrides = dict((k, v) for (k, v) in overrides.iteritems() if k in _valid)
     map.update(overrides)
     return map
+
+
+class Reloader(object):
+    """
+    This class wraps all paste.reloader logic. All methods are @classmethod.
+    """
+
+    _reloader_environ_key = 'PYTHON_RELOADER_SHOULD_RUN'
+
+    @classmethod
+    def _turn_sigterm_into_systemexit(self):
+        """
+        Attempts to turn a SIGTERM exception into a SystemExit exception.
+        """
+        try:
+            import signal
+        except ImportError:
+            return
+        def handle_term(signo, frame):
+            raise SystemExit
+        signal.signal(signal.SIGTERM, handle_term)
+
+    @classmethod
+    def is_installed(self):
+        return os.environ.get(self._reloader_environ_key)
+    
+    @classmethod
+    def install(self):
+        from paste import reloader
+        reloader.install(int(1))
+    
+    @classmethod    
+    def restart_with_reloader(self):
+        """Based on restart_with_monitor from paste.script.serve."""
+        print 'Starting subprocess with file monitor'
+        while 1:
+            args = [sys.executable] + sys.argv
+            new_environ = os.environ.copy()
+            new_environ[self._reloader_environ_key] = 'true'
+            proc = None
+            try:
+                try:
+                    self._turn_sigterm_into_systemexit()
+                    proc = subprocess.Popen(args, env=new_environ)
+                    exit_code = proc.wait()
+                    proc = None
+                except KeyboardInterrupt:
+                    print '^C caught in monitor process'
+                    return 1
+            finally:
+                if (proc is not None
+                    and hasattr(os, 'kill')):
+                    import signal
+                    try:
+                        os.kill(proc.pid, signal.SIGTERM)
+                    except (OSError, IOError):
+                        pass
+                
+            # Reloader always exits with code 3; but if we are
+            # a monitor, any exit code will restart
+            if exit_code != 3:
+                return exit_code
+            print '-'*20, 'Restarting', '-'*20
