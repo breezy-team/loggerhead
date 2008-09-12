@@ -38,9 +38,6 @@ try:
 except ImportError:
     from pysqlite2 import dbapi2
 
-_select_stmt = "select data from revisiondata where revid = ?"
-_insert_stmt = ("insert into revisiondata (revid, data) "
-                "values (?, ?)")
 
 class FakeShelf(object):
     def __init__(self, filename):
@@ -60,7 +57,8 @@ class FakeShelf(object):
     def _unserialize(self, data):
         return cPickle.loads(str(data))
     def get(self, revid):
-        self.cursor.execute(_select_stmt, (revid,))
+        self.cursor.execute(
+            "select data from revisiondata where revid = ?", (revid,))
         filechange = self.cursor.fetchone()
         if filechange is None:
             return None
@@ -68,7 +66,9 @@ class FakeShelf(object):
             return self._unserialize(filechange[0])
     def add(self, revid_obj_pairs):
         for  (r, d) in revid_obj_pairs:
-            self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
+            self.cursor.execute(
+                "insert into revisiondata (revid, data) values (?, ?)",
+                (r, self._serialize(d)))
         self.connection.commit()
 
 
