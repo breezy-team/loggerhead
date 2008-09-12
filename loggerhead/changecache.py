@@ -33,19 +33,14 @@ from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
-SQLITE_INTERFACE = os.environ.get('SQLITE_INTERFACE', 'sqlite3')
-
-if SQLITE_INTERFACE == 'sqlite3':
+try:
     from sqlite3 import dbapi2
-    _param_marker = '?'
+except ImportError:
+    from pysqlite2 import dbapi2
 
-_select_stmt = ("select data from revisiondata where revid = ?"
-                ).replace('?', _param_marker)
+_select_stmt = "select data from revisiondata where revid = ?"
 _insert_stmt = ("insert into revisiondata (revid, data) "
-                "values (?, ?)").replace('?', _param_marker)
-
-
-
+                "values (?, ?)")
 
 class FakeShelf(object):
     def __init__(self, filename):
