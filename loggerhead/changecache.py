@@ -33,18 +33,10 @@ from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
-SQLITE_INTERFACE = os.environ.get('SQLITE_INTERFACE', 'sqlite3')
-
-if SQLITE_INTERFACE == 'sqlite3':
+try:
     from sqlite3 import dbapi2
-    _param_marker = '?'
-
-_select_stmt = ("select data from revisiondata where revid = ?"
-                ).replace('?', _param_marker)
-_insert_stmt = ("insert into revisiondata (revid, data) "
-                "values (?, ?)").replace('?', _param_marker)
-
-
+except ImportError:
+    from pysqlite2 import dbapi2
 
 
 class FakeShelf(object):
@@ -65,7 +57,8 @@ class FakeShelf(object):
     def _unserialize(self, data):
         return cPickle.loads(str(data))
     def get(self, revid):
-        self.cursor.execute(_select_stmt, (revid,))
+        self.cursor.execute(
+            "select data from revisiondata where revid = ?", (revid,))
         filechange = self.cursor.fetchone()
         if filechange is None:
             return None
@@ -73,7 +66,9 @@ class FakeShelf(object):
             return self._unserialize(filechange[0])
     def add(self, revid_obj_pairs):
         for  (r, d) in revid_obj_pairs:
-            self.cursor.execute(_insert_stmt, (r, self._serialize(d)))
+            self.cursor.execute(
+                "insert into revisiondata (revid, data) values (?, ?)",
+                (r, self._serialize(d)))
         self.connection.commit()
 
 
