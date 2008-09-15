@@ -22,6 +22,7 @@ import os
 
 from bzrlib import branch
 
+from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
 class DirEntry(object):
@@ -70,8 +71,14 @@ class DirectoryUI(TemplatedBranchView):
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
+        # Create breadcrumb trail
+        directory_breadcrumbs = util.directory_breadcrumbs(
+                self._name,
+                False,
+                'directory')
         return {
             'dirs': dirs,
             'name': self._name,
             'static_url': static_url,
+            'directory_breadcrumbs': directory_breadcrumbs,
             }

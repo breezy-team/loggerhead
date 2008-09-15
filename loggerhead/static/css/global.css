@@ -318,4 +318,14 @@ ul#pages {
 }
 #pages a:hover {
 	border:solid 1px #666666;
-}		
+}
+.breadcrumb a {
+	color:#889ea9;
+	font-weight:bold;
+	font-size:18px;
+}
+.breadcrumb a:hover{
+	color:#666;
+	font-weight:bold;
+	font-size:18px;
+}

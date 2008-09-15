@@ -17,11 +17,12 @@
           nice/branch/name
         </a>
       </tal:has-link>
-      <tal:no-link condition="not: branch/branch_link">
-        <tal:branch-name replace="branch/friendly_name" />
-      </tal:no-link>
+      <span tal:condition="not: branch/branch_link">
+        <span metal:use-macro="breadcrumbs/directory" />
+      </span>
       : viewing
-      <span tal:content="path" /> for revision <span tal:content="change/revno"/>
+      <span metal:use-macro="breadcrumbs/branch" />
+      for revision <span tal:content="change/revno"/>
     </h1>
 
     <div metal:fill-slot="content">
