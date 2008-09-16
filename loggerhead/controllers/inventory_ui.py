@@ -48,7 +48,7 @@ class InventoryUI(TemplatedBranchView):
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
 
-        file_id = kwargs.get('file_id', inv.root.file_id)
+        file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)
         sort_type = kwargs.get('sort', None)
 
@@ -62,6 +62,14 @@ class InventoryUI(TemplatedBranchView):
         if path is not None:
             if not path.startswith('/'):
                 path = '/' + path
+            file_id = h.get_file_id(revid, path)
+        else:
+            path = inv.id2path(file_id)
+        
+        if file_id is None:
+            file_id = inv.root.file_id
+
+
         idpath = inv.get_idpath(file_id)
         if len(idpath) > 1:
             updir = dirname(path)

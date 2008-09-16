@@ -79,9 +79,9 @@ class TemplatedBranchView(object):
             else:
                 revid = h.last_revid
 
-        path = '/'
+        path = None
         if len(args) > 1:
-            path = args[1]
+            path = '/'.join(args[1:])
 
         vals = {
             'branch': self._branch,
