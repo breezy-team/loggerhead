@@ -50,7 +50,7 @@ class BasicTests(object):
     """
 
     def setUpLoggerhead(self):
-        app = TestApp(BranchWSGIApp(self.branch).app)
+        app = TestApp(BranchWSGIApp(self.branch, '').app)
         return app
 
     def tearDown(self):
