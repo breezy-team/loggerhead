@@ -71,13 +71,15 @@ class TemplatedBranchView(object):
             if arg is None:
                 break
             args.append(arg)
-        
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
 
-        path = None
+        revid = None
+        if h is not None:
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
+            else:
+                revid = h.last_revid
+
+        path = '/'
         if len(args) > 1:
             path = args[1]
 
