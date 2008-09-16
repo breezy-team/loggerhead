@@ -16,16 +16,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from paste.httpexceptions import HTTPServerError
-from loggerhead import history
-from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 from loggerhead import search
 
 
 class SearchUI(TemplatedBranchView):
     """
-    
+
     Class to output progressive search result terms.
     """
 

@@ -7,8 +7,9 @@
   </head>
   <body>
     <div id="loggerheadCont">
-      <h1 tal:content="string:Browsing ${name}">
-        Hi.
+      <h1>
+        Browsing
+        <span metal:use-macro="breadcrumbs/directory" />
       </h1>
 
       <div >

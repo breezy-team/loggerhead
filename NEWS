@@ -8,6 +8,9 @@ dev [future]
 
     - Fixed broken template for project browsing with start-loggerhead
       (Martin Albisett)
+      
+    - Added --reload options to restart the application when a python 
+      file change. (Guillermo Gonzalez) 
 
 1.6 [15Aug2008]
 ----------------

@@ -22,9 +22,9 @@
         </a>
       </tal:has-link>
       <tal:no-link condition="not: branch/branch_link">
-        <tal:branch-name replace="branch/friendly_name" />
+        <span metal:use-macro="breadcrumbs/directory"></span>
       </tal:no-link>
-      <span>: <span tal:content="path"></span> (revision <tal:revno content="change/revno"></tal:revno>)</span>
+      <span>: <span metal:use-macro="breadcrumbs/branch" /> (revision <tal:revno content="change/revno"></tal:revno>)</span>
     </h1>
 
     <div metal:fill-slot="content">

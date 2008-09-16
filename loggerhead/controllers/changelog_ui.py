@@ -73,6 +73,13 @@ class ChangeLogUI(TemplatedBranchView):
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks(changes)
 
+        # Directory Breadcrumbs
+        directory_breadcrumbs = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'changes'))
+
         return {
             'branch': self._branch,
             'changes': changes,
@@ -86,4 +93,5 @@ class ChangeLogUI(TemplatedBranchView):
             'query': query,
             'search_failed': search_failed,
             'url': self._branch.context_url,
+            'directory_breadcrumbs': directory_breadcrumbs,
         }
