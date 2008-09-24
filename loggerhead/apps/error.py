@@ -25,7 +25,6 @@ class ErrorHandlerApp(object):
 
     def __init__(self, application, **kwargs):
         self.application = application
-        self.log = getattr(application, 'log', None)
 
     def __call__(self, environ, start_response):
         try:
@@ -48,14 +47,7 @@ class ErrorHandlerApp(object):
 
     def log_error(self, environ):
         exc_type, exc_object, exc_tb = environ['exc_info']
-        logger = self.log
-        if environ.has_key('branch'):
-            logger = environ['branch'].log
-        elif environ.has_key('FRIENDLY_NAME'):
-            logger = logging.getLogger('loggerhead.%s' %
-                environ['FRIENDLY_NAME'])
-        elif logger is None:
-            logger = logging.getLogger('loggerhead')
+        logger = environ['branch'].log
         logger.exception(self.msg, exc_type.__module__,
                               exc_type.__name__, exc_object)
 
