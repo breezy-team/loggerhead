@@ -15,50 +15,40 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import sys
 import logging
-from loggerhead.controllers import TemplatedBranchView
 from loggerhead.controllers.error_ui import ErrorUI
-  
+
 class ErrorHandlerApp(object):
-    '''Class for WSGI error logging middleware.'''
-    
-    msg = " %s.%s: %s \n" 
+    """Class for WSGI error logging middleware."""
+
+    msg = " %s.%s: %s \n"
 
     def __init__(self, application, **kwargs):
         self.application = application
-        self.log = getattr(application, 'log', None)
-                
+
     def __call__(self, environ, start_response):
         try:
             return self.application(environ, start_response)
         except:
-            # test if exc_info has been set, in the case that 
-            # the error is caused before BranchWSGGIApp middleware 
+            # test if exc_info has been set, in the case that
+            # the error is caused before BranchWSGGIApp middleware
             if environ.has_key('exc_info') and environ.has_key('branch'):
                 # Log and/or report any application errors
                 return self.handle_error(environ, start_response)
             else:
-                # simply propagate the error, this is logged 
+                # simply propagate the error, this is logged
                 # by paste.httpexceptions.TransLogger middleware
                 raise
 
     def handle_error(self, environ, start_response):
-        '''Exception hanlder.'''
+        """Exception hanlder."""
         self.log_error(environ)
         return errapp(environ, start_response)
-        
+
     def log_error(self, environ):
         exc_type, exc_object, exc_tb = environ['exc_info']
-        logger = self.log
-        if environ.has_key('branch'):
-            logger = environ['branch'].log   
-        elif environ.has_key('FRIENDLY_NAME'):
-            logger = logging.getLogger('loggerhead.%s' % 
-                environ['FRIENDLY_NAME'])
-        elif logger is None:
-            logger = logging.getLogger('loggerhead')
-        logger.exception(self.msg, exc_type.__module__, 
+        logger = environ['branch'].log
+        logger.exception(self.msg, exc_type.__module__,
                               exc_type.__name__, exc_object)
 
 

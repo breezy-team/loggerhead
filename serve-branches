@@ -52,8 +52,8 @@ def command_line_parser():
     parser.add_option("--reload", action="store_true", dest="reload",
                       help="Restarts the application when changing python"
                            " files. Only used for development purposes.")
-    parser.add_option('--log-folder', dest="log_folder", 
-                      type=str, help="The directory to place log files")
+    parser.add_option('--log-folder', dest="log_folder",
+                      type=str, help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     return parser
@@ -82,7 +82,7 @@ def main(args):
     if options.trunk_dir and not options.user_dirs:
         print "--trunk-dir is only valid with --user-dirs"
         sys.exit(1)
-        
+
     if options.reload:
         if Reloader.is_installed():
             Reloader.install()
@@ -96,7 +96,7 @@ def main(args):
         app = UserBranchesFromFileSystemRoot(path, options.trunk_dir)
     else:
         app = BranchesFromFileSystemRoot(path)
-    
+
     # setup_logging()
     logging.basicConfig()
     logging.getLogger('').setLevel(logging.DEBUG)
@@ -127,7 +127,7 @@ def main(args):
         pass
     else:
         app = PrefixMiddleware(app, prefix=prefix)
-    
+
     if not options.user_port:
         port = '8080'
     else:

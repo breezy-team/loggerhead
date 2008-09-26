@@ -25,11 +25,11 @@ class ErrorUI(TemplatedBranchView):
     def __init__(self, branch, exc_info):
         super(ErrorUI, self).__init__(branch, None)
         self.exc_info = exc_info
-    
+
     def get_values(self, h, args, kw, headers):
         exc_type, exc_object, exc_tb = self.exc_info
         return {
-            'error_title':'Error',
-            'error_description':exc_object,
-            'error_properties':[self.exc_info],
+            'error_title': 'Error',
+            'error_description': exc_object,
+            'error_properties': [self.exc_info],
         }

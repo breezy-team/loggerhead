@@ -95,7 +95,6 @@ class BranchWSGIApp(object):
     def app(self, environ, start_response):
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
-        environ['FRIENDLY_NAME'] = self.friendly_name
         if self._static_url_base is None:
             self._static_url_base = self._url_base
         self._environ = environ
