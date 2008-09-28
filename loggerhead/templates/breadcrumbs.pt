@@ -15,7 +15,7 @@
 
 <!-- Directory breadcrumbs (for the path leading up to the branch) -->
 <span metal:define-macro="directory" class="breadcrumb">
-    <tal:block repeat="crumb directory_breadcrumbs"><span tal:condition="not:repeat/crumb/start">/</span><a tal:attributes="href string:/${crumb/path}${crumb/suffix}" tal:content="crumb/dir_name" /></tal:block>
+    <tal:block repeat="crumb directory_breadcrumbs"><span tal:condition="not:repeat/crumb/start">/</span><a tal:attributes="href python:url([crumb['suffix']])" tal:content="crumb/dir_name" /></tal:block>
 </span>
 
 </body>
