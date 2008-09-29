@@ -8,14 +8,16 @@
     <body>
         <tal:block metal:fill-slot="heading">
         <h1>
+           <tal:has-link condition="branch/branch_link">
             <a tal:attributes="href branch/branch_link"
                tal:content="branch/friendly_name">
                nice/branch/name
             </a>
+           </tal:has-link>
             <tal:no-link condition="not: branch/branch_link">
                 <span metal:use-macro="breadcrumbs/directory"></span>
             </tal:no-link>
-           : Error
+           : error
         </h1>
         <pre>
             <p tal:content="error_title"/>

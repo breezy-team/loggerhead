@@ -17,6 +17,7 @@
 #
 
 from loggerhead.controllers import TemplatedBranchView
+from loggerhead import util
 
 class ErrorUI(TemplatedBranchView):
 
@@ -33,9 +34,15 @@ class ErrorUI(TemplatedBranchView):
         from StringIO import StringIO
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
+        # Directory Breadcrumbs
+        directory_breadcrumbs = (
+            util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'changes'))
         return {
             'branch': self._branch,
-            'error_title': 'An unexpected error occurred while proccesing the request',
+            'error_title': 'An unexpected error occurred while proccesing the request:',
             'error_description': description.getvalue(),
+            'directory_breadcrumbs': directory_breadcrumbs,
         }
-        
