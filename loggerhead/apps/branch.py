@@ -2,6 +2,7 @@
 
 import logging
 import urllib
+import sys
 
 import bzrlib.branch
 import bzrlib.lru_cache
@@ -110,5 +111,9 @@ class BranchWSGIApp(object):
         try:
             c = cls(self, self.get_history())
             return c(environ, start_response)
+        except:
+            environ['exc_info'] = sys.exc_info()
+            environ['branch'] = self
+            raise
         finally:
             self.branch.unlock()
