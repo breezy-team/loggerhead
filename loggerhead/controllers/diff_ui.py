@@ -19,42 +19,27 @@
 from cStringIO import StringIO
 import logging
 import time
-import sys
 
-from paste import httpexceptions
 from paste.request import path_info_pop
 
-from loggerhead import history
-from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-
-import bzrlib
-from bzrlib import branch
 from bzrlib.diff import show_diff_trees
 
 
 log = logging.getLogger("loggerhead.controllers")
 
 class DiffUI(object):
-    """
+    """Class to output a diff for a single file or revisions."""
 
-    Class to output a diff for a single file or revisions.
-    """
-    
     def __init__(self, branch, history):
         self._branch = branch
         self._history = history
         self.log = history.log
 
-    
     def __call__(self, environ, start_response):
         # /diff/<rev_id>/<rev_id>
-        """
-        Default method called from /diff URL.
-        """
-
+        """Default method called from /diff URL."""
         z = time.time()
-        
+
         args = []
         while 1:
             arg = path_info_pop(environ)
@@ -70,20 +55,20 @@ class DiffUI(object):
         if len(args) is 2:
             revid_to = self._history.fix_revid(args[1])
         else:
-            revid_to = change.parents[0].revid 
+            revid_to = change.parents[0].revid
 
 
         repo = self._branch.branch.repository
         revtree1 = repo.revision_tree(revid_from)
         revtree2 = repo.revision_tree(revid_to)
-        
+
         diff_content_stream = StringIO()
-        show_diff_trees(revtree1, revtree2, diff_content_stream, 
+        show_diff_trees(revtree1, revtree2, diff_content_stream,
                         old_label='', new_label='')
 
         content = diff_content_stream.getvalue()
 
-        self.log.info('/diff %r:%r in %r secs' % (revid_from, revid_to, 
+        self.log.info('/diff %r:%r in %r secs' % (revid_from, revid_to,
                                                   time.time() - z))
 
         revno1 = self._history.get_revno(revid_from)
