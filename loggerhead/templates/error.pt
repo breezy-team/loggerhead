@@ -3,7 +3,7 @@
   <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
     <head>
       <title metal:fill-slot="title"
-             tal:content="string:${branch/friendly_name} : Error"></title>
+             tal:content="string:${branch/friendly_name} : error"></title>
     </head>
     <body>
         <tal:block metal:fill-slot="heading">
