@@ -1,13 +1,28 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <tal:block define="onload string:load()">
-  <html xmlns="http://www.w3.org/1999/xhtml">
+  <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
     <head>
-      <title tal:content="branch_name : Error"></title>
+      <title metal:fill-slot="title"
+             tal:content="string:${branch/friendly_name} : Error"></title>
     </head>
     <body>
-    	<p tal:content="error_title"/>
-        <p tal:content="error_description"/>
+        <tal:block metal:fill-slot="heading">
+        <h1>
+            <a tal:attributes="href branch/branch_link"
+               tal:content="branch/friendly_name">
+               nice/branch/name
+            </a>
+            <tal:no-link condition="not: branch/branch_link">
+                <span metal:use-macro="breadcrumbs/directory"></span>
+            </tal:no-link>
+           : Error
+        </h1>
+        <pre>
+            <p tal:content="error_title"/>
+            <p tal:content="error_description"/>
+        </pre>
         <br/><br/>
+        </tal:block>
     </body>
   </html>
 </tal:block>

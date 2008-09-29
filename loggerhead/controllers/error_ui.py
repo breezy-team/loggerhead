@@ -34,7 +34,7 @@ class ErrorUI(TemplatedBranchView):
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
         return {
-            'branch_name': self._branch.friendly_name,
+            'branch': self._branch,
             'error_title': 'An unexpected error occurred while proccesing the request',
             'error_description': description.getvalue(),
         }
