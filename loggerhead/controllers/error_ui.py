@@ -16,6 +16,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from StringIO import StringIO
+import traceback
+
 from loggerhead.controllers import TemplatedBranchView
 from loggerhead import util
 
@@ -30,11 +33,8 @@ class ErrorUI(TemplatedBranchView):
 
     def get_values(self, h, args, kw, headers):
         exc_type, exc_object, exc_tb = self.exc_info
-        import traceback
-        from StringIO import StringIO
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
-        # Directory Breadcrumbs
         directory_breadcrumbs = (
             util.directory_breadcrumbs(
                 self._branch.friendly_name,
