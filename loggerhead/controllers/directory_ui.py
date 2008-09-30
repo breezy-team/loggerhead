@@ -80,6 +80,5 @@ class DirectoryUI(TemplatedBranchView):
         return {
             'dirs': dirs,
             'name': self._name,
-            'static_url': static_url,
             'directory_breadcrumbs': directory_breadcrumbs,
             }
