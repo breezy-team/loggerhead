@@ -47,6 +47,9 @@ class DirectoryUI(TemplatedBranchView):
     def __init__(self, static_url_base, path, name):
         class _branch(object):
             context_url = 1
+            @staticmethod
+            def static_url(path):
+                return self._static_url_base + path
         self._branch = _branch
         self._history = None
         self._path = path
@@ -61,8 +64,6 @@ class DirectoryUI(TemplatedBranchView):
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
-        def static_url(path):
-            return self._static_url_base + path
         for d in listing:
             p = os.path.join(self._path, d)
             try:
