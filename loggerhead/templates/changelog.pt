@@ -23,10 +23,12 @@
            <tal:no-link condition="not: branch/branch_link">
              <span metal:use-macro="breadcrumbs/directory"></span>
            </tal:no-link>
-           : changes
-          <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
-          <tal:block condition="start_revid">from revision <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
-          <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+           <tal:block condition="changes">
+             : changes
+             <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
+             <tal:block condition="start_revid">from revision <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
+             <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+           </tal:block>
          </h1>
         </tal:block>
 
