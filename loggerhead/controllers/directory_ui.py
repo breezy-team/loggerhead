@@ -22,6 +22,7 @@ import os
 
 from bzrlib import branch
 
+from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
 class DirEntry(object):
@@ -46,6 +47,9 @@ class DirectoryUI(TemplatedBranchView):
     def __init__(self, static_url_base, path, name):
         class _branch(object):
             context_url = 1
+            @staticmethod
+            def static_url(path):
+                return self._static_url_base + path
         self._branch = _branch
         self._history = None
         self._path = path
@@ -60,8 +64,6 @@ class DirectoryUI(TemplatedBranchView):
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
-        def static_url(path):
-            return self._static_url_base + path
         for d in listing:
             p = os.path.join(self._path, d)
             try:
@@ -70,8 +72,13 @@ class DirectoryUI(TemplatedBranchView):
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
+        # Create breadcrumb trail
+        directory_breadcrumbs = util.directory_breadcrumbs(
+                self._name,
+                False,
+                'directory')
         return {
             'dirs': dirs,
             'name': self._name,
-            'static_url': static_url,
+            'directory_breadcrumbs': directory_breadcrumbs,
             }

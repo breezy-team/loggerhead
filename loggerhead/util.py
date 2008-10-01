@@ -32,7 +32,9 @@ import re
 import struct
 import threading
 import time
-import types
+import sys
+import os
+import subprocess
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -342,6 +344,71 @@ def fill_in_navigation(navigation):
             [navigation.scan_url, next_page_revno], **params)
 
 
+def directory_breadcrumbs(path, is_root, view):
+    """
+    Generate breadcrumb information from the directory path given
+
+    The path given should be a path up to any branch that is currently being
+    served
+
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    is_root -- Whether or not loggerhead is serving a branch at its root
+    view -- The type of view we are showing (files, changes etc)
+    """
+    # Is our root directory itself a branch?
+    if is_root:
+        if view == 'directory':
+            directory = 'files'
+        breadcrumbs = [{
+            'dir_name': path,
+            'path': '',
+            'suffix': view,
+        }]
+    else:
+        # Create breadcrumb trail for the path leading up to the branch
+        breadcrumbs = [{
+            'dir_name': "(root)",
+            'path': '',
+            'suffix': '',
+        }]
+        if path != '/':
+            dir_parts = path.strip('/').split('/')
+            for index, dir_name in enumerate(dir_parts):
+                breadcrumbs.append({
+                    'dir_name': dir_name,
+                    'path': '/'.join(dir_parts[:index + 1]),
+                    'suffix': '',
+                })
+            # If we are not in the directory view, the last crumb is a branch,
+            # so we need to specify a view
+            if view != 'directory':
+                breadcrumbs[-1]['suffix'] = '/' + view
+    return breadcrumbs
+
+
+def branch_breadcrumbs(path, inv, view):
+    """
+    Generate breadcrumb information from the branch path given
+
+    The path given should be a path that exists within a branch
+
+    Arguments:
+    path -- The path to convert into breadcrumbs
+    inv -- Inventory to get file information from
+    view -- The type of view we are showing (files, changes etc)
+    """
+    dir_parts = path.strip('/').split('/')
+    inner_breadcrumbs = []
+    for index, dir_name in enumerate(dir_parts):
+        inner_breadcrumbs.append({
+            'dir_name': dir_name,
+            'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            'suffix': '/' + view ,
+        })
+    return inner_breadcrumbs
+
+
 def decorator(unbound):
     def new_decorator(f):
         g = unbound(f)
@@ -445,3 +512,66 @@ def get_context(**overrides):
     overrides = dict((k, v) for (k, v) in overrides.iteritems() if k in _valid)
     map.update(overrides)
     return map
+
+
+class Reloader(object):
+    """
+    This class wraps all paste.reloader logic. All methods are @classmethod.
+    """
+
+    _reloader_environ_key = 'PYTHON_RELOADER_SHOULD_RUN'
+
+    @classmethod
+    def _turn_sigterm_into_systemexit(self):
+        """
+        Attempts to turn a SIGTERM exception into a SystemExit exception.
+        """
+        try:
+            import signal
+        except ImportError:
+            return
+        def handle_term(signo, frame):
+            raise SystemExit
+        signal.signal(signal.SIGTERM, handle_term)
+
+    @classmethod
+    def is_installed(self):
+        return os.environ.get(self._reloader_environ_key)
+    
+    @classmethod
+    def install(self):
+        from paste import reloader
+        reloader.install(int(1))
+    
+    @classmethod    
+    def restart_with_reloader(self):
+        """Based on restart_with_monitor from paste.script.serve."""
+        print 'Starting subprocess with file monitor'
+        while 1:
+            args = [sys.executable] + sys.argv
+            new_environ = os.environ.copy()
+            new_environ[self._reloader_environ_key] = 'true'
+            proc = None
+            try:
+                try:
+                    self._turn_sigterm_into_systemexit()
+                    proc = subprocess.Popen(args, env=new_environ)
+                    exit_code = proc.wait()
+                    proc = None
+                except KeyboardInterrupt:
+                    print '^C caught in monitor process'
+                    return 1
+            finally:
+                if (proc is not None
+                    and hasattr(os, 'kill')):
+                    import signal
+                    try:
+                        os.kill(proc.pid, signal.SIGTERM)
+                    except (OSError, IOError):
+                        pass
+                
+            # Reloader always exits with code 3; but if we are
+            # a monitor, any exit code will restart
+            if exit_code != 3:
+                return exit_code
+            print '-'*20, 'Restarting', '-'*20

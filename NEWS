@@ -7,7 +7,16 @@ dev [future]
       script. (Martin Albisetti)
 
     - Fixed broken template for project browsing with start-loggerhead
-      (Martin Albisett)
+      (Martin Albisetti)
+
+    - Added --reload options to restart the application when a python
+      file change. (Guillermo Gonzalez)
+
+    - Added error handling middleware. (Guillermo Gonzalez)
+
+    - Fix bug #243415 ("Tracebacks go to console but not log
+      file"). Also minor improvements to logging in serve-branches and
+      start-loggerhead. (Guillermo Gonzalez)
 
 1.6 [15Aug2008]
 ----------------

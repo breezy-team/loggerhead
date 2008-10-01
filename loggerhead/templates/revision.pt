@@ -23,7 +23,7 @@
             </a>
           </tal:has-link>
           <tal:no-link condition="not: branch/branch_link">
-            <tal:branch-name replace="branch/friendly_name" />
+            <span metal:use-macro="breadcrumbs/directory"></span>
           </tal:no-link>
           <span>: <tal:revno content="change/revno"></tal:revno>
         <tal:compare-to condition="python:compare_revid is not None">

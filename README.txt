@@ -11,10 +11,16 @@ usual things.
 GETTING STARTED
 ---------------
 
-Loggerhead depends on SimpleTAL for templating and Paste for the
-server.  So you need these installed -- on Ubuntu you want the
-'python-simpletal' and 'python-paste' packages installed.  You need
-version 1.2 or newer of Paste.
+Loggerhead depends on 
+1) SimpleTAL for templating.
+   on ubuntu package `sudo apt-get install python-simpletal`
+   or download from http://www.owlfish.com/software/simpleTAL/download.html
+2) Paste for the server. (You need version 1.2 or newer of Paste.) 
+   on ubuntu package `sudo apt-get install python-paste`
+   or use `easy_install Paste`
+3) Paste Deploy  (optional, needed when proxying through Apache)
+   on ubuntu package `sudo apt-get install python-pastedeploy`
+   or use `easy_install PasteDeploy`
 
 Then simply run the 'serve-branches' with the branch you want to
 serve on the command line:
@@ -76,10 +82,7 @@ configuration is one way to do this::
 
 If Paste Deploy is installed, the 'serve-branches' script can be
 run behind a proxy at the root of a site, but if you're running it at
-some path into the site, you'll need to add a 'prefix' argument to the
-PrefixMiddleware call in the script.  More flexible configuration
-should be added soon...
-
+some path into the site, you'll need to specify is using '--prefix=/some_path'.
 
 FILES CHANGED CACHE
 -------------------
