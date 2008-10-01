@@ -20,7 +20,7 @@
 import logging
 import posixpath
 
-from paste.httpexceptions import HTTPNotFound, HTTPServerError
+from paste.httpexceptions import HTTPServerError
 
 from bzrlib.revision import is_null as is_null_rev
 
