@@ -1,0 +1,45 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Required-Start:		$local_fs $remote_fs $network
+# Default-Start:		3 5
+# Default-Stop:			0 1 2 6
+# Short-Description:		Loggerhead
+# Description:			Manage Loggerhead (a web viewer for projects in bazaar)
+### END INIT INFO
+
+# Configure this please: #
+LOGGERHEAD_PATH=/opt/loggerhead
+LOG_FOLDER=/var/log/loggerhead
+LOG_FILE=$LOG_FOLDER/loggerheadd.log
+PREFIX=/loggerhead
+PORT=8080
+
+# You can add additional options to serve-branches here:
+START_CMD="$LOGGERHEAD_PATH/serve-branches --prefix=$PREFIX --log-folder=$LOG_FOLDER --port=$PORT /var/lib/gforge/bzrroot/"
+
+#
+# main part
+#
+case "$1" in
+    start)
+        python $START_CMD > $LOG_FILE 2>&1 &
+    echo "Started loggerhead.   (See $LOG_FOLDER for details.)"
+    ;;
+    stop)
+    pkill -f "$START_CMD"
+    ;;
+    status)
+        proccess=`pgrep -fl "$START_CMD"`
+        echo "$proccess"
+        netstat -anp |grep -e ":$PORT"
+        if [ -z "$proccess" ]; then
+        echo "Loggerhead is not running."
+    else
+        echo "Loggerhead is running."
+        fi
+        ;;
+
+    *)
+        echo "Usage: loggerheadd { start | stop | status }"
+    exit 1
+esac
