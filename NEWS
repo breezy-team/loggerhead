@@ -3,6 +3,10 @@ What's changed in loggerhead?
 
 dev [future]
 
+    - Fix bug #258710 ("the /files page explodes in an empty branch").
+      Also minor improvements to the /files and /changes pages.
+      (Marius Kruger)
+
     - Added --port, --host and --prefix options to serve-branches
       script. (Martin Albisetti)
 

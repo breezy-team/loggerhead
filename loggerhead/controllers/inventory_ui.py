@@ -22,6 +22,8 @@ import posixpath
 
 from paste.httpexceptions import HTTPServerError
 
+from bzrlib.revision import is_null as is_null_rev
+
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
@@ -45,45 +47,58 @@ class InventoryUI(TemplatedBranchView):
         else:
             revid = h.last_revid
 
-        try:
-            inv = h.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
-
-        file_id = kw.get('file_id', inv.root.file_id)
-        start_revid = kw.get('start_revid', None)
-        sort_type = kw.get('sort', None)
-
         # no navbar for revisions
         navigation = util.Container()
-
-        change = h.get_changes([ revid ])[0]
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
-
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
-            path = '/' + path
-        idpath = inv.get_idpath(file_id)
-        if len(idpath) > 1:
-            updir = dirname(path)
-            updir_file_id = idpath[-2]
-        else:
-            updir = None
-            updir_file_id = None
-        if updir == '/':
-            updir_file_id = None
-
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
                 self._branch.friendly_name,
                 self._branch.is_root,
                 'files')
 
-        # Create breadcrumb trail for the path within the branch
-        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
-        
+        if not is_null_rev(revid):
+            try:
+                inv = h.get_inventory(revid)
+            except:
+                self.log.exception('Exception fetching changes')
+                raise HTTPServerError('Could not fetch changes')
+
+            file_id = kw.get('file_id', inv.root.file_id)
+            start_revid = kw.get('start_revid', None)
+            sort_type = kw.get('sort', None)
+
+            change = h.get_changes([ revid ])[0]
+            # add parent & merge-point branch-nick info, in case it's useful
+            h.get_branch_nicks([ change ])
+
+            path = inv.id2path(file_id)
+            if not path.startswith('/'):
+                path = '/' + path
+            idpath = inv.get_idpath(file_id)
+            if len(idpath) > 1:
+                updir = dirname(path)
+                updir_file_id = idpath[-2]
+            else:
+                updir = None
+                updir_file_id = None
+            if updir == '/':
+                updir_file_id = None
+
+            # Create breadcrumb trail for the path within the branch
+            branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
+            filelist = h.get_filelist(inv, file_id, sort_type)
+        else:
+            inv = None
+            file_id = None
+            start_revid = None
+            sort_type = None
+            change = None
+            path = "/"
+            idpath = None
+            updir = None
+            updir_file_id = None
+            branch_breadcrumbs = []
+            filelist = []
+
         return {
             'branch': self._branch,
             'util': util,
@@ -93,7 +108,7 @@ class InventoryUI(TemplatedBranchView):
             'path': path,
             'updir': updir,
             'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, file_id, sort_type),
+            'filelist': filelist,
             'history': h,
             'posixpath': posixpath,
             'navigation': navigation,
