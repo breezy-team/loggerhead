@@ -20,13 +20,26 @@ START_CMD="$LOGGERHEAD_PATH/serve-branches --prefix=$PREFIX --log-folder=$LOG_FO
 #
 # main part
 #
+
+start_loggerhead(){
+    python $START_CMD > $LOG_FILE 2>&1 &
+    echo "Started loggerhead.   (See $LOG_FOLDER for details.)"
+}
+
+stop_loggerhead(){
+    pkill -f "$START_CMD"
+    proccess=`pgrep -fl "$START_CMD"`
+    if [ -z "$proccess" ]; then
+        echo "Loggerhead was stopped."
+    fi
+}
+
 case "$1" in
     start)
-        python $START_CMD > $LOG_FILE 2>&1 &
-        echo "Started loggerhead.   (See $LOG_FOLDER for details.)"
+        start_loggerhead
     ;;
     stop)
-        pkill -f "$START_CMD"
+        stop_loggerhead
     ;;
     status)
         proccess=`pgrep -fl "$START_CMD"`
@@ -36,12 +49,11 @@ case "$1" in
             echo "Loggerhead is not running."
         else
             echo "Loggerhead is running."
-            fi
+        fi
     ;;
     restart)
-        pkill -f "$START_CMD"
-        python $START_CMD > $LOG_FILE 2>&1 &
-        echo "Restarted loggerhead.   (See $LOG_FOLDER for details.)"
+        stop_loggerhead
+        start_loggerhead
     ;;
     *)
         echo "Usage: loggerheadd { start | stop | status | restart }"
