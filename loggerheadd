@@ -34,12 +34,16 @@ case "$1" in
         netstat -anp |grep -e ":$PORT"
         if [ -z "$proccess" ]; then
         echo "Loggerhead is not running."
+    restart)
+        pkill -f "$START_CMD"
+        python $START_CMD > $LOG_FILE 2>&1 &
+        echo "Restarted loggerhead.   (See $LOG_FOLDER for details.)"
+        ;;
     else
         echo "Loggerhead is running."
         fi
         ;;
-
     *)
-        echo "Usage: loggerheadd { start | stop | status }"
+        echo "Usage: loggerheadd { start | stop | status | restart }"
     exit 1
 esac
