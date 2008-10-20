@@ -16,6 +16,9 @@
       <script language="javascript">
           var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
       </script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/yui/yui-min.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
