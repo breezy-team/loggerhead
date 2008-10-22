@@ -84,6 +84,7 @@ class TemplatedBranchView(object):
             path = '/'.join(args[1:])
 
         vals = {
+            'static_url': self._branch.static_url,
             'branch': self._branch,
             'util': util,
             'history': h,

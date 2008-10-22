@@ -342,8 +342,11 @@ class History (object):
             return revid
         if revid == 'head:':
             return self.last_revid
-        if self.revno_re.match(revid):
-            revid = self._revno_revid[revid]
+        try:
+            if self.revno_re.match(revid):
+                revid = self._revno_revid[revid]
+        except KeyError:
+            raise bzrlib.errors.NoSuchRevision(self._branch.nick, revid)
         return revid
 
     def get_file_view(self, revid, file_id):
