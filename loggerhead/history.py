@@ -35,6 +35,7 @@ import re
 import textwrap
 import threading
 import time
+import urllib
 from StringIO import StringIO
 
 from loggerhead import search
@@ -793,12 +794,15 @@ class History (object):
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
-
+            if pathname == '/':
+                absolutepath = path
+            else:
+            	absolutepath = urllib.quote(path + '/' + pathname)
             revid = entry.revision
 
             file = util.Container(
                 filename=filename, executable=entry.executable, kind=entry.kind,
-                pathname=pathname, file_id=entry.file_id, size=entry.text_size,
+                pathname=pathname, absolutepath=absolutepath, file_id=entry.file_id, size=entry.text_size,
                 revid=revid, change=change_dict[revid])
             file_list.append(file)
 

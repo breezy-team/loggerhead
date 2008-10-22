@@ -57,7 +57,7 @@
           <!-- Show this if it's a directory --> 
           <tal:block repeat="file filelist">
           <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='directory'">
-              <td class="autcell"><a tal:attributes="href python:url(['/files', change.revno], file_id=file.file_id)">
+              <td class="autcell"><a tal:attributes="href python:url(['/files', change.revno, file.absolutepath])">
                       <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif');
                                            title string:Go to ${file/filename}" />
                   </a>
