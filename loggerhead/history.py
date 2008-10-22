@@ -797,10 +797,11 @@ class History (object):
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
-            if pathname == '/':
-                absolutepath = path
+            if path == '':
+                absolutepath = pathname
             else:
             	absolutepath = urllib.quote(path + '/' + pathname)
+            print path
             revid = entry.revision
 
             file = util.Container(

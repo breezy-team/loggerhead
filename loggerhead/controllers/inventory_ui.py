@@ -95,10 +95,6 @@ class InventoryUI(TemplatedBranchView):
                 self.log.exception('Exception fetching changes')
                 raise HTTPServerError('Could not fetch changes')
 
-            file_id = kw.get('file_id', inv.root.file_id)
-            start_revid = kw.get('start_revid', None)
-            sort_type = kw.get('sort', None)
-
             change = h.get_changes([ revid ])[0]
             # add parent & merge-point branch-nick info, in case it's useful
             h.get_branch_nicks([ change ])
