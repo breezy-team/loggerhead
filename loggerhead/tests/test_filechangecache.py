@@ -5,14 +5,18 @@ import tempfile
 
 from loggerhead.changecache import FileChangeCache
 
+
 class MockEntry(object):
+
     def __init__(self, revid):
         self.revid = revid
 
 
 class MockHistory(object):
+
     def __init__(self):
         self.fetched_revids = set()
+
     def get_file_changes_uncached(self, entries):
         output = []
         for entry in entries:
@@ -25,6 +29,7 @@ class TestFileChangeCache(object):
 
     # setup_method and teardown_method are so i can run the tests with
     # py.test and take advantage of the error reporting.
+
     def setup_method(self, meth):
         self.setUp()
 
@@ -38,7 +43,6 @@ class TestFileChangeCache(object):
         for folder in self.cache_folders:
             shutil.rmtree(folder)
 
-
     def makeHistoryAndEntriesForRevids(self, revids, fill_cache_with=[]):
         cache_folder = tempfile.mkdtemp()
         self.cache_folders.append(cache_folder)
@@ -50,7 +54,6 @@ class TestFileChangeCache(object):
         self.cache.get_file_changes([entry for entry in self.entries
                                      if entry.revid in fill_cache_with])
         self.history.fetched_revids.clear()
-
 
     def test_empty_cache(self):
         """An empty cache passes all the revids through to the history object.

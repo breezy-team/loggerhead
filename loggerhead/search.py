@@ -25,11 +25,12 @@ try:
 except ImportError:
     _mod_index = None
 
+
 def search_revisions(branch, query_list, suggest=False):
     """
     Search using bzr-search plugin to find revisions matching the query.
     This can either suggest query terms, or revision ids.
-    
+
     param branch: branch object to search in
     param query_list: string to search
     param suggest: Optional flag to request suggestions instead of results
@@ -42,7 +43,7 @@ def search_revisions(branch, query_list, suggest=False):
     except errors.NoSearchIndex:
         return None # None indicates could-not-search
     query = query_list.split(' ')
-    query = [(term,) for term in query]
+    query = [(term) for term in query]
     revid_list = []
     index._branch.lock_read()
 

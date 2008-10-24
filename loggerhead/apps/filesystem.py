@@ -16,6 +16,7 @@ sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 
 class BranchesFromFileSystemServer(object):
+
     def __init__(self, path, root, name=None):
         self.path = path
         self.root = root
@@ -43,7 +44,9 @@ class BranchesFromFileSystemServer(object):
                 name = self.name
             else:
                 name = '/'
-            return DirectoryUI(environ['loggerhead.static.url'], self.path, name)
+            return DirectoryUI(environ['loggerhead.static.url'],
+                               self.path,
+                               name)
         else:
             new_path = os.path.join(self.path, segment)
             if self.name:

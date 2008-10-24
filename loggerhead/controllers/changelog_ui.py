@@ -102,7 +102,8 @@ class ChangeLogUI(TemplatedBranchView):
             'navigation': navigation,
             'filter_file_id': filter_file_id,
             'start_revid': start_revid,
-            'viewing_from': (orig_start_revid is not None) and (orig_start_revid != h.last_revid),
+            'viewing_from': (orig_start_revid is not None) and (
+                            orig_start_revid != h.last_revid),
             'query': query,
             'search_failed': search_failed,
             'all_same_author': all_same_author,

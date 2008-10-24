@@ -25,6 +25,7 @@ from loggerhead import util
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 
+
 class BufferingWriter(object):
 
     def __init__(self, writefunc, buf_limit):
@@ -50,6 +51,7 @@ class BufferingWriter(object):
         self.bytes += len(data)
         if self.buflen > self.buf_limit:
             self.flush()
+
 
 class TemplatedBranchView(object):
 
@@ -84,7 +86,7 @@ class TemplatedBranchView(object):
         vals.update(self.get_values(h, args, kw, headers))
 
         self.log.info('Getting information for %s: %r secs' % (
-            self.__class__.__name__, time.time() - z,))
+            self.__class__.__name__, time.time() - z))
         if 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
@@ -93,6 +95,11 @@ class TemplatedBranchView(object):
         w = BufferingWriter(writer, 8192)
         template.expand_into(w, **vals)
         w.flush()
-        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
-            self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 100.0*w.bytes_saved/w.bytes))
+        self.log.info(
+            'Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
+                self.__class__.__name__,
+                time.time() - z,
+                w.bytes,
+                w.bytes_saved,
+                100.0*w.bytes_saved/w.bytes))
         return []

@@ -22,6 +22,7 @@ import traceback
 from loggerhead.controllers import TemplatedBranchView
 from loggerhead import util
 
+
 class ErrorUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.error'
@@ -41,7 +42,8 @@ class ErrorUI(TemplatedBranchView):
                 'changes'))
         return {
             'branch': self._branch,
-            'error_title': 'An unexpected error occurred while proccesing the request:',
+            'error_title': ('An unexpected error occurred while'
+                            'proccesing the request:'),
             'error_description': description.getvalue(),
             'directory_breadcrumbs': directory_breadcrumbs,
         }

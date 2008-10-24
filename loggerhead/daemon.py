@@ -25,7 +25,7 @@ def daemonize(pidfile, home):
         try:
             pid = os.fork()     # Fork a second child.
         except OSError, e:
-            raise Exception, "%s [%d]" % (e.strerror, e.errno)
+            raise Exception("%s [%d]" % (e.strerror, e.errno))
 
         if pid == 0:  # The second child.
             os.chdir(WORKDIR)
@@ -53,8 +53,8 @@ def daemonize(pidfile, home):
             pass
 
     f = open(pidfile, 'w')
-    f.write('%d\n' % (os.getpid(),))
-    f.write('%s\n' % (home,))
+    f.write('%d\n' % os.getpid())
+    f.write('%s\n' % home)
     f.close()
 
 
