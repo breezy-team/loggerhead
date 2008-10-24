@@ -26,7 +26,7 @@ def _thread_profile(f, *args, **kwds):
 
 
 def profile(f, *args, **kwds):
-    """XXX docstring"""
+    """FIXME: docstring"""
     global _g_threadmap
     p = Profiler()
     p.enable(subcalls=True)
@@ -47,16 +47,16 @@ def profile(f, *args, **kwds):
 
 
 class Stats(object):
-    """XXX docstring"""
+    """FIXME: docstring"""
 
     def __init__(self, data, threads):
         self.data = data
         self.threads = threads
 
     def sort(self, crit="inlinetime"):
-        """XXX docstring"""
+        """FIXME: docstring"""
         if crit not in profiler_entry.__dict__:
-            raise ValueError, "Can't sort by %s" % crit
+            raise ValueError("Can't sort by %s" % crit)
         self.data.sort(lambda b, a: cmp(getattr(a, crit),
                                         getattr(b, crit)))
         for e in self.data:
@@ -65,7 +65,7 @@ class Stats(object):
                                               getattr(b, crit)))
 
     def pprint(self, top=None, file=None):
-        """XXX docstring"""
+        """FIXME: docstring"""
         if file is None:
             file = sys.stdout
         d = self.data
@@ -93,12 +93,12 @@ class Stats(object):
         for i in range(len(self.data)):
             e = self.data[i]
             if not isinstance(e.code, str):
-                self.data[i] = type(e)((label(e.code),) + e[1:])
+                self.data[i] = type(e)((label(e.code)) + e[1:])
             if e.calls:
                 for j in range(len(e.calls)):
                     se = e.calls[j]
                     if not isinstance(se.code, str):
-                        e.calls[j] = type(se)((label(se.code),) + se[1:])
+                        e.calls[j] = type(se)((label(se.code)) + se[1:])
         for s in self.threads.values():
             s.freeze()
 
@@ -125,15 +125,15 @@ class _CallTreeFilter(object):
         for entry in self.data:
             totaltime = int(entry.totaltime * 1000)
             max_cost = max(max_cost, totaltime)
-        print >> self.out_file, 'summary: %d' % (max_cost,)
+        print >> self.out_file, 'summary: %d' % (max_cost)
 
     def _entry(self, entry):
         out_file = self.out_file
         code = entry.code
         inlinetime = int(entry.inlinetime * 1000)
         #print >> out_file, 'ob=%s' % (code.co_filename,)
-        print >> out_file, 'fi=%s' % (code.co_filename,)
-        print >> out_file, 'fn=%s' % (label(code, True),)
+        print >> out_file, 'fi=%s' % (code.co_filename)
+        print >> out_file, 'fn=%s' % (label(code, True))
         print >> out_file, '%d %d' % (code.co_firstlineno, inlinetime)
         # recursive calls are counted in entry.calls
         if entry.calls:
@@ -149,14 +149,15 @@ class _CallTreeFilter(object):
         code = subentry.code
         totaltime = int(subentry.totaltime * 1000)
         #print >> out_file, 'cob=%s' % (code.co_filename,)
-        print >> out_file, 'cfn=%s' % (label(code, True),)
-        print >> out_file, 'cfi=%s' % (code.co_filename,)
+        print >> out_file, 'cfn=%s' % (label(code, True))
+        print >> out_file, 'cfi=%s' % (code.co_filename)
         print >> out_file, 'calls=%d %d' % (
             subentry.callcount, code.co_firstlineno)
         print >> out_file, '%d %d' % (lineno, totaltime)
 
 
 _fn2mod = {}
+
 
 def label(code, calltree=False):
     if isinstance(code, str):

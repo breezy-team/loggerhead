@@ -45,4 +45,4 @@ class SearchUI(TemplatedBranchView):
                 # Should show a 'search is not available' etc box.
                 terms = []
 
-        return {'terms':terms}
+        return {'terms': terms}

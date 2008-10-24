@@ -24,10 +24,14 @@ import os
 import logging
 import sys
 
+
 def make_handler(config, filename):
     roll = config.get('log.roll', 'never')
     if roll == 'daily':
-        h = logging.handlers.TimedRotatingFileHandler(filename, 'midnight', 1, 100)
+        h = logging.handlers.TimedRotatingFileHandler(filename,
+                                                      'midnight',
+                                                      1,
+                                                      100)
     elif roll == 'weekly':
         h = logging.handlers.TimedRotatingFileHandler(filename, 'W0', 1, 100)
     else:
@@ -42,7 +46,8 @@ def setup_logging(log_folder, config, foreground):
         os.mkdir(log_folder)
 
     f = logging.Formatter('%(levelname)-.3s [%(asctime)s.%(msecs)03d]'
-                          ' %(name)s: %(message)s','%Y%m%d-%H:%M:%S')
+                          ' %(name)s: %(message)s',
+                          '%Y%m%d-%H:%M:%S')
     debug_log = make_handler(config, os.path.join(log_folder, 'debug.log'))
     debug_log.setLevel(logging.DEBUG)
     debug_log.setFormatter(f)
@@ -55,7 +60,7 @@ def setup_logging(log_folder, config, foreground):
     access_log = make_handler(config, os.path.join(log_folder, 'access.log'))
     access_log.setLevel(logging.INFO)
     access_log.setFormatter(f)
-    
+
     error_log = make_handler(config, os.path.join(log_folder, 'error.log'))
     error_log.setLevel(logging.ERROR)
     error_log.setFormatter(f)

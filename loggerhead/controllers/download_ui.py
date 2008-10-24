@@ -48,7 +48,8 @@ class DownloadUI (object):
             args.append(arg)
 
         if len(args) < 2:
-            raise httpexceptions.HTTPMovedPermanently(self._branch.url('../changes'))
+            raise httpexceptions.HTTPMovedPermanently(self._branch.url(
+                      '../changes'))
 
         revid = h.fix_revid(args[0])
         file_id = args[1]
@@ -57,11 +58,14 @@ class DownloadUI (object):
         if mime_type is None:
             mime_type = 'application/octet-stream'
 
-        self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
+        self.log.info('/download %s @ %s (%d bytes)',
+                      path,
+                      h.get_revno(revid),
+                      len(content))
         headers = [
             ('Content-Type', mime_type),
             ('Content-Length', len(content)),
-            ('Content-Disposition', 'attachment; filename=%s'%(filename,)),
+            ('Content-Disposition', 'attachment; filename=%s' % filename),
             ]
         start_response('200 OK', headers)
         return [content]

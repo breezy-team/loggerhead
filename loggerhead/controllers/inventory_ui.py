@@ -30,6 +30,7 @@ from loggerhead.controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 
+
 def dirname(path):
     while path.endswith('/'):
         path = path[:-1]
@@ -66,9 +67,9 @@ class InventoryUI(TemplatedBranchView):
             start_revid = kw.get('start_revid', None)
             sort_type = kw.get('sort', None)
 
-            change = h.get_changes([ revid ])[0]
+            change = h.get_changes([revid])[0]
             # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks([ change ])
+            h.get_branch_nicks([change])
 
             path = inv.id2path(file_id)
             if not path.startswith('/'):
