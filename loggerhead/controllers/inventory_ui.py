@@ -44,10 +44,10 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, revid, path, kwargs, headers):
+    def get_values(self, history, revid, path, kwargs, headers):
 
         try:
-            inv = h.get_inventory(revid)
+            inv = history.get_inventory(revid)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -59,14 +59,14 @@ class InventoryUI(TemplatedBranchView):
         # no navbar for revisions
         navigation = util.Container()
 
-        change = h.get_changes([ revid ])[0]
+        change = history.get_changes([ revid ])[0]
         # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+        history.get_branch_nicks([ change ])
 
         if path is not None:
             if not path.startswith('/'):
                 path = '/' + path
-            file_id = h.get_file_id(revid, path)
+            file_id = history.get_file_id(revid, path)
         else:
             path = inv.id2path(file_id)
         
@@ -88,18 +88,18 @@ class InventoryUI(TemplatedBranchView):
 
         if not is_null_rev(revid):
             try:
-                inv = h.get_inventory(revid)
+                inv = history.get_inventory(revid)
             except:
                 self.log.exception('Exception fetching changes')
                 raise HTTPServerError('Could not fetch changes')
 
-            change = h.get_changes([ revid ])[0]
+            change = history.get_changes([ revid ])[0]
             # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks([ change ])
+            history.get_branch_nicks([ change ])
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
-            filelist = h.get_filelist(inv, file_id, sort_type)
+            filelist = history.get_filelist(inv, file_id, sort_type)
         else:
             inv = None
             file_id = None
@@ -121,7 +121,7 @@ class InventoryUI(TemplatedBranchView):
             'path': path,
             'updir': updir,
             'filelist': filelist,
-            'history': h,
+            'history': history,
             'posixpath': posixpath,
             'navigation': navigation,
             'url': self._branch.context_url,
