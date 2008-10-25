@@ -35,6 +35,7 @@ import re
 import textwrap
 import threading
 import time
+import urllib
 from StringIO import StringIO
 
 from loggerhead import search
@@ -836,7 +837,10 @@ delta.renamed:
             pathname = filename
             if entry.kind == 'directory':
                 pathname += '/'
-
+            if path == '':
+                absolutepath = pathname
+            else:
+            	absolutepath = urllib.quote(path + '/' + pathname)
             revid = entry.revision
 
             file = util.Container(

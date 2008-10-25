@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -19,6 +20,7 @@
 
 import logging
 import posixpath
+import urllib
 
 from paste.httpexceptions import HTTPServerError
 
@@ -32,9 +34,10 @@ log = logging.getLogger("loggerhead.controllers")
 
 
 def dirname(path):
-    while path.endswith('/'):
-        path = path[:-1]
-    path = posixpath.dirname(path)
+    if path is not None:
+        while path.endswith('/'):
+            path = path[:-1]
+        path = urllib.quote(posixpath.dirname(path))
     return path
 
 
@@ -42,14 +45,42 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, args, kw, headers):
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
+    def get_values(self, history, revid, path, kwargs, headers):
+
+        try:
+            inv = history.get_inventory(revid)
+        except:
+            self.log.exception('Exception fetching changes')
+            raise HTTPServerError('Could not fetch changes')
+
+        file_id = kwargs.get('file_id', None)
+        start_revid = kwargs.get('start_revid', None)
+        sort_type = kwargs.get('sort', None)
 
         # no navbar for revisions
         navigation = util.Container()
+
+        change = history.get_changes([ revid ])[0]
+        # add parent & merge-point branch-nick info, in case it's useful
+        history.get_branch_nicks([ change ])
+
+        if path is not None:
+            if not path.startswith('/'):
+                path = '/' + path
+            file_id = history.get_file_id(revid, path)
+        else:
+            path = inv.id2path(file_id)
+        
+        if file_id is None:
+            file_id = inv.root.file_id
+
+
+        idpath = inv.get_idpath(file_id)
+        if len(idpath) > 1:
+            updir = dirname(path)[1:]
+        else:
+            updir = None
+
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
                 self._branch.friendly_name,
@@ -58,35 +89,18 @@ class InventoryUI(TemplatedBranchView):
 
         if not is_null_rev(revid):
             try:
-                inv = h.get_inventory(revid)
+                inv = history.get_inventory(revid)
             except:
                 self.log.exception('Exception fetching changes')
                 raise HTTPServerError('Could not fetch changes')
 
-            file_id = kw.get('file_id', inv.root.file_id)
-            start_revid = kw.get('start_revid', None)
-            sort_type = kw.get('sort', None)
-
-            change = h.get_changes([revid])[0]
+            change = history.get_changes([ revid ])[0]
             # add parent & merge-point branch-nick info, in case it's useful
-            h.get_branch_nicks([change])
-
-            path = inv.id2path(file_id)
-            if not path.startswith('/'):
-                path = '/' + path
-            idpath = inv.get_idpath(file_id)
-            if len(idpath) > 1:
-                updir = dirname(path)
-                updir_file_id = idpath[-2]
-            else:
-                updir = None
-                updir_file_id = None
-            if updir == '/':
-                updir_file_id = None
+            history.get_branch_nicks([ change ])
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
-            filelist = h.get_filelist(inv, file_id, sort_type)
+            filelist = history.get_filelist(inv, file_id, sort_type)
         else:
             inv = None
             file_id = None
@@ -96,7 +110,6 @@ class InventoryUI(TemplatedBranchView):
             path = "/"
             idpath = None
             updir = None
-            updir_file_id = None
             branch_breadcrumbs = []
             filelist = []
 
@@ -108,9 +121,8 @@ class InventoryUI(TemplatedBranchView):
             'file_id': file_id,
             'path': path,
             'updir': updir,
-            'updir_file_id': updir_file_id,
             'filelist': filelist,
-            'history': h,
+            'history': history,
             'posixpath': posixpath,
             'navigation': navigation,
             'url': self._branch.context_url,

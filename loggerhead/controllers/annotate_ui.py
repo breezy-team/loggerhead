@@ -37,21 +37,13 @@ class AnnotateUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.annotate'
 
-    def get_values(self, h, args, kw, headers):
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
+    def get_values(self, h, revid, path, kwargs, headers):
 
-        path = None
-        if len(args) > 1:
-            path = '/'.join(args[1:])
-            if not path.startswith('/'):
-                path = '/' + path
-
-        file_id = kw.get('file_id', None)
+        revid = h.fix_revid(revid)
+        file_id = kwargs.get('file_id', None)
         if (file_id is None) and (path is None):
-            raise HTTPBadRequest('No file_id or filename provided to annotate')
+            raise HTTPBadRequest('No file_id or filename '
+                                 'provided to annotate')
 
         if file_id is None:
             file_id = h.get_file_id(revid, path)

@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -65,14 +66,25 @@ class TemplatedBranchView(object):
     def __call__(self, environ, start_response):
         z = time.time()
         h = self._history
-        kw = dict(parse_querystring(environ))
-        util.set_context(kw)
+        kwargs = dict(parse_querystring(environ))
+        util.set_context(kwargs)
         args = []
         while 1:
             arg = path_info_pop(environ)
             if arg is None:
                 break
             args.append(arg)
+
+        revid = None
+        if h is not None:
+            if len(args) > 0:
+                revid = h.fix_revid(args[0])
+            else:
+                revid = h.last_revid
+
+        path = None
+        if len(args) > 1:
+            path = '/'.join(args[1:])
 
         vals = {
             'static_url': self._branch.static_url,
@@ -83,7 +95,7 @@ class TemplatedBranchView(object):
         }
         vals.update(templatefunctions)
         headers = {}
-        vals.update(self.get_values(h, args, kw, headers))
+        vals.update(self.get_values(h, revid, path, kwargs, headers))
 
         self.log.info('Getting information for %s: %r secs' % (
             self.__class__.__name__, time.time() - z))
