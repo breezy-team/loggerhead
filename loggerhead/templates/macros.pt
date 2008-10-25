@@ -13,7 +13,7 @@
             tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-      <script language="javascript">
+      <script type="text/javascript">
           var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
       </script>
       <script type="text/javascript"

@@ -34,21 +34,28 @@ from loggerhead.apps.config import Root
 from loggerhead.trace import make_handler, setup_logging
 from loggerhead.apps.error import ErrorHandlerApp
 
+
 def main():
     home = os.path.realpath(os.path.dirname(__file__))
     default_pidfile = os.path.join(home, 'loggerhead.pid')
     default_configfile = os.path.join(home, 'loggerhead.conf')
     default_log_folder = os.path.join(home, 'logs')
     parser = OptionParser(usage='usage: %prog [options]', version='%prog')
-    parser.add_option('-f', '--foreground', action='store_true', dest='foreground', default=False,
+    parser.add_option('-f', '--foreground',
+                      action='store_true', dest='foreground', default=False,
                       help="run in the foreground; don't daemonize")
-    parser.add_option('-C', '--check', action='store_true', dest='check', default=False,
-                      help="only start if not already running (useful for cron jobs)")
-    parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
+    parser.add_option('-C', '--check', action='store_true',
+                      dest='check', default=False,
+                      help=("only start if not already running (useful for "
+                            "cron jobs)"))
+    parser.add_option('-p', '--pidfile', dest="pidfile",
+                      default=default_pidfile,
                       type=str, help="override pidfile location")
-    parser.add_option('-c', '--config-file', dest="configfile", default=default_configfile,
-					  type=str, help="override configuration file location")
-    parser.add_option('-L', '--log-folder', dest="log_folder", default=default_log_folder,
+    parser.add_option('-c', '--config-file', dest="configfile",
+                      default=default_configfile,
+                      type=str, help="override configuration file location")
+    parser.add_option('-L', '--log-folder', dest="log_folder",
+                      default=default_log_folder,
                       type=str, help="override log file directory")
     options, args = parser.parse_args()
     if len(args) > 0:
@@ -57,7 +64,9 @@ def main():
     if options.check:
         if daemon.is_running(options.pidfile):
             sys.exit(0)
-        sys.stderr.write('Did not find loggerhead running in %r; restarting...\n' % (options.pidfile,))
+        sys.stderr.write('Did not find loggerhead running in %r;' % (
+                         options.pidfile))
+        sys.stderr.write(' restarting...\n')
 
     # read loggerhead config
 
@@ -66,10 +75,10 @@ def main():
     if extra_path:
         sys.path.insert(0, extra_path)
 
-    potential_overrides = [ ('server.socket_port', int),
-                            ('server.webpath', str),
-                            ('server.thread_pool', int),
-                            ('server.socket_host' ,str) ]
+    potential_overrides = [('server.socket_port', int),
+                           ('server.webpath', str),
+                           ('server.thread_pool', int),
+                           ('server.socket_host', str)]
     server_port = int(config.get('server.socket_port', 8080))
     nworkers = int(config.get('server.thread_pool', 10))
     server_host = config.get('server.socket_host', '0.0.0.0')
@@ -83,7 +92,7 @@ def main():
     if not options.foreground:
         sys.stderr.write('\n')
         sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % (options.pidfile,))
+        sys.stderr.write('PID file: %s\n' % options.pidfile)
         sys.stderr.write('\n')
 
         daemon.daemonize(options.pidfile, home)
@@ -102,6 +111,7 @@ def main():
 
     if webpath:
         scheme, netloc, path, blah, blah, blah = urlparse.urlparse(webpath)
+
         def app(environ, start_response, orig=app):
             environ['SCRIPT_NAME'] = path
             environ['HTTP_HOST'] = netloc

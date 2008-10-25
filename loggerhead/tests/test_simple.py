@@ -24,6 +24,7 @@ class BasicTests(object):
 
     # setup_method and teardown_method are so i can run the tests with
     # py.test and take advantage of the error reporting.
+
     def setup_method(self, meth):
         self.setUp()
 
@@ -77,7 +78,6 @@ class TestWithSimpleTree(BasicTests):
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
 
-
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
@@ -90,7 +90,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_annotate(self):
         app = self.setUpLoggerhead()
-        res = app.get('/annotate', params={'file_id':self.fileid})
+        res = app.get('/annotate', params={'file_id': self.fileid})
         for line in self.filecontents.splitlines():
             res.mustcontain(cgi.escape(line))
 
@@ -115,4 +115,3 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
         res.mustcontain('No revisions!')
-

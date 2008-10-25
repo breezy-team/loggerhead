@@ -17,6 +17,7 @@
 
 from loggerhead.controllers.error_ui import ErrorUI
 
+
 class ErrorHandlerApp(object):
     """Class for WSGI error logging middleware."""
 
@@ -31,7 +32,7 @@ class ErrorHandlerApp(object):
         except:
             # test if exc_info has been set, in the case that
             # the error is caused before BranchWSGGIApp middleware
-            if environ.has_key('exc_info') and environ.has_key('branch'):
+            if 'exc_info' in environ.keys() and 'branch' in environ.keys():
                 # Log and/or report any application errors
                 return self.handle_error(environ, start_response)
             else:
@@ -55,4 +56,3 @@ def errapp(environ, start_response):
     '''Default (and trivial) error handling WSGI application.'''
     c = ErrorUI(environ['branch'], environ['exc_info'])
     return c(environ, start_response)
-

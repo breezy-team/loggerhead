@@ -39,8 +39,10 @@ class RevisionUI(TemplatedBranchView):
         compare_revid = h.fix_revid(kwargs.get('compare_revid', None))
 
         try:
-            revid, start_revid, revid_list = h.get_view(revid, start_revid, 
-                                                        filter_file_id, query)
+            revid, start_revid, revid_list = h.get_view(revid,
+                                                        start_revid,
+                                                        filter_file_id,
+                                                        query)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -55,7 +57,7 @@ class RevisionUI(TemplatedBranchView):
 
         change = h.get_change_with_diff(revid, compare_revid)
         # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+        h.get_branch_nicks([change])
 
         line_count_limit = DEFAULT_LINE_COUNT_LIMIT
         line_count = 0
@@ -67,7 +69,7 @@ class RevisionUI(TemplatedBranchView):
         # FIXME: not currently in use. Should be
         side_by_side = not kwargs.get('unified', False)
         if side_by_side:
-            h.add_side_by_side([ change ])
+            h.add_side_by_side([change])
 
         # Directory Breadcrumbs
         directory_breadcrumbs = (

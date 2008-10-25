@@ -1,6 +1,8 @@
 from loggerhead.zptsupport import load_template
 
-RENDERED = u"<html>\n<head>\n<title>%s</title>\n</head>\n<body>\n<div>Hello, %s</div>\n</body>\n</html>"
+RENDERED = u"<html>\n<head>\n<title>%s</title>\n</head>\n\
+<body>\n<div>Hello, %s</div>\n</body>\n</html>"
+
 
 def test_template_lookup():
     template = load_template("loggerhead.tests.simple")

@@ -41,7 +41,7 @@ def compute_whole_history_data(branch):
 
     last_revid = branch.last_revision()
 
-    log = logging.getLogger('loggerhead.%s' % (branch.nick,))
+    log = logging.getLogger('loggerhead.%s' % branch.nick)
 
     graph = branch.repository.get_graph()
     parent_map = dict(((key, value) for key, value in
@@ -72,7 +72,7 @@ def compute_whole_history_data(branch):
         for parent in _revision_graph[revid]:
             _where_merged.setdefault(parent, set()).add(revid)
 
-    log.info('built revision graph cache: %r secs' % (time.time() - z,))
+    log.info('built revision graph cache: %r secs' % (time.time() - z))
 
     return (_revision_graph, _full_history, _revision_info,
             _revno_revid, _merge_sort, _where_merged)

@@ -27,6 +27,7 @@ from bzrlib.diff import show_diff_trees
 
 log = logging.getLogger("loggerhead.controllers")
 
+
 class DiffUI(object):
     """Class to output a diff for a single file or revisions."""
 
@@ -57,7 +58,6 @@ class DiffUI(object):
         else:
             revid_to = change.parents[0].revid
 
-
         repo = self._branch.branch.repository
         revtree1 = repo.revision_tree(revid_from)
         revtree2 = repo.revision_tree(revid_to)
@@ -77,8 +77,7 @@ class DiffUI(object):
         headers = [
             ('Content-Type', 'application/octet-stream'),
             ('Content-Length', len(content)),
-            ('Content-Disposition', 'attachment; filename=%s'%(filename,)),
+            ('Content-Disposition', 'attachment; filename=%s' % filename),
             ]
         start_response('200 OK', headers)
         return [content]
-
