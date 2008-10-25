@@ -20,6 +20,7 @@
 
 import logging
 import posixpath
+import urllib
 
 from paste.httpexceptions import HTTPServerError
 
@@ -35,7 +36,7 @@ def dirname(path):
     if path is not None:
         while path.endswith('/'):
             path = path[:-1]
-        path = posixpath.dirname(path)
+        path = urllib.quote(posixpath.dirname(path))
     return path
 
 
