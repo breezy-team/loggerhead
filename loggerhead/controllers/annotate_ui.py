@@ -41,7 +41,8 @@ class AnnotateUI (TemplatedBranchView):
         revid = h.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
         if (file_id is None) and (path is None):
-            raise HTTPBadRequest('No file_id or filename provided to annotate')
+            raise HTTPBadRequest('No file_id or filename '
+                                 'provided to annotate')
 
         if file_id is None:
             file_id = h.get_file_id(revid, path)

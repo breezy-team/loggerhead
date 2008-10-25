@@ -104,7 +104,8 @@ class TemplatedBranchView(object):
         w = BufferingWriter(writer, 8192)
         template.expand_into(w, **vals)
         w.flush()
-        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % 
-            (self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved, 
+        self.log.info('Rendering %s: %r secs, %s bytes, %s (%2.1f%%)'
+                      ' bytes saved' % 
+            (self.__class__.__name__, time.time() - z, w.bytes, w.bytes_saved,
                 100.0*w.bytes_saved/w.bytes))
         return []
