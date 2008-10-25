@@ -801,7 +801,6 @@ class History (object):
                 absolutepath = pathname
             else:
             	absolutepath = urllib.quote(path + '/' + pathname)
-            print path
             revid = entry.revision
 
             file = util.Container(

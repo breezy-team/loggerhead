@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -74,13 +75,9 @@ class InventoryUI(TemplatedBranchView):
 
         idpath = inv.get_idpath(file_id)
         if len(idpath) > 1:
-            updir = dirname(path)
-            updir_file_id = idpath[-2]
+            updir = dirname(path)[1:]
         else:
             updir = None
-            updir_file_id = None
-        if updir == '/':
-            updir_file_id = None
 
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
@@ -99,19 +96,6 @@ class InventoryUI(TemplatedBranchView):
             # add parent & merge-point branch-nick info, in case it's useful
             h.get_branch_nicks([ change ])
 
-            path = inv.id2path(file_id)
-            if not path.startswith('/'):
-                path = '/' + path
-            idpath = inv.get_idpath(file_id)
-            if len(idpath) > 1:
-                updir = dirname(path)
-                updir_file_id = idpath[-2]
-            else:
-                updir = None
-                updir_file_id = None
-            if updir == '/':
-                updir_file_id = None
-
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
             filelist = h.get_filelist(inv, file_id, sort_type)
@@ -124,7 +108,6 @@ class InventoryUI(TemplatedBranchView):
             path = "/"
             idpath = None
             updir = None
-            updir_file_id = None
             branch_breadcrumbs = []
             filelist = []
 
@@ -136,7 +119,6 @@ class InventoryUI(TemplatedBranchView):
             'file_id': file_id,
             'path': path,
             'updir': updir,
-            'updir_file_id': updir_file_id,
             'filelist': filelist,
             'history': h,
             'posixpath': posixpath,
