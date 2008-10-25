@@ -136,8 +136,7 @@
                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
                 <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
                                                      title string:Files at revision ${entry/revno}">
-                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
-                                                        alt string:Files" /></a>
+                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="Files" /></a>
                 </td>
             </tr>
           </tal:block>
