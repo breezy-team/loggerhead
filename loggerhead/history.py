@@ -840,13 +840,14 @@ delta.renamed:
             if path == '':
                 absolutepath = pathname
             else:
-            	absolutepath = urllib.quote(path + '/' + pathname)
+                absolutepath = urllib.quote(path + '/' + pathname)
             revid = entry.revision
 
             file = util.Container(
                 filename=filename, executable=entry.executable,
-                kind=entry.kind, pathname=pathname, file_id=entry.file_id,
-                size=entry.text_size, revid=revid, change=change_dict[revid])
+                kind=entry.kind, pathname=pathname, absolutepath=absolutepath,
+                file_id=entry.file_id, size=entry.text_size, revid=revid,
+                change=change_dict[revid])
             file_list.append(file)
 
         if sort_type == 'filename' or sort_type is None:
