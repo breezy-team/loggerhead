@@ -120,8 +120,8 @@ def main(args):
     app = HTTPExceptionHandler(app)
     app = TransLogger(app, logger=logger)
     if options.profile:
-        from paste.debug.profile import ProfileMiddleware
-        app = ProfileMiddleware(app)
+        from loggerhead.middleware.profile import CProfileMiddleware
+        app = CProfileMiddleware(app)
 
     if not options.user_prefix:
         prefix = '/'
