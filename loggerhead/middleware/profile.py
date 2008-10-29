@@ -1,5 +1,9 @@
 '''Profiling middleware for paste.'''
+import cgi
 import cProfile
+from cStringIO import StringIO
+import pstats
+import sys
 
 from paste.debug.profile import ProfileMiddleware
 from paste import response
@@ -17,7 +21,7 @@ class CProfileMiddleware(ProfileMiddleware):
             old_stdout = sys.stdout
             sys.stdout = out
             try:
-                func(*args, **kw)
+                func(*args, **kwargs)
             finally:
                 sys.stdout = old_stdout
             return out.getvalue()
@@ -39,7 +43,8 @@ class CProfileMiddleware(ProfileMiddleware):
 
         self.lock.acquire()
         try:
-            cProfile.runctx("run_app()", globals(), locals())
+            cProfile.runctx("run_app()", globals(), locals(),
+                filename='loggerhead.cprof')
 
             body = ''.join(body)
             headers = catch_response[1]
@@ -48,14 +53,14 @@ class CProfileMiddleware(ProfileMiddleware):
                 not content_type.startswith('text/html') :
                 # We can't add info to non-HTML output
                 return [body]
-            #stats = hotshot.stats.load(self.log_filename)
-            #stats.strip_dirs()
+            stats = pstats.Stats('loggerhead.cprof')
             #stats.sort_stats('time', 'calls')
-            #output = capture_output(stats.print_stats, self.limit)
-            #output_callers = capture_output(
-            #    stats.print_callers, self.limit)
-            #body += '<pre style="%s">%s\n%s</pre>' % (
-            #    self.style, cgi.escape(output), cgi.escape(output_callers))
+            stats.strip_dirs()
+            output = capture_output(stats.print_stats, self.limit)
+            output_callers = capture_output(
+                stats.print_callers, self.limit)
+            body += '<pre style="%s">%s\n%s</pre>' % (
+                self.style, cgi.escape(output), cgi.escape(output_callers))
             return [body]
         finally:
             self.lock.release()
