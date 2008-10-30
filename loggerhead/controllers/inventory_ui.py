@@ -111,7 +111,6 @@ class InventoryUI(TemplatedBranchView):
             start_revid = None
             sort_type = None
             change = None
-            revno_url = revno_url
             path = "/"
             idpath = None
             updir = None
