@@ -70,10 +70,9 @@ class InventoryUI(TemplatedBranchView):
             file_id = history.get_file_id(revid, path)
         else:
             path = inv.id2path(file_id)
-        
+
         if file_id is None:
             file_id = inv.root.file_id
-
 
         idpath = inv.get_idpath(file_id)
         if len(idpath) > 1:
@@ -95,6 +94,11 @@ class InventoryUI(TemplatedBranchView):
                 raise HTTPServerError('Could not fetch changes')
 
             change = history.get_changes([ revid ])[0]
+            # If we're looking at the tip, use head: in the URL instead
+            if revid == history.last_revid:
+                revno_url = 'head:'
+            else:
+                revno_url = history.get_revno(revid)
             # add parent & merge-point branch-nick info, in case it's useful
             history.get_branch_nicks([ change ])
 
@@ -117,6 +121,7 @@ class InventoryUI(TemplatedBranchView):
             'branch': self._branch,
             'util': util,
             'revid': revid,
+            'revno_url': revno_url,
             'change': change,
             'file_id': file_id,
             'path': path,
