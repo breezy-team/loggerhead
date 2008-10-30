@@ -55,7 +55,7 @@
 
             <tr class="blueRow0" tal:condition="python:updir is not None">
                 <td class="summcell" colspan="6">
-                    <a tal:attributes="href python:url(['/files', change.revno, updir])" class="link">
+                    <a tal:attributes="href python:url(['/files', revno_url, updir])" class="link">
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_folder_up.gif')" />..</a>
                 </td>
             </tr>
@@ -63,12 +63,12 @@
             <!-- Show this if it's a directory -->
             <tal:block repeat="file filelist">
             <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='directory'">
-                <td class="autcell"><a tal:attributes="href python:url(['/files', change.revno], file.absolutepath)">
+                <td class="autcell"><a tal:attributes="href python:url(['/files', revno_url, file.absolutepath])">
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_folder.gif');
                                              title string:Go to ${file/filename}" />
                     </a>
 
-                 <a tal:attributes="href python:url(['/files', change.revno, file.absolutepath])" 
+                 <a tal:attributes="href python:url(['/files', revno_url, file.absolutepath])" 
                                         tal:content="file/filename" class="link"></a>
                  </td>
                  <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
@@ -91,7 +91,7 @@
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_flecha.gif')" alt="Symlink" />
                     </a>
 
-                 <a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath])" 
+                 <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])" 
                                         tal:content="file/filename" class="link"></a>
                  </td>
                  <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
@@ -111,7 +111,7 @@
 
             <!-- Show this if it's a regular file -->
             <tr tal:attributes="class string:blueRow${file/parity}" tal:condition="python:file.kind=='file'">
-                <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath])">
+                <td class="autcell"><a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])">
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
                                              title string:Annotate ${file/filename}"
                              tal:condition="python:file.executable is False" />
@@ -121,7 +121,7 @@
                              tal:condition="python:file.executable is True" alt="File" />
                     </a>
 
-              <a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath])"
+              <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])"
                                      tal:content="file/filename" class="link"></a></td>
               <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
                                                   title string:Show revision ${file/change/revno}"
@@ -129,7 +129,7 @@
               </td>
               <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
               <td class="timedate2" tal:content="python:util.human_size(file.size)"></td>
-              <td class="expcell"><a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath]);
+              <td class="expcell"><a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath]);
                                                      title string:Annotate ${file/filename}">
                                       <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
                                      </a>
