@@ -61,8 +61,7 @@
                   alt="collapse all" /> collapse all</a>
         </p>
         <!-- Table -->        
-        <table id="logentries"
-               tal:define="subcolspan python:4-bool(all_same_author)">
+        <table id="logentries">
             <tr class="logheader">
                 <td class="revisionnumber">Rev</td>
                 <td class="expandcell">&nbsp;</td>
