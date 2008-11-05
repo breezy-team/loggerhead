@@ -49,7 +49,6 @@ def search_revisions(branch, query_list, suggest=False):
 
     try:
         if suggest:
-            print query
             terms = index.suggest(query)
             terms = list(terms)
             terms.sort()
