@@ -43,12 +43,13 @@ def search_revisions(branch, query_list, suggest=False):
     except errors.NoSearchIndex:
         return None # None indicates could-not-search
     query = query_list.split(' ')
-    query = [(term) for term in query]
+    query = [(term,) for term in query]
     revid_list = []
     index._branch.lock_read()
 
     try:
         if suggest:
+            print query
             terms = index.suggest(query)
             terms = list(terms)
             terms.sort()
