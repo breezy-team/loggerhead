@@ -1,6 +1,29 @@
 What's changed in loggerhead?
 =============================
 
+dev [future]
+    - Switch navigation from file_ids to paths. Fixes bugs #260363, #269365
+      and #128926. (Martin Albisetti)
+
+    - Fix bug #258710 ("the /files page explodes in an empty branch").
+      Also minor improvements to the /files and /changes pages.
+      (Marius Kruger)
+
+    - Added --port, --host and --prefix options to serve-branches
+      script. (Martin Albisetti)
+
+    - Fixed broken template for project browsing with start-loggerhead
+      (Martin Albisetti)
+
+    - Added --reload options to restart the application when a python
+      file change. (Guillermo Gonzalez)
+
+    - Added error handling middleware. (Guillermo Gonzalez)
+
+    - Fix bug #243415 ("Tracebacks go to console but not log
+      file"). Also minor improvements to logging in serve-branches and
+      start-loggerhead. (Guillermo Gonzalez)
+
 1.6 [15Aug2008]
 ----------------
 

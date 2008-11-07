@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -19,8 +20,11 @@
 
 import logging
 import posixpath
+import urllib
 
 from paste.httpexceptions import HTTPServerError
+
+from bzrlib.revision import is_null as is_null_rev
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -28,10 +32,12 @@ from loggerhead.controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 
+
 def dirname(path):
-    while path.endswith('/'):
-        path = path[:-1]
-    path = posixpath.dirname(path)
+    if path is not None:
+        while path.endswith('/'):
+            path = path[:-1]
+        path = urllib.quote(posixpath.dirname(path))
     return path
 
 
@@ -39,56 +45,94 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, args, kw, headers):
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
+    def get_values(self, history, revid, path, kwargs, headers):
 
         try:
-            inv = h.get_inventory(revid)
+            inv = history.get_inventory(revid)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
 
-        file_id = kw.get('file_id', inv.root.file_id)
-        start_revid = kw.get('start_revid', None)
-        sort_type = kw.get('sort', None)
+        file_id = kwargs.get('file_id', None)
+        start_revid = kwargs.get('start_revid', None)
+        sort_type = kwargs.get('sort', None)
 
         # no navbar for revisions
         navigation = util.Container()
 
-        change = h.get_changes([ revid ])[0]
+        change = history.get_changes([ revid ])[0]
         # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+        history.get_branch_nicks([ change ])
 
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
-            path = '/' + path
+        if path is not None:
+            if not path.startswith('/'):
+                path = '/' + path
+            file_id = history.get_file_id(revid, path)
+        else:
+            path = inv.id2path(file_id)
+
+        if file_id is None:
+            file_id = inv.root.file_id
+
         idpath = inv.get_idpath(file_id)
         if len(idpath) > 1:
-            updir = dirname(path)
-            updir_file_id = idpath[-2]
+            updir = dirname(path)[1:]
         else:
             updir = None
-            updir_file_id = None
-        if updir == '/':
-            updir_file_id = None
+
+        # Directory Breadcrumbs
+        directory_breadcrumbs = util.directory_breadcrumbs(
+                self._branch.friendly_name,
+                self._branch.is_root,
+                'files')
+
+        if not is_null_rev(revid):
+            try:
+                inv = history.get_inventory(revid)
+            except:
+                self.log.exception('Exception fetching changes')
+                raise HTTPServerError('Could not fetch changes')
+
+            change = history.get_changes([ revid ])[0]
+            # If we're looking at the tip, use head: in the URL instead
+            if revid == history.last_revid:
+                revno_url = 'head:'
+            else:
+                revno_url = history.get_revno(revid)
+            # add parent & merge-point branch-nick info, in case it's useful
+            history.get_branch_nicks([ change ])
+
+            # Create breadcrumb trail for the path within the branch
+            branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
+            filelist = history.get_filelist(inv, file_id, sort_type)
+        else:
+            inv = None
+            file_id = None
+            start_revid = None
+            sort_type = None
+            change = None
+            path = "/"
+            idpath = None
+            updir = None
+            branch_breadcrumbs = []
+            filelist = []
 
         return {
             'branch': self._branch,
             'util': util,
             'revid': revid,
+            'revno_url': revno_url,
             'change': change,
             'file_id': file_id,
             'path': path,
             'updir': updir,
-            'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, file_id, sort_type),
-            'history': h,
+            'filelist': filelist,
+            'history': history,
             'posixpath': posixpath,
             'navigation': navigation,
             'url': self._branch.context_url,
             'start_revid': start_revid,
             'fileview_active': True,
+            'directory_breadcrumbs': directory_breadcrumbs,
+            'branch_breadcrumbs': branch_breadcrumbs,
         }

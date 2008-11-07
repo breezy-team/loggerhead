@@ -4,3 +4,4 @@
 ./loggerhead.pid
 ./logs
 build
+*.log

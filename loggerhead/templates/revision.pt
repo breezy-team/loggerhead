@@ -23,7 +23,7 @@
             </a>
           </tal:has-link>
           <tal:no-link condition="not: branch/branch_link">
-            <tal:branch-name replace="branch/friendly_name" />
+            <span metal:use-macro="breadcrumbs/directory"></span>
           </tal:no-link>
           <span>: <tal:revno content="change/revno"></tal:revno>
         <tal:compare-to condition="python:compare_revid is not None">
@@ -36,7 +36,7 @@
                                tal:content="string:browse files at revision ${change/revno}"></a></li>
             <li tal:condition="python:remember != change.revno">
                 <a tal:attributes="href python:url(['/revision', change.revno], remember=change.revno, compare_revid=None); 
-                                   title string:Compare with another revision"
+                                   title string:compare with another revision"
                    tal:content="string:Compare with another revision"></a></li>       
             <li tal:condition="python:(remember is not None) and (compare_revid is None) and (change.revno != remember)" >
                 <a tal:attributes="href python:url(['/revision', change.revno], compare_revid=history.get_revno(remember))">
@@ -45,9 +45,9 @@
             </li>
             <li>
             <a tal:condition="python:len(change.parents) > 0 and compare_revid is None"
-                   tal:attributes="href python:url(['/diff', change.revno], clear=1)">Download Diff</a>
+                   tal:attributes="href python:url(['/diff', change.revno], clear=1)">download diff</a>
             <a tal:condition="python:compare_revid is not None"
-                   tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">Download Diff</a>
+                   tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">download diff</a>
             </li>
             <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]); 
                                   title string:view history from revision ${change/revno}"

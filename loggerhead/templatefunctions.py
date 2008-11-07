@@ -16,24 +16,32 @@
 import os
 from loggerhead.zptsupport import zpt
 
+
 templatefunctions = {}
+
+
 def templatefunc(func):
     templatefunctions[func.__name__] = func
     return func
 
 
 _base = os.path.dirname(__file__)
+
+
 def _pt(name):
     return zpt(os.path.join(_base, 'templates', name + '.pt'))
 
 
 templatefunctions['macros'] = _pt('macros').macros
+templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
+
 
 @templatefunc
 def file_change_summary(url, entry, modified_file_link):
     return _pt('revisionfilechanges').expand(
         url=url, entry=entry, modified_file_link=modified_file_link,
         **templatefunctions)
+
 
 @templatefunc
 def revisioninfo(url, branch, entry, modified_file_link=None):
@@ -43,17 +51,20 @@ def revisioninfo(url, branch, entry, modified_file_link=None):
         modified_file_link=modified_file_link,
         **templatefunctions)
 
+
 @templatefunc
 def collapse_button(group, name, branch, normal='block'):
     return _pt('collapse-button').expand(
         group=group, name=name, normal=normal, branch=branch,
         **templatefunctions)
 
+
 @templatefunc
 def collapse_all_button(group, branch, normal='block'):
     return _pt('collapse-all-button').expand(
         group=group, normal=normal, branch=branch,
         **templatefunctions)
+
 
 @templatefunc
 def revno_with_nick(entry):
@@ -63,11 +74,13 @@ def revno_with_nick(entry):
         extra = ''
     return '(%s%s)'%(entry.revno, extra)
 
+
 @templatefunc
 def modified_file_link_rev(url, entry, item):
     return _pt('modified-file-link-rev').expand(
         url=url, entry=entry, item=item,
         **templatefunctions)
+
 
 @templatefunc
 def modified_file_link_log(url, entry, item):
@@ -75,14 +88,17 @@ def modified_file_link_log(url, entry, item):
         url=url, entry=entry, item=item,
         **templatefunctions)
 
+
 @templatefunc
 def search_box(branch, navigation):
     return _pt('search-box').expand(branch=branch, navigation=navigation,
         **templatefunctions)
 
+
 @templatefunc
 def feed_link(branch, url):
     return _pt('feed-link').expand(branch=branch, url=url, **templatefunctions)
+
 
 @templatefunc
 def menu(branch, url, fileview_active=False):

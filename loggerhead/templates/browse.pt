@@ -1,56 +1,44 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+<html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title metal:fill-slot="title">
-      loggerhead branches
-    </title>
+    <title>loggerhead branches</title>
+    <link rel="stylesheet"
+          tal:attributes="href python:branch.static_url('/static/css/global.css')" />
   </head>
 
   <body>
-
-    <h1 metal:fill-slot="heading" style="padding-bottom: 1em">
-      <tal:title condition="title" content="title" />
-      <tal:no-title condition="not:title">
-        bazaar branches in loggerhead
-      </tal:no-title>
-    </h1>
-
-    <div metal:fill-slot="content">
+   <div id="loggerheadCont">
+    <div>
       <div class="browse-project"
            tal:repeat="project projects">
-        <div class="browse-project-name"
-             tal:content="project/friendly_name"></div>
-
+        <h1 tal:content="project/friendly_name" />
         <div class="browse-project-description"
              tal:condition="python:len(project.long_description) > 0"
              tal:content="structure project/long_description"></div>
 
-        <div class="browse-view">
-          <table>
-            <tr class="heading">
-              <th>Name</th>
-              <th>Description</th>
-              <th>Last change</th>
-              <th />
+          <table id="logentries">
+            <tr class="logheader">
+              <th class="summarycell" colspan="2">Name</th>
+              <th class="summarycell">Description</th>
+              <th class="datecell" colspan="2">Last change</th>
             </tr>
             <tal:block repeat="view python:views_by_project[project]">
-              <tr>
-                <td class="name">
-                  <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)"
-                     tal:content="view/friendly_name">
-                    ${view.friendly_name}
-                  </a>
+              <tr tal:attributes="class string:blueRow1">
+                <td class="icocell">
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" alt="Branch" />
                 </td>
-                <td class="description"
-                    tal:content="view/description">
-                  ${view.description}
+                <td class="autcell">
+                    <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)" 
+                       tal:content="view/friendly_name" />
                 </td>
-                <td class="last-update"
-                    tal:content="python:view.get_history().has_revisions and util._approximatedate(view.last_updated()) or '(no revisions)'"></td>
-                <td class="feed">
+                <td class="autcell"
+                    tal:content="view/description" />
+                <td class="date"
+                    tal:content="python:view.get_history().has_revisions and util._approximatedate(view.last_updated()) or '(no revisions)'" />
+                <td class="icocell">
                   <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name + '/atom')"
                      title="atom feed">
-                    <img tal:attributes="src python:branch.static_url('/static/images/feed-icon-16x16.gif')"
+                    <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')"
                          alt="atom feed" />
                   </a>
                 </td>
@@ -60,16 +48,13 @@
                 </td>
                 <td class="description url" colspan="2">
                   <a tal:attributes="href view/branch_url"
-                     tal:content="view/branch_url">
-                    ${view.branch_url}
-                  </a>
+                     tal:content="view/branch_url" />
                 </td>
               </tr>
             </tal:block>
           </table>
-        </div>
-
       </div>
     </div>
+  </div>
   </body>
 </html>

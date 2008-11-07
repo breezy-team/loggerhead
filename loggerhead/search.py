@@ -18,7 +18,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 import sets
-import os
 try:
     from bzrlib.plugins.search import errors
     from bzrlib.plugins.search import index as _mod_index
@@ -26,11 +25,12 @@ try:
 except ImportError:
     _mod_index = None
 
+
 def search_revisions(branch, query_list, suggest=False):
     """
     Search using bzr-search plugin to find revisions matching the query.
     This can either suggest query terms, or revision ids.
-    
+
     param branch: branch object to search in
     param query_list: string to search
     param suggest: Optional flag to request suggestions instead of results

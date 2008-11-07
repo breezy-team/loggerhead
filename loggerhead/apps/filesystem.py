@@ -16,6 +16,7 @@ sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 
 class BranchesFromFileSystemServer(object):
+
     def __init__(self, path, root, name=None):
         self.path = path
         self.root = root
@@ -24,10 +25,13 @@ class BranchesFromFileSystemServer(object):
     def app_for_branch(self, branch):
         if not self.name:
             name = branch.nick
+            is_root = True
         else:
             name = self.name
+            is_root = False
         branch_app = BranchWSGIApp(
-            branch, name, {'cachepath': sql_dir}, self.root.graph_cache)
+            branch, name, {'cachepath': sql_dir}, self.root.graph_cache,
+            is_root=is_root)
         return branch_app.app
 
     def app_for_non_branch(self, environ):
@@ -40,7 +44,9 @@ class BranchesFromFileSystemServer(object):
                 name = self.name
             else:
                 name = '/'
-            return DirectoryUI(environ['loggerhead.static.url'], self.path, name)
+            return DirectoryUI(environ['loggerhead.static.url'],
+                               self.path,
+                               name)
         else:
             new_path = os.path.join(self.path, segment)
             if self.name:

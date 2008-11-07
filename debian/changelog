@@ -1,3 +1,9 @@
+loggerhead (1.6+bzr238-1) unstable; urgency=low
+
+  * New upstream snapshot.
+
+ -- Jelmer Vernooij <jelmer@samba.org>  Fri, 07 Nov 2008 16:03:13 +0100
+
 loggerhead (1.6-1) unstable; urgency=low
 
   * Initial release. (Closes: #492477)

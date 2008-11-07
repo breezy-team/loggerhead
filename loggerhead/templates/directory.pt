@@ -7,8 +7,9 @@
   </head>
   <body>
     <div id="loggerheadCont">
-      <h1 tal:content="string:Browsing ${name}">
-        Hi.
+      <h1>
+        Browsing
+        <span metal:use-macro="breadcrumbs/directory" />
       </h1>
 
       <div >
@@ -33,7 +34,7 @@
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="icocell">
                     <a tal:attributes="href string:${dir/dirname}/files">
-                        <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" />
+                        <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" alt="Branch" />
                     </a>
                 </td>
                 <td class="autcell">
@@ -50,7 +51,7 @@
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="icocell">
                     <a tal:attributes="href string:${dir/dirname}">
-                        <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" />
+                        <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" alt="Folder" />
                     </a>
                 </td>
                 <td class="autcell">
