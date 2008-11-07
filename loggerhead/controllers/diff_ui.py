@@ -59,8 +59,8 @@ class DiffUI(object):
             revid_to = change.parents[0].revid
 
         repo = self._branch.branch.repository
-        revtree1 = repo.revision_tree(revid_from)
-        revtree2 = repo.revision_tree(revid_to)
+        revtree1 = repo.revision_tree(revid_to)
+        revtree2 = repo.revision_tree(revid_from)
 
         diff_content_stream = StringIO()
         show_diff_trees(revtree1, revtree2, diff_content_stream,
