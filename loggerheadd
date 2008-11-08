@@ -1,37 +1,84 @@
 #!/bin/sh
 ### BEGIN INIT INFO
-# Required-Start:		$local_fs $remote_fs $network
-# Default-Start:		3 5
-# Default-Stop:			0 1 2 6
-# Short-Description:		Loggerhead
-# Description:			Manage Loggerhead (a web viewer for projects in bazaar)
+# Required-Start:       $local_fs $remote_fs $network
+# Default-Start:        3 5
+# Default-Stop:         0 1 2 6
+# Short-Description:    Loggerhead
+# Description:          Manage Loggerhead (a web viewer for projects in bazaar)
 ### END INIT INFO
 
-# Configure this please: #
-LOGGERHEAD_PATH=/opt/loggerhead
+
+#
+# Configure this please:
+# (Please stop loggerhead before changing the configuration, otherwise this
+#   script might not be able to kill loggerhead)
+#
+
+# If serve-branches is not in your path, you will need to specify the full path:
+SERVE_BRANCHES_CMD=serve-branches
+
 LOG_FOLDER=/var/log/loggerhead
 LOG_FILE=$LOG_FOLDER/loggerheadd.log
-PREFIX=/loggerhead
+URL_PREFIX=/loggerhead
 PORT=8080
 
+#please specify the base directory to serve:
+BZRROOT=/bzrroot
+
 # You can add additional options to serve-branches here:
-START_CMD="$LOGGERHEAD_PATH/serve-branches --prefix=$PREFIX --log-folder=$LOG_FOLDER --port=$PORT /var/lib/gforge/bzrroot/"
+START_CMD="$SERVE_BRANCHES_CMD --prefix=$URL_PREFIX --log-folder=$LOG_FOLDER --port=$PORT $BZRROOT"
+
 
 #
 # main part
 #
 
+loggerhead_process(){
+    pgrep -fl "$START_CMD"
+}
+
+loggerhead_status(){
+    proccess=`loggerhead_process`
+    #echo "$proccess"
+    listening=`netstat -nl |grep -e ":$PORT "`
+    #echo "$listening"
+    if [ -z "$proccess" ]; then
+        echo "Loggerhead is *not* running."
+    else
+        echo "Loggerhead is running."
+        if [ -z "$listening" ]; then
+            echo "This server is *not* listening on port $PORT."
+        else
+            echo "This server is listening on port $PORT."
+        fi
+    fi
+}
+
 start_loggerhead(){
+    echo "Starting loggerhead.   (See $LOG_FOLDER for details.)"
+
+    # make sure the log folder is created
+    mkdir -p $LOG_FOLDER
+    echo "" > $LOG_FILE
     python $START_CMD > $LOG_FILE 2>&1 &
-    echo "Started loggerhead.   (See $LOG_FOLDER for details.)"
+
+    #wait a little while of some logging to appear
+    log=""
+    for i in $(seq 1 3 30); do
+        log=`cat $LOG_FILE`
+        if [ -n "$log" ]; then
+            break
+        fi
+        sleep 0.3
+    done
+    tail $LOG_FILE
+    loggerhead_status
 }
 
 stop_loggerhead(){
+    echo "Stopping loggerhead."
     pkill -f "$START_CMD"
-    proccess=`pgrep -fl "$START_CMD"`
-    if [ -z "$proccess" ]; then
-        echo "Loggerhead was stopped."
-    fi
+    loggerhead_status
 }
 
 case "$1" in
@@ -42,14 +89,7 @@ case "$1" in
         stop_loggerhead
     ;;
     status)
-        proccess=`pgrep -fl "$START_CMD"`
-        echo "$proccess"
-        netstat -anp |grep -e ":$PORT"
-        if [ -z "$proccess" ]; then
-            echo "Loggerhead is not running."
-        else
-            echo "Loggerhead is running."
-        fi
+        loggerhead_status
     ;;
     restart)
         stop_loggerhead
