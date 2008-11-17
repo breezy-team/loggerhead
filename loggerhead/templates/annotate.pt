@@ -36,10 +36,14 @@
                 <a tal:attributes="href python:url(['/revision'], clear=1, start_revid=change.revno)">view revision</a>
             </li>
             <li>
-                <a tal:attributes="href python:url(['/changes'], clear=1, start_revid=change.revno, filter_file_id=file_id)">view changes to this file</a>
+                <a tal:attributes="href python:url(['/changes'], clear=1, 
+                                    start_revid=change.revno, filter_file_id=file_id)"
+                >view changes to this file</a>
             </li>
             <li id="last">
-                <a tal:attributes="href python:url(['/download', change.revno, file_id, filename])">download file</a>
+                <a tal:attributes="href python:url(['/download',
+                                    revno_url, file_id, filename])"
+                >download file</a>
             </li>
         </ul>
 
@@ -47,8 +51,8 @@
         <table id="logentries">
           <tr class="logheader">
             <td class="annoLineTit">Line</td>
-            <td class="annoRevTit">Revision</td>            
-            <td class="annoContTit">Contents</td>                    
+            <td class="annoRevTit">Revision</td>
+            <td class="annoContTit">Contents</td>
           </tr>
 
           <tr tal:repeat="line contents" 
