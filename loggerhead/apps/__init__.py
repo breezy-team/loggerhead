@@ -10,3 +10,4 @@ static = os.path.join(
 static_app = urlparser.make_static(None, static)
 
 favicon_app = fileapp.FileApp(os.path.join(static, 'images', 'favicon.ico'))
+robots_app = fileapp.FileApp(os.path.join(static, 'robots.txt'))

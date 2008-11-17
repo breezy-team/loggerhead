@@ -50,6 +50,9 @@ def command_line_parser():
                       help="Host Loggerhead should listen on.")
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
+    parser.add_option("--profile", action="store_true", dest="profile",
+                      help="Generate callgrind profile data to "
+                        "%d-stats.callgrind on each request.")
     parser.add_option("--reload", action="store_true", dest="reload",
                       help="Restarts the application when changing python"
                            " files. Only used for development purposes.")
@@ -116,6 +119,9 @@ def main(args):
     app = ErrorHandlerApp(app)
     app = HTTPExceptionHandler(app)
     app = TransLogger(app, logger=logger)
+    if options.profile:
+        from loggerhead.middleware.profile import LSProfMiddleware
+        app = LSProfMiddleware(app)
 
     if not options.user_prefix:
         prefix = '/'

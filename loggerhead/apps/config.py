@@ -17,7 +17,7 @@ from paste import httpexceptions
 from paste.wsgiwrappers import WSGIResponse
 
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, static_app
+from loggerhead.apps import favicon_app, static_app, robots_app
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 from loggerhead import util
@@ -216,6 +216,8 @@ class Root(object):
             response = WSGIResponse()
             self.browse(response)
             return response(environ, start_response)
+        elif segment == 'robots.txt':
+            return robots_app(environ, start_response)
         elif segment == 'static':
             return static_app(environ, start_response)
         elif segment == 'favicon.ico':
