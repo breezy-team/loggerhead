@@ -52,7 +52,7 @@ class AnnotateUI (TemplatedBranchView):
         navigation = util.Container()
 
         if path is None:
-            path = h.get_path(revid, file_id)
+            path = history.get_path(revid, file_id)
         filename = os.path.basename(path)
 
         change = history.get_changes([ revid ])[0]
