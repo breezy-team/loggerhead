@@ -74,11 +74,11 @@ class InventoryUI(TemplatedBranchView):
         if file_id is None:
             file_id = inv.root.file_id
 
-        idpath = inv.get_idpath(file_id)
-        if len(idpath) > 1:
-            updir = dirname(path)[1:]
-        else:
+        # Are we at the top of the tree
+        if inv.is_root(file_id):
             updir = None
+        else:
+            updir = dirname(path)[1:]
 
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
@@ -112,7 +112,6 @@ class InventoryUI(TemplatedBranchView):
             sort_type = None
             change = None
             path = "/"
-            idpath = None
             updir = None
             branch_breadcrumbs = []
             filelist = []
