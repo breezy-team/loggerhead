@@ -14,6 +14,14 @@
 #   script might not be able to kill loggerhead)
 #
 
+LHUSER=loggerhead
+
+if [ `whoami` = "$LHUSER" ]; then                                                                                   
+    SUDO=""
+else                                                                                                                
+    SUDO="sudo -H -u $LHUSER"
+fi
+
 # If serve-branches is not in your path, you will need to specify the full path:
 SERVE_BRANCHES_CMD=serve-branches
 
@@ -34,7 +42,7 @@ START_CMD="$SERVE_BRANCHES_CMD --prefix=$URL_PREFIX --log-folder=$LOG_FOLDER --p
 #
 
 loggerhead_process(){
-    pgrep -fl "$START_CMD"
+    $SUDO pgrep -fl "$START_CMD"
 }
 
 loggerhead_status(){
@@ -58,9 +66,12 @@ start_loggerhead(){
     echo "Starting loggerhead.   (See $LOG_FOLDER for details.)"
 
     # make sure the log folder is created
-    mkdir -p $LOG_FOLDER
+    if [ ! -d $LOG_FOLDER ]
+    then
+        $SUDO mkdir -p $LOG_FOLDER
+    fi
     echo "" > $LOG_FILE
-    python $START_CMD > $LOG_FILE 2>&1 &
+    $SUDO python $START_CMD > $LOG_FILE 2>&1 &
 
     #wait a little while of some logging to appear
     log=""
@@ -77,7 +88,7 @@ start_loggerhead(){
 
 stop_loggerhead(){
     echo "Stopping loggerhead."
-    pkill -f "$START_CMD"
+    $SUDO pkill -f "$START_CMD"
     loggerhead_status
 }
 
