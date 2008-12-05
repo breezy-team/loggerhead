@@ -122,6 +122,6 @@ class TemplatedBranchView(object):
         if h is None:
             return None
         if len(self.args) > 0:
-            return h.fix_revid(args[0])
+            return h.fix_revid(self.args[0])
         else:
             return h.last_revid
