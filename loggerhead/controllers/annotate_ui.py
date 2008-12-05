@@ -37,8 +37,9 @@ class AnnotateUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.annotate'
 
-    def get_values(self, history, revid, path, kwargs, headers):
-
+    def get_values(self, path, kwargs, headers):
+        history = self._history
+        revid = self.get_revid()
         revid = history.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
         if (file_id is None) and (path is None):
@@ -89,4 +90,5 @@ class AnnotateUI (TemplatedBranchView):
             'fileview_active': True,
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
+            'history': self._history,
         }
