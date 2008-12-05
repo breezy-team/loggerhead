@@ -31,7 +31,7 @@ class ErrorUI(TemplatedBranchView):
         super(ErrorUI, self).__init__(branch, None)
         self.exc_info = exc_info
 
-    def get_values(self, h, args, kw, headers):
+    def get_values(self, h, revid, path, kwargs, response):
         exc_type, exc_object, exc_tb = self.exc_info
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
