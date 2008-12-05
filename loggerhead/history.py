@@ -279,9 +279,16 @@ class History (object):
             revids = [r for r in self._full_history if r in w_revids]
         except AttributeError:
             possible_keys = [(file_id, revid) for revid in self._full_history]
-            existing_keys = self._branch.repository.texts.get_parent_map(
-                                possible_keys)
-            revids = [revid for _, revid in existing_keys.iterkeys()]
+            get_parent_map = self._branch.repository.texts.get_parent_map
+            # We chunk the requests as this works better with GraphIndex.
+            # See _filter_revisions_touching_file_id in bzrlib/log.py
+            # for more information.
+            revids = []
+            chunk_size = 1000
+            for start in xrange(0, len(possible_keys), chunk_size):
+                next_keys = possible_keys[start:start + chunk_size]
+                revids += [k[1] for k in get_parent_map(next_keys)]
+            del possible_keys, next_keys
         return revids
 
     def get_revision_history_since(self, revid_list, date):
