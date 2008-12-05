@@ -45,7 +45,9 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, history, revid, path, kwargs, headers):
+    def get_values(self, path, kwargs, headers):
+        history = self._history
+        revid = self.get_revid()
 
         try:
             inv = history.get_inventory(revid)

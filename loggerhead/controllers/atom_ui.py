@@ -24,7 +24,9 @@ class AtomUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.atom'
 
-    def get_values(self, history, revid, path, kwargs, headers):
+    def get_values(self, path, kwargs, headers):
+        history = self._history
+        revid = self.get_revid()
         pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
         revid_list = history.get_file_view(history.last_revid, None)
@@ -34,4 +36,5 @@ class AtomUI (TemplatedBranchView):
         return {
             'changes': entries,
             'updated': entries[0].date.isoformat() + 'Z',
+            'history': self._history,
         }
