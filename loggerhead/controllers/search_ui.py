@@ -28,7 +28,7 @@ class SearchUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.search'
 
-    def get_values(self, history, revid, path, kwargs, response):
+    def get_values(self, path, kwargs, response):
         """
         Default method called from the search box as /search URL
 
@@ -38,7 +38,7 @@ class SearchUI(TemplatedBranchView):
         terms = []
         query = kwargs['query']
         if len(query) > 0:
-            terms = search.search_revisions(history._branch, query, True)
+            terms = search.search_revisions(self._branch.branch, query, True)
             if terms is not None:
                 terms = [term[0] for term in terms]
             else:

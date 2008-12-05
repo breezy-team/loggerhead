@@ -58,14 +58,21 @@ class TemplatedBranchView(object):
 
     template_path = None
 
-    def __init__(self, branch, history):
+    def __init__(self, branch, history_callable):
         self._branch = branch
-        self._history = history
+        self._history_callable = history_callable
+        self.__history = None
         self.log = branch.log
+
+    @property
+    def _history(self):
+        if self.__history is not None:
+            return self.__history
+        self.__history = self._history_callable()
+        return self.__history
 
     def __call__(self, environ, start_response):
         z = time.time()
-        h = self._history
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
@@ -75,27 +82,21 @@ class TemplatedBranchView(object):
                 break
             args.append(arg)
 
-        revid = None
-        if h is not None:
-            if len(args) > 0:
-                revid = h.fix_revid(args[0])
-            else:
-                revid = h.last_revid
-
         path = None
         if len(args) > 1:
             path = '/'.join(args[1:])
+        self.args = args
 
         vals = {
             'static_url': self._branch.static_url,
             'branch': self._branch,
             'util': util,
-            'history': h,
             'url': self._branch.context_url,
         }
         vals.update(templatefunctions)
         headers = {}
-        vals.update(self.get_values(h, revid, path, kwargs, headers))
+
+        vals.update(self.get_values(path, kwargs, headers))
 
         self.log.info('Getting information for %s: %r secs' % (
             self.__class__.__name__, time.time() - z))
@@ -115,3 +116,12 @@ class TemplatedBranchView(object):
                 w.bytes_saved,
                 100.0*w.bytes_saved/w.bytes))
         return []
+
+    def get_revid(self):
+        h = self._history
+        if h is None:
+            return None
+        if len(self.args) > 0:
+            return h.fix_revid(args[0])
+        else:
+            return h.last_revid
