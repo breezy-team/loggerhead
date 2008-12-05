@@ -24,7 +24,7 @@ class BranchesFromFileSystemServer(object):
 
     def app_for_branch(self, branch):
         if not self.name:
-            name = branch.nick
+            name = branch.get_config().get_nickname()
             is_root = True
         else:
             name = self.name

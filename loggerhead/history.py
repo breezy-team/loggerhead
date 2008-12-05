@@ -207,7 +207,8 @@ class History (object):
         self._file_change_cache = None
         self._branch = branch
         self._inventory_cache = {}
-        self.log = logging.getLogger('loggerhead.%s' % branch.nick)
+        self._branch_nick = self._branch.get_config().get_nickname()
+        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
 
         self.last_revid = branch.last_revision()
 
@@ -367,7 +368,7 @@ iso style "yyyy-mm-dd")
             if self.revno_re.match(revid):
                 revid = self._revno_revid[revid]
         except KeyError:
-            raise bzrlib.errors.NoSuchRevision(self._branch.nick, revid)
+            raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
 
     def get_file_view(self, revid, file_id):
