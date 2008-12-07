@@ -54,7 +54,6 @@ def daemonize(pidfile, home):
 
     f = open(pidfile, 'w')
     f.write('%d\n' % os.getpid())
-    f.write('%s\n' % home)
     f.close()
 
 
