@@ -2,8 +2,9 @@ loggerhead (1.6+bzr253-1) unstable; urgency=low
 
   * New upstream snapshot.
   * Stop writing home directory to pid file. (Closes: #507002)
+  * Use objlib from bzr. (Closes: #506999)
 
- -- Jelmer Vernooij <jelmer@samba.org>  Sun, 07 Dec 2008 16:29:11 +0100
+ -- Jelmer Vernooij <jelmer@samba.org>  Sun, 07 Dec 2008 16:31:02 +0100
 
 loggerhead (1.6+bzr245-1) unstable; urgency=low
 
