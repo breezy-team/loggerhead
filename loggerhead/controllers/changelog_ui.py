@@ -27,8 +27,9 @@ class ChangeLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.changelog'
 
-    def get_values(self, history, revid, path, kwargs, headers):
-
+    def get_values(self, path, kwargs, headers):
+        history = self._history
+        revid = self.get_revid()
         filter_file_id = kwargs.get('filter_file_id', None)
         query = kwargs.get('q', None)
         start_revid = history.fix_revid(kwargs.get('start_revid', None))

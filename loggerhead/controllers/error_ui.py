@@ -28,10 +28,10 @@ class ErrorUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.error'
 
     def __init__(self, branch, exc_info):
-        super(ErrorUI, self).__init__(branch, None)
+        super(ErrorUI, self).__init__(branch, lambda:None)
         self.exc_info = exc_info
 
-    def get_values(self, h, args, kw, headers):
+    def get_values(self, path, kwargs, response):
         exc_type, exc_object, exc_tb = self.exc_info
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)

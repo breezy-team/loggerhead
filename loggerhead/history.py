@@ -207,7 +207,8 @@ class History (object):
         self._file_change_cache = None
         self._branch = branch
         self._inventory_cache = {}
-        self.log = logging.getLogger('loggerhead.%s' % branch.nick)
+        self._branch_nick = self._branch.get_config().get_nickname()
+        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
 
         self.last_revid = branch.last_revision()
 
@@ -278,9 +279,16 @@ class History (object):
             revids = [r for r in self._full_history if r in w_revids]
         except AttributeError:
             possible_keys = [(file_id, revid) for revid in self._full_history]
-            existing_keys = self._branch.repository.texts.get_parent_map(
-                                possible_keys)
-            revids = [revid for _, revid in existing_keys.iterkeys()]
+            get_parent_map = self._branch.repository.texts.get_parent_map
+            # We chunk the requests as this works better with GraphIndex.
+            # See _filter_revisions_touching_file_id in bzrlib/log.py
+            # for more information.
+            revids = []
+            chunk_size = 1000
+            for start in xrange(0, len(possible_keys), chunk_size):
+                next_keys = possible_keys[start:start + chunk_size]
+                revids += [k[1] for k in get_parent_map(next_keys)]
+            del possible_keys, next_keys
         return revids
 
     def get_revision_history_since(self, revid_list, date):
@@ -367,7 +375,7 @@ iso style "yyyy-mm-dd")
             if self.revno_re.match(revid):
                 revid = self._revno_revid[revid]
         except KeyError:
-            raise bzrlib.errors.NoSuchRevision(self._branch.nick, revid)
+            raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
 
     def get_file_view(self, revid, file_id):

@@ -24,17 +24,13 @@ from paste.request import path_info_pop
 
 from bzrlib.diff import show_diff_trees
 
+from loggerhead.controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 
 
-class DiffUI(object):
+class DiffUI(TemplatedBranchView):
     """Class to output a diff for a single file or revisions."""
-
-    def __init__(self, branch, history):
-        self._branch = branch
-        self._history = history
-        self.log = history.log
 
     def __call__(self, environ, start_response):
         # /diff/<rev_id>/<rev_id>

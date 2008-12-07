@@ -57,13 +57,13 @@ class DirectoryUI(TemplatedBranchView):
             def static_url(path):
                 return self._static_url_base + path
         self._branch = _branch
-        self._history = None
+        self._history_callable = lambda:None
         self._path = path
         self._name = name
         self._static_url_base = static_url_base
         self.log = logging.getLogger('')
 
-    def get_values(self, h, revid, path, kwargs, response):
+    def get_values(self, path, kwargs, response):
         listing = [d for d in os.listdir(self._path)
                    if not d.startswith('.')
                    and os.path.isdir(os.path.join(self._path, d))]

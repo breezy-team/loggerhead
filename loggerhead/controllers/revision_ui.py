@@ -30,7 +30,9 @@ class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
 
-    def get_values(self, h, revid, path, kwargs, headers):
+    def get_values(self, path, kwargs, headers):
+        h = self._history
+        revid = self.get_revid()
 
         filter_file_id = kwargs.get('filter_file_id', None)
         start_revid = h.fix_revid(kwargs.get('start_revid', None))

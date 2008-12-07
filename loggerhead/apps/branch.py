@@ -110,7 +110,7 @@ class BranchWSGIApp(object):
         self.branch.lock_read()
         try:
             try:
-                c = cls(self, self.get_history())
+                c = cls(self, self.get_history)
                 return c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()

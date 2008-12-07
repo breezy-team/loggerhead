@@ -24,15 +24,12 @@ import time
 from paste import httpexceptions
 from paste.request import path_info_pop
 
+from loggerhead.controllers import TemplatedBranchView
+
 log = logging.getLogger("loggerhead.controllers")
 
 
-class DownloadUI (object):
-
-    def __init__(self, branch, history):
-        self._branch = branch
-        self._history = history
-        self.log = branch.log
+class DownloadUI (TemplatedBranchView):
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
