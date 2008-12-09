@@ -1,4 +1,4 @@
-loggerhead (1.6+bzr253-1) unstable; urgency=low
+loggerhead (1.6+bzr253-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
   * Stop writing home directory to pid file. (Closes: #507002)
