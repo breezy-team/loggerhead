@@ -13,7 +13,7 @@ DM-Upload-Allowed: yes
 
 Package: loggerhead
 Architecture: all
-Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal
+Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal, python-paste
 Enhances: bzr
 Recommends: bzr-search
 XB-Python-Version: ${python:Versions}
