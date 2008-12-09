@@ -6,7 +6,7 @@ import logging
 
 import bzrlib.bzrdir
 import bzrlib.osutils
-from configobj import ConfigObj
+from bzrlib.util.configobj import ConfigObj
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
