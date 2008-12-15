@@ -23,7 +23,7 @@ import os
 import sys
 import urlparse
 
-from bzrlib.util.configobj import ConfigObj
+from bzrlib.util.configobj.configobj import ConfigObj
 
 from paste import httpserver
 from paste.httpexceptions import make_middleware
