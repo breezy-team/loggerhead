@@ -1,6 +1,6 @@
-loggerhead (1.6+bzr253-1) UNRELEASED; urgency=low
+loggerhead (1.10-1) unstable; urgency=low
 
-  * New upstream snapshot.
+  * New upstream release.
   * Stop writing home directory to pid file. (Closes: #507002)
   * Use objlib from bzr. (Closes: #506999)
   * Fix dependency on python-paste.

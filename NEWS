@@ -2,6 +2,11 @@ What's changed in loggerhead?
 =============================
 
 dev [future]
+---------------
+
+
+1.10 [22Dec2008]
+---------------
     - Add startup deamon script for Linux (Marius Kruger)
 
     - Switch navigation from file_ids to paths. Fixes bugs #260363, #269365
