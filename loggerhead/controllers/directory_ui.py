@@ -25,7 +25,9 @@ from bzrlib import branch
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
+
 class DirEntry(object):
+
     def __init__(self, dirname, parity, branch):
         self.dirname = dirname
         self.parity = parity
@@ -33,10 +35,12 @@ class DirEntry(object):
         if branch is not None:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_change =  datetime.datetime.fromtimestamp(
-                    branch.repository.get_revision(branch.last_revision()).timestamp)
+                self.last_change = datetime.datetime.fromtimestamp(
+                    branch.repository.get_revision(
+                        branch.last_revision()).timestamp)
             except:
                 self.last_change = None
+
 
 class DirectoryUI(TemplatedBranchView):
     """
@@ -45,24 +49,27 @@ class DirectoryUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.directory'
 
     def __init__(self, static_url_base, path, name):
+
         class _branch(object):
             context_url = 1
+
+            @staticmethod
+            def static_url(path):
+                return self._static_url_base + path
         self._branch = _branch
-        self._history = None
+        self._history_callable = lambda:None
         self._path = path
         self._name = name
         self._static_url_base = static_url_base
         self.log = logging.getLogger('')
 
-    def get_values(self, h, args, kwargs, response):
+    def get_values(self, path, kwargs, response):
         listing = [d for d in os.listdir(self._path)
                    if not d.startswith('.')
                    and os.path.isdir(os.path.join(self._path, d))]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
-        def static_url(path):
-            return self._static_url_base + path
         for d in listing:
             p = os.path.join(self._path, d)
             try:
@@ -79,6 +86,5 @@ class DirectoryUI(TemplatedBranchView):
         return {
             'dirs': dirs,
             'name': self._name,
-            'static_url': static_url,
             'directory_breadcrumbs': directory_breadcrumbs,
             }

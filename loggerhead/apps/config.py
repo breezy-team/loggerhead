@@ -10,14 +10,14 @@ import posixpath
 
 import bzrlib.lru_cache
 
-from configobj import ConfigObj
+from bzrlib.util.configobj import ConfigObj
 
 from paste.request import path_info_pop
 from paste import httpexceptions
 from paste.wsgiwrappers import WSGIResponse
 
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, static_app
+from loggerhead.apps import favicon_app, static_app, robots_app
 from loggerhead.templatefunctions import templatefunctions
 from loggerhead.zptsupport import load_template
 from loggerhead import util
@@ -25,6 +25,7 @@ from loggerhead import util
 log = logging.getLogger("loggerhead.controllers")
 
 from loggerhead.history import is_branch
+
 
 class Project(object):
     """A project contains the branches.
@@ -73,7 +74,9 @@ class Project(object):
         log.debug('Rescanning auto-folder for project %s ...', self.name)
         for folder in auto_list:
             view_name = os.path.basename(folder)
-            log.debug('Auto-configuring (project %s) branch %s...', self.name, view_name)
+            log.debug('Auto-configuring (project %s) branch %s...',
+                      self.name,
+                      view_name)
             self._add_view(view_name, ConfigObj(), folder)
         self._auto_list = auto_list
 
@@ -90,7 +93,8 @@ class Project(object):
         description = view_config.get('description', None)
         if description is not None:
             return description
-        description = history._branch.get_config().get_user_option('description')
+        description = history._branch.get_config().get_user_option(
+                          'description')
         return description
 
     def _add_view(self, view_name, view_config, folder):
@@ -107,7 +111,9 @@ class Project(object):
             self.view_data_by_name[view_name] = {
                 'branch_path': folder,
                 'args': (view_name, view_config, self.graph_cache),
-                'description': self._get_description(view, view_config, history),
+                'description': self._get_description(view,
+                                                     view_config,
+                                                     history),
                 '_src_folder': folder,
                 '_view_config': view_config,
                 'friendly_name': friendly_name,
@@ -158,8 +164,8 @@ class Root(object):
         self.projects_by_name = {}
         graph_cache = bzrlib.lru_cache.LRUCache()
         for project_name in self.config.sections:
-            project = Project(
-                project_name, self.config[project_name], self.config, graph_cache)
+            project = Project(project_name, self.config[project_name],
+                              self.config, graph_cache)
             self.projects.append(project)
             self.projects_by_name[project_name] = project
 
@@ -169,7 +175,9 @@ class Root(object):
         # branches again.
         for p in self.projects:
             p._recheck_auto_folders()
+
         class branch(object):
+
             @staticmethod
             def static_url(path):
                 return self._static_url_base + path
@@ -208,6 +216,8 @@ class Root(object):
             response = WSGIResponse()
             self.browse(response)
             return response(environ, start_response)
+        elif segment == 'robots.txt':
+            return robots_app(environ, start_response)
         elif segment == 'static':
             return static_app(environ, start_response)
         elif segment == 'favicon.ico':

@@ -23,10 +23,14 @@
            <tal:no-link condition="not: branch/branch_link">
              <span metal:use-macro="breadcrumbs/directory"></span>
            </tal:no-link>
-           : changes
-          <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
-          <tal:block condition="start_revid">from revision <tal:block content="python:history.get_revno(start_revid)" /></tal:block>
-          <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+           <tal:block condition="changes">
+             : changes
+             <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
+             <tal:block condition="start_revid">from revision
+               <span tal:content="python:history.get_revno(start_revid)"/>
+             </tal:block>
+             <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+           </tal:block>
          </h1>
         </tal:block>
 
@@ -57,8 +61,7 @@
                   alt="collapse all" /> collapse all</a>
         </p>
         <!-- Table -->        
-        <table id="logentries"
-               tal:define="subcolspan python:4-bool(all_same_author)">
+        <table id="logentries">
             <tr class="logheader">
                 <td class="revisionnumber">Rev</td>
                 <td class="expandcell">&nbsp;</td>
@@ -132,8 +135,7 @@
                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
                 <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
                                                      title string:Files at revision ${entry/revno}">
-                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
-                                                        alt string:Files" /></a>
+                                   <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="Files" /></a>
                 </td>
             </tr>
           </tal:block>

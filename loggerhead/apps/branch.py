@@ -2,6 +2,7 @@
 
 import logging
 import urllib
+import sys
 
 import bzrlib.branch
 import bzrlib.lru_cache
@@ -30,7 +31,7 @@ class BranchWSGIApp(object):
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
-        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
+        self.log = logging.getLogger('loggerhead.%s' % friendly_name)
         if graph_cache is None:
             graph_cache = bzrlib.lru_cache.LRUCache()
         self.graph_cache = graph_cache
@@ -85,7 +86,7 @@ class BranchWSGIApp(object):
 
     def last_updated(self):
         h = self.get_history()
-        change = h.get_changes([ h.last_revid ])[0]
+        change = h.get_changes([h.last_revid])[0]
         return change.date
 
     def branch_url(self):
@@ -108,7 +109,12 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPNotFound()
         self.branch.lock_read()
         try:
-            c = cls(self, self.get_history())
-            return c(environ, start_response)
+            try:
+                c = cls(self, self.get_history)
+                return c(environ, start_response)
+            except:
+                environ['exc_info'] = sys.exc_info()
+                environ['branch'] = self
+                raise
         finally:
             self.branch.unlock()

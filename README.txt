@@ -13,13 +13,13 @@ GETTING STARTED
 
 Loggerhead depends on 
 1) SimpleTAL for templating.
-   on ubuntu package `sudo apt-get install python-simpletal`
+   on Ubuntu package `sudo apt-get install python-simpletal`
    or download from http://www.owlfish.com/software/simpleTAL/download.html
 2) Paste for the server. (You need version 1.2 or newer of Paste.) 
-   on ubuntu package `sudo apt-get install python-paste`
+   on Ubuntu package `sudo apt-get install python-paste`
    or use `easy_install Paste`
 3) Paste Deploy  (optional, needed when proxying through Apache)
-   on ubuntu package `sudo apt-get install python-pastedeploy`
+   on Ubuntu package `sudo apt-get install python-pastedeploy`
    or use `easy_install PasteDeploy`
 
 Then simply run the 'serve-branches' with the branch you want to
@@ -36,6 +36,16 @@ You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
+To run loggerhead as a linux daemon: 
+1) Copy loggerheadd to /etc/init.d
+2) Edit the file to configure where your loggerhead is installed, and which
+   serve-branches options you would like.
+3) Register the service
+   cd /etc/init.d
+   a) on upstart based systems like Ubuntu run: 
+      update-rc.d loggerheadd defaults
+   b) on Sysvinit based systems like Centos or SuSE run:
+      chkconfig --add loggerheadd
 
 USING A CONFIG FILE
 -------------------

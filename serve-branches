@@ -29,6 +29,7 @@ from loggerhead import __version__
 from loggerhead.apps.filesystem import (
     BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
 from loggerhead.util import Reloader
+from loggerhead.apps.error import ErrorHandlerApp
 
 
 def command_line_parser():
@@ -36,29 +37,33 @@ def command_line_parser():
     parser.set_defaults(
         user_dirs=False,
         show_version=False,
+        log_folder=None,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
     parser.add_option("--trunk-dir", metavar="DIR",
                       help="The directory that contains the trunk branches.")
     parser.add_option("--port", dest="user_port",
-                      help="Port Loggerhead should listen on (defaults to 8080).")
+                      help=("Port Loggerhead should listen on "
+                            "(defaults to 8080)."))
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
+    parser.add_option("--profile", action="store_true", dest="profile",
+                      help="Generate callgrind profile data to "
+                        "%d-stats.callgrind on each request.")
     parser.add_option("--reload", action="store_true", dest="reload",
                       help="Restarts the application when changing python"
                            " files. Only used for development purposes.")
+    parser.add_option('--log-folder', dest="log_folder",
+                      type=str, help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     return parser
 
 
 def main(args):
-    logging.basicConfig()
-    logging.getLogger().setLevel(logging.DEBUG)
-
     parser = command_line_parser()
     (options, args) = parser.parse_args(sys.argv[1:])
 
@@ -81,7 +86,7 @@ def main(args):
     if options.trunk_dir and not options.user_dirs:
         print "--trunk-dir is only valid with --user-dirs"
         sys.exit(1)
-        
+
     if options.reload:
         if Reloader.is_installed():
             Reloader.install()
@@ -95,8 +100,28 @@ def main(args):
         app = UserBranchesFromFileSystemRoot(path, options.trunk_dir)
     else:
         app = BranchesFromFileSystemRoot(path)
+
+    # setup_logging()
+    logging.basicConfig()
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logger = getattr(app, 'log', logging.getLogger('loggerhead'))
+    if options.log_folder:
+        logfile_path = os.path.join(options.log_folder, 'serve-branches.log')
+    else:
+        logfile_path = 'serve-branches.log'
+    logfile = logging.FileHandler(logfile_path, 'a')
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                  ' %(message)s')
+    logfile.setFormatter(formatter)
+    logfile.setLevel(logging.DEBUG)
+    logger.addHandler(logfile)
+    # setup_logging() #end
+    app = ErrorHandlerApp(app)
     app = HTTPExceptionHandler(app)
-    app = TransLogger(app)
+    app = TransLogger(app, logger=logger)
+    if options.profile:
+        from loggerhead.middleware.profile import LSProfMiddleware
+        app = LSProfMiddleware(app)
 
     if not options.user_prefix:
         prefix = '/'
@@ -109,7 +134,7 @@ def main(args):
         pass
     else:
         app = PrefixMiddleware(app, prefix=prefix)
-    
+
     if not options.user_port:
         port = '8080'
     else:
