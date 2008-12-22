@@ -40,32 +40,38 @@ except ImportError:
 
 
 class FakeShelf(object):
+
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
         self.connection = dbapi2.connect(filename)
         self.cursor = self.connection.cursor()
         if create_table:
             self._create_table()
+
     def _create_table(self):
         self.cursor.execute(
             "create table RevisionData "
             "(revid binary primary key, data binary)")
         self.connection.commit()
+
     def _serialize(self, obj):
         r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
         return r
+
     def _unserialize(self, data):
         return cPickle.loads(str(data))
+
     def get(self, revid):
         self.cursor.execute(
-            "select data from revisiondata where revid = ?", (revid,))
+            "select data from revisiondata where revid = ?", (revid, ))
         filechange = self.cursor.fetchone()
         if filechange is None:
             return None
         else:
             return self._unserialize(filechange[0])
+
     def add(self, revid_obj_pairs):
-        for  (r, d) in revid_obj_pairs:
+        for (r, d) in revid_obj_pairs:
             self.cursor.execute(
                 "insert into revisiondata (revid, data) values (?, ?)",
                 (r, self._serialize(d)))
@@ -73,6 +79,7 @@ class FakeShelf(object):
 
 
 class FileChangeCache(object):
+
     def __init__(self, history, cache_path):
         self.history = history
 
@@ -100,7 +107,8 @@ class FileChangeCache(object):
                 missing_entry_indices.append(len(out))
                 out.append(None)
         if missing_entries:
-            missing_changes = self.history.get_file_changes_uncached(missing_entries)
+            missing_changes = self.history.get_file_changes_uncached(
+                                  missing_entries)
             revid_changes_pairs = []
             for i, entry, changes in zip(
                 missing_entry_indices, missing_entries, missing_changes):

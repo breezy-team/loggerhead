@@ -25,7 +25,7 @@
             <tal:block repeat="view python:views_by_project[project]">
               <tr tal:attributes="class string:blueRow1">
                 <td class="icocell">
-                  <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" />
+                  <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" alt="Branch" />
                 </td>
                 <td class="autcell">
                     <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)" 

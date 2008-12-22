@@ -57,7 +57,8 @@ class LockFile (object):
             self._count += 1
             return True
         try:
-            fd = os.open(self._filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0600)
+            fd = os.open(self._filename,
+                         os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0600)
             os.close(fd)
             self._count += 1
             return True
@@ -65,7 +66,8 @@ class LockFile (object):
             return False
 
     def acquire(self):
-        # try over and over, sleeping on exponential backoff with an upper limit of about 5 seconds
+        # try over and over, sleeping on exponential backoff with
+        # an upper limit of about 5 seconds
         pause = 0.1
         #max_pause = 5.0
         max_pause = 0.1

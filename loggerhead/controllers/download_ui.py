@@ -24,15 +24,12 @@ import time
 from paste import httpexceptions
 from paste.request import path_info_pop
 
+from loggerhead.controllers import TemplatedBranchView
+
 log = logging.getLogger("loggerhead.controllers")
 
 
-class DownloadUI (object):
-
-    def __init__(self, branch, history):
-        self._branch = branch
-        self._history = history
-        self.log = branch.log
+class DownloadUI (TemplatedBranchView):
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
@@ -48,7 +45,8 @@ class DownloadUI (object):
             args.append(arg)
 
         if len(args) < 2:
-            raise httpexceptions.HTTPMovedPermanently(self._branch.url('../changes'))
+            raise httpexceptions.HTTPMovedPermanently(self._branch.url(
+                      '../changes'))
 
         revid = h.fix_revid(args[0])
         file_id = args[1]
@@ -57,11 +55,14 @@ class DownloadUI (object):
         if mime_type is None:
             mime_type = 'application/octet-stream'
 
-        self.log.info('/download %s @ %s (%d bytes)', path, h.get_revno(revid), len(content))
+        self.log.info('/download %s @ %s (%d bytes)',
+                      path,
+                      h.get_revno(revid),
+                      len(content))
         headers = [
             ('Content-Type', mime_type),
             ('Content-Length', len(content)),
-            ('Content-Disposition', 'attachment; filename=%s'%(filename,)),
+            ('Content-Disposition', 'attachment; filename=%s' % filename),
             ]
         start_response('200 OK', headers)
         return [content]
