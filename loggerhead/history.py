@@ -875,9 +875,6 @@ delta.renamed:
 
         return file_list
 
-
-    _BADCHARS_RE = re.compile(ur'[\x00-\x08\x0b\x0e-\x1f]')
-
     def annotate_file(self, file_id, revid):
         z = time.time()
         lineno = 1
@@ -888,33 +885,36 @@ delta.renamed:
         tree = self._branch.repository.revision_tree(file_revid)
         revid_set = set()
 
-        for line_revid, text in tree.annotate_iter(file_id):
-            revid_set.add(line_revid)
-            if self._BADCHARS_RE.match(text):
+        try:
+            bzrlib.textfile.check_text_lines(tree.get_file_lines(file_id))
+        except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
                                      text='(This is a binary file.)',
                                      change=util.Container())
-                return
-        change_cache = dict([(c.revid, c) \
-                for c in self.get_changes(list(revid_set))])
+        else:
+            for line_revid, text in tree.annotate_iter(file_id):
+                revid_set.add(line_revid)
 
-        last_line_revid = None
-        for line_revid, text in tree.annotate_iter(file_id):
-            if line_revid == last_line_revid:
-                # remember which lines have a new revno and which don't
-                status = 'same'
-            else:
-                status = 'changed'
-                parity ^= 1
-                last_line_revid = line_revid
-                change = change_cache[line_revid]
-                trunc_revno = change.revno
-                if len(trunc_revno) > 10:
-                    trunc_revno = trunc_revno[:9] + '...'
+            change_cache = dict([(c.revid, c) \
+                    for c in self.get_changes(list(revid_set))])
 
-            yield util.Container(parity=parity, lineno=lineno, status=status,
-                                 change=change, text=util.fixed_width(text))
-            lineno += 1
+            last_line_revid = None
+            for line_revid, text in tree.annotate_iter(file_id):
+                if line_revid == last_line_revid:
+                    # remember which lines have a new revno and which don't
+                    status = 'same'
+                else:
+                    status = 'changed'
+                    parity ^= 1
+                    last_line_revid = line_revid
+                    change = change_cache[line_revid]
+                    trunc_revno = change.revno
+                    if len(trunc_revno) > 10:
+                        trunc_revno = trunc_revno[:9] + '...'
+
+                yield util.Container(parity=parity, lineno=lineno, status=status,
+                                     change=change, text=util.fixed_width(text))
+                lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))
