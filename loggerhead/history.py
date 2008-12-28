@@ -48,6 +48,7 @@ import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
 import bzrlib.revision
+import bzrlib.textfile
 import bzrlib.tsort
 import bzrlib.ui
 
