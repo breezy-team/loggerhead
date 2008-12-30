@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('anim-base', function(Y) {
 
@@ -55,15 +55,6 @@ YUI.add('anim-base', function(Y) {
         _instances = {},
         _timer;
 
-    var _setPrivate = function(anim, prop, val) {
-        if (typeof prop == 'string') {
-            anim._conf.add(prop, { value: val });
-        } else {
-            Y.each(prop, function(v, n) {
-                _setPrivate(anim, n, v);
-            });
-        }
-    };
     Y.Anim = function() {
         Y.Anim.superclass.constructor.apply(this, arguments);
         _instances[Y.stamp(this)] = this;
@@ -87,6 +78,9 @@ YUI.add('anim-base', function(Y) {
      */
     Y.Anim.DEFAULT_UNIT = 'px';
 
+    Y.Anim.DEFAULT_EASING = function (t, b, c, d) {
+        return c * t / d + b; // linear easing
+    };
 
     /**
      * Bucket for custom getters and setters
@@ -158,8 +152,12 @@ YUI.add('anim-base', function(Y) {
          * @type Function
          */
         easing: {
-            value: function (t, b, c, d) {
-                return c * t / d + b; // linear easing
+            value: Y.Anim.DEFAULT_EASING,
+
+            set: function(val) {
+                if (typeof val === 'string' && Y.Easing) {
+                    return Y.Easing[val];
+                }
             }
         },
 
@@ -400,7 +398,7 @@ YUI.add('anim-base', function(Y) {
         _added: false,
 
         _start: function() {
-            _setPrivate(this, START_TIME, new Date() - this.get(ELAPSED_TIME));
+            this._set(START_TIME, new Date() - this.get(ELAPSED_TIME));
             this._actualFrames = 0;
             if (!this.get(PAUSED)) {
                 this._initAttr();
@@ -412,8 +410,8 @@ YUI.add('anim-base', function(Y) {
         },
 
         _pause: function() {
-            _setPrivate(this, START_TIME, null);
-            _setPrivate(this, PAUSED, true);
+            this._set(START_TIME, null);
+            this._set(PAUSED, true);
             delete _running[Y.stamp(this)];
 
             /**
@@ -426,7 +424,7 @@ YUI.add('anim-base', function(Y) {
         },
 
         _resume: function() {
-            _setPrivate(this, PAUSED, false);
+            this._set(PAUSED, false);
             _running[Y.stamp(this)] = this;
 
             /**
@@ -439,10 +437,9 @@ YUI.add('anim-base', function(Y) {
         },
 
         _end: function(finish) {
-            _setPrivate(this, START_TIME, null);
-            _setPrivate(this, ELAPSED_TIME, 0);
-            _setPrivate(this, PAUSED, false);
-            //_setPrivate(this, REVERSE, false);
+            this._set(START_TIME, null);
+            this._set(ELAPSED_TIME, 0);
+            this._set(PAUSED, false);
 
             delete _running[Y.stamp(this)];
             this.fire(END, {elapsed: this.get(ELAPSED_TIME)});
@@ -482,7 +479,7 @@ YUI.add('anim-base', function(Y) {
             }
 
             this._actualFrames += 1;
-            _setPrivate(this, ELAPSED_TIME, t);
+            this._set(ELAPSED_TIME, t);
 
             this.fire(TWEEN);
             if (done) {
@@ -511,8 +508,8 @@ YUI.add('anim-base', function(Y) {
                 this._end();
             }
 
-            _setPrivate(this, START_TIME, new Date());
-            _setPrivate(this, ITERATION_COUNT, iterCount);
+            this._set(START_TIME, new Date());
+            this._set(ITERATION_COUNT, iterCount);
         },
 
         _initAttr: function() {
@@ -593,4 +590,4 @@ YUI.add('anim-base', function(Y) {
     Y.extend(Y.Anim, Y.Base, proto);
 
 
-}, '3.0.0pr1' ,{requires:['base', 'node']});
+}, '3.0.0pr2' ,{requires:['base', 'node']});

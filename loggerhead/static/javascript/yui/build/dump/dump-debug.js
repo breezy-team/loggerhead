@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /**
  * Returns a simple string representation of the object or array.
@@ -100,4 +100,4 @@ YUI.add("dump", function(Y) {
     Y.dump = dump;
     L.dump = dump;
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");

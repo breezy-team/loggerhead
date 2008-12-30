@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /**
  * OOP utils.  If included, the OOP methods are added to the YUI instance
@@ -336,4 +336,4 @@ YUI.add("oop", function(Y) {
     // };
 
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");

@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-drop-plugin', function(Y) {
 
@@ -16,9 +16,9 @@ YUI.add('dd-drop-plugin', function(Y) {
         * @class DropPlugin
         * @extends Drop
         * @constructor
+        * @namespace plugin
         */
 
-        Y.Plugin = Y.Plugin || {};
 
         var Drop = function(config) {
             config.node = config.owner;
@@ -40,8 +40,9 @@ YUI.add('dd-drop-plugin', function(Y) {
 
 
         Y.extend(Drop, Y.DD.Drop);
-        Y.Plugin.Drop = Drop;
+        Y.namespace('plugin');
+        Y.plugin.Drop = Drop;
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drop'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-drop'], skinnable:false});

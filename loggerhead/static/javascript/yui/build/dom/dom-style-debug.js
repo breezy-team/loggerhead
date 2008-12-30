@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dom-style', function(Y) {
 
@@ -47,8 +47,8 @@ Y.mix(Y.DOM, {
      * @param {String} att The style property to set. 
      * @param {String|Number} val The value. 
      */
-    setStyle: function(node, att, val) {
-        var style = node[STYLE],
+    setStyle: function(node, att, val, style) {
+        style = node[STYLE],
             CUSTOM_STYLES = Y.DOM.CUSTOM_STYLES;
 
         if (style) {
@@ -156,6 +156,7 @@ if (Y.UA.webkit) { // safari converts transparent to rgba()
 
 }
 
+
 /**
  * Add style management functionality to DOM.
  * @module dom
@@ -232,6 +233,7 @@ Y.Color = {
     }
 };
 
+
 /**
  * Add style management functionality to DOM.
  * @module dom
@@ -296,7 +298,7 @@ var ComputedStyle = {
 
         if (property === OPACITY) {
             value = Y.DOM.CUSTOM_STYLES[OPACITY].get(el);        
-        } else if (!current || current.indexOf(PX) > -1) { // no need to convert
+        } else if (!current || (current.indexOf && current.indexOf(PX) > -1)) { // no need to convert
             value = current;
         } else if (Y.DOM.IE.COMPUTED[property]) { // use compute function
             value = Y.DOM.IE.COMPUTED[property](el, property);
@@ -449,4 +451,5 @@ Y.DOM.IE.ComputedStyle = ComputedStyle;
 
 
 
-}, '3.0.0pr1' ,{skinnable:false, requires:['dom-base']});
+
+}, '3.0.0pr2' ,{skinnable:false, requires:['dom-base']});

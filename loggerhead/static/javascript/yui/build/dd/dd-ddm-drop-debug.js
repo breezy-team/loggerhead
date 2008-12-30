@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-ddm-drop', function(Y) {
 
@@ -265,23 +265,26 @@ YUI.add('dd-ddm-drop', function(Y) {
         */
         _deactivateTargets: function() {
             var other = [],
-                activeDrag = this.activeDrag;
+                activeDrag = this.activeDrag,
+                activeDrop = this.activeDrop;
             
             //TODO why is this check so hard??
-            if (activeDrag && !Y.Lang.isNull(this.activeDrop) && this.otherDrops[this.activeDrop]) {
+            if (activeDrag && activeDrop && this.otherDrops[activeDrop]) {
                 if (!activeDrag.get('dragMode')) {
                     //TODO otherDrops -- private..
                     other = this.otherDrops;
-                    delete other[this.activeDrop];
+                    delete other[activeDrop];
                 } else {
                     var tmp = this.getBestMatch(this.otherDrops, true);
-                    this.activeDrop = tmp[0];
+                    activeDrop = tmp[0];
                     other = tmp[1];
                 }
                 activeDrag.get('node').removeClass(this.CSS_PREFIX + '-drag-over')
-                this.activeDrop.fire('drop:hit', { drag: activeDrag, drop: this.activeDrop, others: other });
-                activeDrag.fire('drag:drophit', { drag: activeDrag,  drop: this.activeDrop, others: other });
-            } else if (this.activeDrag) {
+                if (activeDrop) {
+                    activeDrop.fire('drop:hit', { drag: activeDrag, drop: activeDrop, others: other });
+                    activeDrag.fire('drag:drophit', { drag: activeDrag,  drop: activeDrop, others: other });
+                }
+            } else if (activeDrag) {
                 activeDrag.get('node').removeClass(this.CSS_PREFIX + '-drag-over')
                 activeDrag.fire('drag:dropmiss', { pageX: activeDrag.lastXY[0], pageY: activeDrag.lastXY[1] });
             } else {
@@ -398,4 +401,4 @@ YUI.add('dd-ddm-drop', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm'], skinnable:false});

@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dom', function(Y) {
 
@@ -66,7 +66,7 @@ Y.DOM = {
         if (text === UNDEFINED && INNER_TEXT in element) {
             text = element[INNER_TEXT];
         } 
-        return text || ''; 
+        return text || '';
     },
 
     /**
@@ -79,28 +79,29 @@ Y.DOM = {
      * @return {HTMLElement | null} The first matching child html element.
      */
     firstChild: function(element, fn) {
-        return Y.DOM._childBy(element, null, fn); 
+        return Y.DOM._childBy(element, null, fn);
     },
 
     firstChildByTag: function(element, tag, fn) {
-        return Y.DOM._childBy(element, tag, fn); 
+        return Y.DOM._childBy(element, tag, fn);
     },
 
     /**
      * Finds the lastChild of the given HTMLElement.
      * @method lastChild
      * @param {HTMLElement} element The html element.
+     * @param {String} tag The tag to search for.
      * @param {Function} fn optional An optional boolean test to apply.
      * The optional function is passed the current HTMLElement being tested as its only argument.
      * If no function is given, the first found is returned.
      * @return {HTMLElement | null} The first matching child html element.
      */
     lastChild: function(element, fn) {
-        return Y.DOM._childBy(element, null, fn, true); 
+        return Y.DOM._childBy(element, null, fn, true);
     },
 
     lastChildByTag: function(element, tag, fn) {
-        return Y.DOM._childBy(element, tag, fn, true); 
+        return Y.DOM._childBy(element, tag, fn, true);
     },
 
     /**
@@ -126,7 +127,7 @@ Y.DOM = {
                     }
                 }
 
-                return elements; 
+                return elements;
             };
         } else {
             return function(element, tag, fn) {
@@ -142,7 +143,7 @@ Y.DOM = {
                         };
                     }
 
-                    elements = Y.DOM.filterElementsBy(elements, wrapFn); 
+                    elements = Y.DOM.filterElementsBy(elements, wrapFn);
                 }
                 return elements;
             };
@@ -159,7 +160,7 @@ Y.DOM = {
      * @return {Array} The collection of child elements.
      */
     children: function(element, fn) {
-        return Y.DOM.childrenByTag(element, null, fn); 
+        return Y.DOM.childrenByTag(element, null, fn);
     },
 
     /**
@@ -172,7 +173,7 @@ Y.DOM = {
      * @param {Boolean} all optional Whether all node types should be scanned, or just element nodes.
      * @return {HTMLElement | null} The matching DOM node or null if none found. 
      */
-    previous: function(element, fn, all) {
+    previous: function(element, fn) {
         return Y.DOM.elementByAxis(element, PREVIOUS_SIBLING, fn);
     },
 
@@ -211,7 +212,7 @@ Y.DOM = {
      * @param {String} axis The axis to search (parentNode, nextSibling, previousSibling).
      * @param {Function} fn optional An optional boolean test to apply.
      * @param {Boolean} all optional Whether all node types should be returned, or just element nodes.
-     * The optional function is passed the current DOM node being tested as its only argument.
+     * The optional function is passed the current HTMLElement being tested as its only argument.
      * If no function is given, the first element is returned.
      * @return {HTMLElement | null} The matching element or null if none found.
      */
@@ -255,7 +256,7 @@ Y.DOM = {
      * @param {HTMLElement} root optional An optional root element to start from.
      * @param {Function} fn optional An optional boolean test to apply.
      * The optional function is passed the current HTMLElement being tested as its only argument.
-     * If no function is given, the first match is returned.
+     * If no function is given, the first match is returned. 
      * @return {HTMLElement} The matching element.
      */
     firstByTag: function(tag, root, fn) {
@@ -284,13 +285,13 @@ Y.DOM = {
      */
     filterElementsBy: function(elements, fn, firstOnly) {
         var ret = (firstOnly) ? null : [];
-        for (var i = 0, el; el = elements[i++];) {
-            if ( el[TAG_NAME] && (!fn || fn(el)) ) {
+        for (var i = 0, len = elements[LENGTH]; i < len; ++i) {
+            if (elements[i][TAG_NAME] && (!fn || fn(elements[i]))) {
                 if (firstOnly) {
-                    ret = el;
+                    ret = elements[i];
                     break;
                 } else {
-                    ret[ret[LENGTH]] = el;
+                    ret[ret[LENGTH]] = elements[i];
                 }
             }
         }
@@ -308,8 +309,7 @@ Y.DOM = {
     contains: function(element, needle) {
         var ret = false;
 
-        if (!needle || !needle[NODE_TYPE] || !element || !element[NODE_TYPE]) {
-            Y.log('invalid input to contains', 'WARN', 'DOM');
+        if ( !needle || !element || !needle[NODE_TYPE] || !element[NODE_TYPE]) {
             ret = false;
         } else if (element[CONTAINS])  {
             if (Y.UA.opera || needle[NODE_TYPE] === 1) { // IE & SAF contains fail if needle not an ELEMENT_NODE
@@ -327,12 +327,17 @@ Y.DOM = {
     },
 
     /**
-     * Returns an HTMLElement for the given string of HTML.
-     * @method create
-     * @param {String} html The string of HTML to convert to a DOM element. 
-     * @param {Document} document An optional document to create the node with.
-     * @return {HTMLElement} The newly created element. 
+     * Determines whether or not the HTMLElement is part of the document.
+     * @method inDoc
+     * @param {HTMLElement} element The containing html element.
+     * @param {HTMLElement} doc optional The document to check.
+     * @return {Boolean} Whether or not the element is attached to the document. 
      */
+    inDoc: function(element, doc) {
+        doc = doc || Y.config.doc;
+        return Y.DOM.contains(doc.documentElement, element);
+    },
+
     create: function(html, doc) {
         doc = doc || Y.config.doc;
         var m = re_tag.exec(html);
@@ -524,6 +529,7 @@ Y.DOM = {
         });
     }
 })();
+
 /** 
  * The DOM utility provides a cross-browser abtraction layer
  * normalizing DOM tasks, and adds extra helper functionality
@@ -606,6 +612,7 @@ Y.mix(Y.DOM, {
     }
 });
 
+
 /** 
  * Add style management functionality to DOM.
  * @module dom
@@ -647,8 +654,8 @@ Y.mix(Y.DOM, {
      * @param {String} att The style property to set. 
      * @param {String|Number} val The value. 
      */
-    setStyle: function(node, att, val) {
-        var style = node[STYLE],
+    setStyle: function(node, att, val, style) {
+        style = node[STYLE],
             CUSTOM_STYLES = Y.DOM.CUSTOM_STYLES;
 
         if (style) {
@@ -756,6 +763,8 @@ if (Y.UA.webkit) { // safari converts transparent to rgba()
 
 }
 
+
+
 /**
  * Adds position and region management functionality to DOM.
  * @module dom
@@ -764,6 +773,7 @@ if (Y.UA.webkit) { // safari converts transparent to rgba()
  */
 
 var OFFSET_TOP = 'offsetTop',
+
     DOCUMENT_ELEMENT = 'documentElement',
     COMPAT_MODE = 'compatMode',
     OFFSET_LEFT = 'offsetLeft',
@@ -786,10 +796,12 @@ var OFFSET_TOP = 'offsetTop',
     RE_TABLE = /^t(?:able|d|h)$/i;
 
 Y.mix(Y.DOM, {
+
+
     /**
      * Returns the inner height of the viewport (exludes scrollbar). 
      * @method winHeight
-     * @return {Int} The pixel height of the viewport.
+
      */
     winHeight: function(node) {
         var h = Y.DOM._getWinSize(node)[HEIGHT];
@@ -800,7 +812,7 @@ Y.mix(Y.DOM, {
     /**
      * Returns the inner width of the viewport (exludes scrollbar). 
      * @method winWidth
-     * @return {Int} The pixel width of the viewport.
+
      */
     winWidth: function(node) {
         var w = Y.DOM._getWinSize(node)[WIDTH];
@@ -811,7 +823,7 @@ Y.mix(Y.DOM, {
     /**
      * Document height 
      * @method docHeight
-     * @return {Int} The pixel height of the document.
+
      */
     docHeight:  function(node) {
         var h = Y.DOM._getDocSize(node)[HEIGHT];
@@ -822,7 +834,7 @@ Y.mix(Y.DOM, {
     /**
      * Document width 
      * @method docWidth
-     * @return {Int} The pixel width of the document.
+
      */
     docWidth:  function(node) {
         var w = Y.DOM._getDocSize(node)[WIDTH];
@@ -833,7 +845,7 @@ Y.mix(Y.DOM, {
     /**
      * Amount page has been scroll vertically 
      * @method docScrollX
-     * @return {Int} The scroll amount in pixels.
+
      */
     docScrollX: function(node) {
         var doc = Y.DOM._getDoc();
@@ -843,7 +855,7 @@ Y.mix(Y.DOM, {
     /**
      * Amount page has been scroll horizontally 
      * @method docScrollY
-     * @return {Int} The scroll amount in pixels.
+
      */
     docScrollY:  function(node) {
         var doc = Y.DOM._getDoc();
@@ -861,6 +873,10 @@ Y.mix(Y.DOM, {
      TODO: test inDocument/display
      */
     getXY: function() {
+
+
+
+
         if (document[DOCUMENT_ELEMENT][GET_BOUNDING_CLIENT_RECT]) {
             return function(node) {
                 if (!node) {
@@ -893,10 +909,14 @@ Y.mix(Y.DOM, {
                             if (bTop !== MEDIUM) {
                                 off2 = parseInt(bTop, 10);
                             }
+
+
+
                         }
                         
                         xy[0] -= off1;
                         xy[1] -= off2;
+
                     }
 
                 if ((scrollTop || scrollLeft)) {
@@ -1004,6 +1024,7 @@ Y.mix(Y.DOM, {
     setXY: function(node, xy, noRetry) {
         var pos = Y.DOM.getStyle(node, POSITION),
             setStyle = Y.DOM.setStyle,
+
             delta = [ // assuming pixels; if not we will have to retry
                 parseInt( Y.DOM[GET_COMPUTED_STYLE](node, LEFT), 10 ),
                 parseInt( Y.DOM[GET_COMPUTED_STYLE](node, TOP), 10 )
@@ -1016,7 +1037,15 @@ Y.mix(Y.DOM, {
 
         var currentXY = Y.DOM.getXY(node);
 
+
+
+
         if (currentXY === false) { // has to be part of doc to have xy
+
+
+
+
+
             Y.log('xy failed: node not available', 'error', 'Node');
             return false; 
         }
@@ -1115,6 +1144,8 @@ Y.mix(Y.DOM, {
     }
 });
 
+
+
 /**
  * Adds position and region management functionality to DOM.
  * @module dom
@@ -1124,24 +1155,28 @@ Y.mix(Y.DOM, {
 
 var OFFSET_WIDTH = 'offsetWidth',
     OFFSET_HEIGHT = 'offsetHeight',
+    TOP = 'top',
+    RIGHT = 'right',
+    BOTTOM = 'bottom',
+    LEFT = 'left',
     TAG_NAME = 'tagName';
 
 var getOffsets = function(r1, r2) {
-
-    var t = Math.max(r1.top,    r2.top   ),
-        r = Math.min(r1.right,  r2.right ),
-        b = Math.min(r1.bottom, r2.bottom),
-        l = Math.max(r1.left,   r2.left  );
+    var t = Math.max(r1[TOP], r2[TOP]),
+        r = Math.min(r1[RIGHT], r2[RIGHT]),
+        b = Math.min(r1[BOTTOM], r2[BOTTOM]),
+        l = Math.max(r1[LEFT], r2[LEFT]),
+        ret = {};
     
-    return {
-        top: t,
-        bottom: b,
-        left: l,
-        right: r
-    };
+    ret[TOP] = t;
+    ret[RIGHT] = r;
+    ret[BOTTOM] = b;
+    ret[LEFT] = l;
+    return ret;
 };
 
-Y.mix(Y.DOM, {
+var DOM = DOM || Y.DOM;
+Y.mix(DOM, {
     /**
      * Returns an Object literal containing the following about this element: (top, right, bottom, left)
      * @method region
@@ -1149,7 +1184,7 @@ Y.mix(Y.DOM, {
      @return {Object} Object literal containing the following about this element: (top, right, bottom, left)
      */
     region: function(node) {
-        var x = Y.DOM.getXY(node),
+        var x = DOM.getXY(node),
             ret = false;
         
         if (x) {
@@ -1177,11 +1212,11 @@ Y.mix(Y.DOM, {
      @return {Object} Object literal containing the following intersection data: (top, right, bottom, left, area, yoff, xoff, inRegion)
      */
     intersect: function(node, node2, altRegion) {
-        var r = altRegion || Y.DOM.region(node), region = {};
+        var r = altRegion || DOM.region(node), region = {};
 
         var n = node2;
         if (n[TAG_NAME]) {
-            region = Y.DOM.region(n);
+            region = DOM.region(n);
         } else if (Y.Lang.isObject(node2)) {
             region = node2;
         } else {
@@ -1190,14 +1225,14 @@ Y.mix(Y.DOM, {
         
         var off = getOffsets(region, r);
         return {
-            top: off.top,
-            right: off.right,
-            bottom: off.bottom,
-            left: off.left,
-            area: ((off.bottom - off.top) * (off.right - off.left)),
-            yoff: ((off.bottom - off.top)),
-            xoff: (off.right - off.left),
-            inRegion: Y.DOM.inRegion(node, node2, false, altRegion)
+            top: off[TOP],
+            right: off[RIGHT],
+            bottom: off[BOTTOM],
+            left: off[LEFT],
+            area: ((off[BOTTOM] - off[TOP]) * (off[RIGHT] - off[LEFT])),
+            yoff: ((off[BOTTOM] - off[TOP])),
+            xoff: (off[RIGHT] - off[LEFT]),
+            inRegion: DOM.inRegion(node, node2, false, altRegion)
         };
         
     },
@@ -1211,11 +1246,11 @@ Y.mix(Y.DOM, {
      */
     inRegion: function(node, node2, all, altRegion) {
         var region = {},
-            r = altRegion || Y.DOM.region(node);
+            r = altRegion || DOM.region(node);
 
         var n = node2;
         if (n[TAG_NAME]) {
-            region = Y.DOM.region(n);
+            region = DOM.region(n);
         } else if (Y.Lang.isObject(node2)) {
             region = node2;
         } else {
@@ -1223,13 +1258,14 @@ Y.mix(Y.DOM, {
         }
             
         if (all) {
-            return ( r.left   >= region.left   &&
-                r.right  <= region.right  && 
-                r.top    >= region.top    && 
-                r.bottom <= region.bottom    );
+            return (
+                r[LEFT]   >= region[LEFT]   &&
+                r[RIGHT]  <= region[RIGHT]  && 
+                r[TOP]    >= region[TOP]    && 
+                r[BOTTOM] <= region[BOTTOM]  );
         } else {
             var off = getOffsets(region, r);
-            if (off.bottom >= off.top && off.right >= off.left) {
+            if (off[BOTTOM] >= off[TOP] && off[RIGHT] >= off[LEFT]) {
                 return true;
             } else {
                 return false;
@@ -1247,7 +1283,7 @@ Y.mix(Y.DOM, {
      * @return {Boolean} True if in region, false if not.
      */
     inViewportRegion: function(node, all, altRegion) {
-        return Y.DOM.inRegion(node, Y.DOM.viewportRegion(node), all, altRegion);
+        return DOM.inRegion(node, DOM.viewportRegion(node), all, altRegion);
             
     },
 
@@ -1258,16 +1294,16 @@ Y.mix(Y.DOM, {
      */
     viewportRegion: function(node) {
         node = node || Y.config.doc.documentElement;
-        var r = {
-            top: Y.DOM.docScrollY(node),
-            right: Y.DOM.winWidth(node) + Y.DOM.docScrollX(node),
-            bottom: (Y.DOM.docScrollY(node) + Y.DOM.winHeight(node)),
-            left: Y.DOM.docScrollX(node)
-        };
+        var r = {};
+        r[TOP] = DOM.docScrollY(node);
+        r[RIGHT] = DOM.winWidth(node) + DOM.docScrollX(node);
+        r[BOTTOM] = (DOM.docScrollY(node) + DOM.winHeight(node));
+        r[LEFT] = DOM.docScrollX(node);
 
         return r;
     }
 });
+
 /**
  * Add style management functionality to DOM.
  * @module dom
@@ -1332,7 +1368,7 @@ var ComputedStyle = {
 
         if (property === OPACITY) {
             value = Y.DOM.CUSTOM_STYLES[OPACITY].get(el);        
-        } else if (!current || current.indexOf(PX) > -1) { // no need to convert
+        } else if (!current || (current.indexOf && current.indexOf(PX) > -1)) { // no need to convert
             value = current;
         } else if (Y.DOM.IE.COMPUTED[property]) { // use compute function
             value = Y.DOM.IE.COMPUTED[property](el, property);
@@ -1482,6 +1518,7 @@ if (!Y.config.win[GET_COMPUTED_STYLE]) {
 Y.namespace('DOM.IE');
 Y.DOM.IE.COMPUTED = IEComputed;
 Y.DOM.IE.ComputedStyle = ComputedStyle;
+
 
 /**
  * Provides helper methods for collecting and filtering DOM elements.
@@ -1785,10 +1822,7 @@ var Selector = {
             for (i = 0, len = token[ATTRIBUTES][LENGTH]; i < len; ++i) {
                 attribute = node.getAttribute(token[ATTRIBUTES][i][0], 2);
                 if (attribute === undefined) {
-                    attribute = node[token[ATTRIBUTES][i][0]];
-                    if (attribute === undefined) {
-                        return false;
-                    }
+                    return false;
                 }
                 if ( ops[token[ATTRIBUTES][i][1]] &&
                         !ops[token[ATTRIBUTES][i][1]](attribute, token[ATTRIBUTES][i][2])) {
@@ -2041,13 +2075,14 @@ var Selector = {
 
 };
 
-if (Y.UA.ie) { // rewrite class for IE (others use getAttribute('class')
+if (Y.UA.ie && Y.UA.ie < 8) { // rewrite class for IE (others use getAttribute('class')
     Selector.attrAliases['class'] = 'className';
     Selector.attrAliases['for'] = 'htmlFor';
 }
 
 Y.Selector = Selector;
 Y.Selector.patterns = patterns;
+
 
 /**
  * Add style management functionality to DOM.
@@ -2127,4 +2162,5 @@ Y.Color = {
 
 
 
-}, '3.0.0pr1' ,{skinnable:false});
+
+}, '3.0.0pr2' ,{skinnable:false});

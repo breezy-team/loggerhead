@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-ddm-base', function(Y) {
 
@@ -23,7 +23,7 @@ YUI.add('dd-ddm-base', function(Y) {
         DDMBase.superclass.constructor.apply(this, arguments);
     };
 
-    DDMBase.NAME = 'DragDropMgr';
+    DDMBase.NAME = 'dragDropMgr';
 
     DDMBase.ATTRS = {
         /**
@@ -133,7 +133,6 @@ YUI.add('dd-ddm-base', function(Y) {
         initializer: function() {
             Y.Node.get('document').on('mousemove', this._move, this, true);
             Y.Node.get('document').on('mouseup', this._end, this, true);
-            //Y.Event.Target.apply(this);
         },
         /**
         * @private
@@ -234,34 +233,20 @@ YUI.add('dd-ddm-base', function(Y) {
         * @return {Object} The gutter Object Literal.
         */
         cssSizestoObject: function(gutter) {
-            var p = gutter.split(' '),
-            g = {
-                top: 0,
-                bottom: 0,
-                right: 0,
-                left: 0
-            };
-            if (p.length) {
-                g.top = parseInt(p[0], 10);
-                if (p[1]) {
-                    g.right = parseInt(p[1], 10);
-                } else {
-                    g.right = g.top;
-                }
-                if (p[2]) {
-                    g.bottom = parseInt(p[2], 10);
-                } else {
-                    g.bottom = g.top;
-                }
-                if (p[3]) {
-                    g.left = parseInt(p[3], 10);
-                } else if (p[1]) {
-                    g.left = g.right;
-                } else {
-                    g.left = g.top;
-                }
+            var x = gutter.split(' ');
+                
+            switch (x.length) {
+                case 1: x[1] = x[2] = x[3] = x[0]; break;
+                case 2: x[2] = x[0]; x[3] = x[1]; break;
+                case 3: x[3] = x[1]; break;
             }
-            return g;
+
+            return {
+                top   : parseInt(x[0],10),
+                right : parseInt(x[1],10),
+                bottom: parseInt(x[2],10),
+                left  : parseInt(x[3],10)
+            };
         },
         /**
         * @method getDrag
@@ -288,7 +273,7 @@ YUI.add('dd-ddm-base', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['node', 'base'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['node', 'base'], skinnable:false});
 YUI.add('dd-ddm', function(Y) {
 
     /**
@@ -394,9 +379,8 @@ YUI.add('dd-ddm', function(Y) {
             this._pg.on('mousemove', this._move, this, true);
             
             
-            //TODO
-            Y.Event.addListener(window, 'resize', this._pg_size, this, true);
-            Y.Event.addListener(window, 'scroll', this._pg_size, this, true);
+            Y.on('resize', this._pg_size, window, this, true);
+            Y.on('scroll', this._pg_size, window, this, true);
         }   
     }, true);
 
@@ -404,7 +388,7 @@ YUI.add('dd-ddm', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm-base'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm-base'], skinnable:false});
 YUI.add('dd-ddm-drop', function(Y) {
 
     /**
@@ -666,23 +650,26 @@ YUI.add('dd-ddm-drop', function(Y) {
         */
         _deactivateTargets: function() {
             var other = [],
-                activeDrag = this.activeDrag;
+                activeDrag = this.activeDrag,
+                activeDrop = this.activeDrop;
             
             //TODO why is this check so hard??
-            if (activeDrag && !Y.Lang.isNull(this.activeDrop) && this.otherDrops[this.activeDrop]) {
+            if (activeDrag && activeDrop && this.otherDrops[activeDrop]) {
                 if (!activeDrag.get('dragMode')) {
                     //TODO otherDrops -- private..
                     other = this.otherDrops;
-                    delete other[this.activeDrop];
+                    delete other[activeDrop];
                 } else {
                     var tmp = this.getBestMatch(this.otherDrops, true);
-                    this.activeDrop = tmp[0];
+                    activeDrop = tmp[0];
                     other = tmp[1];
                 }
                 activeDrag.get('node').removeClass(this.CSS_PREFIX + '-drag-over')
-                this.activeDrop.fire('drop:hit', { drag: activeDrag, drop: this.activeDrop, others: other });
-                activeDrag.fire('drag:drophit', { drag: activeDrag,  drop: this.activeDrop, others: other });
-            } else if (this.activeDrag) {
+                if (activeDrop) {
+                    activeDrop.fire('drop:hit', { drag: activeDrag, drop: activeDrop, others: other });
+                    activeDrag.fire('drag:drophit', { drag: activeDrag,  drop: activeDrop, others: other });
+                }
+            } else if (activeDrag) {
                 activeDrag.get('node').removeClass(this.CSS_PREFIX + '-drag-over')
                 activeDrag.fire('drag:dropmiss', { pageX: activeDrag.lastXY[0], pageY: activeDrag.lastXY[1] });
             } else {
@@ -797,7 +784,7 @@ YUI.add('dd-ddm-drop', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm'], skinnable:false});
 YUI.add('dd-drag', function(Y) {
 
     /**
@@ -819,6 +806,7 @@ YUI.add('dd-drag', function(Y) {
         OFFSET_WIDTH = 'offsetWidth',        
         MOUSE_UP = 'mouseup',
         MOUSE_DOWN = 'mousedown',
+        DRAG_START = 'dragstart',
         /**
         * @event drag:mouseDown
         * @description Handles the mousedown DOM event, checks to see if you have a valid handle then starts the drag timers.
@@ -923,6 +911,7 @@ YUI.add('dd-drag', function(Y) {
 
         DDM._regDrag(this);
     };
+
     Drag.NAME = 'drag';
 
     Drag.ATTRS = {
@@ -933,9 +922,11 @@ YUI.add('dd-drag', function(Y) {
         */
         node: {
             set: function(node) {
-                var n = Y.Node.get(node);
+                var n = Y.get(node);
                 if (!n) {
                     Y.fail('DD.Drag: Invalid Node Given: ' + node);
+                } else {
+                    n = n.item(0);
                 }
                 return n;
             }
@@ -1041,6 +1032,9 @@ YUI.add('dd-drag', function(Y) {
         dragging: {
             value: false
         },
+        parent: {
+            value: false
+        },
         /**
         * @attribute target
         * @description This attribute only works if the dd-drop module has been loaded. It will make this node a drop target as well as draggable.
@@ -1105,6 +1099,15 @@ YUI.add('dd-drag', function(Y) {
                 }
                 return g;
             }
+        },
+        /**
+        * @attribute bubbles
+        * @description Controls the default bubble parent for this Drag instance. Default: Y.DD.DDM. Set to false to disable bubbling.
+        * @type Object
+        */
+        bubbles: {
+            writeOnce: true,
+            value: Y.DD.DDM
         }
     };
 
@@ -1158,6 +1161,7 @@ YUI.add('dd-drag', function(Y) {
                     if (!Y.Lang.isObject(config)) {
                         config = {};
                     }
+                    config.bubbles = this.get('bubbles');
                     config.node = this.get(NODE);
                     this.target = new Y.DD.Drop(config);
                 }
@@ -1211,7 +1215,10 @@ YUI.add('dd-drag', function(Y) {
                     queuable: true
                 });
             }, this);
-            this.addTarget(DDM);
+
+            if (this.get('bubbles')) {
+                this.addTarget(this.get('bubbles'));
+            }
             
            
         },
@@ -1302,6 +1309,7 @@ YUI.add('dd-drag', function(Y) {
         * @type {Array}
         */
         lastXY: null,
+        realXY: null,
         /**
         * @property mouseXY
         * @description The XY coords of the mousemove
@@ -1325,6 +1333,14 @@ YUI.add('dd-drag', function(Y) {
             if (DDM.activeDrag) {
                 DDM._end();
             }
+        },
+        /** 
+        * @private
+        * @method _fixDragStart
+        * @description The function we use as the ondragstart handler when we start a drag in Internet Explorer. This keeps IE from blowing up on images as drag handles.
+        */
+        _fixDragStart: function(e) {
+            e.preventDefault();
         },
         /** 
         * @private
@@ -1412,7 +1428,7 @@ YUI.add('dd-drag', function(Y) {
                 Y.each(this._handles, function(i, n) {
                     if (Y.Lang.isString(n)) {
                         //Am I this or am I inside this
-                        if (tar.test(n + ', ' + n + ' *')) {
+                        if (tar.test(n + ', ' + n + ' *') && !hTest) {
                             hTest = n;
                             r = true;
                         }
@@ -1437,9 +1453,11 @@ YUI.add('dd-drag', function(Y) {
             }
             if (r) {
                 if (hTest) {
-                    var els = ev.currentTarget.queryAll(hTest);
+                    var els = ev.currentTarget.queryAll(hTest),
+                        set = false;
                     els.each(function(n, i) {
-                        if (n.contains(tar) || n.compareTo(tar)) {
+                        if ((n.contains(tar) || n.compareTo(tar)) && !set) {
+                            set = true;
                             this.set('activeHandle', els.item(i));
                         }
                     }, this);
@@ -1460,6 +1478,7 @@ YUI.add('dd-drag', function(Y) {
             
             this.nodeXY = this.get(NODE).getXY();
             this.lastXY = this.nodeXY;
+            this.realXY = this.nodeXY;
 
             if (this.get('offsetNode')) {
                 this.deltaXY = [(this.startXY[0] - this.nodeXY[0]), (this.startXY[1] - this.nodeXY[1])];
@@ -1520,7 +1539,8 @@ YUI.add('dd-drag', function(Y) {
         */
         removeInvalid: function(str) {
             if (this._invalids[str]) {
-                delete this._handles[str];
+                this._invalids[str] = null;
+                delete this._invalids[str];
                 this.fire(EV_REMOVE_INVALID, { handle: str });
             }
             return this;
@@ -1556,7 +1576,7 @@ YUI.add('dd-drag', function(Y) {
             }
             
 
-            this._invalids = this._invalidsDefault;
+            this._invalids = Y.clone(this._invalidsDefault, true);
 
             this._createEvents();
             
@@ -1576,6 +1596,7 @@ YUI.add('dd-drag', function(Y) {
             node.addClass(DDM.CSS_PREFIX + '-draggable');
             node.on(MOUSE_DOWN, this._handleMouseDownEvent, this, true);
             node.on(MOUSE_UP, this._handleMouseUp, this, true);
+            node.on(DRAG_START, this._fixDragStart, this, true);
         },
         /**
         * @private
@@ -1587,6 +1608,7 @@ YUI.add('dd-drag', function(Y) {
             node.removeClass(DDM.CSS_PREFIX + '-draggable');
             node.detach(MOUSE_DOWN, this._handleMouseDownEvent, this, true);
             node.detach(MOUSE_UP, this._handleMouseUp, this, true);
+            node.detach(DRAG_START, this._fixDragStart, this, true);
         },
         /**
         * @method start
@@ -1660,11 +1682,13 @@ YUI.add('dd-drag', function(Y) {
         _moveNode: function(eXY, noFire) {
             var xy = this._align(eXY), diffXY = [], diffXY2 = [];
 
+            //This will probably kill your machine ;)
             diffXY[0] = (xy[0] - this.lastXY[0]);
             diffXY[1] = (xy[1] - this.lastXY[1]);
 
             diffXY2[0] = (xy[0] - this.nodeXY[0]);
             diffXY2[1] = (xy[1] - this.nodeXY[1]);
+
 
             if (this.get('move')) {
                 if (Y.UA.opera) {
@@ -1672,6 +1696,7 @@ YUI.add('dd-drag', function(Y) {
                 } else {
                     DDM.setXY(this.get(DRAG_NODE), diffXY);
                 }
+                this.realXY = xy;
             }
 
             this.region = {
@@ -1679,8 +1704,8 @@ YUI.add('dd-drag', function(Y) {
                 '1': xy[1],
                 area: 0,
                 top: xy[1],
-                right: xy[0] + this.get(NODE).get(OFFSET_WIDTH),
-                bottom: xy[1] + this.get(NODE).get(OFFSET_HEIGHT),
+                right: xy[0] + this.get(DRAG_NODE).get(OFFSET_WIDTH),
+                bottom: xy[1] + this.get(DRAG_NODE).get(OFFSET_HEIGHT),
                 left: xy[0]
             };
 
@@ -1757,7 +1782,7 @@ YUI.add('dd-drag', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm-base'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm-base'], skinnable:false});
 YUI.add('dd-proxy', function(Y) {
 
     /**
@@ -1807,7 +1832,6 @@ YUI.add('dd-proxy', function(Y) {
         * @type Boolean
         */
         proxy: {
-            writeOnce: true,
             value: false
         },        
         /**
@@ -1900,6 +1924,8 @@ YUI.add('dd-proxy', function(Y) {
                     if (this.get(DRAG_NODE).compareTo(this.get(NODE))) {
                         this.set(DRAG_NODE, DDM._proxy);
                     }
+                } else {
+                    this.set(DRAG_NODE, this.get(NODE));
                 }
             }
             Proxy.superclass.start.apply(this);
@@ -1928,7 +1954,7 @@ YUI.add('dd-proxy', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm', 'dd-drag'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm', 'dd-drag'], skinnable:false});
 YUI.add('dd-constrain', function(Y) {
 
     /**
@@ -1939,7 +1965,7 @@ YUI.add('dd-constrain', function(Y) {
     /**
      * This class extends the dd-drag module to add the constraining methods to it. It supports constraining to a region, node or viewport. It also
      * supports tick based moves and XY axis constraints.
-     * @class DragConstained
+     * @class DragConstrained
      * @extends Drag
      * @constructor
      */
@@ -1954,7 +1980,7 @@ YUI.add('dd-constrain', function(Y) {
 
     };
     
-    C.NAME = 'DragConstrained';
+    C.NAME = 'dragConstrained';
 
     C.ATTRS = {
         /**
@@ -2104,7 +2130,7 @@ YUI.add('dd-constrain', function(Y) {
             var r = {};
             if (this.get('constrain2node')) {
                 if (!this._regionCache) {
-                    Y.Event.addListener('window', 'resize', this._cacheRegion, this);
+                    Y.on('resize', this._cacheRegion, this, true, window);
                     this._cacheRegion();
                 }
                 r = Y.clone(this._regionCache);
@@ -2143,22 +2169,22 @@ YUI.add('dd-constrain', function(Y) {
                 r = this.getRegion(),
                 oh = this.get(DRAG_NODE).get(OFFSET_HEIGHT),
                 ow = this.get(DRAG_NODE).get(OFFSET_WIDTH);
+            
+                if (oxy[1] > (r.bottom - oh)) {
+                    _xy[1] = (r.bottom - oh);
+                }
+                if (r.top > oxy[1]) {
+                    _xy[1] = r.top;
 
-            if (r.top > oxy[1]) {
-                oxy[1] = r.top;
+                }
+                if (oxy[0] > (r.right - ow)) {
+                    _xy[0] = (r.right - ow);
+                }
+                if (r.left > oxy[0]) {
+                    _xy[0] = r.left;
+                }
 
-            }
-            if (oxy[1] > (r.bottom - oh)) {
-                oxy[1] = (r.bottom - oh);
-            }
-            if (r.left > oxy[0]) {
-                oxy[0] = r.left;
-            }
-            if (oxy[0] > (r.right - ow)) {
-                oxy[0] = (r.right - ow);
-            }
-
-            return oxy;
+            return _xy;
         },
         /**
         * @method inRegion
@@ -2186,6 +2212,7 @@ YUI.add('dd-constrain', function(Y) {
         _align: function(xy) {
             var _xy = C.superclass._align.apply(this, arguments),
                 r = this.getRegion(true);
+
             if (this.get('stickX')) {
                 _xy[1] = (this.startXY[1] - this.deltaXY[1]);
             }
@@ -2307,7 +2334,7 @@ YUI.add('dd-constrain', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drag', 'dd-proxy'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-drag', 'dd-proxy'], skinnable:false});
 YUI.add('dd-plugin', function(Y) {
 
        /**
@@ -2320,9 +2347,9 @@ YUI.add('dd-plugin', function(Y) {
         * @class DragPlugin
         * @extends Drag
         * @constructor
+        * @namespace plugin
         */
 
-        Y.Plugin = Y.Plugin || {};
 
         var Drag = function(config) {
             config.node = config.owner;
@@ -2344,11 +2371,12 @@ YUI.add('dd-plugin', function(Y) {
 
 
         Y.extend(Drag, Y.DD.Drag);
-        Y.Plugin.Drag = Drag;
+        Y.namespace('plugin');
+        Y.plugin.Drag = Drag;
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drag'], skinnable:false, optional:['dd-constrain', 'dd-proxy']});
+}, '3.0.0pr2' ,{requires:['dd-drag'], skinnable:false, optional:['dd-constrain', 'dd-proxy']});
 YUI.add('dd-drop', function(Y) {
 
     /**
@@ -2467,7 +2495,17 @@ YUI.add('dd-drop', function(Y) {
                     this.get(NODE).removeClass(DDM.CSS_PREFIX + '-drop-locked');
                 }
             }
+        },
+        /**
+        * @attribute bubbles
+        * @description Controls the default bubble parent for this Drop instance. Default: Y.DD.DDM. Set to false to disable bubbling.
+        * @type Object
+        */
+        bubbles: {
+            writeOnce: true,
+            value: Y.DD.DDM
         }
+
     };
 
     Y.extend(Drop, Y.Base, {
@@ -2495,7 +2533,9 @@ YUI.add('dd-drop', function(Y) {
                 });
             }, this);
 
-            this.addTarget(DDM);
+            if (this.get('bubbles')) {
+                this.addTarget(this.get('bubbles'));
+            }
             
         },
         /**
@@ -2771,7 +2811,7 @@ YUI.add('dd-drop', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm-drop', 'dd-drag'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm-drop', 'dd-drag'], skinnable:false});
 YUI.add('dd-drop-plugin', function(Y) {
 
        /**
@@ -2784,9 +2824,9 @@ YUI.add('dd-drop-plugin', function(Y) {
         * @class DropPlugin
         * @extends Drop
         * @constructor
+        * @namespace plugin
         */
 
-        Y.Plugin = Y.Plugin || {};
 
         var Drop = function(config) {
             config.node = config.owner;
@@ -2808,12 +2848,13 @@ YUI.add('dd-drop-plugin', function(Y) {
 
 
         Y.extend(Drop, Y.DD.Drop);
-        Y.Plugin.Drop = Drop;
+        Y.namespace('plugin');
+        Y.plugin.Drop = Drop;
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drop'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-drop'], skinnable:false});
 
 
-YUI.add('dd', function(Y){}, '3.0.0pr1' ,{use:['dd-ddm-base', 'dd-ddm', 'dd-ddm-drop', 'dd-drag', 'dd-proxy', 'dd-constrain', 'dd-plugin', 'dd-drop', 'dd-drop-plugin'], skinnable:false});
+YUI.add('dd', function(Y){}, '3.0.0pr2' ,{use:['dd-ddm-base', 'dd-ddm', 'dd-ddm-drop', 'dd-drag', 'dd-proxy', 'dd-constrain', 'dd-plugin', 'dd-drop', 'dd-drop-plugin'], skinnable:false});
 
