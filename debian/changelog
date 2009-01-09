@@ -1,4 +1,4 @@
-loggerhead (1.10-1+systemyui) unstable; urgency=low
+loggerhead (1.10-2) unstable; urgency=low
 
   * Use the YUI library provided by libjs-yui.
 
