@@ -1,7 +1,7 @@
 loggerhead (1.10-2) unstable; urgency=low
 
   [ Roland Mas ]
-  * Use the YUI library provided by libjs-yui.
+  * Use the YUI library provided by libjs-yui. (Closes: #511286)
 
   [ Jelmer Vernooij ]
   * Use my debian.org address in Uploaders field.
