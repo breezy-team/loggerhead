@@ -28,6 +28,8 @@
     </h1>
 
     <div metal:fill-slot="content">
+        <tal:branch-info replace="structure python:branchinfo(branch)" />
+
         <p tal:condition="python:not change">
           No revisions!
         </p>

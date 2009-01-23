@@ -3,6 +3,8 @@ What's changed in loggerhead?
 
 dev [future]
 ---------------
+    - Loggerhead now serves bzr branches over HTTP and exposes the URL to
+      branch them. (Jonathan Lange)
 
 
 1.10 [22Dec2008]
