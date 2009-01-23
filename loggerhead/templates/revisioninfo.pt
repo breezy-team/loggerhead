@@ -1,4 +1,4 @@
-<div id="infoContainer" class="revision-info">
+<div class="infoContainer">
     <div id="infTxt">
         <div class="comiter" tal:content="python:util.hide_email(change.author)"></div>
         <div class="timer" tal:content="python:util.date_time(change.date)"></div>
