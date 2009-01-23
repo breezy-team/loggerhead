@@ -34,7 +34,9 @@
          </h1>
         </tal:block>
 
-       <div metal:fill-slot="content">
+        <div metal:fill-slot="content">
+          <tal:branch-info replace="structure python:branchinfo(branch)" />
+
            <!-- Something nicer-looking should be done with search -->
         <p tal:condition="search_failed">
           Sorry, no results found for your search.

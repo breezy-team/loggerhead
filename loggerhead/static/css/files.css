@@ -1,15 +1,4 @@
 /*Info Box*/
-.infoContainer {
-	width:900px;
-	padding:10px 10px 0px 10px;
-	margin:0px 0px 10px 0px;
-	color:#666;
-	background:#fcfcfc;
-	border:1px solid #b7b7b7;
-}
-#branch-info {
-    padding-bottom: 10px;
-}
 .information, .committer, .timer, .mfrom, .mto, .revid {
 	float:left;
 	margin:0px 10px 5px 0px;

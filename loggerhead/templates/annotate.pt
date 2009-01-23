@@ -28,6 +28,8 @@
     </h1>
 
     <div metal:fill-slot="content">
+      <tal:branch-info replace="structure python:branchinfo(branch)" />
+
         <ul id="submenuTabs">
             <li id="first">
                 <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
