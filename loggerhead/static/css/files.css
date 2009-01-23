@@ -7,6 +7,9 @@
 	background:#fcfcfc;
 	border:1px solid #b7b7b7;
 }
+#branch-info {
+    padding-bottom: 10px;
+}
 .information, .committer, .timer, .mfrom, .mto, .revid {
 	float:left;
 	margin:0px 10px 5px 0px;

@@ -43,6 +43,8 @@
 
           <tal:revision-info replace="structure python:revisioninfo(url, branch, change)" />
 
+          <tal:branch-info replace="structure python:branchinfo(branch)" />
+
           <table id="logentries">
             <tr class="logheader">
               <th class="summarycell"><a tal:attributes="href python:url(['/files', revid], sort='filename')">Filename</a></th>

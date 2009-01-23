@@ -70,6 +70,11 @@ class BranchWSGIApp(object):
         kw = util.get_context(**kw)
         return self.url(*args, **kw)
 
+    @property
+    def served_url(self):
+        """The URL that you can fetch this branch from."""
+        return self.url([])
+
     def static_url(self, path):
         return self._static_url_base + path
 

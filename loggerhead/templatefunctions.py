@@ -53,6 +53,11 @@ def revisioninfo(url, branch, entry, modified_file_link=None):
 
 
 @templatefunc
+def branchinfo(branch):
+    return _pt('branchinfo').expand(branch=branch, **templatefunctions)
+
+
+@templatefunc
 def collapse_button(group, name, branch, normal='block'):
     return _pt('collapse-button').expand(
         group=group, name=name, normal=normal, branch=branch,
