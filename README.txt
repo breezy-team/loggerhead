@@ -47,6 +47,15 @@ To run loggerhead as a linux daemon:
    b) on Sysvinit based systems like Centos or SuSE run:
       chkconfig --add loggerheadd
 
+
+LOGGERHEAD AS A BAZAAR PLUGIN
+-----------------------------
+
+This branch contains experimental support for using Loggerhead as a Bazaar
+plugin.  To use it, place the top-level Loggerhead directory (the one
+containing this file) at ``~/.bazaar/plugins/loggerhead``.
+
+
 USING A CONFIG FILE
 -------------------
 
