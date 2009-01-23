@@ -37,19 +37,25 @@ class cmd_serve(bzrlib.builtins.cmd_serve):
 
     takes_options = _original_command.takes_options + [
         Option('http',
-            help='Run an http (Loggerhead) server to browse code.')]
+            help='Run an http (Loggerhead) server to browse code, by default on port 9876.')]
 
     def run(self, *args, **kw):
         if 'http' in kw:
             # hack around loggerhead expecting to be loaded from the module
-            # "loggerhead"
+            # "loggerhead" - this may be wrong in some cases?
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
+
             from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
             from paste.httpexceptions import HTTPExceptionHandler
             from paste.httpserver import serve
             a = HTTPExceptionHandler(BranchesFromFileSystemRoot('.'))
-            serve(a, host='0.0.0.0', port='9876')
+            port = kw.get('port', '9876')
+            if ':' in port:
+                host, port = port.split(':')
+            else:
+                host = '0.0.0.0'
+            serve(a, host=host, port=port)
         else:
             super(cmd_serve, self).run(*args, **kw)
 
