@@ -22,7 +22,7 @@ import sys
 from optparse import OptionParser
 
 from paste import httpserver
-from paste.httpexceptions import HTTPExceptionHandler
+from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
 from loggerhead import __version__
@@ -116,8 +116,6 @@ def main(args):
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
     # setup_logging() #end
-    app = ErrorHandlerApp(app)
-    app = HTTPExceptionHandler(app)
     app = TransLogger(app, logger=logger)
     if options.profile:
         from loggerhead.middleware.profile import LSProfMiddleware
@@ -131,9 +129,23 @@ def main(args):
     try:
         from paste.deploy.config import PrefixMiddleware
     except ImportError:
-        pass
+        cant_proxy_correctly_message = (
+            'Unsupported configuration: PasteDeploy not available, but '
+            'loggerhead appears to be behind a proxy.')
+        def check_not_proxied(app):
+            def wrapped(environ, start_response):
+                if 'HTTP_X_FORWARDED_SERVER' in environ:
+                    exc = HTTPInternalServerError()
+                    exc.explanation = cant_proxy_correctly_message
+                    raise exc
+                return app(environ, start_response)
+            return wrapped
+        app = check_not_proxied(app)
     else:
         app = PrefixMiddleware(app, prefix=prefix)
+
+    app = ErrorHandlerApp(app)
+    app = HTTPExceptionHandler(app)
 
     if not options.user_port:
         port = '8080'
