@@ -20,6 +20,7 @@
 import logging
 import mimetypes
 import time
+import urllib
 
 from paste import httpexceptions
 from paste.request import path_info_pop
@@ -59,10 +60,12 @@ class DownloadUI (TemplatedBranchView):
                       path,
                       h.get_revno(revid),
                       len(content))
+        encoded_filename = urllib.quote(filename.encode('utf-8'))
         headers = [
             ('Content-Type', mime_type),
             ('Content-Length', len(content)),
-            ('Content-Disposition', 'attachment; filename="%s"' % filename),
+            ('Content-Disposition',
+             'attachment; filename*=utf-8\'\'%s' % encoded_filename),
             ]
         start_response('200 OK', headers)
         return [content]
