@@ -84,7 +84,7 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = '/'.join(args[1:])
+            path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
 
         vals = {
