@@ -1,11 +1,6 @@
 import cgi
-import os
-import tempfile
-import shutil
 import logging
 
-import bzrlib.bzrdir
-import bzrlib.osutils
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
 
@@ -88,7 +83,7 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
         res.mustcontain('No revisions!')
-    
+
     def test_inventory(self):
         app = self.setUpLoggerhead()
         res = app.get('/files')
