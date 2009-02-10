@@ -45,14 +45,17 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_filelist(self, inv, file_id, sort_type=None):
+    def get_filelist(self, inv, path, sort_type='filename'):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
-        """
 
+        @param inv: The inventory.
+        @param path: The path of a directory within the inventory.
+        @param sort_type: How to sort the results... XXX.
+        """
+        file_id = inv.path2id(path)
         dir_ie = inv[file_id]
-        path = inv.id2path(file_id)
         file_list = []
 
         revid_set = set()
@@ -81,14 +84,14 @@ class InventoryUI(TemplatedBranchView):
                 change=change_dict[revid])
             file_list.append(file)
 
-        if sort_type == 'filename' or sort_type is None:
+        if sort_type == 'filename':
             file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date)
 
-        # Always sort by kind to get directories first
+        # Always sort directories first.
         file_list.sort(key=lambda x: x.kind != 'directory')
 
         return file_list
