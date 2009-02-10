@@ -70,7 +70,7 @@ class InventoryUI(TemplatedBranchView):
             path = rev_tree.id2path(file_id)
 
         # Are we at the top of the tree
-        if path == '':
+        if path in ['/', '']:
             updir = None
         else:
             updir = dirname(path)[1:]
