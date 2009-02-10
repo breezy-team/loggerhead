@@ -22,8 +22,9 @@ import logging
 import posixpath
 import urllib
 
-from paste.httpexceptions import HTTPServerError
+from paste.httpexceptions import HTTPNotFound
 
+from bzrlib import errors
 from bzrlib.revision import is_null as is_null_rev
 
 from loggerhead import util
@@ -35,8 +36,7 @@ log = logging.getLogger("loggerhead.controllers")
 
 def dirname(path):
     if path is not None:
-        while path.endswith('/'):
-            path = path[:-1]
+        path = path.rstrip('/')
         path = urllib.quote(posixpath.dirname(path))
     return path
 
@@ -99,9 +99,8 @@ class InventoryUI(TemplatedBranchView):
 
         try:
             rev_tree = history._branch.repository.revision_tree(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
+        except errors.NoSuchRevision:
+            raise HTTPNotFound()
 
         file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)
