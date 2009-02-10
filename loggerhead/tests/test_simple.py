@@ -115,3 +115,9 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
         res.mustcontain('No revisions!')
+    
+    def test_inventory(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/files')
+        res.mustcontain('myfilename')
+
