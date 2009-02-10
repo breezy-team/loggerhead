@@ -1,22 +1,24 @@
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.history import History
 from loggerhead.tests.test_simple import BasicTests
 
 
 class TestInventoryUI(BasicTests):
 
+    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+        tree = self.make_branch_and_tree('.')
+        self.build_tree(shape)
+        tree.smart_add([])
+        tree.commit('')
+        tree.branch.lock_read()
+        self.addCleanup(tree.branch.unlock)
+        branch_app = BranchWSGIApp(tree.branch)
+        return tree.branch, InventoryUI(branch_app, branch_app.get_history)
+
     def test_get_filelist(self):
 
-        self.tree = self.make_branch_and_tree('.')
-        self.build_tree_contents(
-            [('filename', '')])
-        self.tree.add('filename')
-        self.tree.commit('')
-        self.tree.branch.lock_read()
-        self.addCleanup(self.tree.branch.unlock)
-        inv_ui = InventoryUI(
-            BranchWSGIApp(self.tree.branch), lambda : History(self.tree.branch, {}))
-        inv = self.tree.branch.repository.get_inventory(self.tree.branch.last_revision())
+        bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
+            ['filename'])
+        inv = bzrbranch.repository.get_inventory(bzrbranch.last_revision())
         self.assertEqual(1, len(inv_ui.get_filelist(inv, '')))
 
