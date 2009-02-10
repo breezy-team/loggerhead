@@ -12,11 +12,7 @@ class TestCornerCases(BasicTests):
         The commit adds a file called 'myfilename' containing the string
         'foo'.
         """
-        f = open(os.path.join(self.bzrbranch, filename), 'w')
-        try:
-            f.write("foo")
-        finally:
-            f.close()
+        self.build_tree_contents([(filename, 'foo')])
         self.tree.add(filename)
         self.tree.commit(message=commit_msg)
 
@@ -30,7 +26,7 @@ class TestCornerCases(BasicTests):
         self.addFileAndCommit('myfilename', msg)
 
         # Make a commit that changes the execute bit of 'myfilename'.
-        os.chmod(os.path.join(self.bzrbranch, 'myfilename'), 0755)
+        os.chmod('myfilename', 0755)
         newrevid = self.tree.commit(message='make something executable')
 
         # Check that it didn't break things.

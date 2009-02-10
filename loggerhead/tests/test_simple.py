@@ -6,6 +6,7 @@ import logging
 
 import bzrlib.bzrdir
 import bzrlib.osutils
+from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
 
 from loggerhead.apps.branch import BranchWSGIApp
@@ -20,44 +21,19 @@ def test_config_root():
     res.mustcontain('loggerhead branches')
 
 
-class BasicTests(object):
-
-    # setup_method and teardown_method are so i can run the tests with
-    # py.test and take advantage of the error reporting.
-
-    def setup_method(self, meth):
-        self.setUp()
-
-    def teardown_method(self, meth):
-        self.tearDown()
+class BasicTests(TestCaseWithTransport):
 
     def setUp(self):
-        logging.basicConfig(level=logging.DEBUG)
-        self.bzrbranch = None
-        self.old_bzrhome = None
+        TestCaseWithTransport.setUp(self)
+        logging.basicConfig(level=logging.ERROR)
+        logging.getLogger('bzr').setLevel(logging.CRITICAL)
 
     def createBranch(self):
-        self.old_bzrhome = bzrlib.osutils.set_or_unset_env('BZR_HOME', '')
-        self.bzrbranch = tempfile.mkdtemp()
-        self.branch = bzrlib.bzrdir.BzrDir.create_branch_convenience(
-            self.bzrbranch, force_new_tree=True)
-        self.tree = self.branch.bzrdir.open_workingtree()
-
-    config_template = """
-    [project]
-        [[branch]]
-            branch_name = 'branch'
-            folder = '%(branch)s'
-    """
+        self.tree = self.make_branch_and_tree('.')
 
     def setUpLoggerhead(self):
-        app = TestApp(BranchWSGIApp(self.branch, '').app)
+        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
         return app
-
-    def tearDown(self):
-        if self.bzrbranch is not None:
-            shutil.rmtree(self.bzrbranch)
-        bzrlib.osutils.set_or_unset_env('BZR_HOME', self.old_bzrhome)
 
 
 class TestWithSimpleTree(BasicTests):
@@ -66,13 +42,10 @@ class TestWithSimpleTree(BasicTests):
         BasicTests.setUp(self)
         self.createBranch()
 
-        f = open(os.path.join(self.bzrbranch, 'myfilename'), 'w')
         self.filecontents = ('some\nmultiline\ndata\n'
                              'with<htmlspecialchars\n')
-        try:
-            f.write(self.filecontents)
-        finally:
-            f.close()
+        self.build_tree_contents(
+            [('myfilename', self.filecontents)])
         self.tree.add('myfilename')
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
@@ -115,3 +88,9 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
         res.mustcontain('No revisions!')
+
+    def test_inventory(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/files')
+        res.mustcontain('No revisions!')
+
