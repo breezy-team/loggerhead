@@ -115,6 +115,7 @@ def main():
         def app(environ, start_response, orig=app):
             environ['SCRIPT_NAME'] = path
             environ['HTTP_HOST'] = netloc
+            environ['wsgi.url_scheme'] = scheme
             return orig(environ, start_response)
 
     try:
