@@ -12,6 +12,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""Just a simple container to turn this into a python package."""
+"""A simple container to turn this into a python package.
+
+We also check the versions of some dependencies.
+"""
+
+import pkg_resources
+
 __version__ = '1.10'
 required_bzrlib = (1, 6)
+
+pkg_resources.get_distribution('Paste>=1.6')
+try:
+    pkg_resources.get_distribution('PasteDeploy>=1.3')
+except pkg_resources.DistributionNotFound:
+    # No paste.deploy is OK, but an old paste.deploy is bad.
+    pass
