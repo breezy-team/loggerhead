@@ -50,7 +50,7 @@ class InventoryUI(TemplatedBranchView):
         revid = self.get_revid()
 
         try:
-            inv = history.get_inventory(revid)
+            rev_tree = history._branch.repository.revision_tree(revid)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -62,22 +62,15 @@ class InventoryUI(TemplatedBranchView):
         # no navbar for revisions
         navigation = util.Container()
 
-        change = history.get_changes([ revid ])[0]
-        # add parent & merge-point branch-nick info, in case it's useful
-        history.get_branch_nicks([ change ])
-
         if path is not None:
             if not path.startswith('/'):
                 path = '/' + path
             file_id = history.get_file_id(revid, path)
         else:
-            path = inv.id2path(file_id)
-
-        if file_id is None:
-            file_id = inv.root.file_id
+            path = rev_tree.id2path(file_id)
 
         # Are we at the top of the tree
-        if inv.is_root(file_id):
+        if path == '':
             updir = None
         else:
             updir = dirname(path)[1:]
@@ -89,11 +82,6 @@ class InventoryUI(TemplatedBranchView):
                 'files')
 
         if not is_null_rev(revid):
-            try:
-                inv = history.get_inventory(revid)
-            except:
-                self.log.exception('Exception fetching changes')
-                raise HTTPServerError('Could not fetch changes')
 
             change = history.get_changes([ revid ])[0]
             # If we're looking at the tip, use head: in the URL instead
@@ -105,16 +93,18 @@ class InventoryUI(TemplatedBranchView):
             history.get_branch_nicks([ change ])
 
             # Create breadcrumb trail for the path within the branch
-            branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
-            filelist = history.get_filelist(inv, file_id, sort_type)
+            branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
+            if file_id is None:
+                file_id = rev_tree.inventory.root.file_id
+            filelist = history.get_filelist(rev_tree.inventory, file_id, sort_type)
         else:
             inv = None
-            file_id = None
             start_revid = None
             sort_type = None
             change = None
             path = "/"
             updir = None
+            revno_url = 'head:'
             branch_breadcrumbs = []
             filelist = []
 
@@ -124,7 +114,6 @@ class InventoryUI(TemplatedBranchView):
             'revid': revid,
             'revno_url': revno_url,
             'change': change,
-            'file_id': file_id,
             'path': path,
             'updir': updir,
             'filelist': filelist,

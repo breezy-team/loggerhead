@@ -23,6 +23,10 @@ def test_config_root():
 
 class BasicTests(TestCaseWithTransport):
 
+    def setUp(self):
+        TestCaseWithTransport.setUp(self)
+        logging.basicConfig(level=logging.ERROR)
+        logging.getLogger('bzr').setLevel(logging.CRITICAL)
 
     def createBranch(self):
         self.tree = self.make_branch_and_tree('.')
@@ -88,5 +92,5 @@ class TestEmptyBranch(BasicTests):
     def test_inventory(self):
         app = self.setUpLoggerhead()
         res = app.get('/files')
-        res.mustcontain('myfilename')
+        res.mustcontain('No revisions!')
 
