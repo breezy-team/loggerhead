@@ -76,7 +76,7 @@ class InventoryUI(TemplatedBranchView):
 
             file = util.Container(
                 filename=filename, executable=entry.executable,
-                kind=entry.kind, pathname=pathname, absolutepath=absolutepath,
+                kind=entry.kind, absolutepath=absolutepath,
                 file_id=entry.file_id, size=entry.text_size, revid=revid,
                 change=change_dict[revid])
             file_list.append(file)
