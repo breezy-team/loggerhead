@@ -869,11 +869,6 @@ delta.renamed:
         # Always sort by kind to get directories first
         file_list.sort(key=lambda x: x.kind != 'directory')
 
-        parity = 0
-        for file in file_list:
-            file.parity = parity
-            parity ^= 1
-
         return file_list
 
     def annotate_file(self, file_id, revid):
