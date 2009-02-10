@@ -45,6 +45,54 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
+    def get_filelist(self, inv, file_id, sort_type=None):
+        """
+        return the list of all files (and their attributes) within a given
+        path subtree.
+        """
+
+        dir_ie = inv[file_id]
+        path = inv.id2path(file_id)
+        file_list = []
+
+        revid_set = set()
+
+        for filename, entry in dir_ie.children.iteritems():
+            revid_set.add(entry.revision)
+
+        change_dict = {}
+        for change in self._history.get_changes(list(revid_set)):
+            change_dict[change.revid] = change
+
+        for filename, entry in dir_ie.children.iteritems():
+            pathname = filename
+            if entry.kind == 'directory':
+                pathname += '/'
+            if path == '':
+                absolutepath = pathname
+            else:
+                absolutepath = urllib.quote(path + '/' + pathname)
+            revid = entry.revision
+
+            file = util.Container(
+                filename=filename, executable=entry.executable,
+                kind=entry.kind, pathname=pathname, absolutepath=absolutepath,
+                file_id=entry.file_id, size=entry.text_size, revid=revid,
+                change=change_dict[revid])
+            file_list.append(file)
+
+        if sort_type == 'filename' or sort_type is None:
+            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
+        elif sort_type == 'size':
+            file_list.sort(key=lambda x: x.size)
+        elif sort_type == 'date':
+            file_list.sort(key=lambda x: x.change.date)
+
+        # Always sort by kind to get directories first
+        file_list.sort(key=lambda x: x.kind != 'directory')
+
+        return file_list
+
     def get_values(self, path, kwargs, headers):
         history = self._history
         revid = self.get_revid()
@@ -96,7 +144,7 @@ class InventoryUI(TemplatedBranchView):
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
             if file_id is None:
                 file_id = rev_tree.inventory.root.file_id
-            filelist = history.get_filelist(rev_tree.inventory, file_id, sort_type)
+            filelist = self.get_filelist(rev_tree.inventory, file_id, sort_type)
         else:
             inv = None
             start_revid = None

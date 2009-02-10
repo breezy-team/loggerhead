@@ -823,54 +823,6 @@ delta.renamed:
             for m in change.changes.modified:
                 m.sbs_chunks = _make_side_by_side(m.chunks)
 
-    def get_filelist(self, inv, file_id, sort_type=None):
-        """
-        return the list of all files (and their attributes) within a given
-        path subtree.
-        """
-
-        dir_ie = inv[file_id]
-        path = inv.id2path(file_id)
-        file_list = []
-
-        revid_set = set()
-
-        for filename, entry in dir_ie.children.iteritems():
-            revid_set.add(entry.revision)
-
-        change_dict = {}
-        for change in self.get_changes(list(revid_set)):
-            change_dict[change.revid] = change
-
-        for filename, entry in dir_ie.children.iteritems():
-            pathname = filename
-            if entry.kind == 'directory':
-                pathname += '/'
-            if path == '':
-                absolutepath = pathname
-            else:
-                absolutepath = urllib.quote(path + '/' + pathname)
-            revid = entry.revision
-
-            file = util.Container(
-                filename=filename, executable=entry.executable,
-                kind=entry.kind, pathname=pathname, absolutepath=absolutepath,
-                file_id=entry.file_id, size=entry.text_size, revid=revid,
-                change=change_dict[revid])
-            file_list.append(file)
-
-        if sort_type == 'filename' or sort_type is None:
-            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
-        elif sort_type == 'size':
-            file_list.sort(key=lambda x: x.size)
-        elif sort_type == 'date':
-            file_list.sort(key=lambda x: x.change.date)
-
-        # Always sort by kind to get directories first
-        file_list.sort(key=lambda x: x.kind != 'directory')
-
-        return file_list
-
     def annotate_file(self, file_id, revid):
         z = time.time()
         lineno = 1
