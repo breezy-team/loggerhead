@@ -144,9 +144,7 @@ class InventoryUI(TemplatedBranchView):
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
-            if file_id is None:
-                file_id = rev_tree.inventory.root.file_id
-            filelist = self.get_filelist(rev_tree.inventory, file_id, sort_type)
+            filelist = self.get_filelist(rev_tree.inventory, path, sort_type)
         else:
             inv = None
             start_revid = None
