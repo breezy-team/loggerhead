@@ -144,8 +144,8 @@ def main(args):
     else:
         app = PrefixMiddleware(app, prefix=prefix)
 
-    app = ErrorHandlerApp(app)
     app = HTTPExceptionHandler(app)
+    app = ErrorHandlerApp(app)
 
     if not options.user_port:
         port = '8080'
