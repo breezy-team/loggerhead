@@ -101,10 +101,9 @@ class InventoryUI(TemplatedBranchView):
         branch = history._branch
         try:
             revid = self.get_revid()
+            rev_tree = branch.repository.revision_tree(revid)
         except errors.NoSuchRevision:
             raise HTTPNotFound()
-
-        rev_tree = branch.repository.revision_tree(revid)
 
         file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)

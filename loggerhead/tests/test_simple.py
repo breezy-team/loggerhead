@@ -73,6 +73,7 @@ class TestWithSimpleTree(BasicTests):
     def test_inventory_bad_rev_404(self):
         app = self.setUpLoggerhead()
         res = app.get('/files/200', status=404)
+        res = app.get('/files/invalid-revid', status=404)
 
     def test_revision(self):
         app = self.setUpLoggerhead()
