@@ -69,7 +69,13 @@ class TestWithSimpleTree(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/files')
         res.mustcontain('myfilename')
+        res = app.get('/files/')
+        res.mustcontain('myfilename')
         res = app.get('/files/1')
+        res.mustcontain('myfilename')
+        res = app.get('/files/1/')
+        res.mustcontain('myfilename')
+        res = app.get('/files/1/?file_id=' + self.tree.path2id(''))
         res.mustcontain('myfilename')
 
     def test_inventory_bad_rev_404(self):
@@ -80,6 +86,7 @@ class TestWithSimpleTree(BasicTests):
     def test_inventory_bad_path_404(self):
         app = self.setUpLoggerhead()
         res = app.get('/files/1/hooha', status=404)
+        res = app.get('/files/1?file_id=dssadsada', status=404)
 
     def test_revision(self):
         app = self.setUpLoggerhead()

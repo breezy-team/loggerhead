@@ -117,13 +117,19 @@ class InventoryUI(TemplatedBranchView):
             if file_id is None:
                 raise HTTPNotFound()
         else:
-            path = rev_tree.id2path(file_id)
+            if file_id is None:
+                path = ''
+            else:
+                try:
+                    path = rev_tree.id2path(file_id)
+                except errors.NoSuchId:
+                    raise HTTPNotFound()
 
         # Are we at the top of the tree
         if path in ['/', '']:
             updir = None
         else:
-            updir = dirname(path)[1:]
+            updir = dirname(path)
 
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
