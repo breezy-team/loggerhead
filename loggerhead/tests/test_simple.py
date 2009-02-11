@@ -6,12 +6,14 @@ from bzrlib.util.configobj.configobj import ConfigObj
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
+from paste.httpexceptions import HTTPExceptionHandler
+
 
 
 def test_config_root():
     from loggerhead.apps.config import Root
     config = ConfigObj()
-    app = TestApp(Root(config))
+    app = TestApp(HTTPExceptionHandler(Root(config)))
     res = app.get('/')
     res.mustcontain('loggerhead branches')
 
@@ -27,7 +29,8 @@ class BasicTests(TestCaseWithTransport):
         self.tree = self.make_branch_and_tree('.')
 
     def setUpLoggerhead(self):
-        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
+        app = TestApp(
+            HTTPExceptionHandler(BranchWSGIApp(self.tree.branch, '').app))
         return app
 
 
@@ -66,6 +69,10 @@ class TestWithSimpleTree(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/files')
         res.mustcontain('myfilename')
+
+    def test_inventory_bad_rev_404(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/files/200', status=404)
 
     def test_revision(self):
         app = self.setUpLoggerhead()

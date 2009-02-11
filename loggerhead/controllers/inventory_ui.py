@@ -99,12 +99,12 @@ class InventoryUI(TemplatedBranchView):
     def get_values(self, path, kwargs, headers):
         history = self._history
         branch = history._branch
-        revid = self.get_revid()
-
         try:
-            rev_tree = branch.repository.revision_tree(revid)
+            revid = self.get_revid()
         except errors.NoSuchRevision:
             raise HTTPNotFound()
+
+        rev_tree = branch.repository.revision_tree(revid)
 
         file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)
@@ -115,6 +115,8 @@ class InventoryUI(TemplatedBranchView):
 
         if path is not None:
             file_id = rev_tree.path2id(path)
+            if file_id is None:
+                raise HTTPNotFound()
         else:
             path = rev_tree.id2path(file_id)
 
