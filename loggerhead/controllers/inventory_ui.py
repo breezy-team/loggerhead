@@ -152,9 +152,7 @@ class InventoryUI(TemplatedBranchView):
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
             filelist = self.get_filelist(rev_tree.inventory, path, sort_type)
         else:
-            inv = None
             start_revid = None
-            sort_type = None
             change = None
             path = "/"
             updir = None
