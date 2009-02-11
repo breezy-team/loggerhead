@@ -16,7 +16,6 @@ class TestInventoryUI(BasicTests):
         return tree.branch, InventoryUI(branch_app, branch_app.get_history)
 
     def test_get_filelist(self):
-
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
         inv = bzrbranch.repository.get_inventory(bzrbranch.last_revision())

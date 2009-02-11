@@ -98,10 +98,11 @@ class InventoryUI(TemplatedBranchView):
 
     def get_values(self, path, kwargs, headers):
         history = self._history
+        branch = history._branch
         revid = self.get_revid()
 
         try:
-            rev_tree = history._branch.repository.revision_tree(revid)
+            rev_tree = branch.repository.revision_tree(revid)
         except errors.NoSuchRevision:
             raise HTTPNotFound()
 
@@ -113,9 +114,7 @@ class InventoryUI(TemplatedBranchView):
         navigation = util.Container()
 
         if path is not None:
-            if not path.startswith('/'):
-                path = '/' + path
-            file_id = history.get_file_id(revid, path)
+            file_id = rev_tree.path2id(path)
         else:
             path = rev_tree.id2path(file_id)
 
@@ -135,7 +134,7 @@ class InventoryUI(TemplatedBranchView):
 
             change = history.get_changes([ revid ])[0]
             # If we're looking at the tip, use head: in the URL instead
-            if revid == history.last_revid:
+            if revid == branch.last_revision():
                 revno_url = 'head:'
             else:
                 revno_url = history.get_revno(revid)
@@ -165,7 +164,6 @@ class InventoryUI(TemplatedBranchView):
             'path': path,
             'updir': updir,
             'filelist': filelist,
-            'history': history,
             'posixpath': posixpath,
             'navigation': navigation,
             'url': self._branch.context_url,
