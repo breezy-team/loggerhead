@@ -69,11 +69,17 @@ class TestWithSimpleTree(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/files')
         res.mustcontain('myfilename')
+        res = app.get('/files/1')
+        res.mustcontain('myfilename')
 
     def test_inventory_bad_rev_404(self):
         app = self.setUpLoggerhead()
         res = app.get('/files/200', status=404)
         res = app.get('/files/invalid-revid', status=404)
+
+    def test_inventory_bad_path_404(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/files/1/hooha', status=404)
 
     def test_revision(self):
         app = self.setUpLoggerhead()
