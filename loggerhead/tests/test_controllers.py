@@ -28,10 +28,11 @@ class TestRevisionUI(BasicTests):
 
     def make_bzrbranch_and_revision_ui_for_tree_shapes(self, shape1, shape2):
         tree = self.make_branch_and_tree('.')
-        self.build_tree(shape1)
+        self.build_tree_contents(shape1)
+        tree.smart_add([])
         tree.commit('')
         tree.smart_add([])
-        self.build_tree(shape2)
+        self.build_tree_contents(shape2)
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
