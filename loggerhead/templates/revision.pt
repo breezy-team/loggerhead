@@ -88,22 +88,20 @@
 
       <div metal:fill-slot="content">
         <div class="diff"
-             tal:condition="change/changes/modified"
-             tal:define="uniqs python:{}">
+             tal:condition="change/changes/modified">
           <!-- ! side-by-side diff -->
           <tal:block repeat="item change/changes/modified">
 
-              <tal:u define="u python:util.uniq(uniqs, item.file_id)">
-                      <div class="diffBox"><img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
-                                                                title python:branch.static_url('/static/images/treeCollapsed.png');
-                                                                alt python:branch.static_url('/static/images/treeExpanded.png')"
-                                                                class="expand_diff" />
-                                           <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
-                                                              id string:${item/filename}-s;
-                                                              title string:Annotate ${item/filename}"
-                                              tal:content="item/filename"></a></div>
-               <div id="psuedotable" class="diffinfo">
-               <tal:block repeat="chunk item/sbs_chunks">
+            <div class="diffBox"><img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
+                                                      title python:branch.static_url('/static/images/treeCollapsed.png');
+                                                      alt python:branch.static_url('/static/images/treeExpanded.png')"
+                                      class="expand_diff" />
+              <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
+                                 id string:${item/filename}-s;
+                                 title string:Annotate ${item/filename}"
+                 tal:content="item/filename"></a></div>
+            <div class="psuedotable diffinfo">
+              <tal:block repeat="chunk item/sbs_chunks">
 
                 <tal:block condition="not:repeat/chunk/start">
                  <div class="lineNumber separate"></div>
@@ -114,22 +112,21 @@
                 </tal:block>
 
                 <tal:block repeat="line chunk/diff">
-                    <div id="pseudorow">
-                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.old_lineno)" /></div>
-                    <div tal:attributes="class string:lineCode ${line/old_type}">
-                      <tal:block replace="structure python:util.fill_div(line.old_line)" />
-                    </div>
+                  <div class="pseudorow">
+                    <div class="lineNumber"
+                         tal:content="structure python:util.fill_div(line.old_lineno)"></div>
+                    <div tal:attributes="class string:lineCode ${line/old_type}"
+                         tal:content="structure python:util.fill_div(line.old_line)"></div>
 
-                    <div class="lineNumber"><tal:block replace="structure python:util.fill_div(line.new_lineno)" /></div>
-                    <div tal:attributes="class string:lineCode ${line/new_type}">
-                      <tal:block replace="structure python:util.fill_div(line.new_line)" />
-                    </div>
+                    <div class="lineNumber"
+                         tal:content="structure python:util.fill_div(line.new_lineno)"></div>
+                    <div tal:attributes="class string:lineCode ${line/new_type}"
+                         tal:content="structure python:util.fill_div(line.new_line)"></div>
                     <div class="clear"><!-- --></div>
                     </div>
                    </tal:block>
                  </tal:block>
                  </div>
-              </tal:u>
             </tal:block>
         </div>
 
