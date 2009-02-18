@@ -115,7 +115,6 @@ ul#list-files li.desc {
 .blank {
     float: left;
     padding:0px 1%;
-    background:#f8fbfd;
 }
 .unified .code { width:89%; }
 .sbs .code, .blank { width:43%; }
