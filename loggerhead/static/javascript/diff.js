@@ -90,15 +90,22 @@ YUI().use(
     }
 
     function toggle_unified_sbs(event) {
+      event.preventDefault();
       if (unified) {
         Y.all(".pseudotable").each(make_sbs);
         unified = false;
+        Y.get("#toggle_unified_sbs").set('textContent', "Show unified diffs");
       }
-      else { // unified -> sbs
+      else {
         Y.all(".pseudotable").each(make_unified);
         unified = true;
+        Y.get("#toggle_unified_sbs").set('textContent', "Show diffs side-by-side");
       }
     }
 
     Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
+    Y.on(
+      "domready", function () {
+        Y.all(".show_if_js").removeClass("show_if_js");
+      });
   });

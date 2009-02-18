@@ -82,6 +82,7 @@
                  alt="collapse all" /> collapse all</a>
         </p>
         <!-- Table -->
+        <p class="expand show_if_js"><a id="toggle_unified_sbs" href="#">Show diffs side-by-side</a></p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" alt="added" /> added</p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/deleteCode.gif')" alt="removed" /> removed</p>
         <div class="clear"><!-- --></div>
@@ -89,7 +90,6 @@
       </tal:block>
 
       <div metal:fill-slot="content">
-        <input type="button" id="toggle_unified_sbs" value="Do it!" />
         <div class="diff"
              tal:repeat="item change/changes/modified">
 
