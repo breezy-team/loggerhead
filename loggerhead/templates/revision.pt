@@ -9,6 +9,8 @@
       <metal:block fill-slot="header_extras">
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:branch.static_url('/static/css/diff.css')"/>
+        <script type="text/javascript"
+                tal:attributes="src python:branch.static_url('/static/javascript/diff.js')"></script>
       </metal:block>
     </head>
 
@@ -87,6 +89,7 @@
       </tal:block>
 
       <div metal:fill-slot="content">
+        <input type="button" onclick="doit();" value="Do it!" />
         <div class="diff"
              tal:repeat="item change/changes/modified">
 
@@ -101,7 +104,7 @@
                tal:content="item/filename">
             </a>
           </div>
-          <div class="psuedotable diffinfo unified"
+          <div class="pseudotable diffinfo unified"
                tal:repeat="chunk item/chunks">
 
             <tal:block condition="not:repeat/chunk/start">

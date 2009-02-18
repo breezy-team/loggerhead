@@ -118,7 +118,7 @@ ul#list-files li.desc {
     background:#f8fbfd;
 }
 .unified .code { width:89%; }
-.sbs .code { width:44.5%; }
+.sbs .code { width:40%; }
 .code.insert {
     background:#92ed92;
 }

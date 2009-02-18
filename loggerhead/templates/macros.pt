@@ -19,6 +19,9 @@
       <script type="text/javascript"
               tal:attributes="src
               python:branch.static_url('/static/javascript/yui/build/yui/yui-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/node/node-min.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
