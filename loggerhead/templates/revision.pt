@@ -89,7 +89,7 @@
       </tal:block>
 
       <div metal:fill-slot="content">
-        <input type="button" onclick="doit();" value="Do it!" />
+        <input type="button" id="toggle_unified_sbs" value="Do it!" />
         <div class="diff"
              tal:repeat="item change/changes/modified">
 
