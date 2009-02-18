@@ -101,25 +101,25 @@
                tal:content="item/filename">
             </a>
           </div>
-          <div class="psuedotable diffinfo"
+          <div class="psuedotable diffinfo unified"
                tal:repeat="chunk item/chunks">
 
             <tal:block condition="not:repeat/chunk/start">
-              <div class="lineNumber separate"></div>
-              <div class="lineCode separate"></div>
-              <div class="lineNumber separate"></div>
-              <div class="lineCode separate"></div>
-              <div class="clear"><!-- --></div>
+              <div class="pseudorow context">
+                <div class="lineNumber separate"></div>
+                <div class="lineNumber second separate"></div>
+                <div class="code separate"></div>
+                <div class="clear"><!-- --></div>
+              </div>
             </tal:block>
 
-            <div class="pseudorow"
-                 tal:repeat="line chunk/diff">
+            <div tal:repeat="line chunk/diff"
+                 tal:attributes="class string:pseudorow ${line/type}">
               <div class="lineNumber"
                    tal:content="structure python:util.fill_div(line.old_lineno)"></div>
-
-              <div class="lineNumber"
+              <div class="lineNumber second"
                    tal:content="structure python:util.fill_div(line.new_lineno)"></div>
-              <div tal:attributes="class string:lineCode-u ${line/type}"
+              <div tal:attributes="class string:code ${line/type}"
                    tal:content="structure python:util.fill_div(util.html_clean(line.line))"></div>
               <div class="clear"><!-- --></div>
             </div>
