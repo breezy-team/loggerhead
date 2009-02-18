@@ -114,12 +114,11 @@ ul#list-files li.desc {
 }
 .blank {
     float: left;
-    width: 40%;
     padding:0px 1%;
     background:#f8fbfd;
 }
 .unified .code { width:89%; }
-.sbs .code { width:40%; }
+.sbs .code, .blank { width:43%; }
 .code.insert {
     background:#92ed92;
 }

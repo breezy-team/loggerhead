@@ -4,7 +4,6 @@ function doit(event) {
   if (unified) {
     Y.all(".pseudotable").each(
       function (chunk) {
-        chunk.replaceClass('unified', 'sbs');
         var added = [];
         var removed = [];
         function clear_bufs(before) {
@@ -51,6 +50,7 @@ function doit(event) {
             }
           });
         clear_bufs(null);
+        chunk.replaceClass('unified', 'sbs');
       });
     unified = false;
   }
