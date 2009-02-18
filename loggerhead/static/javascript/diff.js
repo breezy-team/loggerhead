@@ -9,26 +9,28 @@ function doit(event) {
         var removed = [];
         function clear_bufs(before) {
           if (!added.length && !removed.length) return;
+          Y.log('hai');
           var common = Math.min(added.length, removed.length);
           for (var i = 0; i < common; i++) {
             var a = added[i];
             var r = removed[i];
             a.ancestor().removeChild(a);
-            r.removeChild(r.query('.linenumber.second'));
-            r.insertBefore(a.query('.linenumber.second'), r.query('.clear'));
+            r.removeChild(r.query('.lineNumber.second'));
+            r.insertBefore(a.query('.lineNumber.second'), r.query('.clear'));
             r.insertBefore(a.query('.code.insert'), r.query('.clear'));
             r.replaceClass('removed', 'both');
           }
+          Y.log('hai');
           if (added.length > removed.length) {
-            for (var j = common; i < added.length; i++) {
+            for (var j = common; j < added.length; j++) {
               a = added[j];
-              a.insertBefore(a.create('<div class="blank">&nbsp;</div>'), a.query('.linenumber.second'));
+              a.insertBefore(a.create('<div class="blank">&nbsp;</div>'), a.query('.lineNumber.second'));
             }
           }
           else if (added.length < removed.length) {
-            for (var j = common; i < removed.length; i++) {
+            for (var j = common; j < removed.length; j++) {
               r = removed[j];
-              r.insertBefore(r.query('.code.delete'), r.query('.linenumber.second'));
+              r.insertBefore(r.query('.code.delete'), r.query('.lineNumber.second'));
               r.insertBefore(r.create('<div class="blank">&nbsp;</div>'), r.query('.clear'));
             }
           }
@@ -69,12 +71,12 @@ function doit(event) {
               line.removeChild(line.query('.code'));
             }
             else if (line.hasClass("both")) {
-              var added_line = line.create('<div class="pseudorow insert"><div class="linenumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
+              var added_line = line.create('<div class="pseudorow insert"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
               var clear = added_line.query('.clear');
-              added_line.insertBefore(line.query('.linenumber.second'), clear);
+              added_line.insertBefore(line.query('.lineNumber.second'), clear);
               added_line.insertBefore(line.query('.code.insert'), clear);
               pending_added[pending_added.length] = added_line;
-              line.insertBefore(line.create('<div class="linenumber second">&nbsp;</div>'), line.query('.code.delete'));
+              line.insertBefore(line.create('<div class="lineNumber second">&nbsp;</div>'), line.query('.code.delete'));
               line.replaceClass("both", "delete");
             }
             else if (line.hasClass("insert")) {
@@ -83,7 +85,7 @@ function doit(event) {
             }
             else if (line.hasClass("delete")) {
               line.removeChild(line.query('.blank'));
-              line.insertBefore(line.query('.linenumber.second'), line.query('.code.delete'));
+              line.insertBefore(line.query('.lineNumber.second'), line.query('.code.delete'));
             }
           });
         flush_adds(null);

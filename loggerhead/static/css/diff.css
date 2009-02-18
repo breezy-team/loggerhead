@@ -114,7 +114,8 @@ ul#list-files li.desc {
 }
 .blank {
     float: left;
-    width: 48%;
+    width: 40%;
+    padding:0px 1%;
     background:#f8fbfd;
 }
 .unified .code { width:89%; }
