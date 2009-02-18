@@ -115,6 +115,14 @@ ul#list-files li.desc {
 	background:#fff;
 	font:normal 12px/1.8 monospace;
 }
+.lineCode-u {
+	float:left;
+	width:88%;
+	padding:0px 1%; 
+	color:#000;
+	background:#fff;
+	font:normal 12px/1.8 monospace;
+}
 .delete, .insert {
 	display:block;
 	background:#ff7f7f;
