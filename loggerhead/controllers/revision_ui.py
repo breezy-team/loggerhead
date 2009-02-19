@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import re
 from StringIO import StringIO
 
 import bzrlib.diff
@@ -31,64 +30,6 @@ from loggerhead.history import rich_filename
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
 
-def _process_side_by_side_buffers(line_list, delete_list, insert_list):
-    while len(delete_list) < len(insert_list):
-        delete_list.append((None, '', 'context'))
-    while len(insert_list) < len(delete_list):
-        insert_list.append((None, '', 'context'))
-    while len(delete_list) > 0:
-        d = delete_list.pop(0)
-        i = insert_list.pop(0)
-        line_list.append(util.Container(old_lineno=d[0], new_lineno=i[0],
-                                        old_line=d[1], new_line=i[1],
-                                        old_type=d[2], new_type=i[2]))
-
-
-def _make_side_by_side(chunk_list):
-    """
-    turn a normal unified-style diff (post-processed by parse_delta) into a
-    side-by-side diff structure.  the new structure is::
-
-        chunks: list(
-            diff: list(
-                old_lineno: int,
-                new_lineno: int,
-                old_line: str,
-                new_line: str,
-                type: str('context' or 'changed'),
-            )
-        )
-    """
-    out_chunk_list = []
-    for chunk in chunk_list:
-        line_list = []
-        wrap_char = '<wbr/>'
-        delete_list, insert_list = [], []
-        for line in chunk.diff:
-            # Add <wbr/> every X characters so we can wrap properly
-            wrap_line = re.findall(r'.{%d}|.+$' % 78, line.line)
-            wrap_lines = [util.html_clean(_line) for _line in wrap_line]
-            wrapped_line = wrap_char.join(wrap_lines)
-
-            if line.type == 'context':
-                if len(delete_list) or len(insert_list):
-                    _process_side_by_side_buffers(line_list, delete_list,
-                                                  insert_list)
-                    delete_list, insert_list = [], []
-                line_list.append(util.Container(old_lineno=line.old_lineno,
-                                                new_lineno=line.new_lineno,
-                                                old_line=wrapped_line,
-                                                new_line=wrapped_line,
-                                                old_type=line.type,
-                                                new_type=line.type))
-            elif line.type == 'delete':
-                delete_list.append((line.old_lineno, wrapped_line, line.type))
-            elif line.type == 'insert':
-                insert_list.append((line.new_lineno, wrapped_line, line.type))
-        if len(delete_list) or len(insert_list):
-            _process_side_by_side_buffers(line_list, delete_list, insert_list)
-        out_chunk_list.append(util.Container(diff=line_list))
-    return out_chunk_list
 
 class RevisionUI(TemplatedBranchView):
 
@@ -209,13 +150,6 @@ class RevisionUI(TemplatedBranchView):
 
         return change
 
-    @staticmethod
-    def add_side_by_side(changes):
-        # FIXME: this is a rotten API.
-        for change in changes:
-            for m in change.changes.modified:
-                m.sbs_chunks = _make_side_by_side(m.chunks)
-
     def get_values(self, path, kwargs, headers):
         h = self._history
         revid = self.get_revid()
@@ -253,12 +187,6 @@ class RevisionUI(TemplatedBranchView):
             for chunk in file.chunks:
                 line_count += len(chunk.diff)
 
-        # let's make side-by-side diff be the default
-        # FIXME: not currently in use. Should be
-        side_by_side = not kwargs.get('unified', False)
-        if side_by_side:
-            self.add_side_by_side([change])
-
         # Directory Breadcrumbs
         directory_breadcrumbs = (
             util.directory_breadcrumbs(
@@ -278,7 +206,6 @@ class RevisionUI(TemplatedBranchView):
             'query': query,
             'remember': remember,
             'compare_revid': compare_revid,
-            'side_by_side': side_by_side,
             'url': self._branch.context_url,
             'line_count': line_count,
             'line_count_limit': line_count_limit,

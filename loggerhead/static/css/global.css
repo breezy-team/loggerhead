@@ -337,3 +337,6 @@ ul#pages {
 	background:#fcfcfc;
 	border:1px solid #b7b7b7;
 }
+.show_if_js {
+    display: none;
+}
