@@ -28,10 +28,9 @@ class BasicTests(TestCaseWithTransport):
     def createBranch(self):
         self.tree = self.make_branch_and_tree('.')
 
-    def setUpLoggerhead(self):
-        app = TestApp(
-            HTTPExceptionHandler(BranchWSGIApp(self.tree.branch, '').app))
-        return app
+    def setUpLoggerhead(self, **kw):
+        branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
+        return TestApp(HTTPExceptionHandler(branch_app))
 
 
 class TestWithSimpleTree(BasicTests):
@@ -53,6 +52,15 @@ class TestWithSimpleTree(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
         res.mustcontain(cgi.escape(self.msg))
+
+    def test_changes_branch_from(self):
+        app = self.setUpLoggerhead(served_url="lp:loggerhead")
+        res = app.get('/changes')
+        self.failUnless("To get this branch, use:" in res)
+        self.failUnless("lp:loggerhead" in res)
+        app = self.setUpLoggerhead(served_url=None)
+        res = app.get('/changes')
+        self.failIf("To get this branch, use:" in res)
 
     def test_changes_search(self):
         app = self.setUpLoggerhead()

@@ -54,7 +54,10 @@ def revisioninfo(url, branch, entry, modified_file_link=None):
 
 @templatefunc
 def branchinfo(branch):
-    return _pt('branchinfo').expand(branch=branch, **templatefunctions)
+    if branch.served_url is not None:
+        return _pt('branchinfo').expand(branch=branch, **templatefunctions)
+    else:
+        return ''
 
 
 @templatefunc
