@@ -92,10 +92,10 @@ YUI().use(
                                    this.close_content = close_content;
                                    this.expand_icon   = expand_icon;
 
-                                   var expander = new Fx.Slide(this.item, { duration: 200 } );
+                                   //var expander = new Fx.Slide(this.item, { duration: 200 } );
                                    if (!this.is_open)
                                    {
-                                     expander.hide();
+                                     //expander.hide();
                                      if ($defined(this.expand_icon))
                                      {
                                        this.expand_icon.set('src',this.expand_icon.title);
@@ -113,8 +113,8 @@ YUI().use(
                                  open: function()
                                  {
                                    this.item.setStyle('display', 'block');
-                                   var expander = this.item.get('slide');
-                                   expander.slideIn();
+                                   //var expander = this.item.get('slide');
+                                   //expander.slideIn();
                                    if ($defined(this.open_content))
                                    {
                                      for (var i=0;i<this.open_content.length;++i)
@@ -140,8 +140,9 @@ YUI().use(
 
                                  close: function()
                                  {
-                                   var expander = this.item.get('slide');
-                                   expander.slideOut();
+                                   this.item.setStyle('display', 'none');
+                                   //var expander = this.item.get('slide');
+                                   //expander.slideOut();
                                    if ($defined(this.open_content))
                                    {
                                      for (var i=0;i<this.open_content.length;++i)
