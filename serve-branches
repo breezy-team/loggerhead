@@ -21,6 +21,8 @@ import sys
 
 from optparse import OptionParser
 
+from bzrlib.plugin import load_plugins
+
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
@@ -156,6 +158,8 @@ def main(args):
         host = '0.0.0.0'
     else:
         host = options.user_host
+
+    load_plugins()
 
     httpserver.serve(app, host=host, port=port)
 
