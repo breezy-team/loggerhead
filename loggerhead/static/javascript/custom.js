@@ -249,4 +249,20 @@ YUI().use(
                           });
     }
 
+    Y.on(
+      'click',
+      function (event) {
+        event.preventDefault();
+        toggle_expand_all_revisionview('open');
+      },
+       '#expand_all a'
+    );
+    Y.on(
+      'click',
+      function (event) {
+        event.preventDefault();
+        toggle_expand_all_revisionview('close');
+      },
+      '#collapse_all a'
+    );
   });

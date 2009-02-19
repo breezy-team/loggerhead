@@ -73,11 +73,11 @@
         </tal:we-are-comparing>
 
         <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
-        <p class="expand" id="expand_all" style="display:none;"><a tal:attributes="href string:javascript:toggle_expand_all_revisionview('open')">
+        <p class="expand" id="expand_all" style="display:none;"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                  alt="expand all" /> expand all</a>
         </p>
-        <p class="expand" id="collapse_all"><a tal:attributes="href string:javascript:toggle_expand_all_revisionview('close')">
+        <p class="expand show_if_js" id="collapse_all"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
                  alt="collapse all" /> collapse all</a>
         </p>
