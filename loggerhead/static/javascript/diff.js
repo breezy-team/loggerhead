@@ -104,6 +104,51 @@ YUI().use(
     }
 
     Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
+
+    function toggle_expand_all_revisionview(action)
+    {
+      $$('.diffBox').each(function(item, i)
+                          {
+    	                    var colapsable = item.colapsable;
+                            if(action == 'close')
+                            {
+                              $('expand_all').setStyle('display','block');
+                              $('collapse_all').setStyle('display','none');
+                              colapsable.close();
+                            }
+                            else if(action == 'open')
+                            {
+                              $('expand_all').setStyle('display','none');
+                              $('collapse_all').setStyle('display','block');
+                              colapsable.open();
+                            }
+                          });
+    }
+
+    Y.on(
+      'click',
+      function (event) {
+        event.preventDefault();
+        toggle_expand_all_revisionview('open');
+      },
+       '#expand_all a'
+    );
+
+    Y.on(
+      'click',
+      function (event) {
+        event.preventDefault();
+        toggle_expand_all_revisionview('close');
+      },
+      '#collapse_all a'
+    );
+
+  });
+
+
+YUI().use(
+  "node",
+  function (Y) {
     Y.on(
       "domready", function () {
         Y.all(".show_if_js").removeClass("show_if_js");
