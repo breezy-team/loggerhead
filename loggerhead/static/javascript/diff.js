@@ -107,22 +107,23 @@ YUI().use(
 
     function toggle_expand_all_revisionview(action)
     {
-      $$('.diffBox').each(function(item, i)
-                          {
-    	                    var colapsable = item.colapsable;
-                            if(action == 'close')
-                            {
-                              $('expand_all').setStyle('display','block');
-                              $('collapse_all').setStyle('display','none');
-                              colapsable.close();
-                            }
-                            else if(action == 'open')
-                            {
-                              $('expand_all').setStyle('display','none');
-                              $('collapse_all').setStyle('display','block');
-                              colapsable.open();
-                            }
-                          });
+      Y.all('.diffBox').each(
+        function(item, i)
+        {
+    	  var colapsable = item.colapsable;
+          if(action == 'close')
+          {
+            $('expand_all').setStyle('display','block');
+            $('collapse_all').setStyle('display','none');
+            colapsable.close();
+          }
+          else if(action == 'open')
+          {
+            $('expand_all').setStyle('display','none');
+            $('collapse_all').setStyle('display','block');
+            colapsable.open();
+          }
+        });
     }
 
     Y.on(
@@ -131,7 +132,7 @@ YUI().use(
         event.preventDefault();
         toggle_expand_all_revisionview('open');
       },
-       '#expand_all a'
+      '#expand_all a'
     );
 
     Y.on(
@@ -143,14 +144,17 @@ YUI().use(
       '#collapse_all a'
     );
 
-  });
-
-
-YUI().use(
-  "node",
-  function (Y) {
     Y.on(
       "domready", function () {
         Y.all(".show_if_js").removeClass("show_if_js");
+        Y.all('.diffBox').each(
+          function(item, i)
+          {
+            var item_slide = item.next('.diffinfo');
+            var expand_icon = item.query( '.expand_diff' );
+            var colapsable = new Colapsable(item_slide, expand_icon, null, null, true);
+            item.query( '.expand_diff' ).on('click', function(){colapsable.toggle();});
+            item.colapsable=colapsable;
+          });
       });
   });
