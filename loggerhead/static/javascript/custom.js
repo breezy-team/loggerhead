@@ -61,22 +61,22 @@ window.addEvent(
 
 function cool_search(response, query)
 {
-  var posicion = $('q').getPosition();
-  var size     = $('q').getSize();
-  var current_query = $('q').get('value');
+  var q = Y.get('#q');
+  var region = q.get('region');
+  var current_query = q.get('value');
   if (current_query == query)
   {
-    $('search_terms').set('html',response);
-    $('search_terms').setStyle('display','block');
-    $('search_terms').setStyle('position','absolute');
-    $('search_terms').setStyle('left',posicion.x);
-    $('search_terms').setStyle('top',posicion.y + size.y);
+    Y.get('#search_terms').set('innerHTML', response);
+    Y.get('#search_terms').setStyle('display', 'block');
+    Y.get('#search_terms').setStyle('position', 'absolute');
+    Y.get('#search_terms').setStyle('left', region.left);
+    Y.get('#search_terms').setStyle('top', region.bottom);
   }
 }
 
 function hide_search()
 {
-  hide_div = setTimeout("$('search_terms').setStyle('display','none')", 300);
+  setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
 }
 
 function Colapsable(item, expand_icon, open_content, close_content, is_open)

@@ -9,8 +9,6 @@
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-core.js')"></script>
-<!--    <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>-->
     <script type="text/javascript">
       var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
     </script>
