@@ -81,13 +81,8 @@ function hide_search()
 
 function Colapsable(item, expand_icon, open_content, close_content, is_open)
 {
-  this.is_open = false;
-  if ($defined(is_open))
-  {
-    this.is_open = is_open;
-  }
+  this.is_open = is_open;
   this.item = item;
-  item.set('colapsable',this);
   this.open_content  = open_content;
   this.close_content = close_content;
   this.expand_icon   = expand_icon;
@@ -95,18 +90,11 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
   //var expander = new Fx.Slide(this.item, { duration: 200 } );
   if (!this.is_open)
   {
-    //expander.hide();
-    if ($defined(this.expand_icon))
-    {
-      this.expand_icon.set('src',this.expand_icon.get('title'));
-    }
+    this.expand_icon.set('src',this.expand_icon.get('title'));
   }
   else
   {
-    if ($defined(this.expand_icon))
-    {
-      this.expand_icon.set('src',this.expand_icon.get('alt'));
-    }
+    this.expand_icon.set('src',this.expand_icon.get('alt'));
   }
 }
 
@@ -115,26 +103,17 @@ Colapsable.prototype.open = function()
   this.item.setStyle('display', 'block');
   //var expander = this.item.get('slide');
   //expander.slideIn();
-  if ($defined(this.open_content))
+  for (var i=0;i<this.open_content.length;++i)
   {
-    for (var i=0;i<this.open_content.length;++i)
-    {
-      this.open_content[i].setStyle('display','block');
-    }
+    this.open_content[i].setStyle('display','block');
   }
 
-  if ($defined(this.close_content))
+  for (var i=0;i<this.close_content.length;++i)
   {
-    for (var i=0;i<this.close_content.length;++i)
-    {
-      this.close_content[i].setStyle('display','none');
-    }
+    this.close_content[i].setStyle('display','none');
   }
 
-  if ($defined(this.expand_icon))
-  {
-    this.expand_icon.set('src',this.expand_icon.get('alt'));
-  }
+  this.expand_icon.set('src',this.expand_icon.get('alt'));
   this.is_open = true;
 };
 
@@ -143,25 +122,16 @@ Colapsable.prototype.close = function()
   this.item.setStyle('display', 'none');
   //var expander = this.item.get('slide');
   //expander.slideOut();
-  if ($defined(this.open_content))
+  for (var i=0;i<this.open_content.length;++i)
   {
-    for (var i=0;i<this.open_content.length;++i)
-    {
-      this.open_content[i].setStyle('display','none');
-    }
+    this.open_content[i].setStyle('display','none');
   }
 
-  if ($defined(this.close_content))
+  for (var i=0;i<this.close_content.length;++i)
   {
-    for (var i=0;i<this.close_content.length;++i)
-    {
-      this.close_content[i].setStyle('display','block');
-    }
+    this.close_content[i].setStyle('display','block');
   }
-  if ($defined(this.expand_icon))
-  {
-    this.expand_icon.set('src',this.expand_icon.get('title'));
-  }
+  this.expand_icon.set('src',this.expand_icon.get('title'));
   this.is_open = false;
 };
 

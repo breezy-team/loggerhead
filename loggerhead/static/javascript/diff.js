@@ -111,14 +111,14 @@ function toggle_expand_all_revisionview(action)
       var colapsable = item.colapsable;
       if(action == 'close')
       {
-        $('expand_all').setStyle('display','block');
-        $('collapse_all').setStyle('display','none');
+        Y.get('#expand_all').setStyle('display','block');
+        Y.get('#collapse_all').setStyle('display','none');
         colapsable.close();
       }
       else if(action == 'open')
       {
-        $('expand_all').setStyle('display','none');
-        $('collapse_all').setStyle('display','block');
+        Y.get('#expand_all').setStyle('display','none');
+        Y.get('#collapse_all').setStyle('display','block');
         colapsable.open();
       }
     });
@@ -150,7 +150,7 @@ Y.on(
       {
         var item_slide = item.next('.diffinfo');
         var expand_icon = item.query( '.expand_diff' );
-        var colapsable = new Colapsable(item_slide, expand_icon, null, null, true);
+        var colapsable = new Colapsable(item_slide, expand_icon, [], [], true);
         item.query( '.expand_diff' ).on('click', function(){colapsable.toggle();});
         item.colapsable=colapsable;
       });

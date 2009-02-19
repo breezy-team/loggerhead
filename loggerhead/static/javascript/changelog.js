@@ -55,7 +55,7 @@ Y.on(
         open_content.push(item.query('.long_description'));
         close_content.push(item.query('.short_description'));
         var expand_icon = item.query('.expand_icon');
-        var colapsable = new Colapsable(item_slide, expand_icon, open_content, close_content);
+        var colapsable = new Colapsable(item_slide, expand_icon, open_content, close_content, false);
 
         item.query('.expand_revisioninfo').on('click',function(){colapsable.toggle();});
         item.colapsable = colapsable;
