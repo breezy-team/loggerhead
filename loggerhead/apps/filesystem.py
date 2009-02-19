@@ -32,7 +32,7 @@ class BranchesFromFileSystemServer(object):
             is_root = False
         branch_app = BranchWSGIApp(
             branch, name, {'cachepath': sql_dir}, self.root.graph_cache,
-            is_root=is_root, served_url='lp:loggerhead')
+            is_root=is_root)
         return branch_app.app
 
     def app_for_non_branch(self, environ):
