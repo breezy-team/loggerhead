@@ -118,10 +118,16 @@ ul#list-files li.desc {
 }
 .unified .code { width:89%; }
 .sbs .code, .blank { width:43%; }
-.code.insert {
+.unified .insert .lineNumber.first {
+    background:#c9ffc9;
+}
+.unified .delete .lineNumber.second {
+    background:#ffbfbf;
+}
+.code.insert, .insert .lineNumber.second, .both .lineNumber.second {
     background:#92ed92;
 }
-.code.delete {
+.code.delete, .delete .lineNumber.first, .both .lineNumber.first {
     background:#ff7f7f;
 }
 .separate {
