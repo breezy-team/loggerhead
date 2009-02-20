@@ -46,6 +46,8 @@ Y.on(
   'domready',
   function()
   {
+    var revlogs = Y.all('.revision_log');
+    if (revlogs == null) return;
     Y.all('.revision_log').each(
       function(item, i)
       {
