@@ -340,3 +340,6 @@ ul#pages {
 .show_if_js {
     display: none;
 }
+.revision_log {
+    overflow: hidden;
+}

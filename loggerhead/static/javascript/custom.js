@@ -83,7 +83,12 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
   this.close_content = close_content;
   this.expand_icon   = expand_icon;
 
-  this.height = item.get('region').height;
+  if (this.is_open) {
+    this.height = item.get('region').height;
+  }
+  else {
+    this.height = null;
+  }
 
   //var expander = new Fx.Slide(this.item, { duration: 200 } );
   if (!this.is_open)
@@ -99,6 +104,11 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
 Colapsable.prototype.open = function()
 {
   this.item.setStyle('display', 'block');
+
+  if (this.height == null) {
+    this.height = this.item.get('region').height;
+  }
+
   var anim = new Y.Anim(
     {
       node: this.item,
