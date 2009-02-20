@@ -23,10 +23,13 @@ from loggerhead.history import History
 from loggerhead import util
 
 
+_DEFAULT = object()
+
 class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
-                 graph_cache=None, branch_link=None, is_root=False):
+                 graph_cache=None, branch_link=None, is_root=False,
+                 served_url=_DEFAULT):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -36,6 +39,7 @@ class BranchWSGIApp(object):
             graph_cache = bzrlib.lru_cache.LRUCache()
         self.graph_cache = graph_cache
         self.is_root = is_root
+        self.served_url = served_url
 
     def get_history(self):
         _history = History(self.branch, self.graph_cache)
@@ -70,11 +74,6 @@ class BranchWSGIApp(object):
         kw = util.get_context(**kw)
         return self.url(*args, **kw)
 
-    @property
-    def served_url(self):
-        """The URL that you can fetch this branch from."""
-        return self.url([])
-
     def static_url(self, path):
         return self._static_url_base + path
 
@@ -103,6 +102,8 @@ class BranchWSGIApp(object):
         if self._static_url_base is None:
             self._static_url_base = self._url_base
         self._environ = environ
+        if self.served_url is _DEFAULT:
+            self.served_url = self.url([])
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
