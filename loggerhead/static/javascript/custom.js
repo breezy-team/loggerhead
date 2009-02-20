@@ -1,10 +1,11 @@
-Y = YUI().use("node");
+Y = YUI().use("node", "io-base");
 
 var global_timeout_id = null;
 var global_search_request = null;
 
-window.addEvent(
-  'domready', function()
+Y.on(
+  'domready',
+  function()
   {
     var search_box = $('q');
     if ($defined(search_box))
@@ -32,41 +33,39 @@ window.addEvent(
           {
             url = global_path + 'search?query=' + query;
 
-            if ($defined(global_search_request))
+            if (!Y.Lang.isNull(global_search_request))
             {
-              global_search_request.cancel();
+              global_search_request.abort();
             }
-            global_search_request = new Request({'url':url,'method':'get','onComplete':function(response)
-                                                 {
-                                                   cool_search(response,query);
-                                                 }});
+            global_search_request = Y.io(
+              url,
+              {
+                on: {complete: cool_search},
+                arguments: [query]
+              }
+            );
 
-            global_search_request.send('');
             var posicion = search_box.getPosition();
             var size     = search_box.getSize();
 
-            $('search_terms').setStyle('position','absolute');
-            $('search_terms').setStyle('left',posicion.x);
-            $('search_terms').setStyle('top',posicion.y + size.y);
-            $('search_terms').setStyle('display','block');
-            $('search_terms').set('html','Loading...');
-
-            new Request({'url':url,'method':'get','onComplete':cool_search}).send('');
-
-
+            Y.get('#search_terms').setStyle('display', 'block');
+            Y.get('#search_terms').setStyle('position', 'absolute');
+            Y.get('#search_terms').setStyle('left', posicion.x);
+            Y.get('#search_terms').setStyle('top', posicion.y + size.y);
+            Y.get('#search_terms').set('innerHTML','Loading...');
           }
         });
     }
   });
 
-function cool_search(response, query)
+function cool_search(tid, response, query)
 {
   var q = Y.get('#q');
   var region = q.get('region');
   var current_query = q.get('value');
   if (current_query == query)
   {
-    Y.get('#search_terms').set('innerHTML', response);
+    Y.get('#search_terms').set('innerHTML', response.responseText);
     Y.get('#search_terms').setStyle('display', 'block');
     Y.get('#search_terms').setStyle('position', 'absolute');
     Y.get('#search_terms').setStyle('left', region.left);
