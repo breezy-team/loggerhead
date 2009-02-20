@@ -105,7 +105,9 @@ Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
 
 function toggle_expand_all_revisionview(action)
 {
-  Y.all('.diffBox').each(
+  var diffs = Y.all('.diffBox');
+  if (diffs == null) return;
+  diffs.each(
     function(item, i)
     {
       var colapsable = item.colapsable;
@@ -145,13 +147,15 @@ Y.on(
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
-    Y.all('.diffBox').each(
+    var diffs = Y.all('.diffBox');
+    if (diffs == null) return;
+    diffs.each(
       function(item, i)
       {
         var item_slide = item.next('.diffinfo');
         var expand_icon = item.query( '.expand_diff' );
         var colapsable = new Colapsable(item_slide, expand_icon, [], [], true);
-        item.query( '.expand_diff' ).on('click', function(){colapsable.toggle();});
+        item.query('.expand_diff').on('click', function(){colapsable.toggle();});
         item.colapsable=colapsable;
       });
   });

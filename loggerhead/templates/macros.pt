@@ -18,13 +18,22 @@
             python:branch.static_url('/static/javascript/yui/build/oop/oop-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src
-            python:branch.static_url('/static/javascript/yui/build/dom/dom-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src
             python:branch.static_url('/static/javascript/yui/build/event/event-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/attribute/attribute-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/base/base-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/dom/dom-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
             python:branch.static_url('/static/javascript/yui/build/node/node-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/anim/anim-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src
             python:branch.static_url('/static/javascript/yui/build/io/io-base-min.js')"></script>

@@ -1,4 +1,4 @@
-Y = YUI().use("node", "io-base");
+Y = YUI().use("node", "io-base", "anim");
 
 var global_timeout_id = null;
 var global_search_request = null;
@@ -83,6 +83,8 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
   this.close_content = close_content;
   this.expand_icon   = expand_icon;
 
+  this.height = item.get('region').height;
+
   //var expander = new Fx.Slide(this.item, { duration: 200 } );
   if (!this.is_open)
   {
@@ -97,8 +99,23 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
 Colapsable.prototype.open = function()
 {
   this.item.setStyle('display', 'block');
-  //var expander = this.item.get('slide');
-  //expander.slideIn();
+  var anim = new Y.Anim(
+    {
+      node: this.item,
+      from: {
+        height: 0
+      },
+      to: {
+        height: this.height
+      },
+      duration: 0.2
+    });
+  anim.on('end', this.openComplete, this);
+  anim.run();
+};
+
+Colapsable.prototype.openComplete = function()
+{
   for (var i=0;i<this.open_content.length;++i)
   {
     this.open_content[i].setStyle('display','block');
@@ -115,15 +132,31 @@ Colapsable.prototype.open = function()
 
 Colapsable.prototype.close = function()
 {
+  var item = this.item;
+  var anim = new Y.Anim(
+    {
+      node: this.item,
+      from: {
+        height: this.height
+      },
+      to: {
+        height: 0
+      },
+      duration: 0.2
+    });
+  anim.on("end", this.closeComplete, this);
+  anim.run();
+};
+
+Colapsable.prototype.closeComplete = function () {
   this.item.setStyle('display', 'none');
-  //var expander = this.item.get('slide');
-  //expander.slideOut();
-  for (var i=0;i<this.open_content.length;++i)
+  var i;
+  for (i=0;i<this.open_content.length;++i)
   {
     this.open_content[i].setStyle('display','none');
   }
 
-  for (var i=0;i<this.close_content.length;++i)
+  for (i=0;i<this.close_content.length;++i)
   {
     this.close_content[i].setStyle('display','block');
   }
