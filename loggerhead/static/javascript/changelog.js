@@ -1,6 +1,8 @@
 function toggle_expand_all(action)
 {
-  Y.all('.revision_log').each(
+  var revlogs = Y.all('.revision_log');
+  if (revlogs == null) return;
+  revlogs.each(
     function(item, i)
     {
       var collapsable = item.collapsable;
@@ -48,7 +50,7 @@ Y.on(
   {
     var revlogs = Y.all('.revision_log');
     if (revlogs == null) return;
-    Y.all('.revision_log').each(
+    revlogs.each(
       function(item, i)
       {
         var item_slide = item.query('.revisioninfo');
