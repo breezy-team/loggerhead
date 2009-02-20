@@ -75,7 +75,7 @@ function hide_search()
   setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
 }
 
-function Colapsable(item, expand_icon, open_content, close_content, is_open)
+function Collapsable(item, expand_icon, open_content, close_content, is_open)
 {
   this.is_open = is_open;
   this.item = item;
@@ -101,7 +101,7 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
   }
 }
 
-Colapsable.prototype.open = function()
+Collapsable.prototype.open = function()
 {
   if (this.height == null) {
     this.item.setStyle('position', 'absolute');
@@ -130,7 +130,7 @@ Colapsable.prototype.open = function()
   anim.run();
 };
 
-Colapsable.prototype.openComplete = function()
+Collapsable.prototype.openComplete = function()
 {
   for (var i=0;i<this.open_content.length;++i)
   {
@@ -146,7 +146,7 @@ Colapsable.prototype.openComplete = function()
   this.is_open = true;
 };
 
-Colapsable.prototype.close = function()
+Collapsable.prototype.close = function()
 {
   var item = this.item;
   var anim = new Y.Anim(
@@ -164,7 +164,7 @@ Colapsable.prototype.close = function()
   anim.run();
 };
 
-Colapsable.prototype.closeComplete = function () {
+Collapsable.prototype.closeComplete = function () {
   this.item.setStyle('display', 'none');
   var i;
   for (i=0;i<this.open_content.length;++i)
@@ -180,12 +180,12 @@ Colapsable.prototype.closeComplete = function () {
   this.is_open = false;
 };
 
-Colapsable.prototype.isOpen = function()
+Collapsable.prototype.isOpen = function()
 {
   return this.is_open;
 };
 
-Colapsable.prototype.toggle = function()
+Collapsable.prototype.toggle = function()
 {
   if (this.isOpen())
   {

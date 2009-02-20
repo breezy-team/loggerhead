@@ -110,18 +110,18 @@ function toggle_expand_all_revisionview(action)
   diffs.each(
     function(item, i)
     {
-      var colapsable = item.colapsable;
+      var collapsable = item.collapsable;
       if(action == 'close')
       {
         Y.get('#expand_all').setStyle('display','block');
         Y.get('#collapse_all').setStyle('display','none');
-        colapsable.close();
+        collapsable.close();
       }
       else if(action == 'open')
       {
         Y.get('#expand_all').setStyle('display','none');
         Y.get('#collapse_all').setStyle('display','block');
-        colapsable.open();
+        collapsable.open();
       }
     });
 }
@@ -154,8 +154,8 @@ Y.on(
       {
         var item_slide = item.next('.diffinfo');
         var expand_icon = item.query( '.expand_diff' );
-        var colapsable = new Colapsable(item_slide, expand_icon, [], [], true);
-        item.query('.expand_diff').on('click', function(){colapsable.toggle();});
-        item.colapsable=colapsable;
+        var collapsable = new Collapsable(item_slide, expand_icon, [], [], true);
+        item.query('.expand_diff').on('click', function(){collapsable.toggle();});
+        item.collapsable=collapsable;
       });
   });
