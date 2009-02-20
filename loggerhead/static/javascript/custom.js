@@ -103,10 +103,14 @@ function Colapsable(item, expand_icon, open_content, close_content, is_open)
 
 Colapsable.prototype.open = function()
 {
-  this.item.setStyle('display', 'block');
-
   if (this.height == null) {
+    this.item.setStyle('position', 'absolute');
+    this.item.setStyle('top', -1000000000);
+    this.item.setStyle('display', 'block');
     this.height = this.item.get('region').height;
+    this.item.setStyle('display', 'none');
+    this.item.setStyle('position', null);
+    this.item.setStyle('top', null);
   }
 
   var anim = new Y.Anim(
@@ -121,6 +125,8 @@ Colapsable.prototype.open = function()
       duration: 0.2
     });
   anim.on('end', this.openComplete, this);
+  this.item.setStyle('height', 0);
+  this.item.setStyle('display', 'block');
   anim.run();
 };
 
