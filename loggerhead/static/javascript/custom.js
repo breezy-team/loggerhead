@@ -7,52 +7,49 @@ Y.on(
   'domready',
   function()
   {
-    var search_box = $('q');
-    if ($defined(search_box))
+    var search_box = Y.get('#q');
+    if (!Y.Lang.isNull(search_box))
     {
-      search_box.removeEvents();
-      search_box.addEvents(
+      function get_suggestions() {
+        var query = search_box.get('value');
+        var url = global_path + 'search?query=' + query;
+
+        if (!Y.Lang.isNull(global_search_request))
         {
-          keyup: function()
+          global_search_request.abort();
+        }
+        global_search_request = Y.io(
+          url,
           {
-            if($('q').value == '')
-            {
-              $('search_terms').setStyle('display','none');
-            }
-            else
-            {
-              if (null != global_timeout_id)
-              {
-                clearTimeout(global_timeout_id);
-              }
-              global_timeout_id = setTimeout('$("q").fireEvent("search",$("q").value)',200);
-            }
-          },
+            on: {complete: cool_search},
+            arguments: [query]
+          }
+        );
 
-          search: function(query)
+        var region = search_box.get('region');
+        var current_query = search_box.get('value');
+
+        Y.get('#search_terms').setStyle('display', 'block');
+        Y.get('#search_terms').setStyle('position', 'absolute');
+        Y.get('#search_terms').setStyle('left', region.left);
+        Y.get('#search_terms').setStyle('top', region.bottom);
+        Y.get('#search_terms').set('innerHTML','Loading...');
+      }
+      search_box.on(
+        "keyup",
+        function(event)
+        {
+          if(search_box.get('value') == '')
           {
-            url = global_path + 'search?query=' + query;
-
-            if (!Y.Lang.isNull(global_search_request))
+            Y.get('#search_terms').setStyle('display', 'none');
+          }
+          else
+          {
+            if (null != global_timeout_id)
             {
-              global_search_request.abort();
+              clearTimeout(global_timeout_id);
             }
-            global_search_request = Y.io(
-              url,
-              {
-                on: {complete: cool_search},
-                arguments: [query]
-              }
-            );
-
-            var posicion = search_box.getPosition();
-            var size     = search_box.getSize();
-
-            Y.get('#search_terms').setStyle('display', 'block');
-            Y.get('#search_terms').setStyle('position', 'absolute');
-            Y.get('#search_terms').setStyle('left', posicion.x);
-            Y.get('#search_terms').setStyle('top', posicion.y + size.y);
-            Y.get('#search_terms').set('innerHTML','Loading...');
+            global_timeout_id = setTimeout(get_suggestions, 200);
           }
         });
     }
