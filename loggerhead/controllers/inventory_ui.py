@@ -45,7 +45,7 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_filelist(self, inv, path, sort_type='filename'):
+    def get_filelist(self, inv, path, sort_type):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
@@ -107,7 +107,7 @@ class InventoryUI(TemplatedBranchView):
 
         file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)
-        sort_type = kwargs.get('sort', None)
+        sort_type = kwargs.get('sort', 'filename')
 
         # no navbar for revisions
         navigation = util.Container()
