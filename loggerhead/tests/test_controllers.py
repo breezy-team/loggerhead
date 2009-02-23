@@ -21,7 +21,7 @@ class TestInventoryUI(BasicTests):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
         inv = bzrbranch.repository.get_inventory(bzrbranch.last_revision())
-        self.assertEqual(1, len(inv_ui.get_filelist(inv, '')))
+        self.assertEqual(1, len(inv_ui.get_filelist(inv, '', 'filename')))
 
 
 class TestRevisionUI(BasicTests):
