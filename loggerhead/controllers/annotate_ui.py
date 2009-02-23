@@ -59,11 +59,7 @@ class AnnotateUI (TemplatedBranchView):
                                      text='(This is a binary file.)',
                                      change=util.Container())
         else:
-            for line_revid, text in tree.annotate_iter(file_id):
-                revid_set.add(line_revid)
-
-            change_cache = dict([(c.revid, c) \
-                    for c in self._history.get_changes(list(revid_set))])
+            change_cache = {}
 
             last_line_revid = None
             for line_revid, text in tree.annotate_iter(file_id):
@@ -74,10 +70,10 @@ class AnnotateUI (TemplatedBranchView):
                     status = 'changed'
                     parity ^= 1
                     last_line_revid = line_revid
-                    change = change_cache[line_revid]
-                    trunc_revno = change.revno
-                    if len(trunc_revno) > 10:
-                        trunc_revno = trunc_revno[:9] + '...'
+                    if line_revid in change_cache:
+                        change = change_cache[line_revid]
+                    else:
+                        change = change_cache[line_revid] = self._history.get_changes([line_revid])[0]
 
                 yield util.Container(parity=parity, lineno=lineno, status=status,
                                      change=change, text=util.fixed_width(text))
