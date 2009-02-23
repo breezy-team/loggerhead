@@ -124,7 +124,6 @@ class AnnotateUI (TemplatedBranchView):
         branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
 
         return {
-            'revid': revid,
             'revno_url': revno_url,
             'file_id': file_id,
             'path': path,
@@ -135,5 +134,4 @@ class AnnotateUI (TemplatedBranchView):
             'fileview_active': True,
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
-            'history': self._history,
         }
