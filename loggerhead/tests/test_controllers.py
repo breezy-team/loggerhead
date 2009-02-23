@@ -1,4 +1,5 @@
 from loggerhead.apps.branch import BranchWSGIApp
+from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.tests.test_simple import BasicTests
@@ -54,3 +55,25 @@ class TestRevisionUI(BasicTests):
         self.assertIsInstance(
             rev_ui.get_values('2', {}, []),
             dict)
+
+class TestAnnotateUI(BasicTests):
+
+    def make_annotate_ui_for_file_history(self, file_id, rev_ids_texts):
+        tree = self.make_branch_and_tree('.')
+        open('filename', 'w').write('')
+        tree.add(['filename'], [file_id])
+        for rev_id, text in rev_ids_texts:
+            open('filename', 'w').write(text)
+            tree.commit(rev_id=rev_id, message='.')
+        tree.branch.lock_read()
+        self.addCleanup(tree.branch.unlock)
+        branch_app = BranchWSGIApp(tree.branch)
+        return AnnotateUI(branch_app, branch_app.get_history)
+
+    def test_annotate_file(self):
+        history = [('rev1', 'old\nold\n'), ('rev2', 'new\nold\n')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        annotated = list(ann_ui.annotate_file('file_id', 'rev2'))
+        self.assertEqual(2, len(annotated))
+        self.assertEqual('2', annotated[0].change.revno)
+        self.assertEqual('1', annotated[1].change.revno)

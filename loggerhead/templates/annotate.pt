@@ -38,7 +38,7 @@
                 <a tal:attributes="href python:url(['/revision', change.revno], clear=1)">view revision</a>
             </li>
             <li>
-                <a tal:attributes="href python:url(['/changes'], clear=1,s filter_file_id=file_id)"
+                <a tal:attributes="href python:url(['/changes'], clear=1, filter_file_id=file_id)"
                 >view changes to this file</a>
             </li>
             <li id="last">
