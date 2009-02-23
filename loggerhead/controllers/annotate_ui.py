@@ -47,9 +47,7 @@ class AnnotateUI (TemplatedBranchView):
         parity = 0
 
         file_revid = self._history.get_inventory(revid)[file_id].revision
-        oldvalues = None
         tree = self._history._branch.repository.revision_tree(file_revid)
-        revid_set = set()
 
         try:
             bzrlib.textfile.check_text_lines(tree.get_file_lines(file_id))
@@ -73,10 +71,12 @@ class AnnotateUI (TemplatedBranchView):
                     if line_revid in change_cache:
                         change = change_cache[line_revid]
                     else:
-                        change = change_cache[line_revid] = self._history.get_changes([line_revid])[0]
+                        change = self._history.get_changes([line_revid])[0]
+                        change_cache[line_revid] = change
 
-                yield util.Container(parity=parity, lineno=lineno, status=status,
-                                     change=change, text=util.fixed_width(text))
+                yield util.Container(
+                    parity=parity, lineno=lineno, status=status,
+                    change=change, text=util.fixed_width(text))
                 lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))
