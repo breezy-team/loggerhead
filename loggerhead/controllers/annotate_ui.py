@@ -18,7 +18,6 @@
 #
 
 import os
-import posixpath
 import time
 
 import bzrlib.errors
@@ -30,14 +29,7 @@ from loggerhead.controllers import TemplatedBranchView
 from loggerhead import util
 
 
-def dirname(path):
-    while path.endswith('/'):
-        path = path[:-1]
-    path = posixpath.dirname(path)
-    return path
-
-
-class AnnotateUI (TemplatedBranchView):
+class AnnotateUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.annotate'
 
