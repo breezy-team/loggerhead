@@ -19,6 +19,10 @@
 
 import os
 import posixpath
+import time
+
+import bzrlib.errors
+import bzrlib.textfile
 
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
@@ -37,8 +41,53 @@ class AnnotateUI (TemplatedBranchView):
 
     template_path = 'loggerhead.templates.annotate'
 
+    def annotate_file(self, file_id, revid):
+        z = time.time()
+        lineno = 1
+        parity = 0
+
+        file_revid = self._history.get_inventory(revid)[file_id].revision
+        oldvalues = None
+        tree = self._history._branch.repository.revision_tree(file_revid)
+        revid_set = set()
+
+        try:
+            bzrlib.textfile.check_text_lines(tree.get_file_lines(file_id))
+        except bzrlib.errors.BinaryFile:
+                # bail out; this isn't displayable text
+                yield util.Container(parity=0, lineno=1, status='same',
+                                     text='(This is a binary file.)',
+                                     change=util.Container())
+        else:
+            for line_revid, text in tree.annotate_iter(file_id):
+                revid_set.add(line_revid)
+
+            change_cache = dict([(c.revid, c) \
+                    for c in self._history.get_changes(list(revid_set))])
+
+            last_line_revid = None
+            for line_revid, text in tree.annotate_iter(file_id):
+                if line_revid == last_line_revid:
+                    # remember which lines have a new revno and which don't
+                    status = 'same'
+                else:
+                    status = 'changed'
+                    parity ^= 1
+                    last_line_revid = line_revid
+                    change = change_cache[line_revid]
+                    trunc_revno = change.revno
+                    if len(trunc_revno) > 10:
+                        trunc_revno = trunc_revno[:9] + '...'
+
+                yield util.Container(parity=parity, lineno=lineno, status=status,
+                                     change=change, text=util.fixed_width(text))
+                lineno += 1
+
+        self.log.debug('annotate: %r secs' % (time.time() - z))
+
     def get_values(self, path, kwargs, headers):
         history = self._history
+        branch = history._branch
         revid = self.get_revid()
         revid = history.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
@@ -58,7 +107,7 @@ class AnnotateUI (TemplatedBranchView):
 
         change = history.get_changes([ revid ])[0]
         # If we're looking at the tip, use head: in the URL instead
-        if revid == history.last_revid:
+        if revid == branch.last_revision():
             revno_url = 'head:'
         else:
             revno_url = history.get_revno(revid)
@@ -86,7 +135,7 @@ class AnnotateUI (TemplatedBranchView):
             'filename': filename,
             'navigation': navigation,
             'change': change,
-            'contents': list(history.annotate_file(file_id, revid)),
+            'contents': list(self.annotate_file(file_id, revid)),
             'fileview_active': True,
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
