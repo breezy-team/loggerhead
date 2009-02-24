@@ -7,21 +7,38 @@
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+    <script type="text/javascript">
+      var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+    </script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-core.js')"></script>
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/yui/yui-min.js')"></script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/oop/oop-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/event/event-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/attribute/attribute-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/base/base-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/dom/dom-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/node/node-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/anim/anim-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src
+            python:branch.static_url('/static/javascript/yui/build/io/io-base-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-      <script type="text/javascript">
-          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
-      </script>
-      <script type="text/javascript"
-              tal:attributes="src
-              python:branch.static_url('/static/javascript/yui/build/yui/yui-min.js')"></script>
-      <script type="text/javascript"
-              tal:attributes="src
-              python:branch.static_url('/static/javascript/yui/build/node/node-min.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 

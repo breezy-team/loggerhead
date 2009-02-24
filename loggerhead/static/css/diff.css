@@ -70,14 +70,14 @@ ul#list-files li.desc {
     color:#0f6b97;
     text-decoration:none;
     margin-right:10px;
-    float:left;	
+    float:left;
 }
 #loggerheadCont p.codin, #loggerheadCont p.codin a, #loggerheadCont p.codin a:link, #loggerheadCont p.codin a:visited, #loggerheadCont p.codin a:hover {
     color:#000;
     font-size:12px;
     text-decoration:none;
     margin-right:10px;
-    float:left;	
+    float:left;
 }
 /*Diff Boxes*/
 .diffBox {
@@ -95,6 +95,9 @@ ul#list-files li.desc {
 }
 .diff {
     margin: 2em 0 2em 0;
+}
+.diffinfo {
+    overflow: hidden;
 }
 .lineNumber {
     width:2%;
