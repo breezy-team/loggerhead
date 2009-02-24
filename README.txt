@@ -86,8 +86,8 @@ requests to Loggerhead.  Adding lines like this to you Apache
 configuration is one way to do this::
 
     <Location "/branches/">
-        ProxyPass http://127.0.0.1:8080/
-        ProxyPassReverse http://127.0.0.1:8080/
+        ProxyPass http://127.0.0.1:8080/branches/
+        ProxyPassReverse http://127.0.0.1:8080/branches/
     </Location>
 
 If Paste Deploy is installed, the 'serve-branches' script can be
