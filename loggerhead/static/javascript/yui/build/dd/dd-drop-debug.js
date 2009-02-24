@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-drop', function(Y) {
 
@@ -122,7 +122,17 @@ YUI.add('dd-drop', function(Y) {
                     this.get(NODE).removeClass(DDM.CSS_PREFIX + '-drop-locked');
                 }
             }
+        },
+        /**
+        * @attribute bubbles
+        * @description Controls the default bubble parent for this Drop instance. Default: Y.DD.DDM. Set to false to disable bubbling.
+        * @type Object
+        */
+        bubbles: {
+            writeOnce: true,
+            value: Y.DD.DDM
         }
+
     };
 
     Y.extend(Drop, Y.Base, {
@@ -150,7 +160,9 @@ YUI.add('dd-drop', function(Y) {
                 });
             }, this);
 
-            this.addTarget(DDM);
+            if (this.get('bubbles')) {
+                this.addTarget(this.get('bubbles'));
+            }
             
         },
         /**
@@ -426,4 +438,4 @@ YUI.add('dd-drop', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm-drop', 'dd-drag'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm-drop', 'dd-drag'], skinnable:false});

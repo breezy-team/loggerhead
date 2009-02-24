@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /* base.css, part of YUI's CSS Foundation */
 .yui-cssbase h1 {
@@ -51,7 +51,7 @@ version: 3.0.0pr1
 	list-style: disc outside;
 }
 .yui-cssbase dl dd {
-	/*giving UL's LIs generated numbers*/
+	/*providing spacing for definition terms*/
 	margin-left:1em;
 }
 .yui-cssbase th,.yui-cssbase td {

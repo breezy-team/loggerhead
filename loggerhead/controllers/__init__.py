@@ -84,7 +84,7 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = '/'.join(args[1:])
+            path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
 
         vals = {
@@ -121,7 +121,7 @@ class TemplatedBranchView(object):
         h = self._history
         if h is None:
             return None
-        if len(self.args) > 0:
+        if len(self.args) > 0 and self.args != ['']:
             return h.fix_revid(self.args[0])
         else:
             return h.last_revid

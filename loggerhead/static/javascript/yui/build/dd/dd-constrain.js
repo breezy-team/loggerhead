@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-constrain', function(Y) {
 
@@ -14,7 +14,7 @@ YUI.add('dd-constrain', function(Y) {
     /**
      * This class extends the dd-drag module to add the constraining methods to it. It supports constraining to a region, node or viewport. It also
      * supports tick based moves and XY axis constraints.
-     * @class DragConstained
+     * @class DragConstrained
      * @extends Drag
      * @constructor
      */
@@ -29,7 +29,7 @@ YUI.add('dd-constrain', function(Y) {
 
     };
     
-    C.NAME = 'DragConstrained';
+    C.NAME = 'dragConstrained';
 
     C.ATTRS = {
         /**
@@ -179,7 +179,7 @@ YUI.add('dd-constrain', function(Y) {
             var r = {};
             if (this.get('constrain2node')) {
                 if (!this._regionCache) {
-                    Y.Event.addListener('window', 'resize', this._cacheRegion, this);
+                    Y.on('resize', this._cacheRegion, this, true, window);
                     this._cacheRegion();
                 }
                 r = Y.clone(this._regionCache);
@@ -218,22 +218,22 @@ YUI.add('dd-constrain', function(Y) {
                 r = this.getRegion(),
                 oh = this.get(DRAG_NODE).get(OFFSET_HEIGHT),
                 ow = this.get(DRAG_NODE).get(OFFSET_WIDTH);
+            
+                if (oxy[1] > (r.bottom - oh)) {
+                    _xy[1] = (r.bottom - oh);
+                }
+                if (r.top > oxy[1]) {
+                    _xy[1] = r.top;
 
-            if (r.top > oxy[1]) {
-                oxy[1] = r.top;
+                }
+                if (oxy[0] > (r.right - ow)) {
+                    _xy[0] = (r.right - ow);
+                }
+                if (r.left > oxy[0]) {
+                    _xy[0] = r.left;
+                }
 
-            }
-            if (oxy[1] > (r.bottom - oh)) {
-                oxy[1] = (r.bottom - oh);
-            }
-            if (r.left > oxy[0]) {
-                oxy[0] = r.left;
-            }
-            if (oxy[0] > (r.right - ow)) {
-                oxy[0] = (r.right - ow);
-            }
-
-            return oxy;
+            return _xy;
         },
         /**
         * @method inRegion
@@ -261,6 +261,7 @@ YUI.add('dd-constrain', function(Y) {
         _align: function(xy) {
             var _xy = C.superclass._align.apply(this, arguments),
                 r = this.getRegion(true);
+
             if (this.get('stickX')) {
                 _xy[1] = (this.startXY[1] - this.deltaXY[1]);
             }
@@ -382,4 +383,4 @@ YUI.add('dd-constrain', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drag', 'dd-proxy'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-drag', 'dd-proxy'], skinnable:false});

@@ -7,6 +7,7 @@ from bzrlib import branch, errors, lru_cache
 
 from paste.request import path_info_pop
 from paste import httpexceptions
+from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
@@ -80,6 +81,9 @@ class BranchesFromFileSystemRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif '/.bzr/' in environ['PATH_INFO']:
+            app = urlparser.make_static(None, self.folder)
+            return app(environ, start_response)
         else:
             return BranchesFromFileSystemServer(
                 self.folder, self)(environ, start_response)

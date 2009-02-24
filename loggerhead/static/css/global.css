@@ -329,3 +329,17 @@ ul#pages {
 	font-weight:bold;
 	font-size:18px;
 }
+#branch-info {
+	width:900px;
+	padding:10px 10px 10px 10px;
+	margin:0px 0px 10px 0px;
+	color:#666;
+	background:#fcfcfc;
+	border:1px solid #b7b7b7;
+}
+.show_if_js {
+    display: none;
+}
+.revision_log {
+    overflow: hidden;
+}

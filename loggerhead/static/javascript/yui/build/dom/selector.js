@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('selector', function(Y) {
 
@@ -306,10 +306,7 @@ var Selector = {
             for (i = 0, len = token[ATTRIBUTES][LENGTH]; i < len; ++i) {
                 attribute = node.getAttribute(token[ATTRIBUTES][i][0], 2);
                 if (attribute === undefined) {
-                    attribute = node[token[ATTRIBUTES][i][0]];
-                    if (attribute === undefined) {
-                        return false;
-                    }
+                    return false;
                 }
                 if ( ops[token[ATTRIBUTES][i][1]] &&
                         !ops[token[ATTRIBUTES][i][1]](attribute, token[ATTRIBUTES][i][2])) {
@@ -560,7 +557,7 @@ var Selector = {
 
 };
 
-if (Y.UA.ie) { // rewrite class for IE (others use getAttribute('class')
+if (Y.UA.ie && Y.UA.ie < 8) { // rewrite class for IE (others use getAttribute('class')
     Selector.attrAliases['class'] = 'className';
     Selector.attrAliases['for'] = 'htmlFor';
 }
@@ -570,4 +567,5 @@ Y.Selector.patterns = patterns;
 
 
 
-}, '3.0.0pr1' ,{skinnable:false, requires:['dom-base']});
+
+}, '3.0.0pr2' ,{skinnable:false, requires:['dom-base']});

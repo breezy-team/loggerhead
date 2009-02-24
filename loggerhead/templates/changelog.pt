@@ -8,6 +8,8 @@
         <link rel="alternate" type="application/atom+xml"
               tal:attributes="href python:url(['/atom']);
                               title string:RSS feed for ${branch/friendly_name}" />
+        <script type="text/javascript"
+                tal:attributes="src python:branch.static_url('/static/javascript/changelog.js')"></script>
       </metal:block>
     </head>
 
@@ -34,7 +36,9 @@
          </h1>
         </tal:block>
 
-       <div metal:fill-slot="content">
+        <div metal:fill-slot="content">
+          <tal:branch-info replace="structure python:branchinfo(branch)" />
+
            <!-- Something nicer-looking should be done with search -->
         <p tal:condition="search_failed">
           Sorry, no results found for your search.
@@ -52,11 +56,11 @@
                              title 'Show revision '+history.get_revno(navigation.last_in_page_revid)"
              tal:content="python:history.get_revno(navigation.last_in_page_revid)"></a>
          </tal:block></p>
-        <p class="expand" id="expand_all"><a tal:attributes="href string:javascript:toggle_expand_all('open')">
+        <p class="expand show_if_js" id="expand_all"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                   alt="expand all" /> expand all</a>
         </p>
-        <p class="expand" id="collapse_all" style="display:none;"><a tal:attributes="href string:javascript:toggle_expand_all('close')">
+        <p class="expand" id="collapse_all" style="display:none;"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
                   alt="collapse all" /> collapse all</a>
         </p>

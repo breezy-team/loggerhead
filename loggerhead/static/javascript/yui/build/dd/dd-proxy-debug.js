@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-proxy', function(Y) {
 
@@ -53,7 +53,6 @@ YUI.add('dd-proxy', function(Y) {
         * @type Boolean
         */
         proxy: {
-            writeOnce: true,
             value: false
         },        
         /**
@@ -146,6 +145,8 @@ YUI.add('dd-proxy', function(Y) {
                     if (this.get(DRAG_NODE).compareTo(this.get(NODE))) {
                         this.set(DRAG_NODE, DDM._proxy);
                     }
+                } else {
+                    this.set(DRAG_NODE, this.get(NODE));
                 }
             }
             Proxy.superclass.start.apply(this);
@@ -174,4 +175,4 @@ YUI.add('dd-proxy', function(Y) {
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-ddm', 'dd-drag'], skinnable:false});
+}, '3.0.0pr2' ,{requires:['dd-ddm', 'dd-drag'], skinnable:false});

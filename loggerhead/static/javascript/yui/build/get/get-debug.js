@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 
 YUI.add("get", function(Y) {
@@ -119,40 +119,6 @@ Y.Get = function() {
             }, win);
     };
 
-    /*
-     * The request failed, execute fail handler with whatever
-     * was accomplished.  There isn't a failure case at the
-     * moment unless you count aborted transactions
-     * @method _fail
-     * @param id {string} the id of the request
-     * @private
-     */
-    var _fail = function(id, msg) {
-
-        Y.log("get failure: " + msg, "warn", "get");
-
-        var q = queues[id];
-        if (q.timer) {
-            q.timer.cancel();
-        }
-
-        // execute failure callback
-        if (q.onFailure) {
-            var sc=q.context || q;
-            q.onFailure.call(sc, _returnData(q, msg));
-        }
-    };
-
-    var _get = function(nId, tId) {
-        var q = queues[tId],
-            n = (L.isString(nId)) ? q.win.document.getElementById(nId) : nId;
-        if (!n) {
-            _fail(tId, "target node not found: " + nId);
-        }
-
-        return n;
-    };
-
     /**
      * Removes the nodes for the specified queue
      * @method _purge
@@ -194,6 +160,40 @@ Y.Get = function() {
                     _purge(this.tId);
                 }
             };
+    };
+
+    /*
+     * The request failed, execute fail handler with whatever
+     * was accomplished.  There isn't a failure case at the
+     * moment unless you count aborted transactions
+     * @method _fail
+     * @param id {string} the id of the request
+     * @private
+     */
+    var _fail = function(id, msg) {
+
+        Y.log("get failure: " + msg, "warn", "get");
+
+        var q = queues[id];
+        if (q.timer) {
+            q.timer.cancel();
+        }
+
+        // execute failure callback
+        if (q.onFailure) {
+            var sc=q.context || q;
+            q.onFailure.call(sc, _returnData(q, msg));
+        }
+    };
+
+    var _get = function(nId, tId) {
+        var q = queues[tId],
+            n = (L.isString(nId)) ? q.win.document.getElementById(nId) : nId;
+        if (!n) {
+            _fail(tId, "target node not found: " + nId);
+        }
+
+        return n;
     };
 
 
@@ -283,6 +283,14 @@ Y.Get = function() {
         } 
 
         var url = q.url[0];
+
+        // if the url is undefined, this is probably a trailing comma problem in IE
+        if (!url) {
+            q.url.shift(); 
+            Y.log('skipping empty url');
+            return _next(id);
+        }
+
         Y.log("attempting to load " + url, "info", "get");
 
         if (q.timeout) {
@@ -408,7 +416,7 @@ Y.Get = function() {
 
         // IE supports the readystatechange event for script and css nodes
         // Opera only for script nodes.  Opera support onload for script
-        // nodes, but this doesn't fire when their is a load failure.
+        // nodes, but this doesn't fire when there is a load failure.
         // The onreadystatechange appears to be a better way to respond
         // to both success and failure.
         if (ua.ie) {
@@ -416,6 +424,7 @@ Y.Get = function() {
                 var rs = this.readyState;
                 if ("loaded" === rs || "complete" === rs) {
                     Y.log(id + " onreadstatechange " + url, "info", "get");
+                    n.onreadystatechange = null;
                     f(id, url);
                 }
             };
@@ -661,4 +670,4 @@ Y.Get = function() {
     };
 }();
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
