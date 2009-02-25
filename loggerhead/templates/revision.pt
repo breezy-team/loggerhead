@@ -98,7 +98,7 @@
                                  title python:branch.static_url('/static/images/treeCollapsed.png');
                                  alt python:branch.static_url('/static/images/treeExpanded.png')"
                  class="expand_diff" />
-            <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
+            <a tal:attributes="href python:url(['/annotate', change.revno, item.filename], clear=1);
                                id string:${item/filename}-s;
                                title string:Annotate ${item/filename}"
                tal:content="item/filename">

@@ -122,17 +122,13 @@ class RevisionUI(TemplatedBranchView):
             else:
                 diff = ''
             out.append(util.Container(
-                          filename=rich_filename(new_path, kind),
-                          file_id=fid,
-                          chunks=self._process_diff(diff),
-                          raw_diff=diff))
+                filename=rich_filename(new_path, kind), file_id=fid,
+                chunks=self._process_diff(diff)))
 
         return out
 
-    def get_change_with_diff(self, revid, compare_revid):
+    def get_changes_with_diff(self, change, compare_revid):
         h = self._history
-        change = h.get_changes([revid])[0]
-
         if compare_revid is None:
             if change.parents:
                 compare_revid = change.parents[0].revid
@@ -140,15 +136,13 @@ class RevisionUI(TemplatedBranchView):
                 compare_revid = 'null:'
 
         rev_tree1 = h._branch.repository.revision_tree(compare_revid)
-        rev_tree2 = h._branch.repository.revision_tree(revid)
+        rev_tree2 = h._branch.repository.revision_tree(change.revid)
         delta = rev_tree2.changes_from(rev_tree1)
 
-        change.changes = h.parse_delta(delta)
-        change.changes.modified = self._parse_diffs(rev_tree1,
-                                                    rev_tree2,
-                                                    delta)
+        changes = h.parse_delta(delta)
+        changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
 
-        return change
+        return changes
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -177,7 +171,8 @@ class RevisionUI(TemplatedBranchView):
             navigation.query = query
         util.fill_in_navigation(navigation)
 
-        change = self.get_change_with_diff(revid, compare_revid)
+        change = h.get_changes([revid])[0]
+        change.changes = self.get_changes_with_diff(change, compare_revid)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
 
