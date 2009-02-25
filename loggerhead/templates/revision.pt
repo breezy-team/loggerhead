@@ -91,7 +91,7 @@
 
       <div metal:fill-slot="content">
         <div class="diff"
-             tal:repeat="item change/changes/modified">
+             tal:repeat="item diffs">
 
           <div class="diffBox">
             <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');

@@ -140,9 +140,8 @@ class RevisionUI(TemplatedBranchView):
         delta = rev_tree2.changes_from(rev_tree1)
 
         changes = h.parse_delta(delta)
-        changes.modified = self._parse_diffs(rev_tree1, rev_tree2, delta)
 
-        return changes
+        return changes, self._parse_diffs(rev_tree1, rev_tree2, delta)
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -172,15 +171,10 @@ class RevisionUI(TemplatedBranchView):
         util.fill_in_navigation(navigation)
 
         change = h.get_changes([revid])[0]
-        change.changes = self.get_changes_with_diff(change, compare_revid)
+        change.changes, diffs = self.get_changes_with_diff(change, compare_revid)
+        print diffs
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
-
-        line_count_limit = DEFAULT_LINE_COUNT_LIMIT
-        line_count = 0
-        for file in change.changes.modified:
-            for chunk in file.chunks:
-                line_count += len(chunk.diff)
 
         # Directory Breadcrumbs
         directory_breadcrumbs = (
@@ -193,6 +187,7 @@ class RevisionUI(TemplatedBranchView):
             'branch': self._branch,
             'revid': revid,
             'change': change,
+            'diffs': diffs,
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,
@@ -202,8 +197,5 @@ class RevisionUI(TemplatedBranchView):
             'remember': remember,
             'compare_revid': compare_revid,
             'url': self._branch.context_url,
-            'line_count': line_count,
-            'line_count_limit': line_count_limit,
-            'show_plain_diffs': line_count > line_count_limit,
             'directory_breadcrumbs': directory_breadcrumbs,
         }
