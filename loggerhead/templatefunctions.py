@@ -37,18 +37,17 @@ templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 
 @templatefunc
-def file_change_summary(url, entry, modified_file_link):
+def file_change_summary(url, entry):
     return _pt('revisionfilechanges').expand(
-        url=url, entry=entry, modified_file_link=modified_file_link,
-        **templatefunctions)
+        url=url, entry=entry, **templatefunctions)
 
 
 @templatefunc
-def revisioninfo(url, branch, entry, modified_file_link=None):
+def revisioninfo(url, branch, entry, include_file_list=False):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
-        modified_file_link=modified_file_link,
+        include_file_list=include_file_list,
         **templatefunctions)
 
 
@@ -81,20 +80,6 @@ def revno_with_nick(entry):
     else:
         extra = ''
     return '(%s%s)'%(entry.revno, extra)
-
-
-@templatefunc
-def modified_file_link_rev(url, entry, item):
-    return _pt('modified-file-link-rev').expand(
-        url=url, entry=entry, item=item,
-        **templatefunctions)
-
-
-@templatefunc
-def modified_file_link_log(url, entry, item):
-    return _pt('modified-file-link-log').expand(
-        url=url, entry=entry, item=item,
-        **templatefunctions)
 
 
 @templatefunc

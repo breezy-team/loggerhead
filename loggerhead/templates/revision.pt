@@ -82,7 +82,7 @@
           </ul>
         </tal:we-are-comparing>
 
-        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
+        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, True)" />
         <p class="expand" id="expand_all" style="display:none;"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                  alt="expand all" /> expand all</a>
