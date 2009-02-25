@@ -190,6 +190,7 @@ class RevisionUI(TemplatedBranchView):
             'revid': revid,
             'change': change,
             'diffs': diffs,
+            'path_': path,
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,

@@ -628,12 +628,9 @@ iso style "yyyy-mm-dd")
                                            file_id=fid))
 
         for old_path, new_path, fid, kind, text_modified, meta_modified in \
-delta.renamed:
+                delta.renamed:
             renamed.append((rich_filename(old_path, kind),
-                            rich_filename(new_path, kind), fid))
-            if meta_modified or text_modified:
-                modified.append(util.Container(
-                    filename=rich_filename(new_path, kind), file_id=fid))
+                            rich_filename(new_path, kind), fid, text_modified))
 
         for path, fid, kind in delta.removed:
             removed.append((rich_filename(path, kind), fid))

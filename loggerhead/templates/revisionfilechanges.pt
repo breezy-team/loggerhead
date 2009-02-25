@@ -28,20 +28,23 @@
         <li class="desc">files renamed:</li>
     </tal:block>
     <li class="files"
-        tal:define="old_filename python:renamed[0];
-                    new_filename python:renamed[1];
-                    file_id      python:renamed[2]">
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                         title string:Annotate ${old_filename}"
-         tal:content="old_filename" class="filename">
+        tal:define="old_filename  python:renamed[0];
+                    new_filename  python:renamed[1];
+                    file_id       python:renamed[2];
+                    text_modified python:renamed[3]">
+      <tal:old-name content="old_filename" class="filename">
         old_filename
-      </a>
+      </tal:old-name>
       =>
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                         title string:Annotate ${new_filename}"
+      <a tal:condition="text_modified"
+         tal:attributes="href  python:url(['/revision', entry.revno, new_filename]);
+                         title string:View changes to ${new_filename} in revision ${entry/revno}"
          tal:content="new_filename">
         new_filename
       </a>
+      <tal:old-name condition="not:text_modified" content="new_filename" class="filename">
+        new_filename
+      </tal:old-name>
     </li>
 </ul>
 
@@ -50,8 +53,8 @@
         <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=item.file_id);
-                         title string:Annotate ${item/filename}"
+      <a tal:attributes="href  python:url(['/revision', entry.revno, item.filename]);
+                         title string:View changes to ${item/filename} in revision ${entry/revno}"
                          tal:content="item/filename"/>
     </li>
 </ul>
