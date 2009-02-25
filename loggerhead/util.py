@@ -226,7 +226,7 @@ def fill_div(s):
 
 HSC = HTMLStructureCleaner()
 
-def fixed_width(s):
+def fixed_width(s, convert_newlines=False):
     """
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
     chop up the string.
@@ -241,7 +241,13 @@ def fixed_width(s):
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
-    return HSC.clean(s).expandtabs().replace(' ', NONBREAKING_SPACE).replace('\n', '<br/>')
+	    
+	s = s.expandtabs().replace(' ', NONBREAKING_SPACE)
+
+	if (convert_newlines):
+	    return HSC.clean(s).replace('\n', '<br/>')
+	else:
+	    return s
 
 
 def fake_permissions(kind, executable):

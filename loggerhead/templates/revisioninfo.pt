@@ -13,7 +13,7 @@
                tal:content="python:revno_with_nick(merge_point)"></a>
         </div>
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
-        <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
+        <div class="information" tal:content="structure python:util.fixed_width(change.comment,convert_newlines=True)"></div>
     </div>
     <ul id="list-files">
         <tal:block condition="nocall:modified_file_link">
