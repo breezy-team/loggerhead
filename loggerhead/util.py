@@ -24,6 +24,8 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
+from simpletal.simpleTALUtils import HTMLStructureCleaner
+
 import base64
 import cgi
 import datetime
@@ -222,6 +224,7 @@ def fill_div(s):
             s = s.decode('iso-8859-15')
         return s
 
+HSC = HTMLStructureCleaner()
 
 def fixed_width(s):
     """
@@ -238,7 +241,7 @@ def fixed_width(s):
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
-    return s.expandtabs().replace(' ', NONBREAKING_SPACE)
+    return HSC.clean(s).expandtabs().replace(' ', NONBREAKING_SPACE).replace('\n', '<br/>')
 
 
 def fake_permissions(kind, executable):
