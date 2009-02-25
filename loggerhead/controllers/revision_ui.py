@@ -20,6 +20,7 @@
 from StringIO import StringIO
 
 import bzrlib.diff
+from bzrlib import errors
 
 from paste.httpexceptions import HTTPServerError
 
@@ -107,9 +108,17 @@ class RevisionUI(TemplatedBranchView):
         for path, fid, kind, text_modified, meta_modified in delta.modified:
             if (path_ is None or path == path_):
                 process.append((path, path, fid, kind))
+        for path, fid, kind in delta.added:
+            if (path_ is None or path == path_):
+                process.append((path, path, fid, kind))
+
+        process.sort(key=lambda x:x[1])
 
         for old_path, new_path, fid, kind in process:
-            old_lines = old_tree.get_file_lines(fid)
+            try:
+                old_lines = old_tree.get_file_lines(fid)
+            except errors.NoSuchId:
+                old_lines = []
             new_lines = new_tree.get_file_lines(fid)
             buffer = StringIO()
             if old_lines != new_lines:

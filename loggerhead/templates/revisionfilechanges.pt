@@ -1,31 +1,31 @@
 <tal:block>
-<ul tal:repeat="added entry/changes/added">
+  <ul tal:repeat="added entry/changes/added">
     <tal:block condition="repeat/added/start">
-        <li class="desc">files added:</li>
+      <li class="desc">files added:</li>
     </tal:block>
     <li class="files"
         tal:define="filename python:added[0];
                     file_id  python:added[1]">
-        <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                           title string:Annotate ${filename}"
-           tal:content="filename" class="link"></a>
+      <a tal:attributes="href  python:url(['/revision', entry.revno, filename]);
+                         title string:View changes to ${new_filename} in revision ${entry/revno}"
+         tal:content="filename" class="link"></a>
     </li>
-</ul>
+  </ul>
 
-<ul tal:repeat="removed entry/changes/removed">
+  <ul tal:repeat="removed entry/changes/removed">
     <tal:block condition="repeat/removed/start">
-        <li class="desc">files removed:</li>
+      <li class="desc">files removed:</li>
     </tal:block>
     <li class="files"
         tal:define="filename python:removed[0];
                     file_id  python:removed[1]">
       <tal:block content="filename" />
     </li>
-</ul>
+  </ul>
 
-<ul tal:repeat="renamed entry/changes/renamed">
+  <ul tal:repeat="renamed entry/changes/renamed">
     <tal:block condition="repeat/renamed/start">
-        <li class="desc">files renamed:</li>
+      <li class="desc">files renamed:</li>
     </tal:block>
     <li class="files"
         tal:define="old_filename  python:renamed[0];
@@ -35,7 +35,7 @@
       <tal:old-name content="old_filename" class="filename">
         old_filename
       </tal:old-name>
-      =>
+      =&gt;
       <a tal:condition="text_modified"
          tal:attributes="href  python:url(['/revision', entry.revno, new_filename]);
                          title string:View changes to ${new_filename} in revision ${entry/revno}"
@@ -46,16 +46,16 @@
         new_filename
       </tal:old-name>
     </li>
-</ul>
+  </ul>
 
-<ul tal:repeat="item entry/changes/modified">
+  <ul tal:repeat="item entry/changes/modified">
     <tal:block condition="repeat/item/start">
-        <li class="desc">files modified:</li>
+      <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
       <a tal:attributes="href  python:url(['/revision', entry.revno, item.filename]);
                          title string:View changes to ${item/filename} in revision ${entry/revno}"
-                         tal:content="item/filename"/>
+         tal:content="item/filename"/>
     </li>
-</ul>
+  </ul>
 </tal:block>
