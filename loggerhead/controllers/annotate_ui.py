@@ -24,7 +24,7 @@ import bzrlib.errors
 import bzrlib.textfile
 
 from pygments import highlight
-from pygments.lexers import guess_lexer, TextLexer
+from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
 from pygments.formatters import HtmlFormatter
 from pygments.util import ClassNotFound
 
@@ -44,6 +44,7 @@ class AnnotateUI(TemplatedBranchView):
         parity = 0
 
         file_revid = self._history.get_inventory(revid)[file_id].revision
+	file_name  = os.path.basename(self._history.get_path(revid, file_id))
         tree = self._history._branch.repository.revision_tree(file_revid)
 
         try:
@@ -51,7 +52,7 @@ class AnnotateUI(TemplatedBranchView):
 
             bzrlib.textfile.check_text_lines(file_lines)
 
-	    pa = PygmentAnnotater('\n'.join(file_lines[:128]))
+	    pa = PygmentAnnotater(file_name, '\n'.join(file_lines[:128]))
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
@@ -139,13 +140,16 @@ class AnnotateUI(TemplatedBranchView):
 
 
 class PygmentAnnotater:
-    def __init__(self, text):
+    def __init__(self, path, text):
 	self.formatter = CustomHtmlFormatter(style='colorful')
 
 	try:
-	    self.lexer = guess_lexer(text, stripall=False)
+	    self.lexer = guess_lexer_for_filename(path, text, stripall=False)
 	except (ClassNotFound, ValueError):
-	    self.lexer = TextLexer(stripall=False)
+	    try: 
+		self.lexer = guess_lexer(text, stripall=False)
+	    except (ClassNotFound, ValueError):
+		self.lexer = TextLexer(stripall=False)
 
     def annotate(self, text):
 	hl_text  = highlight(text.expandtabs(), self.lexer, self.formatter)
