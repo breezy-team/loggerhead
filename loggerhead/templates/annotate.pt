@@ -10,7 +10,7 @@
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:branch.static_url('/static/css/annotate.css')"/>
         <link rel="stylesheet" type="text/css" media="all"
-              tal:attributes="href python:branch.static_url('/static/css/pygments.css')"/>
+              tal:attributes="href python:branch.static_url('/static/css/highlight.css')"/>
     </metal:block>
   </head>
 

@@ -1,0 +1,60 @@
+#
+# Copyright (C) 2009  Peter Bui <pnutzh4x0r@gmail.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
+from pygments import highlight
+from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
+from pygments.formatters import HtmlFormatter
+from pygments.util import ClassNotFound
+
+from loggerhead import util
+
+DEFAULT_PYGMENT_STYLE = 'colorful'
+
+
+class PygmentHighlighter:
+    def __init__(self, path, text, style=DEFAULT_PYGMENT_STYLE):
+	self.formatter = PygmentHtmlFormatter(style=style)
+
+	try:
+	    self.lexer = guess_lexer_for_filename(path, text, stripall=False)
+	except (ClassNotFound, ValueError):
+	    try: 
+		self.lexer = guess_lexer(text, stripall=False)
+	    except (ClassNotFound, ValueError):
+		self.lexer = TextLexer(stripall=False)
+
+    def highlight(self, text):
+	hl_text  = highlight(text.expandtabs(), self.lexer, self.formatter)
+	hl_split = hl_text.find('<')
+
+	hl_text  = hl_text[:hl_split].replace(' ', util.NONBREAKING_SPACE) + \
+		   hl_text[hl_split:]
+
+	return hl_text
+
+
+class PygmentHtmlFormatter(HtmlFormatter):
+    def wrap(self, source, outfile):
+	return self._wrap_code(source)
+
+    def _wrap_code(self, source):
+	yield 0, ''
+	for i, t in source:
+	    yield i, t
+	    
+	yield 0, ''

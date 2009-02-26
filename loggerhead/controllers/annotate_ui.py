@@ -23,14 +23,10 @@ import time
 import bzrlib.errors
 import bzrlib.textfile
 
-from pygments import highlight
-from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
-from pygments.formatters import HtmlFormatter
-from pygments.util import ClassNotFound
-
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
+from loggerhead.highlight import PygmentHighlighter
 from loggerhead import util
 
 
@@ -52,7 +48,7 @@ class AnnotateUI(TemplatedBranchView):
 
             bzrlib.textfile.check_text_lines(file_lines)
 
-	    pa = PygmentAnnotater(file_name, '\n'.join(file_lines[:128]))
+	    ph = PygmentHighlighter(file_name, '\n'.join(file_lines[:128]))
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
@@ -78,7 +74,7 @@ class AnnotateUI(TemplatedBranchView):
 
                 yield util.Container(
                     parity=parity, lineno=lineno, status=status,
-                    change=change, text=pa.annotate(text))
+                    change=change, text=ph.highlight(text))
                 lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))
@@ -137,37 +133,3 @@ class AnnotateUI(TemplatedBranchView):
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
         }
-
-
-class PygmentAnnotater:
-    def __init__(self, path, text):
-	self.formatter = CustomHtmlFormatter(style='colorful')
-
-	try:
-	    self.lexer = guess_lexer_for_filename(path, text, stripall=False)
-	except (ClassNotFound, ValueError):
-	    try: 
-		self.lexer = guess_lexer(text, stripall=False)
-	    except (ClassNotFound, ValueError):
-		self.lexer = TextLexer(stripall=False)
-
-    def annotate(self, text):
-	hl_text  = highlight(text.expandtabs(), self.lexer, self.formatter)
-	hl_split = hl_text.find('<')
-
-	hl_text  = hl_text[:hl_split].replace(' ', util.NONBREAKING_SPACE) + \
-		   hl_text[hl_split:]
-
-	return hl_text
-
-
-class CustomHtmlFormatter(HtmlFormatter):
-    def wrap(self, source, outfile):
-	return self._wrap_code(source)
-
-    def _wrap_code(self, source):
-	yield 0, ''
-	for i, t in source:
-	    yield i, t
-	    
-	yield 0, ''
