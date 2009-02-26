@@ -10,24 +10,24 @@ function make_unified(chunk) {
   }
   chunk.get('children').filter(".pseudorow").each(
     function (line) {
-      if (line.hasClass("context")) {
+      if (line.hasClass("context-row")) {
         flush_adds(line);
         line.removeChild(line.query('.code'));
       }
-      else if (line.hasClass("both")) {
-        var added_line = line.create('<div class="pseudorow insert"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
+      else if (line.hasClass("both-row")) {
+        var added_line = line.create('<div class="pseudorow insert-row"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
         var clear = added_line.query('.clear');
         added_line.insertBefore(line.query('.lineNumber.second'), clear);
         added_line.insertBefore(line.query('.code.insert'), clear);
         pending_added[pending_added.length] = added_line;
         line.insertBefore(line.create('<div class="lineNumber second">&nbsp;</div>'), line.query('.code.delete'));
-        line.replaceClass("both", "delete");
+        line.replaceClass("both-row", "delete-row");
       }
-      else if (line.hasClass("insert")) {
+      else if (line.hasClass("insert-row")) {
         flush_adds(line);
         line.removeChild(line.query('.blank'));
       }
-      else if (line.hasClass("delete")) {
+      else if (line.hasClass("delete-row")) {
         line.removeChild(line.query('.blank'));
         line.insertBefore(line.query('.lineNumber.second'), line.query('.code.delete'));
       }
@@ -50,9 +50,8 @@ function make_sbs(chunk) {
       r.removeChild(r.query('.lineNumber.second'));
       r.insertBefore(a.query('.lineNumber.second'), r.query('.clear'));
       r.insertBefore(a.query('.code.insert'), r.query('.clear'));
-      r.replaceClass('removed', 'both');
+      r.replaceClass('removed-row', 'both-row');
     }
-    Y.log('hai');
     if (added.length > removed.length) {
       for (var j = common; j < added.length; j++) {
         a = added[j];
@@ -71,14 +70,14 @@ function make_sbs(chunk) {
   }
   chunk.get('children').filter(".pseudorow").each(
     function (line) {
-      if (line.hasClass("context")) {
+      if (line.hasClass("context-row")) {
         clear_bufs(line);
         line.insertBefore(line.query('.code').cloneNode(true), line.query(".second"));
       }
-      else if (line.hasClass("insert")) {
+      else if (line.hasClass("insert-row")) {
         added[added.length] = line;
       }
-      else if (line.hasClass("delete")) {
+      else if (line.hasClass("delete-row")) {
         removed[removed.length] = line;
       }
     });
@@ -92,12 +91,12 @@ function toggle_unified_sbs(event) {
   if (unified) {
     Y.all(".pseudotable").each(make_sbs);
     unified = false;
-    Y.get("#toggle_unified_sbs").set('textContent', "Show unified diffs");
+    Y.get("#toggle_unified_sbs").set('innerHTML', "Show unified diffs");
   }
   else {
     Y.all(".pseudotable").each(make_unified);
     unified = true;
-    Y.get("#toggle_unified_sbs").set('textContent', "Show diffs side-by-side");
+    Y.get("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
   }
 }
 

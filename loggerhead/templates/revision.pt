@@ -118,7 +118,7 @@
               </tal:block>
 
               <div tal:repeat="line chunk/diff"
-                   tal:attributes="class string:pseudorow ${line/type}">
+                   tal:attributes="class string:pseudorow ${line/type}-row">
                 <div class="lineNumber first"
                      tal:content="structure python:util.fill_div(line.old_lineno)"></div>
                 <div class="lineNumber second"
