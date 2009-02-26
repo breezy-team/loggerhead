@@ -137,6 +137,7 @@ class AnnotateUI(TemplatedBranchView):
             'branch_breadcrumbs': branch_breadcrumbs,
         }
 
+
 class PygmentAnnotater:
     def __init__(self, text):
 	self.formatter = CustomHtmlFormatter(style='colorful')
@@ -147,7 +148,14 @@ class PygmentAnnotater:
 	    self.lexer = TextLexer(stripall=False)
 
     def annotate(self, text):
-	return highlight(text, self.lexer, self.formatter)
+	hl_text  = highlight(text.expandtabs(), self.lexer, self.formatter)
+	hl_split = hl_text.find('<')
+
+	hl_text  = hl_text[:hl_split].replace(' ', util.NONBREAKING_SPACE) + \
+		   hl_text[hl_split:]
+
+	return hl_text
+
 
 class CustomHtmlFormatter(HtmlFormatter):
     def wrap(self, source, outfile):
