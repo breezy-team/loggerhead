@@ -6,9 +6,7 @@
     <li class="files"
         tal:define="filename python:added[0];
                     file_id  python:added[1]">
-      <a tal:attributes="href  python:url(['/revision', entry.revno, filename]);
-                         title string:View changes to ${new_filename} in revision ${entry/revno}"
-         tal:content="filename" class="link"></a>
+      <tal:revision content="structure python:revision_link(url, entry.revno, filename)" />
     </li>
   </ul>
 
@@ -36,12 +34,7 @@
         old_filename
       </tal:old-name>
       =&gt;
-      <a tal:condition="text_modified"
-         tal:attributes="href  python:url(['/revision', entry.revno, new_filename]);
-                         title string:View changes to ${new_filename} in revision ${entry/revno}"
-         tal:content="new_filename">
-        new_filename
-      </a>
+      <tal:revision condition="text_modified" content="structure python:revision_link(url, entry.revno, new_filename)" />
       <tal:old-name condition="not:text_modified" content="new_filename" class="filename">
         new_filename
       </tal:old-name>
@@ -53,9 +46,7 @@
       <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
-      <a tal:attributes="href  python:url(['/revision', entry.revno, item.filename]);
-                         title string:View changes to ${item/filename} in revision ${entry/revno}"
-         tal:content="item/filename"/>
+      <tal:revision content="structure python:revision_link(url, entry.revno, item.filename)" />
     </li>
   </ul>
 </tal:block>

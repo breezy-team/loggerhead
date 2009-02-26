@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+import cgi
 import os
 from loggerhead.zptsupport import zpt
 
@@ -97,3 +98,15 @@ def feed_link(branch, url):
 def menu(branch, url, fileview_active=False):
     return _pt('menu').expand(branch=branch, url=url,
         fileview_active=fileview_active, **templatefunctions)
+
+
+@templatefunc
+def annotate_link(url, revno, path):
+    return '<a href="%s" title="Annotate %s">%s</a>'%(
+        url(['/annotate', revno, path]), cgi.escape(path), cgi.escape(path))
+
+@templatefunc
+def revision_link(url, revno, path):
+    return '<a href="%s" title="View changes to %s in revision %s">%s</a>'%(
+        url(['/revision', revno, path]), cgi.escape(path), cgi.escape(revno),
+        cgi.escape(path))
