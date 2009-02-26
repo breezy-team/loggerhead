@@ -32,17 +32,32 @@
             <a tal:condition="specific_path" tal:content="change/revno"
                tal:attributes="href python:url(['/revision', change.revno])"
                title="View changes to all files"></a>
-            <tal:compare-to condition="python:compare_revid is not None">
+                      <tal:compare-to condition="python:compare_revid is not None">
               (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
             </tal:compare-to>
-            </span>
+          </span>
           <span class="breadcrumb" tal:condition="specific_path">
             : <a tal:attributes="href python:url(['/annotate', change.revno, specific_path]);
                                  title string:Annotate ${specific_path}"
                  tal:content="specific_path">
               path</a>
-        </span></h1>
+          </span>
+        </h1>
         <tal:branch-info replace="structure python:branchinfo(branch)" />
+        <p tal:condition="not:specific_path">
+          Viewing all changes in revision <tal:revno content="change/revno" />.
+        </p>
+        <p tal:condition="specific_path">
+          <a tal:attributes="href python:url(['/revision', change.revno])">
+            &#xAB; back to all changes
+          </a>
+        </p>
+        <p tal:condition="specific_path">
+          Viewing changes to
+          <a tal:attributes="href python:url(['/annotate', change.revno, specific_path]);
+                             title string:Annotate ${specific_path}"
+             tal:content="specific_path"></a> in revision <tal:revno content="change/revno" />.
+        </p>
         <ul id="submenuTabs">
           <li id="first"><a tal:attributes="href python:url(['/files', change.revno]);
                                             title string:browse files at revision ${change/revno}"
