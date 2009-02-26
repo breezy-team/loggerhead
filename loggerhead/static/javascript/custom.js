@@ -101,16 +101,21 @@ function Collapsable(item, expand_icon, open_content, close_content, is_open)
   }
 }
 
+function get_height(node) {
+  node.setStyle('position', 'absolute');
+  node.setStyle('top', -1000000000);
+  node.setStyle('display', 'block');
+  var height = node.get('region').height;
+  node.setStyle('display', 'none');
+  node.setStyle('position', 'static');
+  node.setStyle('top', 'auto');
+  return height;
+}
+
 Collapsable.prototype.open = function()
 {
   if (this.height == null) {
-    this.item.setStyle('position', 'absolute');
-    this.item.setStyle('top', -1000000000);
-    this.item.setStyle('display', 'block');
-    this.height = this.item.get('region').height;
-    this.item.setStyle('display', 'none');
-    this.item.setStyle('position', null);
-    this.item.setStyle('top', null);
+    this.height = get_height(this.item);
   }
 
   var anim = new Y.Anim(
