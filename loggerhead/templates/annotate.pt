@@ -9,6 +9,8 @@
     <metal:block fill-slot="header_extras">
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:branch.static_url('/static/css/annotate.css')"/>
+        <link rel="stylesheet" type="text/css" media="all"
+              tal:attributes="href python:branch.static_url('/static/css/pygments.css')"/>
     </metal:block>
   </head>
 
@@ -65,7 +67,7 @@
                  tal:attributes="href python:url(['/revision', line.change.revno], clear=1);
                                  title python:'%s by %s, on %s (%s)'%(line.change.revno, util.hide_email(line.change.author), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
             </td>
-            <td class="annoCont" tal:content="line/text"></td>
+            <td class="annoCont" tal:content="structure line/text"></td>
           </tr>
         </table>
       </div>

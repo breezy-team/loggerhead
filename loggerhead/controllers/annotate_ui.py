@@ -17,11 +17,18 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from __future__ import with_statement
+
 import os
 import time
 
 import bzrlib.errors
 import bzrlib.textfile
+
+from pygments import highlight
+from pygments.lexers import guess_lexer, TextLexer
+from pygments.formatters import HtmlFormatter
+from pygments.util import ClassNotFound
 
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
@@ -42,7 +49,11 @@ class AnnotateUI(TemplatedBranchView):
         tree = self._history._branch.repository.revision_tree(file_revid)
 
         try:
-            bzrlib.textfile.check_text_lines(tree.get_file_lines(file_id))
+	    file_lines = tree.get_file_lines(file_id)
+
+            bzrlib.textfile.check_text_lines(file_lines)
+
+	    pa = PygmentAnnotater('\n'.join(file_lines[:128]))
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
@@ -68,7 +79,7 @@ class AnnotateUI(TemplatedBranchView):
 
                 yield util.Container(
                     parity=parity, lineno=lineno, status=status,
-                    change=change, text=util.fixed_width(text))
+                    change=change, text=pa.annotate(text))
                 lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))
@@ -127,3 +138,26 @@ class AnnotateUI(TemplatedBranchView):
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
         }
+
+class PygmentAnnotater:
+    def __init__(self, text):
+	self.formatter = CustomHtmlFormatter(style='colorful')
+
+	try:
+	    self.lexer = guess_lexer(text, stripall=False)
+	except (ClassNotFound, ValueError):
+	    self.lexer = TextLexer(stripall=False)
+
+    def annotate(self, text):
+	return highlight(text, self.lexer, self.formatter)
+
+class CustomHtmlFormatter(HtmlFormatter):
+    def wrap(self, source, outfile):
+	return self._wrap_code(source)
+
+    def _wrap_code(self, source):
+	yield 0, ''
+	for i, t in source:
+	    yield i, t
+	    
+	yield 0, ''
