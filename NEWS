@@ -6,6 +6,8 @@ dev [future]
     - Loggerhead now serves bzr branches over HTTP and exposes the URL to
       branch them. (Jonathan Lange)
 
+    - Added syntax highlighting to annotate view using python-pygments.
+      Partially addresses bug #306631. (Peter Bui)
 
 1.10 [22Dec2008]
 ---------------
