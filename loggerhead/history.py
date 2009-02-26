@@ -82,7 +82,7 @@ def clean_message(message):
     module (Robey, the original author of this code, apparently favored this
     style of message).
     """
-    message = message.splitlines()
+    message = message.lstrip().splitlines()
 
     if len(message) == 1:
         message = textwrap.wrap(message[0])
