@@ -121,16 +121,16 @@ ul#list-files li.desc {
 }
 .unified .code { width:89%; }
 .sbs .code, .blank { width:43%; }
-.unified .insert .lineNumber.first {
+.unified .insert-row .lineNumber.first {
     background:#c9ffc9;
 }
-.unified .delete .lineNumber.second {
+.unified .delete-row .lineNumber.second {
     background:#ffbfbf;
 }
-.code.insert, .insert .lineNumber.second, .both .lineNumber.second {
+.code.insert, .insert-row .lineNumber.second, .both-row .lineNumber.second {
     background:#92ed92;
 }
-.code.delete, .delete .lineNumber.first, .both .lineNumber.first {
+.code.delete, .delete-row .lineNumber.first, .both-row .lineNumber.first {
     background:#ff7f7f;
 }
 .separate {
