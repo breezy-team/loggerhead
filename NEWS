@@ -6,6 +6,8 @@ dev [future]
     - Loggerhead now serves bzr branches over HTTP and exposes the URL to
       branch them. (Jonathan Lange)
 
+    - Convert newlines in commit messages to HTML line breaks for annotate and
+      changelog views.  Addresses bug #273688. (Peter Bui)
 
 1.10 [22Dec2008]
 ---------------
