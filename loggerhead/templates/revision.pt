@@ -28,18 +28,18 @@
             <span metal:use-macro="breadcrumbs/directory"></span>
           </tal:no-link>
           <span class="breadcrumb">:
-            <tal:revno condition="not:path_" content="change/revno"></tal:revno>
-            <a tal:condition="path_" tal:content="change/revno"
+            <tal:revno condition="not:specific_path" content="change/revno"></tal:revno>
+            <a tal:condition="specific_path" tal:content="change/revno"
                tal:attributes="href python:url(['/revision', change.revno])"
                title="View changes to all files"></a>
             <tal:compare-to condition="python:compare_revid is not None">
               (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
             </tal:compare-to>
             </span>
-          <span class="breadcrumb" tal:condition="path_">
-            : <a tal:attributes="href python:url(['/annotate', change.revno, path_]);
-                                 title string:Annotate ${path_}"
-                 tal:content="path_">
+          <span class="breadcrumb" tal:condition="specific_path">
+            : <a tal:attributes="href python:url(['/annotate', change.revno, specific_path]);
+                                 title string:Annotate ${specific_path}"
+                 tal:content="specific_path">
               path</a>
         </span></h1>
         <tal:branch-info replace="structure python:branchinfo(branch)" />

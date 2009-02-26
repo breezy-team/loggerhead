@@ -81,7 +81,7 @@ class RevisionUI(TemplatedBranchView):
             chunks.append(chunk)
         return chunks
 
-    def _parse_diffs(self, old_tree, new_tree, delta, path_):
+    def _parse_diffs(self, old_tree, new_tree, delta, specific_path):
         """
         Return a list of processed diffs, in the format::
 
@@ -101,15 +101,24 @@ class RevisionUI(TemplatedBranchView):
         process = []
         out = []
 
+        def include_specific_path(path):
+            return specific_path == path
+        def include_all_paths(path):
+            return True
+        if specific_path:
+            include_path = include_specific_path
+        else:
+            include_path = include_all_paths
+
         for old_path, new_path, fid, \
             kind, text_modified, meta_modified in delta.renamed:
-            if text_modified and (path_ is None or new_path == path_):
+            if text_modified and include_path(new_path):
                 process.append((old_path, new_path, fid, kind))
         for path, fid, kind, text_modified, meta_modified in delta.modified:
-            if (path_ is None or path == path_):
+            if include_path(path):
                 process.append((path, path, fid, kind))
         for path, fid, kind in delta.added:
-            if (path_ is None or path == path_):
+            if include_path(path):
                 process.append((path, path, fid, kind))
 
         process.sort(key=lambda x:x[1])
@@ -137,7 +146,7 @@ class RevisionUI(TemplatedBranchView):
 
         return out
 
-    def get_changes_with_diff(self, change, compare_revid, path):
+    def get_changes_with_diff(self, change, compare_revid, specific_path):
         h = self._history
         if compare_revid is None:
             if change.parents:
@@ -151,7 +160,8 @@ class RevisionUI(TemplatedBranchView):
 
         changes = h.parse_delta(delta)
 
-        return changes, self._parse_diffs(rev_tree1, rev_tree2, delta, path)
+        return changes, self._parse_diffs(
+            rev_tree1, rev_tree2, delta, specific_path)
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -199,7 +209,7 @@ class RevisionUI(TemplatedBranchView):
             'revid': revid,
             'change': change,
             'diffs': diffs,
-            'path_': path,
+            'specific_path': path,
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,

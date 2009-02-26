@@ -32,8 +32,8 @@ class TestRevisionUI(BasicTests):
         self.build_tree_contents(shape1)
         tree.smart_add([])
         tree.commit('')
-        tree.smart_add([])
         self.build_tree_contents(shape2)
+        tree.smart_add([])
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
@@ -55,6 +55,22 @@ class TestRevisionUI(BasicTests):
         self.assertIsInstance(
             rev_ui.get_values('2', {}, []),
             dict)
+
+    def test_get_changes_with_diff(self):
+        branch, rev_ui = self.make_bzrbranch_and_revision_ui_for_tree_shapes(
+            [('file', 'oldcontents'), ('file2', 'oldcontents')],
+            [('file', 'newcontents'), ('file2', 'oldcontents')])
+        change = rev_ui._history.get_changes([branch.last_revision()])[0]
+        changes, diffs = rev_ui.get_changes_with_diff(change, None, None)
+        self.assertEqual(1, len(diffs))
+
+    def test_get_changes_with_diff_specific_path(self):
+        branch, rev_ui = self.make_bzrbranch_and_revision_ui_for_tree_shapes(
+            [('file', 'oldcontents'), ('file2', 'oldcontents')],
+            [('file', 'newcontents'), ('file2', 'newcontents')])
+        change = rev_ui._history.get_changes([branch.last_revision()])[0]
+        changes, diffs = rev_ui.get_changes_with_diff(change, None, 'file')
+        self.assertEqual(1, len(diffs))
 
 class TestAnnotateUI(BasicTests):
 
