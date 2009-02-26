@@ -26,29 +26,39 @@ from loggerhead import util
 DEFAULT_PYGMENT_STYLE = 'colorful'
 
 
-class PygmentHighlighter:
-    def __init__(self, path, text, style=DEFAULT_PYGMENT_STYLE):
-	self.formatter = PygmentHtmlFormatter(style=style)
+class PygmentsHighlighter:
+    @staticmethod
+    def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
+	""" 
+	Returns a list of highlighted (i.e. HTML formatted) strings and it
+	replaces initial spaces with nonbreaking spaces to maintain
+	indentation.
+	"""
+
+	formatter = PygmentsHtmlFormatter(style=style)
+	
+	encoding = 'utf-8'
+	try:
+	    text = text.decode(encoding)
+	except UnicodeDecodeError:
+	    text = text.decode(encoding)
+	    encoding = 'iso-8859-15'
 
 	try:
-	    self.lexer = guess_lexer_for_filename(path, text, stripall=False)
+	    lexer = guess_lexer_for_filename(path, text, encoding=encoding)
 	except (ClassNotFound, ValueError):
 	    try: 
-		self.lexer = guess_lexer(text, stripall=False)
+		lexer = guess_lexer(text, encoding=encoding)
 	    except (ClassNotFound, ValueError):
-		self.lexer = TextLexer(stripall=False)
+		lexer = TextLexer(encoding=encoding)
 
-    def highlight(self, text):
-	hl_text  = highlight(text.expandtabs(), self.lexer, self.formatter)
-	hl_split = hl_text.find('<')
+	hl_lines = highlight(text, lexer, formatter).split('\n')
+	hl_lines = [ util.fix_whitespace(line) for line in hl_lines ]
 
-	hl_text  = hl_text[:hl_split].replace(' ', util.NONBREAKING_SPACE) + \
-		   hl_text[hl_split:]
-
-	return hl_text
+	return hl_lines
 
 
-class PygmentHtmlFormatter(HtmlFormatter):
+class PygmentsHtmlFormatter(HtmlFormatter):
     def wrap(self, source, outfile):
 	return self._wrap_code(source)
 

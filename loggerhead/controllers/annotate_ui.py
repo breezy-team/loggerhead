@@ -26,7 +26,7 @@ import bzrlib.textfile
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
-from loggerhead.highlight import PygmentHighlighter
+from loggerhead.highlight import PygmentsHighlighter
 from loggerhead import util
 
 
@@ -40,15 +40,18 @@ class AnnotateUI(TemplatedBranchView):
         parity = 0
 
         file_revid = self._history.get_inventory(revid)[file_id].revision
-	file_name  = os.path.basename(self._history.get_path(revid, file_id))
         tree = self._history._branch.repository.revision_tree(file_revid)
+	
+	file_name = os.path.basename(self._history.get_path(revid, file_id))
+	hl_lines = None
 
         try:
 	    file_lines = tree.get_file_lines(file_id)
 
             bzrlib.textfile.check_text_lines(file_lines)
 
-	    ph = PygmentHighlighter(file_name, '\n'.join(file_lines[:128]))
+	    hl_lines = PygmentsHighlighter.highlight(file_name, 
+						     ''.join(file_lines))
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
@@ -74,7 +77,7 @@ class AnnotateUI(TemplatedBranchView):
 
                 yield util.Container(
                     parity=parity, lineno=lineno, status=status,
-                    change=change, text=ph.highlight(text))
+                    change=change, text=hl_lines[lineno - 1])
                 lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))
