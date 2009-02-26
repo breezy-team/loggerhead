@@ -17,7 +17,7 @@
     <li class="files"
         tal:define="filename python:removed[0];
                     file_id  python:removed[1]">
-      <tal:block content="filename" />
+      <tal:revision content="structure python:revision_link(url, entry.revno, filename)" />
     </li>
   </ul>
 

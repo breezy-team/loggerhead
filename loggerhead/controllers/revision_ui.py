@@ -120,6 +120,9 @@ class RevisionUI(TemplatedBranchView):
         for path, fid, kind in delta.added:
             if include_path(path):
                 process.append((path, path, fid, kind))
+        for path, fid, kind in delta.removed:
+            if include_path(path):
+                process.append((path, path, fid, kind))
 
         process.sort(key=lambda x:x[1])
 
@@ -128,7 +131,10 @@ class RevisionUI(TemplatedBranchView):
                 old_lines = old_tree.get_file_lines(fid)
             except errors.NoSuchId:
                 old_lines = []
-            new_lines = new_tree.get_file_lines(fid)
+            try:
+                new_lines = new_tree.get_file_lines(fid)
+            except errors.NoSuchId:
+                new_lines = []
             buffer = StringIO()
             if old_lines != new_lines:
                 try:
