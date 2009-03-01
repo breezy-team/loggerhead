@@ -113,6 +113,7 @@ class InventoryUI(TemplatedBranchView):
         navigation = util.Container()
 
         if path is not None:
+            path = path.rstrip('/')
             file_id = rev_tree.path2id(path)
             if file_id is None:
                 raise HTTPNotFound()
