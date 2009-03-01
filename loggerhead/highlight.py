@@ -33,7 +33,7 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
     indentation.
     """
 
-    formatter = PygmentsHtmlFormatter(style=style)
+    formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
     encoding = 'utf-8'
     try:
@@ -54,15 +54,3 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
     hl_lines = [util.fix_whitespace(line) for line in hl_lines]
 
     return hl_lines
-
-
-class PygmentsHtmlFormatter(HtmlFormatter):
-    def wrap(self, source, outfile):
-	return self._wrap_code(source)
-
-    def _wrap_code(self, source):
-	yield 0, ''
-	for i, t in source:
-	    yield i, t
-
-	yield 0, ''
