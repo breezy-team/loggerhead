@@ -39,8 +39,8 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
     try:
         text = text.decode(encoding)
     except UnicodeDecodeError:
-        text = text.decode(encoding)
         encoding = 'iso-8859-15'
+        text = text.decode(encoding)
 
     try:
         lexer = guess_lexer_for_filename(path, text, encoding=encoding)
