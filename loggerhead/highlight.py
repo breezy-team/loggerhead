@@ -26,39 +26,41 @@ from loggerhead import util
 DEFAULT_PYGMENT_STYLE = 'colorful'
 
 
-class PygmentsHighlighter:
-    @staticmethod
-    def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
-	""" 
-	Returns a list of highlighted (i.e. HTML formatted) strings and it
-	replaces initial spaces with nonbreaking spaces to maintain
-	indentation.
-	"""
+def pygments_highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
+    """ 
+    Returns a list of highlighted (i.e. HTML formatted) strings and it
+    replaces initial spaces with nonbreaking spaces to maintain
+    indentation.
+    """
 
-	formatter = PygmentsHtmlFormatter(style=style)
+    formatter = PygmentsHtmlFormatter(style=style)
 	
-	encoding = 'utf-8'
-	try:
-	    text = text.decode(encoding)
-	except UnicodeDecodeError:
-	    text = text.decode(encoding)
-	    encoding = 'iso-8859-15'
+    encoding = 'utf-8'
+    try:
+	text = text.decode(encoding)
+    except UnicodeDecodeError:
+	text = text.decode(encoding)
+	encoding = 'iso-8859-15'
 
-	try:
-	    lexer = guess_lexer_for_filename(path, text, encoding=encoding)
+    try:
+	lexer = guess_lexer_for_filename(path, text, encoding=encoding)
+    except (ClassNotFound, ValueError):
+	try: 
+	    lexer = guess_lexer(text, encoding=encoding)
 	except (ClassNotFound, ValueError):
-	    try: 
-		lexer = guess_lexer(text, encoding=encoding)
-	    except (ClassNotFound, ValueError):
-		lexer = TextLexer(encoding=encoding)
+	    lexer = TextLexer(encoding=encoding)
 
-	hl_lines = highlight(text, lexer, formatter).split('\n')
-	hl_lines = [ util.fix_whitespace(line) for line in hl_lines ]
+    hl_lines = highlight(text, lexer, formatter).split('\n')
+    hl_lines = [ util.fix_whitespace(line) for line in hl_lines ]
 
-	return hl_lines
+    return hl_lines
 
 
 class PygmentsHtmlFormatter(HtmlFormatter):
+    """
+    Custom HTML formatter to avoid default <div> and <pre> blocks.
+    """
+
     def wrap(self, source, outfile):
 	return self._wrap_code(source)
 
