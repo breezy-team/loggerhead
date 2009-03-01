@@ -42,12 +42,10 @@ class AnnotateUI(TemplatedBranchView):
         file_revid = self._history.get_inventory(revid)[file_id].revision
         tree = self._history._branch.repository.revision_tree(file_revid)
 
-	file_name = os.path.basename(self._history.get_path(revid, file_id))
-	hl_lines = None
+        file_name = os.path.basename(self._history.get_path(revid, file_id))
 
         try:
-	    file_lines = tree.get_file_lines(file_id)
-
+            file_lines = tree.get_file_lines(file_id)
             bzrlib.textfile.check_text_lines(file_lines)
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
@@ -55,7 +53,7 @@ class AnnotateUI(TemplatedBranchView):
                                      text='(This is a binary file.)',
                                      change=util.Container())
         else:
-	    hl_lines = highlight(file_name, ''.join(file_lines))
+            hl_lines = highlight(file_name, ''.join(file_lines))
 
             change_cache = {}
 
