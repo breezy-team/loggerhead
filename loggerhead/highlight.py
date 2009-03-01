@@ -28,8 +28,8 @@ DEFAULT_PYGMENT_STYLE = 'colorful'
 
 def pygments_highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
     """ 
-    Returns a list of highlighted (i.e. HTML formatted) strings and it
-    replaces initial spaces with nonbreaking spaces to maintain
+    Returns a list of highlighted (i.e. HTML formatted) strings and it replaces
+    spaces outside of HTML tags with nonbreaking spaces to maintain
     indentation.
     """
 
