@@ -67,7 +67,7 @@
                  tal:attributes="href python:url(['/revision', line.change.revno], clear=1);
                                  title python:'%s by %s, on %s (%s)'%(line.change.revno, util.hide_email(line.change.author), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
             </td>
-            <td class="annoCont" tal:content="structure line/text"></td>
+            <td class="annoCont"><pre tal:content="structure line/text"></pre></td>
           </tr>
         </table>
       </div>

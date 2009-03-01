@@ -51,6 +51,6 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
             lexer = TextLexer(encoding=encoding)
 
     hl_lines = _highlight_func(text, lexer, formatter).split('\n')
-    hl_lines = [util.fix_whitespace(line) for line in hl_lines]
+#    hl_lines = [util.fix_whitespace(line) for line in hl_lines]
 
     return hl_lines

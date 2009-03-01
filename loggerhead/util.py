@@ -241,28 +241,6 @@ def fixed_width(s):
     return s.expandtabs().replace(' ', NONBREAKING_SPACE)
 
 
-def fix_whitespace(s):
-    """
-    Replace spaces outside of HTML tags with nonbreaking spaces 
-    """
-
-    ns = ''
-    outside_tag = True	# Whether or not we are outside of a HTML tag
-
-    for c in s.expandtabs():
-	if outside_tag:
-	    if c == '<':
-		outside_tag = False
-	    elif c == ' ':
-		c = NONBREAKING_SPACE
-	else: # Inside tag
-	    if c == '>':
-		outside_tag = True
-	ns += c
-
-    return ns
-
-
 def fake_permissions(kind, executable):
     # fake up unix-style permissions given only a "kind" and executable bit
     if kind == 'directory':
