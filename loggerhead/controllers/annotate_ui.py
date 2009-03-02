@@ -26,7 +26,7 @@ import bzrlib.textfile
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
-from loggerhead.highlight import pygments_highlight
+from loggerhead.highlight import highlight
 from loggerhead import util
 
 
@@ -41,22 +41,20 @@ class AnnotateUI(TemplatedBranchView):
 
         file_revid = self._history.get_inventory(revid)[file_id].revision
         tree = self._history._branch.repository.revision_tree(file_revid)
-	
-	file_name = os.path.basename(self._history.get_path(revid, file_id))
-	hl_lines = None
+
+        file_name = os.path.basename(self._history.get_path(revid, file_id))
 
         try:
-	    file_lines = tree.get_file_lines(file_id)
-
+            file_lines = tree.get_file_lines(file_id)
             bzrlib.textfile.check_text_lines(file_lines)
-
-	    hl_lines = pygments_highlight(file_name, ''.join(file_lines))
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
                                      text='(This is a binary file.)',
                                      change=util.Container())
         else:
+            hl_lines = highlight(file_name, ''.join(file_lines))
+
             change_cache = {}
 
             last_line_revid = None
