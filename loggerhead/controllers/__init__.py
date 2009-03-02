@@ -40,7 +40,6 @@ class BufferingWriter(object):
     def flush(self):
         chunk = ''.join(self.buf)
         chunk = re.sub(r'\s*\n\s*', '\n', chunk)
-        chunk = re.sub(r'[ \t]+', ' ', chunk)
         self.bytes_saved += self.buflen - len(chunk)
         self.writefunc(chunk)
         self.buf = []

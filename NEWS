@@ -9,6 +9,8 @@ dev [future]
     - Leading blank lines in commit messages no longer result in an empty
       summary. (Colin Watson)
 
+    - Added syntax highlighting to annotate view using python-pygments.
+      Partially addresses bug #306631. (Peter Bui)
 
 1.10 [22Dec2008]
 ---------------
