@@ -21,16 +21,12 @@ from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
 from pygments.formatters import HtmlFormatter
 from pygments.util import ClassNotFound
 
-from loggerhead import util
-
 DEFAULT_PYGMENT_STYLE = 'colorful'
 
 
 def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
     """
-    Returns a list of highlighted (i.e. HTML formatted) strings and it
-    replaces initial spaces with nonbreaking spaces to maintain
-    indentation.
+    Returns a list of highlighted (i.e. HTML formatted) strings.
     """
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
@@ -51,6 +47,5 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
             lexer = TextLexer(encoding=encoding)
 
     hl_lines = _highlight_func(text, lexer, formatter).split('\n')
-#    hl_lines = [util.fix_whitespace(line) for line in hl_lines]
 
     return hl_lines
