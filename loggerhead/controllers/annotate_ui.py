@@ -26,7 +26,10 @@ import bzrlib.textfile
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
-from loggerhead.highlight import highlight
+try:
+    from loggerhead.highlight import highlight
+except ImportError:
+    highlight = None
 from loggerhead import util
 
 
@@ -53,7 +56,10 @@ class AnnotateUI(TemplatedBranchView):
                                      text='(This is a binary file.)',
                                      change=util.Container())
         else:
-            hl_lines = highlight(file_name, ''.join(file_lines))
+            if highlight is not None:
+                hl_lines = highlight(file_name, ''.join(file_lines))
+            else:
+                hl_lines = file_lines
 
             change_cache = {}
 
