@@ -18,6 +18,7 @@
 import logging
 import os
 import pkg_resources
+import re
 import StringIO
 
 from simpletal import simpleTAL, simpleTALES
@@ -33,8 +34,11 @@ def zpt(tfile):
     tinstance = _zpt_cache.get(tfile)
     stat = os.stat(tfile)
     if tinstance is None or tinstance.stat != stat:
+        text = open(tfile).read()
+        text = re.sub(r'\s*\n\s*', '\n', text)
+        text = re.sub(r'[ \t]+', ' ', text)
         tinstance = _zpt_cache[tfile] = TemplateWrapper(
-            simpleTAL.compileXMLTemplate(open(tfile)), tfile, stat)
+            simpleTAL.compileXMLTemplate(text), tfile, stat)
     return tinstance
 
 
