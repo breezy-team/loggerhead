@@ -74,7 +74,7 @@ class InventoryUI(TemplatedBranchView):
             if path == '':
                 absolutepath = pathname
             else:
-                absolutepath = urllib.quote(path + '/' + pathname)
+                absolutepath = path + '/' + pathname
             revid = entry.revision
 
             file = util.Container(
