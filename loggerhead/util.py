@@ -241,13 +241,13 @@ def fixed_width(s, convert_newlines=False):
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
-	    
-	s = s.expandtabs().replace(' ', NONBREAKING_SPACE)
 
-	if (convert_newlines):
-	    return HSC.clean(s).replace('\n', '<br/>')
-	else:
-	    return s
+        s = s.expandtabs().replace(' ', NONBREAKING_SPACE)
+
+        if (convert_newlines):
+            return HSC.clean(s).replace('\n', '<br/>')
+        else:
+            return s
 
 
 def fake_permissions(kind, executable):
