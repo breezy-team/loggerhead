@@ -7,8 +7,10 @@
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
-<!-- <script type="text/javascript"
-            src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script> -->
+    <tal:comment condition="nothing">
+      <script type="text/javascript"
+              src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>
+    </tal:comment>
     <script type="text/javascript">
       var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
     </script>

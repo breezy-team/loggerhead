@@ -120,7 +120,10 @@ ul#list-files li.desc {
     padding:0px 1%;
 }
 .unified .code { width:89%; }
-.sbs .code, .blank { width:43%; }
+.sbs .code, .blank {
+    width:43%;
+    overflow: hidden;
+}
 .unified .insert-row .lineNumber.first {
     background:#c9ffc9;
 }
