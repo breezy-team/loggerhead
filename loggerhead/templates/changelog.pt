@@ -103,7 +103,7 @@
                 <a tal:attributes="title python:'Show revision '+entry.revno;
                                    href  python:url(['/revision', entry.revno], clear=1);
                                    class string:link"
-                   tal:content="structure python:util.fixed_width(entry.comment,convert_newlines=True)"></a>
+                   tal:content="structure python:util.fixed_width(entry.comment)"></a>
               </div>
               <div class="revisioninfo" style="display:none;">
                 <ul class="expandrev">
