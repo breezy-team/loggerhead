@@ -12,6 +12,9 @@ dev [future]
     - Added syntax highlighting to annotate view using python-pygments.
       Partially addresses bug #306631. (Peter Bui)
 
+    - Convert newlines in commit messages to HTML line breaks for annotate and
+      changelog views.  Addresses bug #273688. (Peter Bui)
+
 1.10 [22Dec2008]
 ---------------
     - Add startup deamon script for Linux (Marius Kruger)
