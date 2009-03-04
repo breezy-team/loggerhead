@@ -21,7 +21,9 @@
 }
 .annoLine, .annoCont {
 	font:normal 12px/normal monospace;
+        whitespace: pre;
 }
+.annoCont pre { margin: 0; }
 .annoLine {
 	text-align:right;
 }
