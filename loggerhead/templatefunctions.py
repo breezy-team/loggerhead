@@ -38,17 +38,32 @@ templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 
 @templatefunc
-def file_change_summary(url, entry):
+def file_change_summary(url, entry, link_style='normal', currently_showing=None):
+    if link_style == 'fragment':
+        def file_link(filename):
+            if currently_showing:
+                print filename, currently_showing, filename == currently_showing
+                if filename == currently_showing:
+                    return '<b><a href="#%s">%s</a></b>' % (
+                        cgi.escape(filename), cgi.escape(filename))
+                else:
+                    return revision_link(url, entry.revno, filename)
+            else:
+                return '<a href="#%s">%s</a>' % (
+                    cgi.escape(filename), cgi.escape(filename))
+    else:
+        file_link = lambda filename: revision_link(url, entry.revno, filename)
     return _pt('revisionfilechanges').expand(
-        url=url, entry=entry, **templatefunctions)
+        url=url, entry=entry, file_link=file_link,
+        currently_showing=currently_showing, **templatefunctions)
 
 
 @templatefunc
-def revisioninfo(url, branch, entry, include_file_list=False):
+def revisioninfo(url, branch, entry, include_file_list=False, currently_showing=None):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
-        include_file_list=include_file_list,
+        include_file_list=include_file_list, currently_showing=currently_showing,
         **templatefunctions)
 
 

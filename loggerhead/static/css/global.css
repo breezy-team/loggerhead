@@ -11,6 +11,9 @@ a, a:link, a:visited, a:hover {
 	font-weight:normal;
 	outline:none;
 }
+b a:link, b a:visited {
+    font-weight: bold;
+}
 img {
 	padding:0px;
 	margin:0px;

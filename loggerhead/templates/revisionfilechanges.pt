@@ -6,7 +6,7 @@
     <li class="files"
         tal:define="filename python:added[0];
                     file_id  python:added[1]">
-      <tal:revision content="structure python:revision_link(url, entry.revno, filename)" />
+      <tal:revision content="structure python:file_link(filename)" />
     </li>
   </ul>
 
@@ -17,7 +17,7 @@
     <li class="files"
         tal:define="filename python:removed[0];
                     file_id  python:removed[1]">
-      <tal:revision content="structure python:revision_link(url, entry.revno, filename)" />
+      <tal:revision content="structure python:file_link(filename)" />
     </li>
   </ul>
 
@@ -34,7 +34,7 @@
         old_filename
       </tal:old-name>
       =&gt;
-      <tal:revision condition="text_modified" content="structure python:revision_link(url, entry.revno, new_filename)" />
+      <tal:revision condition="text_modified" content="structure python:file_link(new_filename)" />
       <tal:old-name condition="not:text_modified" content="new_filename" class="filename">
         new_filename
       </tal:old-name>
@@ -46,7 +46,7 @@
       <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
-      <tal:revision content="structure python:revision_link(url, entry.revno, item.filename)" />
+      <tal:revision content="structure python:file_link(item.filename)" />
     </li>
   </ul>
 </tal:block>
