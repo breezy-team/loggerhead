@@ -27,12 +27,31 @@
           <tal:no-link condition="not: branch/branch_link">
             <span metal:use-macro="breadcrumbs/directory"></span>
           </tal:no-link>
-          <span>: <tal:revno content="change/revno"></tal:revno>
-            <tal:compare-to condition="python:compare_revid is not None">
+          <span class="breadcrumb">:
+            <tal:revno condition="not:specific_path" content="change/revno"></tal:revno>
+            <a tal:condition="specific_path" tal:content="change/revno"
+               tal:attributes="href python:url(['/revision', change.revno])"
+               title="View changes to all files"></a>
+                      <tal:compare-to condition="python:compare_revid is not None">
               (compared to revision <tal:block content="python:history.get_revno(compare_revid)" />)
             </tal:compare-to>
-        </span></h1>
+          </span>
+          <span class="breadcrumb" tal:condition="specific_path">
+            : <tal:annotate content="structure python:annotate_link(url, change.revno, specific_path)" />
+          </span>
+        </h1>
         <tal:branch-info replace="structure python:branchinfo(branch)" />
+        <p tal:condition="not:specific_path">
+          Viewing all changes in revision <tal:revno content="change/revno" />.
+        </p>
+        <p tal:condition="specific_path">
+          <a tal:attributes="href python:url(['/revision', change.revno])">
+            &#xAB; back to all changes in this revision
+          </a>
+        </p>
+        <p tal:condition="specific_path">
+          Viewing changes to <tal:annotate content="structure python:annotate_link(url, change.revno, specific_path)" />
+        </p>
         <ul id="submenuTabs">
           <li id="first"><a tal:attributes="href python:url(['/files', change.revno]);
                                             title string:browse files at revision ${change/revno}"
@@ -72,7 +91,7 @@
           </ul>
         </tal:we-are-comparing>
 
-        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, modified_file_link_rev)" />
+        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, 'fragment', specific_path)" />
         <p class="expand" id="expand_all" style="display:none;"><a href="#">
             <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                  alt="expand all" /> expand all</a>
@@ -91,16 +110,16 @@
 
       <div metal:fill-slot="content">
         <div class="diff"
-             tal:repeat="item change/changes/modified">
+             tal:repeat="item diffs">
 
           <div class="diffBox">
             <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
                                  title python:branch.static_url('/static/images/treeCollapsed.png');
                                  alt python:branch.static_url('/static/images/treeExpanded.png')"
                  class="expand_diff" />
-            <a tal:attributes="href python:url(['/annotate', change.revno], clear=1, file_id=item.file_id);
-                               id string:${item/filename}-s;
-                               title string:Annotate ${item/filename}"
+            <a tal:attributes="href python:url(['/revision', change.revno, item.filename], clear=1);
+                               id string:${item/filename};
+                               title string:View changes to ${item/filename} only"
                tal:content="item/filename">
             </a>
           </div>

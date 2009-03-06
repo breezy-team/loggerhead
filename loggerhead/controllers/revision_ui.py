@@ -20,6 +20,7 @@
 from StringIO import StringIO
 
 import bzrlib.diff
+from bzrlib import errors
 
 from paste.httpexceptions import HTTPServerError
 
@@ -80,7 +81,7 @@ class RevisionUI(TemplatedBranchView):
             chunks.append(chunk)
         return chunks
 
-    def _parse_diffs(self, old_tree, new_tree, delta):
+    def _parse_diffs(self, old_tree, new_tree, delta, specific_path):
         """
         Return a list of processed diffs, in the format::
 
@@ -100,16 +101,40 @@ class RevisionUI(TemplatedBranchView):
         process = []
         out = []
 
+        def include_specific_path(path):
+            return specific_path == path
+        def include_all_paths(path):
+            return True
+        if specific_path:
+            include_path = include_specific_path
+        else:
+            include_path = include_all_paths
+
         for old_path, new_path, fid, \
             kind, text_modified, meta_modified in delta.renamed:
-            if text_modified:
+            if text_modified and include_path(new_path):
                 process.append((old_path, new_path, fid, kind))
         for path, fid, kind, text_modified, meta_modified in delta.modified:
-            process.append((path, path, fid, kind))
+            if include_path(path):
+                process.append((path, path, fid, kind))
+        for path, fid, kind in delta.added:
+            if file == 'kind' and include_path(path):
+                process.append((path, path, fid, kind))
+        for path, fid, kind in delta.removed:
+            if file == 'kind' and include_path(path):
+                process.append((path, path, fid, kind))
+
+        process.sort(key=lambda x:x[1])
 
         for old_path, new_path, fid, kind in process:
-            old_lines = old_tree.get_file_lines(fid)
-            new_lines = new_tree.get_file_lines(fid)
+            try:
+                old_lines = old_tree.get_file_lines(fid)
+            except errors.NoSuchId:
+                old_lines = []
+            try:
+                new_lines = new_tree.get_file_lines(fid)
+            except errors.NoSuchId:
+                new_lines = []
             buffer = StringIO()
             if old_lines != new_lines:
                 try:
@@ -122,17 +147,13 @@ class RevisionUI(TemplatedBranchView):
             else:
                 diff = ''
             out.append(util.Container(
-                          filename=rich_filename(new_path, kind),
-                          file_id=fid,
-                          chunks=self._process_diff(diff),
-                          raw_diff=diff))
+                filename=rich_filename(new_path, kind), file_id=fid,
+                chunks=self._process_diff(diff)))
 
         return out
 
-    def get_change_with_diff(self, revid, compare_revid):
+    def get_changes_with_diff(self, change, compare_revid, specific_path):
         h = self._history
-        change = h.get_changes([revid])[0]
-
         if compare_revid is None:
             if change.parents:
                 compare_revid = change.parents[0].revid
@@ -140,15 +161,13 @@ class RevisionUI(TemplatedBranchView):
                 compare_revid = 'null:'
 
         rev_tree1 = h._branch.repository.revision_tree(compare_revid)
-        rev_tree2 = h._branch.repository.revision_tree(revid)
+        rev_tree2 = h._branch.repository.revision_tree(change.revid)
         delta = rev_tree2.changes_from(rev_tree1)
 
-        change.changes = h.parse_delta(delta)
-        change.changes.modified = self._parse_diffs(rev_tree1,
-                                                    rev_tree2,
-                                                    delta)
+        changes = h.parse_delta(delta)
 
-        return change
+        return changes, self._parse_diffs(
+            rev_tree1, rev_tree2, delta, specific_path)
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -177,15 +196,12 @@ class RevisionUI(TemplatedBranchView):
             navigation.query = query
         util.fill_in_navigation(navigation)
 
-        change = self.get_change_with_diff(revid, compare_revid)
+        change = h.get_changes([revid])[0]
+        if path in ('', '/'):
+            path = None
+        change.changes, diffs = self.get_changes_with_diff(change, compare_revid, path)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
-
-        line_count_limit = DEFAULT_LINE_COUNT_LIMIT
-        line_count = 0
-        for file in change.changes.modified:
-            for chunk in file.chunks:
-                line_count += len(chunk.diff)
 
         # Directory Breadcrumbs
         directory_breadcrumbs = (
@@ -198,6 +214,8 @@ class RevisionUI(TemplatedBranchView):
             'branch': self._branch,
             'revid': revid,
             'change': change,
+            'diffs': diffs,
+            'specific_path': path,
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,
@@ -207,8 +225,5 @@ class RevisionUI(TemplatedBranchView):
             'remember': remember,
             'compare_revid': compare_revid,
             'url': self._branch.context_url,
-            'line_count': line_count,
-            'line_count_limit': line_count_limit,
-            'show_plain_diffs': line_count > line_count_limit,
             'directory_breadcrumbs': directory_breadcrumbs,
         }

@@ -123,7 +123,7 @@
                        title="Show history" class="link"></a>
                   </li>
                   <li class="committerli" tal:content="python:util.hide_email(entry.author)"></li>
-                  <tal:block content="structure python:file_change_summary(url, entry, modified_file_link_log)" />
+                  <tal:block content="structure python:file_change_summary(url, entry)" />
                 </ul>
               </div>
             </td>

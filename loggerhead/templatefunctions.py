@@ -13,6 +13,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+import cgi
 import os
 from loggerhead.zptsupport import zpt
 
@@ -37,18 +38,32 @@ templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 
 @templatefunc
-def file_change_summary(url, entry, modified_file_link):
+def file_change_summary(url, entry, link_style='normal', currently_showing=None):
+    if link_style == 'fragment':
+        def file_link(filename):
+            if currently_showing:
+                print filename, currently_showing, filename == currently_showing
+                if filename == currently_showing:
+                    return '<b><a href="#%s">%s</a></b>' % (
+                        cgi.escape(filename), cgi.escape(filename))
+                else:
+                    return revision_link(url, entry.revno, filename)
+            else:
+                return '<a href="#%s">%s</a>' % (
+                    cgi.escape(filename), cgi.escape(filename))
+    else:
+        file_link = lambda filename: revision_link(url, entry.revno, filename)
     return _pt('revisionfilechanges').expand(
-        url=url, entry=entry, modified_file_link=modified_file_link,
-        **templatefunctions)
+        url=url, entry=entry, file_link=file_link,
+        currently_showing=currently_showing, **templatefunctions)
 
 
 @templatefunc
-def revisioninfo(url, branch, entry, modified_file_link=None):
+def revisioninfo(url, branch, entry, include_file_list=False, currently_showing=None):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
-        modified_file_link=modified_file_link,
+        include_file_list=include_file_list, currently_showing=currently_showing,
         **templatefunctions)
 
 
@@ -84,20 +99,6 @@ def revno_with_nick(entry):
 
 
 @templatefunc
-def modified_file_link_rev(url, entry, item):
-    return _pt('modified-file-link-rev').expand(
-        url=url, entry=entry, item=item,
-        **templatefunctions)
-
-
-@templatefunc
-def modified_file_link_log(url, entry, item):
-    return _pt('modified-file-link-log').expand(
-        url=url, entry=entry, item=item,
-        **templatefunctions)
-
-
-@templatefunc
 def search_box(branch, navigation):
     return _pt('search-box').expand(branch=branch, navigation=navigation,
         **templatefunctions)
@@ -112,3 +113,15 @@ def feed_link(branch, url):
 def menu(branch, url, fileview_active=False):
     return _pt('menu').expand(branch=branch, url=url,
         fileview_active=fileview_active, **templatefunctions)
+
+
+@templatefunc
+def annotate_link(url, revno, path):
+    return '<a href="%s" title="Annotate %s">%s</a>'%(
+        url(['/annotate', revno, path]), cgi.escape(path), cgi.escape(path))
+
+@templatefunc
+def revision_link(url, revno, path):
+    return '<a href="%s" title="View changes to %s in revision %s">%s</a>'%(
+        url(['/revision', revno, path]), cgi.escape(path), cgi.escape(revno),
+        cgi.escape(path))
