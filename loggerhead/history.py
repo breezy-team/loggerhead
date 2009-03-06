@@ -631,8 +631,8 @@ iso style "yyyy-mm-dd")
         for old_path, new_path, fid, kind, text_modified, meta_modified in \
                 delta.renamed:
             renamed.append(util.Container(
-                old_path=rich_filename(old_path, kind),
-                new_path=rich_filename(new_path, kind), file_id=fid,
+                old_filename=rich_filename(old_path, kind),
+                new_filename=rich_filename(new_path, kind), file_id=fid,
                 text_modified=text_modified))
 
         for path, fid, kind in delta.removed:
