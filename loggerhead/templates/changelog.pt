@@ -69,7 +69,7 @@
           <td class="revisionnumber">Rev</td>
           <td class="expandcell">&nbsp;</td>
           <td class="summarycell">Summary</td>
-          <td class="authorcell">Author</td>
+          <td class="authorcell">Authors</td>
           <td class="datecell">Date</td>
           <td class="diffcell">Diff</td>
           <td class="downloadcell">Files</td>
@@ -122,12 +122,12 @@
                        tal:content="python:revno_with_nick(merge_point)"
                        title="Show history" class="link"></a>
                   </li>
-                  <li class="committerli" tal:content="python:util.hide_email(entry.author)"></li>
+                  <li class="committerli" tal:content="python:', '.join(util.hide_emails(entry.authors))"></li>
                   <tal:block content="structure python:file_change_summary(url, entry)" />
                 </ul>
               </div>
             </td>
-            <td tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
+            <td tal:content="python:util.trunc(util.hide_email(entry.authors[0]), 20)"
                 class="autcell"></td>
             <td class="date">
               <span tal:attributes="title python:util.date_time(entry.date)"

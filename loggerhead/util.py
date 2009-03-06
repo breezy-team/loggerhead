@@ -181,6 +181,14 @@ def hide_email(email):
         return '%s at %s' % (username, domains[-2])
     return '%s at %s' % (username, domains[0])
 
+def hide_emails(emails):
+    """
+    try to obscure any email address in a list of bazaar committers' names.
+    """
+    result = []
+    for email in emails:
+        result.append(hide_email(email))
+    return result
 
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
