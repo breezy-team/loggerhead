@@ -58,6 +58,7 @@ class AnnotateUI(TemplatedBranchView):
         else:
             if highlight is not None:
                 hl_lines = highlight(file_name, ''.join(file_lines))
+                hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
             else:
                 hl_lines = file_lines
 
