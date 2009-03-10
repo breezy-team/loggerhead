@@ -76,7 +76,8 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                 from paste.httpserver import serve
                 a = HTTPExceptionHandler(BranchesFromFileSystemRoot('.'))
                 port = kw.get('port', DEFAULT_PORT)
-                if ':' in port:
+                # port might be an int already...
+                if isinstance(port, basestring) and ':' in port:
                     host, port = port.split(':')
                 else:
                     host = '0.0.0.0'
