@@ -67,7 +67,7 @@
       <table id="logentries">
         <tr class="logheader">
           <td class="revisionnumber">Rev</td>
-          <td class="expandcell">&nbsp;</td>
+          <td class="expandcell show_if_js">&nbsp;</td>
           <td class="summarycell">Summary</td>
           <td class="authorcell">Author</td>
           <td class="datecell">Date</td>
@@ -81,15 +81,17 @@
                                                             href  python:url(['/revision', entry.revno], clear=1)"
                                             tal:content="python:util.trunc(entry.revno)"></a>
             </td>
-            <td class="expcell">
+            <td class="expcell show_if_js">
               <div class="expand_revisioninfo">
                 <!-- So, this is interesting. I'm using "alt" to have the correct URL for the image of the expanded icon
                      and "title" tag for the contracted URL of the image. This is a bit of a hack, but it's better than
                      other approaches I tried  :)  -->
-                <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                     alt python:branch.static_url('/static/images/treeExpanded.png');
-                                     title python:branch.static_url('/static/images/treeCollapsed.png')"
-                     class="expand_icon" />
+                <a href="#">
+                  <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
+                                       alt python:branch.static_url('/static/images/treeExpanded.png');
+                                       title python:branch.static_url('/static/images/treeCollapsed.png')"
+                       class="expand_icon" />
+                </a>
               </div>
             </td>
             <td class="summcell"><div tal:attributes="class string:short_description">
