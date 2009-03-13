@@ -7,6 +7,9 @@
       <link rel="alternate" type="application/atom+xml"
             tal:attributes="href python:url(['/atom']);
                             title string:RSS feed for ${branch/friendly_name}" />
+    <script type="text/javascript">
+      var revids = <tal:block content="data" />;
+    </script>
       <script type="text/javascript"
               tal:attributes="src python:branch.static_url('/static/javascript/changelog.js')"></script>
     </metal:block>
@@ -76,7 +79,7 @@
         </tr>
         <tal:block tal:repeat="entry changes">
           <a tal:attributes="name string:entry-${entry/revno}"/>
-          <tr tal:attributes="class string:blueRow${entry/parity} revision_log">
+          <tr tal:attributes="class string:blueRow${entry/parity} revision_log; id string:log-${entry/index}">
             <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                             href  python:url(['/revision', entry.revno], clear=1)"
                                             tal:content="python:util.trunc(entry.revno)"></a>
@@ -108,25 +111,8 @@
                    tal:content="structure python:util.fixed_width(entry.comment)"></a>
               </div>
               <div class="revisioninfo" style="display:none;">
-                <ul class="expandrev">
-                  <li class="mfrom" tal:repeat="parent python:entry.parents[1:]">
-                    <span class="revnolink">
-                      <a tal:attributes="href python:url(['/changes', parent.revno])"
-                         tal:content="parent/revno"></a>
-                    </span>
-                    <a tal:condition="parent.branch_nick"
-                       tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
-                       tal:content="python:'(' + parent.branch_nick + ')'"
-                       title="Show history" class="link"></a>
-                  </li>
-                  <li class="mto" tal:repeat="merge_point entry/merge_points">
-                    <a tal:attributes="href python:url(['/changes'], start_revid=merge_point.revno)"
-                       tal:content="python:revno_with_nick(merge_point)"
-                       title="Show history" class="link"></a>
-                  </li>
-                  <li class="committerli" tal:content="python:util.hide_email(entry.author)"></li>
-                  <tal:block content="structure python:file_change_summary(url, entry)" />
-                </ul>
+                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
+                Loading...
               </div>
             </td>
             <td tal:content="python:util.trunc(util.hide_email(entry.author), 20)"

@@ -61,7 +61,14 @@ Y.on(
         var expand_icon = item.query('.expand_icon');
         var collapsable = new Collapsable(item_slide, expand_icon, open_content, close_content, false);
 
-        item.query('.expand_revisioninfo a').on('click',function() { collapsable.toggle(); });
+        item.query('.expand_revisioninfo a').on(
+          'click',
+          function(e) {
+            e.preventDefault();
+            collapsable.toggle();
+          });
+        var revid = revids[item.get('id').replace('log-', '')];
+        collapsable.source = global_path + '+revlog/' + revid;
         item.collapsable = collapsable;
       });
 

@@ -112,8 +112,27 @@ function get_height(node) {
   return height;
 }
 
+function load_finished (tid, res, args)
+{
+  var col = args[0];
+  col.source = null;
+  var newNode = col.item.create(res.responseText.split('\n').splice(1).join(''));
+  col.item.ancestor().replaceChild(newNode, col.item);
+  col.item = newNode;
+  col.open();
+}
+
 Collapsable.prototype.open = function()
 {
+  if (this.source) {
+    Y.log(this.source);
+    Y.io(
+      this.source,
+      {on: {complete: load_finished},
+       arguments: [this]});
+    return;
+  }
+
   if (this.height == null) {
     this.height = get_height(this.item);
   }
