@@ -1,4 +1,6 @@
-Y = YUI().use("node", "io-base", "anim");
+Y = YUI().use("node", "io-base", "io-queue", "anim");
+
+Y.io.queue.size(2);
 
 var global_timeout_id = null;
 var global_search_request = null;
@@ -111,7 +113,7 @@ Collapsable.prototype.open = function()
 {
   if (this.source) {
     this.loading.setStyle('display', 'block');
-    Y.io(
+    Y.io.queue(
       this.source,
       {
         on: {complete: this._load_finished},
