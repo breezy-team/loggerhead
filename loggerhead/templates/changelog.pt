@@ -105,15 +105,17 @@
                                        href  python:url(['/revision', entry.revno], clear=1);
                                        class string:link"
                        tal:content="entry/short_comment"></a>
+                    <div class="loading" style="display:none;">
+                      <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
+                      Loading...
+                    </div>
                   </div>
                   <div class="long_description" style="display: none">
                     <a tal:attributes="title python:'Show revision '+entry.revno;
                                        href  python:url(['/revision', entry.revno], clear=1);
                                        class string:link"
                        tal:content="structure python:util.fixed_width(entry.comment)"></a>
-                    <div class="revisioninfo" style="display:none;">
-                      <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-                      Loading...
+                    <div class="source_target">
                     </div>
                   </div>
                 </div>

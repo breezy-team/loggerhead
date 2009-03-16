@@ -60,7 +60,8 @@ Y.on(
             open_node: item.query('.long_description'),
             close_node: item.query('.short_description'),
             source: global_path + '+revlog/' + revid,
-            source_target: item.query('.revisioninfo'),
+            source_target: item.query('.source_target'),
+            loading: item.query('.loading'),
             is_open: false
           });
 

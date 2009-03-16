@@ -83,6 +83,7 @@ function Collapsable(config)
   this.close_node = config.close_node;
   this.expand_icon = config.expand_icon;
   this.source = config.source;
+  this.loading = config.loading;
 }
 
 function get_height(node) {
@@ -102,12 +103,14 @@ Collapsable.prototype._load_finished = function(tid, res)
   this.source_target.ancestor().replaceChild(newNode, this.source_target);
   this.source_target = null;
   this.source = null;
+  this.loading.setStyle('display', 'none');
   this.open();
 };
 
 Collapsable.prototype.open = function()
 {
   if (this.source) {
+    this.loading.setStyle('display', 'block');
     Y.io(
       this.source,
       {
@@ -186,7 +189,6 @@ Collapsable.prototype.close = function()
 };
 
 Collapsable.prototype.closeComplete = function () {
-  //this.item.setStyle('display', 'none');
   this.open_node.setStyle('display', 'none');
   if (this.close_node) {
     this.close_node.setStyle('display', 'block');
@@ -196,14 +198,9 @@ Collapsable.prototype.closeComplete = function () {
   this.is_open = false;
 };
 
-Collapsable.prototype.isOpen = function()
-{
-  return this.is_open;
-};
-
 Collapsable.prototype.toggle = function()
 {
-  if (this.isOpen())
+  if (this.is_open)
   {
     this.close();
   }
