@@ -75,32 +75,14 @@ function hide_search()
   setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
 }
 
-function Collapsable(item, expand_icon, open_content, close_content, is_open)
+function Collapsable(config)
 {
-  this.is_open = is_open;
-  this.item = item;
-  this.open_content  = open_content;
-  this.close_content = close_content;
-  this.expand_icon   = expand_icon;
-  this.source = null;
-  this.anim = null;
-
-  if (this.is_open) {
-    this.height = item.get('region').height;
-  }
-  else {
-    this.height = null;
-  }
-
-  //var expander = new Fx.Slide(this.item, { duration: 200 } );
-  if (!this.is_open)
-  {
-    this.expand_icon.set('src',this.expand_icon.get('title'));
-  }
-  else
-  {
-    this.expand_icon.set('src',this.expand_icon.get('alt'));
-  }
+  this.is_open = config.is_open;
+  this.source_target = config.source_target;
+  this.open_node = config.open_node;
+  this.close_node = config.close_node;
+  this.expand_icon = config.expand_icon;
+  this.source = config.source;
 }
 
 function get_height(node) {
@@ -116,10 +98,10 @@ function get_height(node) {
 
 Collapsable.prototype._load_finished = function(tid, res)
 {
+  var newNode = Y.Node.create(res.responseText.split('\n').splice(1).join(''));
+  this.source_target.ancestor().replaceChild(newNode, this.source_target);
+  this.source_target = null;
   this.source = null;
-  var newNode = this.item.create(res.responseText.split('\n').splice(1).join(''));
-  this.item.ancestor().replaceChild(newNode, this.item);
-  this.item = newNode;
   this.open();
 };
 
@@ -135,49 +117,67 @@ Collapsable.prototype.open = function()
     return;
   }
 
-  if (this.height == null) {
-    this.height = get_height(this.open_content[0]);
+  var open_height = get_height(this.open_node);
+
+  var close_height;
+  if (this.close_node) {
+    close_height = this.close_node.get('region').height;
+  }
+  else {
+    close_height = 0;
   }
 
-  var clo_height = this.close_content[0].get('region').height;
+  var container = this.open_node.ancestor('.container');
 
-  this.anim = new Y.Anim(
+  var anim = new Y.Anim(
     {
-      node: this.item.ancestor('.container'),
+      node: container,
       from: {
-        marginBottom: clo_height - this.height
+        marginBottom: close_height - open_height
       },
       to: {
         marginBottom: 0
       },
       duration: 0.2
     });
-  this.anim.on('end', this.openComplete, this);
-  this.close_content[0].setStyle('display', 'none');
-  this.open_content[0].setStyle('display', 'block');
+
+  anim.on('end', this.openComplete, this);
+  container.setStyle('marginBottom', close_height - this.height);
+  if (this.close_node) {
+    this.close_node.setStyle('display', 'none');
+  }
+  this.open_node.setStyle('display', 'block');
   this.expand_icon.set('src',this.expand_icon.get('alt'));
-  this.item.ancestor('.container').setStyle('marginBottom', clo_height - this.height);
-  this.item.setStyle('display', 'block');
-  this.anim.run();
+  anim.run();
 };
 
 Collapsable.prototype.openComplete = function()
 {
   this.is_open = true;
-  this.anim = null;
 };
 
 Collapsable.prototype.close = function()
 {
-  var item = this.item;
+  var container = this.open_node.ancestor('.container');
+
+  var open_height = this.open_node.get('region').height;
+
+  var close_height;
+  if (this.close_node) {
+    close_height = get_height(this.close_node);
+  }
+  else {
+    close_height = 0;
+  }
+
   var anim = new Y.Anim(
     {
-      node: this.item.ancestor('.container'),
+      node: container,
       from: {
         marginBottom: 0
       },
       to: {
-        marginBottom: get_height(this.close_content[0]) - this.height
+        marginBottom: close_height - open_height
       },
       duration: 0.2
     });
@@ -187,9 +187,11 @@ Collapsable.prototype.close = function()
 
 Collapsable.prototype.closeComplete = function () {
   //this.item.setStyle('display', 'none');
-  this.open_content[0].setStyle('display', 'none');
-  this.close_content[0].setStyle('display', 'block');
-  this.item.ancestor('.container').setStyle('marginBottom', 0);
+  this.open_node.setStyle('display', 'none');
+  if (this.close_node) {
+    this.close_node.setStyle('display', 'block');
+  }
+  this.open_node.ancestor('.container').setStyle('marginBottom', 0);
   this.expand_icon.set('src', this.expand_icon.get('title'));
   this.is_open = false;
 };
