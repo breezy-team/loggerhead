@@ -1,4 +1,6 @@
-Y = YUI().use("node", "io-base", "anim");
+Y = YUI().use("node", "io-base", "io-queue", "anim");
+
+Y.io.queue.size(2);
 
 var global_timeout_id = null;
 var global_search_request = null;
@@ -75,30 +77,15 @@ function hide_search()
   setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
 }
 
-function Collapsable(item, expand_icon, open_content, close_content, is_open)
+function Collapsable(config)
 {
-  this.is_open = is_open;
-  this.item = item;
-  this.open_content  = open_content;
-  this.close_content = close_content;
-  this.expand_icon   = expand_icon;
-
-  if (this.is_open) {
-    this.height = item.get('region').height;
-  }
-  else {
-    this.height = null;
-  }
-
-  //var expander = new Fx.Slide(this.item, { duration: 200 } );
-  if (!this.is_open)
-  {
-    this.expand_icon.set('src',this.expand_icon.get('title'));
-  }
-  else
-  {
-    this.expand_icon.set('src',this.expand_icon.get('alt'));
-  }
+  this.is_open = config.is_open;
+  this.source_target = config.source_target;
+  this.open_node = config.open_node;
+  this.close_node = config.close_node;
+  this.expand_icon = config.expand_icon;
+  this.source = config.source;
+  this.loading = config.loading;
 }
 
 function get_height(node) {
@@ -112,56 +99,90 @@ function get_height(node) {
   return height;
 }
 
+Collapsable.prototype._load_finished = function(tid, res)
+{
+  var newNode = Y.Node.create(res.responseText.split('\n').splice(1).join(''));
+  this.source_target.ancestor().replaceChild(newNode, this.source_target);
+  this.source_target = null;
+  this.source = null;
+  this.loading.setStyle('display', 'none');
+  this.open();
+};
+
 Collapsable.prototype.open = function()
 {
-  if (this.height == null) {
-    this.height = get_height(this.item);
+  if (this.source) {
+    this.loading.setStyle('display', 'block');
+    Y.io.queue(
+      this.source,
+      {
+        on: {complete: this._load_finished},
+        context: this
+      });
+    return;
   }
+
+  var open_height = get_height(this.open_node);
+
+  var close_height;
+  if (this.close_node) {
+    close_height = this.close_node.get('region').height;
+  }
+  else {
+    close_height = 0;
+  }
+
+  var container = this.open_node.ancestor('.container');
 
   var anim = new Y.Anim(
     {
-      node: this.item,
+      node: container,
       from: {
-        height: 0
+        marginBottom: close_height - open_height
       },
       to: {
-        height: this.height
+        marginBottom: 0
       },
       duration: 0.2
     });
+
   anim.on('end', this.openComplete, this);
-  this.item.setStyle('height', 0);
-  this.item.setStyle('display', 'block');
+  container.setStyle('marginBottom', close_height - open_height);
+  if (this.close_node) {
+    this.close_node.setStyle('display', 'none');
+  }
+  this.open_node.setStyle('display', 'block');
+  this.expand_icon.set('src', this.expand_icon.get('alt'));
   anim.run();
 };
 
 Collapsable.prototype.openComplete = function()
 {
-  for (var i=0;i<this.open_content.length;++i)
-  {
-    this.open_content[i].setStyle('display','block');
-  }
-
-  for (var i=0;i<this.close_content.length;++i)
-  {
-    this.close_content[i].setStyle('display','none');
-  }
-
-  this.expand_icon.set('src',this.expand_icon.get('alt'));
   this.is_open = true;
 };
 
 Collapsable.prototype.close = function()
 {
-  var item = this.item;
+  var container = this.open_node.ancestor('.container');
+
+  var open_height = this.open_node.get('region').height;
+
+  var close_height;
+  if (this.close_node) {
+    close_height = get_height(this.close_node);
+  }
+  else {
+    close_height = 0;
+  }
+
   var anim = new Y.Anim(
     {
-      node: this.item,
+      node: container,
       from: {
-        height: this.height
+        marginBottom: 0
       },
       to: {
-        height: 0
+        marginBottom: close_height - open_height
       },
       duration: 0.2
     });
@@ -170,29 +191,18 @@ Collapsable.prototype.close = function()
 };
 
 Collapsable.prototype.closeComplete = function () {
-  this.item.setStyle('display', 'none');
-  var i;
-  for (i=0;i<this.open_content.length;++i)
-  {
-    this.open_content[i].setStyle('display','none');
+  this.open_node.setStyle('display', 'none');
+  if (this.close_node) {
+    this.close_node.setStyle('display', 'block');
   }
-
-  for (i=0;i<this.close_content.length;++i)
-  {
-    this.close_content[i].setStyle('display','block');
-  }
-  this.expand_icon.set('src',this.expand_icon.get('title'));
+  this.open_node.ancestor('.container').setStyle('marginBottom', 0);
+  this.expand_icon.set('src', this.expand_icon.get('title'));
   this.is_open = false;
-};
-
-Collapsable.prototype.isOpen = function()
-{
-  return this.is_open;
 };
 
 Collapsable.prototype.toggle = function()
 {
-  if (this.isOpen())
+  if (this.is_open)
   {
     this.close();
   }

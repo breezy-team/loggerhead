@@ -123,28 +123,32 @@
                tal:content="item/filename">
             </a>
           </div>
-          <div class="diffinfo">
-            <div class="pseudotable unified"
-                 tal:repeat="chunk item/chunks">
+          <div style="overflow: hidden">
+            <div class="container">
+              <div class="diffinfo">
+                <div class="pseudotable unified"
+                     tal:repeat="chunk item/chunks">
 
-              <tal:block condition="not:repeat/chunk/start">
-                <div class="pseudorow context-row">
-                  <div class="lineNumber separate"></div>
-                  <div class="lineNumber second separate"></div>
-                  <div class="code separate"></div>
-                  <div class="clear"><!-- --></div>
+                  <tal:block condition="not:repeat/chunk/start">
+                    <div class="pseudorow context-row">
+                      <div class="lineNumber separate"></div>
+                      <div class="lineNumber second separate"></div>
+                      <div class="code separate"></div>
+                      <div class="clear"><!-- --></div>
+                    </div>
+                  </tal:block>
+
+                  <div tal:repeat="line chunk/diff"
+                       tal:attributes="class string:pseudorow ${line/type}-row">
+                    <div class="lineNumber first"
+                         tal:content="structure python:util.fill_div(line.old_lineno)"></div>
+                    <div class="lineNumber second"
+                         tal:content="structure python:util.fill_div(line.new_lineno)"></div>
+                    <div tal:attributes="class string:code ${line/type}"
+                         tal:content="structure python:util.fill_div(util.html_clean(line.line))"></div>
+                    <div class="clear"><!-- --></div>
+                  </div>
                 </div>
-              </tal:block>
-
-              <div tal:repeat="line chunk/diff"
-                   tal:attributes="class string:pseudorow ${line/type}-row">
-                <div class="lineNumber first"
-                     tal:content="structure python:util.fill_div(line.old_lineno)"></div>
-                <div class="lineNumber second"
-                     tal:content="structure python:util.fill_div(line.new_lineno)"></div>
-                <div tal:attributes="class string:code ${line/type}"
-                     tal:content="structure python:util.fill_div(util.html_clean(line.line))"></div>
-                <div class="clear"><!-- --></div>
               </div>
             </div>
           </div>

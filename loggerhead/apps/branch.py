@@ -15,6 +15,7 @@ from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.revision_ui import RevisionUI
+from loggerhead.controllers.revlog_ui import RevLogUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.search_ui import SearchUI
@@ -82,6 +83,7 @@ class BranchWSGIApp(object):
         'changes': ChangeLogUI,
         'files': InventoryUI,
         'revision': RevisionUI,
+        '+revlog': RevLogUI,
         'download': DownloadUI,
         'atom': AtomUI,
         'search': SearchUI,
