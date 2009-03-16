@@ -128,7 +128,7 @@
                  tal:repeat="chunk item/chunks">
 
               <tal:block condition="not:repeat/chunk/start">
-                <div class="pseudorow context">
+                <div class="pseudorow context-row">
                   <div class="lineNumber separate"></div>
                   <div class="lineNumber second separate"></div>
                   <div class="code separate"></div>
