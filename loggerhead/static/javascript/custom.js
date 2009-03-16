@@ -142,7 +142,7 @@ Collapsable.prototype.open = function()
     });
 
   anim.on('end', this.openComplete, this);
-  container.setStyle('marginBottom', close_height - this.height);
+  container.setStyle('marginBottom', close_height - open_height);
   if (this.close_node) {
     this.close_node.setStyle('display', 'none');
   }
