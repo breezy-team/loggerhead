@@ -147,7 +147,7 @@ Collapsable.prototype.open = function()
     this.close_node.setStyle('display', 'none');
   }
   this.open_node.setStyle('display', 'block');
-  this.expand_icon.set('src',this.expand_icon.get('alt'));
+  this.expand_icon.set('src', this.expand_icon.get('alt'));
   anim.run();
 };
 
