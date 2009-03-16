@@ -17,6 +17,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import simplejson
+import urllib
+
 from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
@@ -58,7 +61,10 @@ class ChangeLogUI(TemplatedBranchView):
                 scan_list = revid_list[i:]
             change_list = scan_list[:pagesize]
             changes = list(history.get_changes(change_list))
-            history.add_changes(changes)
+            data = {}
+            for i, c in enumerate(changes):
+                c.index = i
+                data[str(i)] = urllib.quote(urllib.quote(c.revid, safe=''))
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -71,9 +77,6 @@ class ChangeLogUI(TemplatedBranchView):
             navigation.query = query
         util.fill_in_navigation(navigation)
 
-        # add parent & merge-point branch-nick info, in case it's useful
-        history.get_branch_nicks(changes)
-
         # Directory Breadcrumbs
         directory_breadcrumbs = (
             util.directory_breadcrumbs(
@@ -84,6 +87,7 @@ class ChangeLogUI(TemplatedBranchView):
         return {
             'branch': self._branch,
             'changes': changes,
+            'data': simplejson.dumps(data),
             'util': util,
             'history': history,
             'revid': revid,

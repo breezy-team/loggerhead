@@ -42,7 +42,6 @@ def file_change_summary(url, entry, link_style='normal', currently_showing=None)
     if link_style == 'fragment':
         def file_link(filename):
             if currently_showing:
-                print filename, currently_showing, filename == currently_showing
                 if filename == currently_showing:
                     return '<b><a href="#%s">%s</a></b>' % (
                         cgi.escape(filename), cgi.escape(filename))

@@ -41,7 +41,6 @@ function make_sbs(chunk) {
   var removed = [];
   function clear_bufs(before) {
     if (!added.length && !removed.length) return;
-    Y.log('hai');
     var common = Math.min(added.length, removed.length);
     for (var i = 0; i < common; i++) {
       var a = added[i];
@@ -151,10 +150,16 @@ Y.on(
     diffs.each(
       function(item, i)
       {
-        var item_slide = item.next('.diffinfo');
-        var expand_icon = item.query( '.expand_diff' );
-        var collapsable = new Collapsable(item_slide, expand_icon, [], [], true);
-        item.query('.expand_diff').on('click', function(){collapsable.toggle();});
-        item.collapsable=collapsable;
-      });
+        item.query('.expand_diff').on('click', function() { collapsable.toggle(); });
+        var collapsable = new Collapsable(
+          {
+            expand_icon: item.query('.expand_diff'),
+            open_node: item.ancestor().query('.diffinfo'),
+            close_node: null,
+            source: null,
+            source_target: null,
+            is_open: true
+          });
+       item.collapsable=collapsable;
+       });
   });

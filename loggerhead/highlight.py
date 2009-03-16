@@ -39,10 +39,10 @@ def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
         text = text.decode(encoding)
 
     try:
-        lexer = guess_lexer_for_filename(path, text, encoding=encoding)
+        lexer = guess_lexer_for_filename(path, text[:1024], encoding=encoding)
     except (ClassNotFound, ValueError):
         try:
-            lexer = guess_lexer(text, encoding=encoding)
+            lexer = guess_lexer(text[:1024], encoding=encoding)
         except (ClassNotFound, ValueError):
             lexer = TextLexer(encoding=encoding)
 
