@@ -82,6 +82,8 @@ function Collapsable(item, expand_icon, open_content, close_content, is_open)
   this.open_content  = open_content;
   this.close_content = close_content;
   this.expand_icon   = expand_icon;
+  this.source = null;
+  this.anim = null;
 
   if (this.is_open) {
     this.height = item.get('region').height;
@@ -112,62 +114,57 @@ function get_height(node) {
   return height;
 }
 
-function load_finished (tid, res, args)
+Collapsable.prototype._load_finished = function(tid, res)
 {
-  var col = args[0];
-  col.source = null;
-  var newNode = col.item.create(res.responseText.split('\n').splice(1).join(''));
-  col.item.ancestor().replaceChild(newNode, col.item);
-  col.item = newNode;
-  col.open();
-}
+  this.source = null;
+  var newNode = this.item.create(res.responseText.split('\n').splice(1).join(''));
+  this.item.ancestor().replaceChild(newNode, this.item);
+  this.item = newNode;
+  this.open();
+};
 
 Collapsable.prototype.open = function()
 {
   if (this.source) {
-    Y.log(this.source);
     Y.io(
       this.source,
-      {on: {complete: load_finished},
-       arguments: [this]});
+      {
+        on: {complete: this._load_finished},
+        context: this
+      });
     return;
   }
 
   if (this.height == null) {
-    this.height = get_height(this.item);
+    this.height = get_height(this.open_content[0]);
   }
 
-  var anim = new Y.Anim(
+  var clo_height = this.close_content[0].get('region').height;
+
+  this.anim = new Y.Anim(
     {
-      node: this.item,
+      node: this.item.ancestor('.container'),
       from: {
-        height: 0
+        marginBottom: clo_height - this.height
       },
       to: {
-        height: this.height
+        marginBottom: 0
       },
       duration: 0.2
     });
-  anim.on('end', this.openComplete, this);
-  this.item.setStyle('height', 0);
+  this.anim.on('end', this.openComplete, this);
+  this.close_content[0].setStyle('display', 'none');
+  this.open_content[0].setStyle('display', 'block');
+  this.expand_icon.set('src',this.expand_icon.get('alt'));
+  this.item.ancestor('.container').setStyle('marginBottom', clo_height - this.height);
   this.item.setStyle('display', 'block');
-  anim.run();
+  this.anim.run();
 };
 
 Collapsable.prototype.openComplete = function()
 {
-  for (var i=0;i<this.open_content.length;++i)
-  {
-    this.open_content[i].setStyle('display','block');
-  }
-
-  for (var i=0;i<this.close_content.length;++i)
-  {
-    this.close_content[i].setStyle('display','none');
-  }
-
-  this.expand_icon.set('src',this.expand_icon.get('alt'));
   this.is_open = true;
+  this.anim = null;
 };
 
 Collapsable.prototype.close = function()
@@ -175,12 +172,12 @@ Collapsable.prototype.close = function()
   var item = this.item;
   var anim = new Y.Anim(
     {
-      node: this.item,
+      node: this.item.ancestor('.container'),
       from: {
-        height: this.height
+        marginBottom: 0
       },
       to: {
-        height: 0
+        marginBottom: get_height(this.close_content[0]) - this.height
       },
       duration: 0.2
     });
@@ -189,18 +186,11 @@ Collapsable.prototype.close = function()
 };
 
 Collapsable.prototype.closeComplete = function () {
-  this.item.setStyle('display', 'none');
-  var i;
-  for (i=0;i<this.open_content.length;++i)
-  {
-    this.open_content[i].setStyle('display','none');
-  }
-
-  for (i=0;i<this.close_content.length;++i)
-  {
-    this.close_content[i].setStyle('display','block');
-  }
-  this.expand_icon.set('src',this.expand_icon.get('title'));
+  //this.item.setStyle('display', 'none');
+  this.open_content[0].setStyle('display', 'none');
+  this.close_content[0].setStyle('display', 'block');
+  this.item.ancestor('.container').setStyle('marginBottom', 0);
+  this.expand_icon.set('src', this.expand_icon.get('title'));
   this.is_open = false;
 };
 

@@ -97,22 +97,26 @@
                 </a>
               </div>
             </td>
-            <td class="summcell"><div tal:attributes="class string:short_description">
-                <a tal:attributes="title python:'Show revision '+entry.revno;
-                                   href  python:url(['/revision', entry.revno], clear=1);
-                                   class string:link"
-                   tal:content="entry/short_comment"></a>
-              </div>
-              <div tal:attributes="class string:long_description;
-                                   style string:display:none">
-                <a tal:attributes="title python:'Show revision '+entry.revno;
-                                   href  python:url(['/revision', entry.revno], clear=1);
-                                   class string:link"
-                   tal:content="structure python:util.fixed_width(entry.comment)"></a>
-              </div>
-              <div class="revisioninfo" style="display:none;">
-                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-                Loading...
+            <td class="summcell">
+              <div style="overflow: hidden">
+                <div class="container">
+                  <div class="short_description">
+                    <a tal:attributes="title python:'Show revision '+entry.revno;
+                                       href  python:url(['/revision', entry.revno], clear=1);
+                                       class string:link"
+                       tal:content="entry/short_comment"></a>
+                  </div>
+                  <div class="long_description" style="display: none">
+                    <a tal:attributes="title python:'Show revision '+entry.revno;
+                                       href  python:url(['/revision', entry.revno], clear=1);
+                                       class string:link"
+                       tal:content="structure python:util.fixed_width(entry.comment)"></a>
+                    <div class="revisioninfo" style="display:none;">
+                      <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
+                      Loading...
+                    </div>
+                  </div>
+                </div>
               </div>
             </td>
             <td tal:content="python:util.trunc(util.hide_email(entry.author), 20)"
