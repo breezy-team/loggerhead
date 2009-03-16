@@ -41,7 +41,6 @@ function make_sbs(chunk) {
   var removed = [];
   function clear_bufs(before) {
     if (!added.length && !removed.length) return;
-    Y.log('hai');
     var common = Math.min(added.length, removed.length);
     for (var i = 0; i < common; i++) {
       var a = added[i];
@@ -152,7 +151,6 @@ Y.on(
       function(item, i)
       {
         item.query('.expand_diff').on('click', function() { collapsable.toggle(); });
-        Y.log(item.ancestor().query('.diffinfo'));
         var collapsable = new Collapsable(
           {
             expand_icon: item.query('.expand_diff'),

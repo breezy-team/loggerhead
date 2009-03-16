@@ -18,6 +18,7 @@
 #
 
 import simplejson
+import urllib
 
 from paste.httpexceptions import HTTPServerError
 
@@ -63,7 +64,7 @@ class ChangeLogUI(TemplatedBranchView):
             data = {}
             for i, c in enumerate(changes):
                 c.index = i
-                data[str(i)] = c.revid
+                data[str(i)] = urllib.quote(urllib.quote(c.revid, safe=''))
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')

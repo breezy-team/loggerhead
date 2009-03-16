@@ -1,3 +1,5 @@
+import urllib
+
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
@@ -8,7 +10,8 @@ class RevLogUI(TemplatedBranchView):
 
     def get_values(self, path, kwargs, headers):
         history = self._history
-        revid = self.get_revid()
+
+        revid = urllib.unquote(self.args[0])
 
         changes = list(history.get_changes([revid]))
         history.add_changes(changes)
