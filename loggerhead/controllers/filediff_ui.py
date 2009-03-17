@@ -54,7 +54,6 @@ def _process_diff(difftext):
 
 
 def diff_chunks_for_file(repository, file_id, new_revid, old_revid):
-    print old_revid == new_revid
     old_tree, new_tree = repository.revision_trees([old_revid, new_revid])
     try:
         old_lines = old_tree.get_file_lines(file_id)
@@ -74,8 +73,6 @@ def diff_chunks_for_file(repository, file_id, new_revid, old_revid):
             difftext = buffer.getvalue()
     else:
         difftext = ''
-
-    print repr(difftext)
 
     return _process_diff(difftext)
 
