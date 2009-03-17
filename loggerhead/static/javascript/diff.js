@@ -151,7 +151,6 @@ Y.on(
         var hash = e.target.get('href').split('#')[1];
         var collapsable = Y.get('#' + path_to_id[hash]).collapsable;
         if (!collapsable.is_open) {
-          e.preventDefault();
           collapsable.open(function () { window.location.hash = '#' + hash; });
         }
       });
