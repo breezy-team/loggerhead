@@ -87,13 +87,14 @@ function make_sbs(chunk) {
 
 function toggle_unified_sbs(event) {
   event.preventDefault();
+  var pts = Y.all(".pseudotable");
   if (unified) {
-    Y.all(".pseudotable").each(make_sbs);
+    pts && pts.each(make_sbs);
     unified = false;
     Y.get("#toggle_unified_sbs").set('innerHTML', "Show unified diffs");
   }
   else {
-    Y.all(".pseudotable").each(make_unified);
+    pts && pts.each(make_unified);
     unified = true;
     Y.get("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
   }
@@ -142,6 +143,12 @@ Y.on(
   '#collapse_all a'
 );
 
+function node_process(node) {
+  if (!unified) {
+    node.get('children').filter('.pseudotable').each(make_sbs);
+  }
+}
+
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
@@ -176,7 +183,8 @@ Y.on(
             source: source_url,
             source_target: item.query('.source_target'),
             is_open: specific_path != null,
-            loading: item.query('.loading')
+            loading: item.query('.loading'),
+            node_process: node_process
           });
        item.collapsable=collapsable;
        });

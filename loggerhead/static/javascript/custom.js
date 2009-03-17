@@ -86,6 +86,7 @@ function Collapsable(config)
   this.expand_icon = config.expand_icon;
   this.source = config.source;
   this.loading = config.loading;
+  this.node_process = config.node_process;
 }
 
 function get_height(node) {
@@ -102,6 +103,8 @@ function get_height(node) {
 Collapsable.prototype._load_finished = function(tid, res, args)
 {
   var newNode = Y.Node.create(res.responseText.split('\n').splice(1).join(''));
+  if (this.node_process)
+    this.node_process(newNode);
   this.source_target.ancestor().replaceChild(newNode, this.source_target);
   this.source_target = null;
   this.source = null;
