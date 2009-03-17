@@ -162,7 +162,7 @@ Y.on(
         var collapsable = new Collapsable(
           {
             expand_icon: item.query('.expand_diff'),
-            open_node: item.ancestor().query('.diffinfo'),
+            open_node: item.query('.diffinfo'),
             close_node: null,
             source: source_url,
             source_target: item.query('.source_target'),
