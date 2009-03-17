@@ -8,7 +8,6 @@ from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
 def _process_diff(difftext):
-    # doesn't really need to be a method; could be static.
     chunks = []
     chunk = None
     for line in difftext.splitlines():

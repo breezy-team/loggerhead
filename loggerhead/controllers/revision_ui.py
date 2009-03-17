@@ -18,6 +18,7 @@
 #
 
 import simplejson
+import urllib
 
 from paste.httpexceptions import HTTPServerError
 
@@ -29,6 +30,8 @@ from loggerhead.history import rich_filename
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
 
+def dq(p):
+    return urllib.quote(urllib.quote(p, safe=''))
 
 class RevisionUI(TemplatedBranchView):
 
@@ -143,7 +146,8 @@ class RevisionUI(TemplatedBranchView):
             cr = compare_revid
         for i, item in enumerate(diffs):
             item.index = i
-            link_data['diff-' + str(i)] = '%s/%s/%s' % (revid, cr, item.file_id)
+            link_data['diff-' + str(i)] = '%s/%s/%s' % (
+                dq(revid), dq(cr), dq(item.file_id))
             path_to_id[item.filename] = 'diff-' + str(i)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
