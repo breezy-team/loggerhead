@@ -18,15 +18,12 @@
 #
 
 import simplejson
-from StringIO import StringIO
-
-import bzrlib.diff
-from bzrlib import errors
 
 from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
+from loggerhead.controllers.filediff_ui import diff_chunks_for_file
 from loggerhead.history import rich_filename
 
 
@@ -36,51 +33,6 @@ DEFAULT_LINE_COUNT_LIMIT = 3000
 class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
-
-    def _process_diff(self, diff):
-        # doesn't really need to be a method; could be static.
-        chunks = []
-        chunk = None
-        for line in diff.splitlines():
-            if len(line) == 0:
-                continue
-            if line.startswith('+++ ') or line.startswith('--- '):
-                continue
-            if line.startswith('@@ '):
-                # new chunk
-                if chunk is not None:
-                    chunks.append(chunk)
-                chunk = util.Container()
-                chunk.diff = []
-                split_lines = line.split(' ')[1:3]
-                lines = [int(x.split(',')[0][1:]) for x in split_lines]
-                old_lineno = lines[0]
-                new_lineno = lines[1]
-            elif line.startswith(' '):
-                chunk.diff.append(util.Container(old_lineno=old_lineno,
-                                                 new_lineno=new_lineno,
-                                                 type='context',
-                                                 line=line[1:]))
-                old_lineno += 1
-                new_lineno += 1
-            elif line.startswith('+'):
-                chunk.diff.append(util.Container(old_lineno=None,
-                                                 new_lineno=new_lineno,
-                                                 type='insert', line=line[1:]))
-                new_lineno += 1
-            elif line.startswith('-'):
-                chunk.diff.append(util.Container(old_lineno=old_lineno,
-                                                 new_lineno=None,
-                                                 type='delete', line=line[1:]))
-                old_lineno += 1
-            else:
-                chunk.diff.append(util.Container(old_lineno=None,
-                                                 new_lineno=None,
-                                                 type='unknown',
-                                                 line=repr(line)))
-        if chunk is not None:
-            chunks.append(chunk)
-        return chunks
 
     def _parse_diffs(self, old_tree, new_tree, delta, specific_path):
         """
@@ -99,57 +51,36 @@ class RevisionUI(TemplatedBranchView):
                 ),
             )
         """
+        if specific_path:
+            fid = new_tree.path2id(specific_path)
+            kind = new_tree.kind(fid)
+            chunks=diff_chunks_for_file(fid, old_tree, new_tree)
+            return [util.Container(
+                filename=rich_filename(specific_path, kind), file_id=fid,
+                chunks=chunks)]
+
         process = []
         out = []
 
-        def include_specific_path(path):
-            return specific_path == path
-        def include_all_paths(path):
-            return True
-        if specific_path:
-            include_path = include_specific_path
-        else:
-            include_path = include_all_paths
-
         for old_path, new_path, fid, \
             kind, text_modified, meta_modified in delta.renamed:
-            if text_modified and include_path(new_path):
-                process.append((old_path, new_path, fid, kind))
+            if text_modified:
+                process.append((new_path, fid, kind))
         for path, fid, kind, text_modified, meta_modified in delta.modified:
-            if include_path(path):
-                process.append((path, path, fid, kind))
+            process.append((path, fid, kind))
         for path, fid, kind in delta.added:
-            if kind == 'file' and include_path(path):
-                process.append((path, path, fid, kind))
+            if kind == 'file':
+                process.append((path, fid, kind))
         for path, fid, kind in delta.removed:
-            if kind == 'file' and include_path(path):
-                process.append((path, path, fid, kind))
+            if kind == 'file':
+                process.append((path, fid, kind))
 
-        process.sort(key=lambda x:x[1])
+        process.sort()
 
-        for old_path, new_path, fid, kind in process:
-            try:
-                old_lines = old_tree.get_file_lines(fid)
-            except errors.NoSuchId:
-                old_lines = []
-            try:
-                new_lines = new_tree.get_file_lines(fid)
-            except errors.NoSuchId:
-                new_lines = []
-            buffer = StringIO()
-            if old_lines != new_lines:
-                try:
-                    bzrlib.diff.internal_diff(old_path, old_lines,
-                                              new_path, new_lines, buffer)
-                except bzrlib.errors.BinaryFile:
-                    diff = ''
-                else:
-                    diff = buffer.getvalue()
-            else:
-                diff = ''
+        for new_path, fid, kind in process:
             out.append(util.Container(
                 filename=rich_filename(new_path, kind), file_id=fid,
-                chunks=self._process_diff(diff)))
+                chunks=[]))
 
         return out
 

@@ -53,8 +53,7 @@ def _process_diff(difftext):
     return chunks
 
 
-def diff_chunks_for_file(repository, file_id, new_revid, old_revid):
-    old_tree, new_tree = repository.revision_trees([old_revid, new_revid])
+def diff_chunks_for_file(file_id, old_tree, new_tree):
     try:
         old_lines = old_tree.get_file_lines(file_id)
     except errors.NoSuchId:
@@ -88,8 +87,10 @@ class FileDiffUI(TemplatedBranchView):
         compare_revid = urllib.unquote(self.args[1])
         file_id = urllib.unquote(self.args[2])
 
-        chunks = diff_chunks_for_file(
-            self._history._branch.repository, file_id, revid, compare_revid)
+        repository = self._history._branch.repository
+        old_tree, new_tree = repository.revision_trees([compare_revid, revid])
+
+        chunks = diff_chunks_for_file(file_id, old_tree, new_tree)
 
         return {
             'util': util,
