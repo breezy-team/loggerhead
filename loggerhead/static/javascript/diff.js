@@ -103,7 +103,7 @@ Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
 
 function toggle_expand_all_revisionview(action)
 {
-  var diffs = Y.all('.diffBox');
+  var diffs = Y.all('.diff');
   if (diffs == null) return;
   diffs.each(
     function(item, i)
@@ -145,20 +145,29 @@ Y.on(
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
-    var diffs = Y.all('.diffBox');
+    var diffs = Y.all('.diff');
     if (diffs == null) return;
     diffs.each(
       function(item, i)
       {
-        item.query('.expand_diff').on('click', function() { collapsable.toggle(); });
+        var source_url = null;
+        if (!specific_path)
+            source_url = global_path + '+filediff/' + link_data[item.get('id').replace('diff-', '')];
+        item.query('.the-link').on(
+          'click',
+          function(e) {
+            e.preventDefault();
+            collapsable.toggle();
+          });
         var collapsable = new Collapsable(
           {
             expand_icon: item.query('.expand_diff'),
             open_node: item.ancestor().query('.diffinfo'),
             close_node: null,
-            source: null,
-            source_target: null,
-            is_open: true
+            source: source_url,
+            source_target: item.query('.source_target'),
+            is_open: specific_path != null,
+            loading: item.query('.loading')
           });
        item.collapsable=collapsable;
        });
