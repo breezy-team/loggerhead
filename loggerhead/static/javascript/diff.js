@@ -166,7 +166,7 @@ Y.on(
       'click',
       function (e) {
         e.preventDefault();
-        var path = e.target.get('href').split('#')[1];
+        var path = decodeURIComponent(e.target.get('href').split('#')[1]);
         window.location.hash = '#' + path;
         zoom_to_diff(path);
       });
