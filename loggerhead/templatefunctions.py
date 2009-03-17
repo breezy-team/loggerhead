@@ -38,7 +38,7 @@ templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 
 @templatefunc
-def file_change_summary(url, entry, link_style='normal', currently_showing=None):
+def file_change_summary(url, entry, currently_showing=None):
     def file_link(filename):
         if currently_showing and filename == currently_showing:
             return '<b><a href="#%s">%s</a></b>' % (
