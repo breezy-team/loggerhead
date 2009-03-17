@@ -11,15 +11,16 @@ from paste import request
 from paste import httpexceptions
 
 from loggerhead.apps import static_app
-from loggerhead.controllers.changelog_ui import ChangeLogUI
-from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
+from loggerhead.controllers.atom_ui import AtomUI
+from loggerhead.controllers.changelog_ui import ChangeLogUI
+from loggerhead.controllers.diff_ui import DiffUI
+from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.filediff_ui import FileDiffUI
+from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.revlog_ui import RevLogUI
-from loggerhead.controllers.atom_ui import AtomUI
-from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.search_ui import SearchUI
-from loggerhead.controllers.diff_ui import DiffUI
 from loggerhead.history import History
 from loggerhead import util
 
@@ -79,15 +80,16 @@ class BranchWSGIApp(object):
         return self._static_url_base + path
 
     controllers_dict = {
+        '+filediff': FileDiffUI,
+        '+revlog': RevLogUI,
         'annotate': AnnotateUI,
+        'atom': AtomUI,
         'changes': ChangeLogUI,
+        'diff': DiffUI,
+        'download': DownloadUI,
         'files': InventoryUI,
         'revision': RevisionUI,
-        '+revlog': RevLogUI,
-        'download': DownloadUI,
-        'atom': AtomUI,
         'search': SearchUI,
-        'diff': DiffUI,
         }
 
     def last_updated(self):

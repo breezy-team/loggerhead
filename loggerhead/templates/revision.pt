@@ -11,6 +11,11 @@
               tal:attributes="href python:branch.static_url('/static/css/diff.css')"/>
         <script type="text/javascript"
                 tal:attributes="src python:branch.static_url('/static/javascript/diff.js')"></script>
+        <script type="text/javascript">
+          var link_data = <tal:b content="link_data" />;
+          var specific_path = <tal:b content="json_specific_path" />;
+          var path_to_id = <tal:b content="path_to_id" />;
+        </script>
       </metal:block>
     </head>
 
@@ -92,14 +97,16 @@
         </tal:we-are-comparing>
 
         <tal:revision-info replace="structure python:revisioninfo(url, branch, change, 'fragment', specific_path)" />
-        <p class="expand" id="expand_all" style="display:none;"><a href="#">
-            <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
-                 alt="expand all" /> expand all</a>
-        </p>
-        <p class="expand show_if_js" id="collapse_all"><a href="#">
-            <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
-                 alt="collapse all" /> collapse all</a>
-        </p>
+        <tal:specific-path condition="not:specific_path">
+          <p class="expand show_if_js" id="expand_all"><a href="#">
+              <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
+                   alt="expand all" /> expand all</a>
+          </p>
+          <p class="expand" id="collapse_all" style="display:none;"><a href="#">
+              <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
+                   alt="collapse all" /> collapse all</a>
+          </p>
+        </tal:specific-path>
         <!-- Table -->
         <p class="expand show_if_js"><a id="toggle_unified_sbs" href="#">Show diffs side-by-side</a></p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" alt="added" /> added</p>
@@ -110,22 +117,34 @@
 
       <div metal:fill-slot="content">
         <div class="diff"
-             tal:repeat="item diffs">
+             tal:repeat="item diffs" tal:attributes="id string:diff-${item/index}">
 
-          <div class="diffBox">
-            <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
-                                 title python:branch.static_url('/static/images/treeCollapsed.png');
-                                 alt python:branch.static_url('/static/images/treeExpanded.png')"
-                 class="expand_diff" />
+          <div  class="diffBox">
             <a tal:attributes="href python:url(['/revision', change.revno, item.filename], clear=1);
                                id string:${item/filename};
                                title string:View changes to ${item/filename} only"
-               tal:content="item/filename">
+               class="the-link">
+              <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
+                                   title python:branch.static_url('/static/images/treeCollapsed.png');
+                                   alt python:branch.static_url('/static/images/treeExpanded.png')"
+                   class="expand_diff" tal:condition="not:specific_path" />
+              <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
+                                   title python:branch.static_url('/static/images/treeCollapsed.png');
+                                   alt python:branch.static_url('/static/images/treeExpanded.png')"
+                   class="expand_diff" tal:condition="specific_path" />
+              <tal:b content="item/filename" />
             </a>
           </div>
           <div style="overflow: hidden">
             <div class="container">
-              <div class="diffinfo">
+              <div class="loading" style="display:none">
+                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
+              </div>
+              <div class="diffinfo" tal:condition="not:specific_path">
+                <div class="source_target" >
+                </div>
+              </div>
+              <div class="diffinfo" tal:condition="specific_path">
                 <div class="pseudotable unified"
                      tal:repeat="chunk item/chunks">
 
