@@ -564,10 +564,15 @@ iso style "yyyy-mm-dd")
 
         message, short_message = clean_message(revision.message)
 
+        try:
+            authors = revision.get_apparent_authors()
+        except AttributeError:
+            authors = [revision.get_apparent_author()]
+
         entry = {
             'revid': revision.revision_id,
             'date': commit_time,
-            'author': revision.get_apparent_author(),
+            'authors': authors,
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,
             'comment': revision.message,

@@ -65,7 +65,7 @@
               <a tal:condition="python:line.status=='changed'"
                  tal:content="python:util.trunc(line.change.revno)"
                  tal:attributes="href python:url(['/revision', line.change.revno], clear=1);
-                                 title python:'%s by %s, on %s (%s)'%(line.change.revno, util.hide_email(line.change.author), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
+                                 title python:'%s by %s, on %s (%s)'%(line.change.revno, ', '.join(util.hide_emails(line.change.authors)), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
             </td>
             <td class="annoCont"><pre tal:content="structure line/text"></pre></td>
           </tr>
