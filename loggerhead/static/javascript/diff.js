@@ -148,10 +148,12 @@ Y.on(
     Y.all("#list-files a").on(
       'click',
       function (e) {
-        var collapsable = Y.get('#' + path_to_id[e.target.get('href').split('#')[1]]).collapsable;
-        if (!collapsable.is_open)
-          collapsable.open();
-        Y.log(e);
+        var hash = e.target.get('href').split('#')[1];
+        var collapsable = Y.get('#' + path_to_id[hash]).collapsable;
+        if (!collapsable.is_open) {
+          e.preventDefault();
+          collapsable.open(function () { window.location.hash = '#' + hash; });
+        }
       });
     var diffs = Y.all('.diff');
     if (diffs == null) return;
