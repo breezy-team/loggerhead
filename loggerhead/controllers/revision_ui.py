@@ -118,10 +118,10 @@ class RevisionUI(TemplatedBranchView):
             if include_path(path):
                 process.append((path, path, fid, kind))
         for path, fid, kind in delta.added:
-            if file == 'kind' and include_path(path):
+            if kind == 'file' and include_path(path):
                 process.append((path, path, fid, kind))
         for path, fid, kind in delta.removed:
-            if file == 'kind' and include_path(path):
+            if kind == 'file' and include_path(path):
                 process.append((path, path, fid, kind))
 
         process.sort(key=lambda x:x[1])
