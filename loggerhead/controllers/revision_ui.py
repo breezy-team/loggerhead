@@ -202,6 +202,7 @@ class RevisionUI(TemplatedBranchView):
             path = None
         change.changes, diffs = self.get_changes_with_diff(change, compare_revid, path)
         link_data = {}
+        path_to_id = {}
         if compare_revid is None:
             if change.parents:
                 cr = change.parents[0].revid
@@ -211,7 +212,8 @@ class RevisionUI(TemplatedBranchView):
             cr = compare_revid
         for i, item in enumerate(diffs):
             item.index = i
-            link_data[str(i)] = '%s/%s/%s' % (revid, cr, item.file_id)
+            link_data['diff-' + str(i)] = '%s/%s/%s' % (revid, cr, item.file_id)
+            path_to_id[item.filename] = 'diff-' + str(i)
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
 
@@ -230,6 +232,7 @@ class RevisionUI(TemplatedBranchView):
             'link_data': simplejson.dumps(link_data),
             'specific_path': path,
             'json_specific_path': simplejson.dumps(path),
+            'path_to_id': simplejson.dumps(path_to_id),
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,

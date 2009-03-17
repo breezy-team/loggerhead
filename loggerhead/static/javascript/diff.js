@@ -145,6 +145,14 @@ Y.on(
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
+    Y.all("#list-files a").on(
+      'click',
+      function (e) {
+        var collapsable = Y.get('#' + path_to_id[e.target.get('href').split('#')[1]]).collapsable;
+        if (!collapsable.is_open)
+          collapsable.open();
+        Y.log(e);
+      });
     var diffs = Y.all('.diff');
     if (diffs == null) return;
     diffs.each(
@@ -152,7 +160,7 @@ Y.on(
       {
         var source_url = null;
         if (!specific_path)
-            source_url = global_path + '+filediff/' + link_data[item.get('id').replace('diff-', '')];
+            source_url = global_path + '+filediff/' + link_data[item.get('id')];
         item.query('.the-link').on(
           'click',
           function(e) {

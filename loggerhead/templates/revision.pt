@@ -14,6 +14,7 @@
         <script type="text/javascript">
           var link_data = <tal:b content="link_data" />;
           var specific_path = <tal:b content="json_specific_path" />;
+          var path_to_id = <tal:b content="path_to_id" />;
         </script>
       </metal:block>
     </head>
