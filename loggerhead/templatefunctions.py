@@ -39,19 +39,12 @@ templatefunctions['breadcrumbs'] = _pt('breadcrumbs').macros
 
 @templatefunc
 def file_change_summary(url, entry, link_style='normal', currently_showing=None):
-    if link_style == 'fragment':
-        def file_link(filename):
-            if currently_showing:
-                if filename == currently_showing:
-                    return '<b><a href="#%s">%s</a></b>' % (
-                        cgi.escape(filename), cgi.escape(filename))
-                else:
-                    return revision_link(url, entry.revno, filename)
-            else:
-                return '<a href="#%s">%s</a>' % (
-                    cgi.escape(filename), cgi.escape(filename))
-    else:
-        file_link = lambda filename: revision_link(url, entry.revno, filename)
+    def file_link(filename):
+        if currently_showing and filename == currently_showing:
+            return '<b><a href="#%s">%s</a></b>' % (
+                cgi.escape(filename), cgi.escape(filename))
+        else:
+            return revision_link(url, entry.revno, filename, '#' + filename)
     return _pt('revisionfilechanges').expand(
         url=url, entry=entry, file_link=file_link,
         currently_showing=currently_showing, **templatefunctions)
@@ -120,7 +113,7 @@ def annotate_link(url, revno, path):
         url(['/annotate', revno, path]), cgi.escape(path), cgi.escape(path))
 
 @templatefunc
-def revision_link(url, revno, path):
-    return '<a href="%s" title="View changes to %s in revision %s">%s</a>'%(
-        url(['/revision', revno, path]), cgi.escape(path), cgi.escape(revno),
-        cgi.escape(path))
+def revision_link(url, revno, path, frag=''):
+    return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>'%(
+        url(['/revision', revno, path]), frag, cgi.escape(path),
+        cgi.escape(revno), cgi.escape(path))

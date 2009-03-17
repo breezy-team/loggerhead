@@ -155,8 +155,10 @@ Y.on(
     Y.all("#list-files a").on(
       'click',
       function (e) {
+        e.preventDefault();
         var hash = e.target.get('href').split('#')[1];
         var collapsable = Y.get('#' + path_to_id[hash]).collapsable;
+        window.location.hash = '#' + hash;
         if (!collapsable.is_open) {
           collapsable.open(function () { window.location.hash = '#' + hash; });
         }
