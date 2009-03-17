@@ -16,7 +16,7 @@
         <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
     </div>
     <ul id="list-files" tal:condition="include_file_list">
-      <tal:block content="structure python:file_change_summary(url, change, currently_showing)" />
+      <tal:block content="structure python:file_change_summary(url, change, 'fragment', currently_showing)" />
     </ul>
     <div class="clear"><!-- --></div>
 </div>

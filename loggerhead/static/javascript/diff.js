@@ -149,6 +149,16 @@ function node_process(node) {
   }
 }
 
+function zoom_to_diff (path) {
+  var collapsable = Y.get('#' + path_to_id[path]).collapsable;
+  if (!collapsable.is_open) {
+    collapsable.open(
+      function () {
+        window.location.hash = '#' + path;
+      });
+  }
+}
+
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
@@ -156,12 +166,9 @@ Y.on(
       'click',
       function (e) {
         e.preventDefault();
-        var hash = e.target.get('href').split('#')[1];
-        var collapsable = Y.get('#' + path_to_id[hash]).collapsable;
-        window.location.hash = '#' + hash;
-        if (!collapsable.is_open) {
-          collapsable.open(function () { window.location.hash = '#' + hash; });
-        }
+        var path = e.target.get('href').split('#')[1];
+        window.location.hash = '#' + path;
+        zoom_to_diff(path);
       });
     var diffs = Y.all('.diff');
     if (diffs == null) return;
@@ -170,7 +177,7 @@ Y.on(
       {
         var source_url = null;
         if (!specific_path)
-            source_url = global_path + '+filediff/' + link_data[item.get('id')];
+          source_url = global_path + '+filediff/' + link_data[item.get('id')];
         item.query('.the-link').on(
           'click',
           function(e) {
@@ -190,4 +197,7 @@ Y.on(
           });
        item.collapsable=collapsable;
        });
+    if (window.location.hash && !specific_path) {
+      zoom_to_diff(window.location.hash.substring(1));
+    }
   });
