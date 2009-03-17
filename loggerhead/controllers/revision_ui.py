@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import simplejson
 from StringIO import StringIO
 
 import bzrlib.diff
@@ -216,6 +217,7 @@ class RevisionUI(TemplatedBranchView):
             'change': change,
             'diffs': diffs,
             'specific_path': path,
+            'json_specific_path': simplejson.dumps(path),
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,
