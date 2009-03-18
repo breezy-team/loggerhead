@@ -70,11 +70,10 @@ class FakeShelf(object):
         else:
             return self._unserialize(filechange[0])
 
-    def add(self, revid_obj_pairs):
-        for (r, d) in revid_obj_pairs:
-            self.cursor.execute(
-                "insert into revisiondata (revid, data) values (?, ?)",
-                (r, self._serialize(d)))
+    def add(self, revid, object):
+        self.cursor.execute(
+            "insert into revisiondata (revid, data) values (?, ?)",
+            (revid, self._serialize(object)))
         self.connection.commit()
 
 
@@ -98,5 +97,5 @@ class FileChangeCache(object):
         changes = cache.get(entry.revid)
         if changes is None:
             changes = self.history.get_file_changes_uncached(entry)
-            cache.add([(entry.revid, changes)])
+            cache.add(entry.revid, changes)
         return changes
