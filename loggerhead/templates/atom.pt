@@ -17,8 +17,8 @@
     <id tal:content="python:branch.url(['/revision', entry.revno])">
       ID
     </id>
-    <author>
-      <name tal:content="python:util.hide_email(entry.author)">
+    <author tal:repeat="author entry/authors">
+      <name tal:content="python:util.hide_email(author)">
         author
       </name>
     </author>
