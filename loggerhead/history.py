@@ -44,6 +44,7 @@ from loggerhead.wholehistory import compute_whole_history_data
 
 import bzrlib
 import bzrlib.branch
+import bzrlib.delta
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
@@ -128,6 +129,38 @@ class _RevListToTimestamps(object):
 
     def __len__(self):
         return len(self.revid_list)
+
+class FileChangeReporter(object):
+    def __init__(self):
+        self.added = []
+        self.modified = []
+        self.renamed = []
+        self.removed = []
+        self.text_changes = []
+    def report(self, file_id, paths, versioned, renamed, modified,
+               exe_change, kind):
+        if modified not in ('unchanged', 'kind changed'):
+            self.text_changes.append(util.Container(
+                filename=rich_filename(paths[1], kind[0]),
+                file_id=file_id))
+        if versioned == 'added':
+            self.added.append(util.Container(
+                filename=rich_filename(paths[1], kind),
+                file_id=file_id, kind=kind[1]))
+        elif versioned == 'removed':
+            self.removed.append(util.Container(
+                filename=rich_filename(paths[1], kind),
+                file_id=file_id, kind=kind[0]))
+        elif renamed:
+            self.renamed.append(util.Container(
+                old_filename=rich_filename(paths[0], kind[0]),
+                new_filename=rich_filename(paths[1], kind[1]),
+                file_id=file_id,
+                text_modified=modified == 'modified'))
+        else:
+            self.modified.append(util.Container(
+                filename=rich_filename(paths[1], kind),
+                file_id=file_id))
 
 
 class History (object):
@@ -597,46 +630,13 @@ iso style "yyyy-mm-dd")
             ),
             text_changes: list((filename, file_id)),
         """
-        delta = new_tree.changes_from(old_tree)
-        added = []
-        modified = []
-        renamed = []
-        removed = []
-        text_changes = []
+        reporter = FileChangeReporter()
 
-        for path, fid, kind in delta.added:
-            added.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid, kind=kind))
-            if kind == 'file':
-                text_changes.append(util.Container(
-                    filename=rich_filename(path, kind), file_id=fid))
-
-        for path, fid, kind, text_modified, meta_modified in delta.modified:
-            modified.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid))
-            if text_modified:
-                text_changes.append(util.Container(
-                    filename=rich_filename(path, kind), file_id=fid))
-
-        for old_path, new_path, fid, kind, text_modified, meta_modified in \
-                delta.renamed:
-            renamed.append(util.Container(
-                old_filename=rich_filename(old_path, kind),
-                new_filename=rich_filename(new_path, kind), file_id=fid,
-                text_modified=text_modified))
-            if text_modified:
-                text_changes.append(util.Container(
-                    filename=rich_filename(new_path, kind), file_id=fid))
-
-        for path, fid, kind in delta.removed:
-            removed.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid, kind=kind))
-            if kind == 'file':
-                text_changes.append(util.Container(
-                    filename=rich_filename(path, kind), file_id=fid))
-
-        text_changes.sort()
+        bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
         return util.Container(
-            added=added, renamed=renamed, removed=removed, modified=modified,
-            text_changes=text_changes)
+            added=sorted(reporter.added, key=lambda x:x.filename),
+            renamed=sorted(reporter.renamed, key=lambda x:x.new_filename),
+            removed=sorted(reporter.removed, key=lambda x:x.filename),
+            modified=sorted(reporter.modified, key=lambda x:x.filename),
+            text_changes=sorted(reporter.text_changes))
