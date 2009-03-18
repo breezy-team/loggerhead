@@ -562,7 +562,7 @@ iso style "yyyy-mm-dd")
         else:
             old_tree = repo.revision_tree(bzrlib.revision.NULL_REVISION)
         new_tree = repo.revision_tree(entry.revid)
-        return self.parse_delta(new_tree.changes_from(old_tree))
+        return self.file_changes_from_revision_trees(old_tree, new_tree)
 
     def get_file_changes(self, entry):
         if self._file_change_cache is None:
@@ -584,7 +584,7 @@ iso style "yyyy-mm-dd")
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def parse_delta(self, delta):
+    def file_changes_from_revision_trees(self, old_tree, new_tree):
         """
         Return a nested data structure containing the changes in a delta::
 
@@ -597,6 +597,7 @@ iso style "yyyy-mm-dd")
             ),
             text_changes: list((filename, file_id)),
         """
+        delta = new_tree.changes_from(old_tree)
         added = []
         modified = []
         renamed = []

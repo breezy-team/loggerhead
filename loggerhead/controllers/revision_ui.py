@@ -78,8 +78,8 @@ class RevisionUI(TemplatedBranchView):
 
         old_tree = h._branch.repository.revision_tree(cr)
         new_tree = h._branch.repository.revision_tree(change.revid)
-        delta = new_tree.changes_from(old_tree)
-        change.changes = h.parse_delta(delta)
+        change.changes = h.file_changes_from_revision_trees(
+            old_tree, new_tree)
 
         link_data = {}
         path_to_id = {}
