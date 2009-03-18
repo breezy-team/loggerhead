@@ -526,32 +526,6 @@ iso style "yyyy-mm-dd")
 
         return [self._change_from_revision(rev) for rev in rev_list]
 
-    def _get_deltas_for_revisions_with_trees(self, revisions):
-        """Produce a list of revision deltas.
-
-        Note that the input is a sequence of REVISIONS, not revision_ids.
-        Trees will be held in memory until the generator exits.
-        Each delta is relative to the revision's lefthand predecessor.
-        (This is copied from bzrlib.)
-        """
-        required_trees = set()
-        for revision in revisions:
-            required_trees.add(revision.revid)
-            required_trees.update([p.revid for p in revision.parents[:1]])
-        trees = dict((t.get_revision_id(), t) for
-                     t in self._branch.repository.revision_trees(
-                         required_trees))
-        ret = []
-        for revision in revisions:
-            if not revision.parents:
-                old_tree = self._branch.repository.revision_tree(
-                    bzrlib.revision.NULL_REVISION)
-            else:
-                old_tree = trees[revision.parents[0].revid]
-            tree = trees[revision.revid]
-            ret.append(tree.changes_from(old_tree))
-        return ret
-
     def _change_from_revision(self, revision):
         """
         Given a bzrlib Revision, return a processed "change" for use in
@@ -581,19 +555,23 @@ iso style "yyyy-mm-dd")
         }
         return util.Container(entry)
 
-    def get_file_changes_uncached(self, entries):
-        delta_list = self._get_deltas_for_revisions_with_trees(entries)
-
-        return [self.parse_delta(delta) for delta in delta_list]
-
-    def get_file_changes(self, entries):
-        if self._file_change_cache is None:
-            return self.get_file_changes_uncached(entries)
+    def get_file_changes_uncached(self, entry):
+        repo = self._branch.repository
+        if entry.parents:
+            old_tree = repo.revision_tree(entry.parents[0].revid)
         else:
-            return self._file_change_cache.get_file_changes(entries)
+            old_tree = repo.revision_tree(bzrlib.revision.NULL_REVISION)
+        new_tree = repo.revision_tree(entry.revid)
+        return self.parse_delta(new_tree.changes_from(old_tree))
+
+    def get_file_changes(self, entry):
+        if self._file_change_cache is None:
+            return self.get_file_changes_uncached(entry)
+        else:
+            return self._file_change_cache.get_file_changes(entry)
 
     def add_changes(self, entry):
-        changes = self.get_file_changes([entry])[0]
+        changes = self.get_file_changes(entry)
         entry.changes = changes
 
     def get_file(self, file_id, revid):
