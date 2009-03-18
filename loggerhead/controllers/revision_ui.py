@@ -25,7 +25,6 @@ from paste.httpexceptions import HTTPServerError
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 from loggerhead.controllers.filediff_ui import diff_chunks_for_file
-from loggerhead.history import rich_filename
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
@@ -36,73 +35,6 @@ def dq(p):
 class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
-
-    def _parse_diffs(self, old_tree, new_tree, delta, specific_path):
-        """
-        Return a list of processed diffs, in the format::
-
-            list(
-                filename: str,
-                file_id: str,
-                chunks: list(
-                    diff: list(
-                        old_lineno: int,
-                        new_lineno: int,
-                        type: str('context', 'delete', or 'insert'),
-                        line: str,
-                    ),
-                ),
-            )
-        """
-        if specific_path:
-            fid = new_tree.path2id(specific_path)
-            kind = new_tree.kind(fid)
-            chunks=diff_chunks_for_file(fid, old_tree, new_tree)
-            return [util.Container(
-                filename=rich_filename(specific_path, kind), file_id=fid,
-                chunks=chunks)]
-
-        process = []
-        out = []
-
-        for old_path, new_path, fid, \
-            kind, text_modified, meta_modified in delta.renamed:
-            if text_modified:
-                process.append((new_path, fid, kind))
-        for path, fid, kind, text_modified, meta_modified in delta.modified:
-            process.append((path, fid, kind))
-        for path, fid, kind in delta.added:
-            if kind == 'file':
-                process.append((path, fid, kind))
-        for path, fid, kind in delta.removed:
-            if kind == 'file':
-                process.append((path, fid, kind))
-
-        process.sort()
-
-        for new_path, fid, kind in process:
-            out.append(util.Container(
-                filename=rich_filename(new_path, kind), file_id=fid,
-                chunks=[]))
-
-        return out
-
-    def get_changes_with_diff(self, change, compare_revid, specific_path):
-        h = self._history
-        if compare_revid is None:
-            if change.parents:
-                compare_revid = change.parents[0].revid
-            else:
-                compare_revid = 'null:'
-
-        rev_tree1 = h._branch.repository.revision_tree(compare_revid)
-        rev_tree2 = h._branch.repository.revision_tree(change.revid)
-        delta = rev_tree2.changes_from(rev_tree1)
-
-        changes = h.parse_delta(delta)
-
-        return changes, self._parse_diffs(
-            rev_tree1, rev_tree2, delta, specific_path)
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -132,11 +64,7 @@ class RevisionUI(TemplatedBranchView):
         util.fill_in_navigation(navigation)
 
         change = h.get_changes([revid])[0]
-        if path in ('', '/'):
-            path = None
-        change.changes, diffs = self.get_changes_with_diff(change, compare_revid, path)
-        link_data = {}
-        path_to_id = {}
+
         if compare_revid is None:
             if change.parents:
                 cr = change.parents[0].revid
@@ -144,11 +72,28 @@ class RevisionUI(TemplatedBranchView):
                 cr = 'null:'
         else:
             cr = compare_revid
-        for i, item in enumerate(diffs):
-            item.index = i
-            link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                dq(revid), dq(cr), dq(item.file_id))
-            path_to_id[item.filename] = 'diff-' + str(i)
+
+        if path in ('', '/'):
+            path = None
+
+        old_tree = h._branch.repository.revision_tree(cr)
+        new_tree = h._branch.repository.revision_tree(change.revid)
+        delta = new_tree.changes_from(old_tree)
+        change.changes = h.parse_delta(delta)
+
+        link_data = {}
+        path_to_id = {}
+        if path:
+            diff_chunks = diff_chunks_for_file(
+                new_tree.path2id(path), old_tree, new_tree)
+        else:
+            diff_chunks = None
+            for i, item in enumerate(change.changes.text_changes):
+                item.index = i
+                link_data['diff-' + str(i)] = '%s/%s/%s' % (
+                    dq(revid), dq(cr), dq(item.file_id))
+                path_to_id[item.filename] = 'diff-' + str(i)
+
         # add parent & merge-point branch-nick info, in case it's useful
         h.get_branch_nicks([change])
 
@@ -163,7 +108,7 @@ class RevisionUI(TemplatedBranchView):
             'branch': self._branch,
             'revid': revid,
             'change': change,
-            'diffs': diffs,
+            'diff_chunks': diff_chunks,
             'link_data': simplejson.dumps(link_data),
             'specific_path': path,
             'json_specific_path': simplejson.dumps(path),

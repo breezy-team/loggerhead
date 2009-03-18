@@ -618,20 +618,28 @@ iso style "yyyy-mm-dd")
             modified: list(
                 filename: str,
                 file_id: str,
-            )
+            ),
+            text_changes: list((filename, file_id)),
         """
         added = []
         modified = []
         renamed = []
         removed = []
+        text_changes = []
 
         for path, fid, kind in delta.added:
             added.append(util.Container(
                 filename=rich_filename(path, kind), file_id=fid, kind=kind))
+            if kind == 'file':
+                text_changes.append(util.Container(
+                    filename=rich_filename(path, kind), file_id=fid))
 
         for path, fid, kind, text_modified, meta_modified in delta.modified:
             modified.append(util.Container(
                 filename=rich_filename(path, kind), file_id=fid))
+            if text_modified:
+                text_changes.append(util.Container(
+                    filename=rich_filename(path, kind), file_id=fid))
 
         for old_path, new_path, fid, kind, text_modified, meta_modified in \
                 delta.renamed:
@@ -639,10 +647,19 @@ iso style "yyyy-mm-dd")
                 old_filename=rich_filename(old_path, kind),
                 new_filename=rich_filename(new_path, kind), file_id=fid,
                 text_modified=text_modified))
+            if text_modified:
+                text_changes.append(util.Container(
+                    filename=rich_filename(new_path, kind), file_id=fid))
 
         for path, fid, kind in delta.removed:
             removed.append(util.Container(
                 filename=rich_filename(path, kind), file_id=fid, kind=kind))
+            if kind == 'file':
+                text_changes.append(util.Container(
+                    filename=rich_filename(path, kind), file_id=fid))
 
-        return util.Container(added=added, renamed=renamed,
-                              removed=removed, modified=modified)
+        text_changes.sort()
+
+        return util.Container(
+            added=added, renamed=renamed, removed=removed, modified=modified,
+            text_changes=text_changes)
