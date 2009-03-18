@@ -592,11 +592,9 @@ iso style "yyyy-mm-dd")
         else:
             return self._file_change_cache.get_file_changes(entries)
 
-    def add_changes(self, entries):
-        changes_list = self.get_file_changes(entries)
-
-        for entry, changes in zip(entries, changes_list):
-            entry.changes = changes
+    def add_changes(self, entry):
+        changes = self.get_file_changes([entry])[0]
+        entry.changes = changes
 
     def get_file(self, file_id, revid):
         "returns (path, filename, data)"
