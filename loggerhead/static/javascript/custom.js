@@ -86,6 +86,7 @@ function Collapsable(config)
   this.expand_icon = config.expand_icon;
   this.source = config.source;
   this.loading = config.loading;
+  this.node_process = config.node_process;
 }
 
 function get_height(node) {
@@ -99,17 +100,19 @@ function get_height(node) {
   return height;
 }
 
-Collapsable.prototype._load_finished = function(tid, res)
+Collapsable.prototype._load_finished = function(tid, res, args)
 {
   var newNode = Y.Node.create(res.responseText.split('\n').splice(1).join(''));
+  if (this.node_process)
+    this.node_process(newNode);
   this.source_target.ancestor().replaceChild(newNode, this.source_target);
   this.source_target = null;
   this.source = null;
   this.loading.setStyle('display', 'none');
-  this.open();
+  this.open(args[0]);
 };
 
-Collapsable.prototype.open = function()
+Collapsable.prototype.open = function(callback)
 {
   if (this.source) {
     this.loading.setStyle('display', 'block');
@@ -117,6 +120,7 @@ Collapsable.prototype.open = function()
       this.source,
       {
         on: {complete: this._load_finished},
+        arguments: [callback],
         context: this
       });
     return;
@@ -146,7 +150,7 @@ Collapsable.prototype.open = function()
       duration: 0.2
     });
 
-  anim.on('end', this.openComplete, this);
+  anim.on('end', this.openComplete, this, callback);
   container.setStyle('marginBottom', close_height - open_height);
   if (this.close_node) {
     this.close_node.setStyle('display', 'none');
@@ -156,8 +160,9 @@ Collapsable.prototype.open = function()
   anim.run();
 };
 
-Collapsable.prototype.openComplete = function()
+Collapsable.prototype.openComplete = function(evt, callback)
 {
+  if (callback) callback();
   this.is_open = true;
 };
 

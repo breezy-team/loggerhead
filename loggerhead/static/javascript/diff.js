@@ -87,13 +87,14 @@ function make_sbs(chunk) {
 
 function toggle_unified_sbs(event) {
   event.preventDefault();
+  var pts = Y.all(".pseudotable");
   if (unified) {
-    Y.all(".pseudotable").each(make_sbs);
+    pts && pts.each(make_sbs);
     unified = false;
     Y.get("#toggle_unified_sbs").set('innerHTML', "Show unified diffs");
   }
   else {
-    Y.all(".pseudotable").each(make_unified);
+    pts && pts.each(make_unified);
     unified = true;
     Y.get("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
   }
@@ -103,7 +104,7 @@ Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
 
 function toggle_expand_all_revisionview(action)
 {
-  var diffs = Y.all('.diffBox');
+  var diffs = Y.all('.diff');
   if (diffs == null) return;
   diffs.each(
     function(item, i)
@@ -142,24 +143,61 @@ Y.on(
   '#collapse_all a'
 );
 
+function node_process(node) {
+  if (!unified) {
+    node.get('children').filter('.pseudotable').each(make_sbs);
+  }
+}
+
+function zoom_to_diff (path) {
+  var collapsable = Y.get('#' + path_to_id[path]).collapsable;
+  if (!collapsable.is_open) {
+    collapsable.open(
+      function () {
+        window.location.hash = '#' + path;
+      });
+  }
+}
+
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
-    var diffs = Y.all('.diffBox');
+    Y.all("#list-files a").on(
+      'click',
+      function (e) {
+        e.preventDefault();
+        var path = decodeURIComponent(e.target.get('href').split('#')[1]);
+        window.location.hash = '#' + path;
+        zoom_to_diff(path);
+      });
+    var diffs = Y.all('.diff');
     if (diffs == null) return;
     diffs.each(
       function(item, i)
       {
-        item.query('.expand_diff').on('click', function() { collapsable.toggle(); });
+        var source_url = null;
+        if (!specific_path)
+          source_url = global_path + '+filediff/' + link_data[item.get('id')];
+        item.query('.the-link').on(
+          'click',
+          function(e) {
+            e.preventDefault();
+            collapsable.toggle();
+          });
         var collapsable = new Collapsable(
           {
             expand_icon: item.query('.expand_diff'),
-            open_node: item.ancestor().query('.diffinfo'),
+            open_node: item.query('.diffinfo'),
             close_node: null,
-            source: null,
-            source_target: null,
-            is_open: true
+            source: source_url,
+            source_target: item.query('.source_target'),
+            is_open: specific_path != null,
+            loading: item.query('.loading'),
+            node_process: node_process
           });
        item.collapsable=collapsable;
        });
+    if (window.location.hash && !specific_path) {
+      zoom_to_diff(window.location.hash.substring(1));
+    }
   });
