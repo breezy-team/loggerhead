@@ -17,7 +17,10 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import simplejson
+try:
+    import simplejson
+except ImportError:
+    import json as simplejson
 import urllib
 
 from paste.httpexceptions import HTTPServerError
@@ -31,6 +34,7 @@ DEFAULT_LINE_COUNT_LIMIT = 3000
 
 def dq(p):
     return urllib.quote(urllib.quote(p, safe=''))
+
 
 class RevisionUI(TemplatedBranchView):
 
