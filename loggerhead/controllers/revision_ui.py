@@ -82,39 +82,22 @@ class RevisionUI(TemplatedBranchView):
         if path in ('', '/'):
             path = None
 
-        old_tree = h._branch.repository.revision_tree(cr)
-        new_tree = h._branch.repository.revision_tree(change.revid)
         file_changes = h.file_changes_from_revision_trees(
-            old_tree, new_tree)
+            cr, change.revid)
 
         link_data = {}
         path_to_id = {}
         if path:
-            file_id = new_tree.path2id(path)
-            try:
-                c = old_tree.inventory[file_id].revision
-            except errors.NoSuchId:
-                c = 'null:'
-            try:
-                d = new_tree.inventory[file_id].revision
-            except errors.NoSuchId:
-                d = 'null:'
+            item = [x for x in file_changes.text_changes if x.filename == path][0]
             diff_chunks = diff_chunks_for_file(
-                self._history._branch.repository, new_tree.path2id(path), c, d)
+                self._history._branch.repository, item.file_id,
+                item.old_revision, item.new_revision)
         else:
             diff_chunks = None
             for i, item in enumerate(file_changes.text_changes):
                 item.index = i
-                try:
-                    c = old_tree.inventory[item.file_id].revision
-                except errors.NoSuchId:
-                    c = 'null:'
-                try:
-                    d = new_tree.inventory[item.file_id].revision
-                except errors.NoSuchId:
-                    d = 'null:'
                 link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                    dq(d), dq(c), dq(item.file_id))
+                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
                 path_to_id[item.filename] = 'diff-' + str(i)
 
         h.add_branch_nicks(change)
