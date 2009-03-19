@@ -17,9 +17,10 @@
 #
 
 """
-a cache for chewed-up "change" data structures, which are basically just a
-different way of storing a revision.  the cache improves lookup times 10x
-over bazaar's xml revision structure, though, so currently still worth doing.
+a cache for chewed-up 'file change' data structures, which are basically just
+a different way of storing a revision delta.  the cache improves lookup times
+10x over bazaar's xml revision structure, though, so currently still worth
+doing.
 
 once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
@@ -29,19 +30,21 @@ import cPickle
 import os
 import tempfile
 
-from loggerhead import util
-
 try:
     from sqlite3 import dbapi2
 except ImportError:
     from pysqlite2 import dbapi2
 
+# We take an optimistic approach to concurrency here: we might do work twice
+# in the case of races, but not crash or corrupt data.
 
 class FakeShelf(object):
 
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
         if create_table:
+            # To avoid races around creating the database, we create the db in
+            # a temporary file and rename it into the ultimate location.
             fd, path = tempfile.mkstemp(dir=os.path.dirname(filename))
             self._create_table(path)
             os.rename(path, filename)
@@ -58,8 +61,7 @@ class FakeShelf(object):
         con.close()
 
     def _serialize(self, obj):
-        r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
-        return r
+        return dbapi2.Binary(cPickle.dumps(obj, protocol=2))
 
     def _unserialize(self, data):
         return cPickle.loads(str(data))
@@ -80,7 +82,8 @@ class FakeShelf(object):
                 (revid, self._serialize(object)))
             self.connection.commit()
         except dbapi2.IntegrityError:
-            # oh well!
+            # If another thread or process attempted to set the same key, we
+            # assume it set it to the same value and carry on with our day.
             pass
 
 
