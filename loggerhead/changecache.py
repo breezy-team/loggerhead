@@ -31,8 +31,6 @@ import tempfile
 
 from loggerhead import util
 
-with_lock = util.with_lock('_lock', 'ChangeCache')
-
 try:
     from sqlite3 import dbapi2
 except ImportError:

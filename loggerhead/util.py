@@ -449,25 +449,6 @@ def decorator(unbound):
     return new_decorator
 
 
-# common threading-lock decorator
-
-
-def with_lock(lockname, debug_name=None):
-    if debug_name is None:
-        debug_name = lockname
-
-    @decorator
-    def _decorator(unbound):
-
-        def locked(self, *args, **kw):
-            getattr(self, lockname).acquire()
-            try:
-                return unbound(self, *args, **kw)
-            finally:
-                getattr(self, lockname).release()
-        return locked
-    return _decorator
-
 
 @decorator
 def lsprof(f):
