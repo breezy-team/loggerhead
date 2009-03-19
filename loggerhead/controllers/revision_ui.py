@@ -23,8 +23,6 @@ except ImportError:
     import json as simplejson
 import urllib
 
-from bzrlib import errors
-
 from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
