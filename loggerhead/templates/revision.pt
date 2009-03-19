@@ -96,7 +96,7 @@
           </ul>
         </tal:we-are-comparing>
 
-        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, 'fragment', specific_path)" />
+        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, file_changes, specific_path)" />
         <tal:specific-path condition="not:specific_path">
           <p class="expand show_if_js" id="expand_all"><a href="#">
               <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
@@ -116,62 +116,85 @@
       </tal:block>
 
       <div metal:fill-slot="content">
-        <div class="diff"
-             tal:repeat="item diffs" tal:attributes="id string:diff-${item/index}">
+        <tal:block condition="specific_path">
+          <div class="diff">
 
-          <div  class="diffBox">
-            <a tal:attributes="href python:url(['/revision', change.revno, item.filename], clear=1);
-                               id string:${item/filename};
-                               title string:View changes to ${item/filename} only"
-               class="the-link">
-              <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                   title python:branch.static_url('/static/images/treeCollapsed.png');
-                                   alt python:branch.static_url('/static/images/treeExpanded.png')"
-                   class="expand_diff" tal:condition="not:specific_path" />
-              <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
-                                   title python:branch.static_url('/static/images/treeCollapsed.png');
-                                   alt python:branch.static_url('/static/images/treeExpanded.png')"
-                   class="expand_diff" tal:condition="specific_path" />
-              <tal:b content="item/filename" />
-            </a>
-          </div>
-          <div style="overflow: hidden">
-            <div class="container">
-              <div class="loading" style="display:none">
-                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-              </div>
-              <div class="diffinfo" tal:condition="not:specific_path">
-                <div class="source_target" >
+            <div  class="diffBox">
+              <a tal:attributes="href python:url(['/revision', change.revno, specific_path], clear=1);
+                                 id string:${specific_path};
+                                 title string:View changes to ${specific_path} only"
+                 class="the-link">
+                <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
+                                     title python:branch.static_url('/static/images/treeCollapsed.png');
+                                     alt python:branch.static_url('/static/images/treeExpanded.png')"
+                     class="expand_diff"/>
+                <tal:b content="specific_path" />
+              </a>
+            </div>
+            <div style="overflow: hidden">
+              <div class="container">
+                <div class="loading" style="display:none">
+                  <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
                 </div>
-              </div>
-              <div class="diffinfo" tal:condition="specific_path">
-                <div class="pseudotable unified"
-                     tal:repeat="chunk item/chunks">
+                <div class="diffinfo">
+                  <div class="pseudotable unified"
+                       tal:repeat="chunk diff_chunks">
 
-                  <tal:block condition="not:repeat/chunk/start">
-                    <div class="pseudorow context-row">
-                      <div class="lineNumber separate"></div>
-                      <div class="lineNumber second separate"></div>
-                      <div class="code separate"></div>
+                    <tal:block condition="not:repeat/chunk/start">
+                      <div class="pseudorow context-row">
+                        <div class="lineNumber separate"></div>
+                        <div class="lineNumber second separate"></div>
+                        <div class="code separate"></div>
+                        <div class="clear"><!-- --></div>
+                      </div>
+                    </tal:block>
+
+                    <div tal:repeat="line chunk/diff"
+                         tal:attributes="class string:pseudorow ${line/type}-row">
+                      <div class="lineNumber first"
+                           tal:content="structure python:util.fill_div(line.old_lineno)"></div>
+                      <div class="lineNumber second"
+                           tal:content="structure python:util.fill_div(line.new_lineno)"></div>
+                      <div tal:attributes="class string:code ${line/type}"
+                           tal:content="structure python:util.fill_div(util.html_clean(line.line))"></div>
                       <div class="clear"><!-- --></div>
                     </div>
-                  </tal:block>
-
-                  <div tal:repeat="line chunk/diff"
-                       tal:attributes="class string:pseudorow ${line/type}-row">
-                    <div class="lineNumber first"
-                         tal:content="structure python:util.fill_div(line.old_lineno)"></div>
-                    <div class="lineNumber second"
-                         tal:content="structure python:util.fill_div(line.new_lineno)"></div>
-                    <div tal:attributes="class string:code ${line/type}"
-                         tal:content="structure python:util.fill_div(util.html_clean(line.line))"></div>
-                    <div class="clear"><!-- --></div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </tal:block>
+
+        <tal:block condition="not:specific_path">
+          <div class="diff"
+               tal:repeat="item file_changes/text_changes" tal:attributes="id string:diff-${item/index}">
+
+            <div  class="diffBox">
+              <a tal:attributes="href python:url(['/revision', change.revno, item.filename], clear=1);
+                                 id string:${item/filename};
+                                 title string:View changes to ${item/filename} only"
+                 class="the-link">
+                <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
+                                     title python:branch.static_url('/static/images/treeCollapsed.png');
+                                     alt python:branch.static_url('/static/images/treeExpanded.png')"
+                     class="expand_diff" />
+                <tal:b content="item/filename" />
+              </a>
+            </div>
+            <div style="overflow: hidden">
+              <div class="container">
+                <div class="loading" style="display:none">
+                  <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
+                </div>
+                <div class="diffinfo">
+                  <div class="source_target" >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </tal:block>
 
         <ul tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
             id="pages">

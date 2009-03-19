@@ -70,11 +70,10 @@ class FakeShelf(object):
         else:
             return self._unserialize(filechange[0])
 
-    def add(self, revid_obj_pairs):
-        for (r, d) in revid_obj_pairs:
-            self.cursor.execute(
-                "insert into revisiondata (revid, data) values (?, ?)",
-                (r, self._serialize(d)))
+    def add(self, revid, object):
+        self.cursor.execute(
+            "insert into revisiondata (revid, data) values (?, ?)",
+            (revid, self._serialize(object)))
         self.connection.commit()
 
 
@@ -93,26 +92,10 @@ class FileChangeCache(object):
         self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
 
     @with_lock
-    def get_file_changes(self, entries):
-        out = []
-        missing_entries = []
-        missing_entry_indices = []
+    def get_file_changes(self, entry):
         cache = FakeShelf(self._changes_filename)
-        for entry in entries:
-            changes = cache.get(entry.revid)
-            if changes is not None:
-                out.append(changes)
-            else:
-                missing_entries.append(entry)
-                missing_entry_indices.append(len(out))
-                out.append(None)
-        if missing_entries:
-            missing_changes = self.history.get_file_changes_uncached(
-                                  missing_entries)
-            revid_changes_pairs = []
-            for i, entry, changes in zip(
-                missing_entry_indices, missing_entries, missing_changes):
-                revid_changes_pairs.append((entry.revid, changes))
-                out[i] = changes
-            cache.add(revid_changes_pairs)
-        return out
+        changes = cache.get(entry.revid)
+        if changes is None:
+            changes = self.history.get_file_changes_uncached(entry)
+            cache.add(entry.revid, changes)
+        return changes

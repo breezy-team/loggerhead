@@ -162,14 +162,16 @@ function zoom_to_diff (path) {
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
-    Y.all("#list-files a").on(
-      'click',
-      function (e) {
-        e.preventDefault();
-        var path = decodeURIComponent(e.target.get('href').split('#')[1]);
-        window.location.hash = '#' + path;
-        zoom_to_diff(path);
-      });
+    if (!specific_path) {
+      Y.all("#list-files a").on(
+        'click',
+        function (e) {
+          e.preventDefault();
+          var path = decodeURIComponent(e.target.get('href').split('#')[1]);
+          window.location.hash = '#' + path;
+          zoom_to_diff(path);
+        });
+    }
     var diffs = Y.all('.diff');
     if (diffs == null) return;
     diffs.each(

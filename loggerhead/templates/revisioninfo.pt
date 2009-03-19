@@ -15,8 +15,8 @@
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
         <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
     </div>
-    <ul id="list-files" tal:condition="include_file_list">
-      <tal:block content="structure python:file_change_summary(url, change, 'fragment', currently_showing)" />
+    <ul id="list-files" tal:condition="file_changes">
+      <tal:block content="structure python:file_change_summary(url, change, file_changes, 'fragment', currently_showing)" />
     </ul>
     <div class="clear"><!-- --></div>
 </div>
