@@ -637,8 +637,13 @@ iso style "yyyy-mm-dd")
             ),
             text_changes: list((filename, file_id)),
         """
-        old_tree, new_tree = self._branch.repository.revision_trees(
-            [old_revid, new_revid])
+        repo = self._branch.repository
+        if bzrlib.revision.is_null(old_revid) or \
+               bzrlib.revision.is_null(new_revid):
+            old_tree, new_tree = map(
+                repo.revision_tree, [old_revid, new_revid])
+        else:
+            old_tree, new_tree = repo.revision_trees([old_revid, new_revid])
 
         reporter = FileChangeReporter(old_tree.inventory, new_tree.inventory)
 
