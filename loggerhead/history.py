@@ -131,18 +131,29 @@ class _RevListToTimestamps(object):
         return len(self.revid_list)
 
 class FileChangeReporter(object):
-    def __init__(self):
+    def __init__(self, old_inv, new_inv):
         self.added = []
         self.modified = []
         self.renamed = []
         self.removed = []
         self.text_changes = []
+        self.old_inv = old_inv
+        self.new_inv = new_inv
+
+    def revid(self, inv, file_id):
+        try:
+            return inv[file_id].revision
+        except bzrlib.errors.NoSuchId:
+            return 'null:'
+
     def report(self, file_id, paths, versioned, renamed, modified,
                exe_change, kind):
         if modified not in ('unchanged', 'kind changed'):
             self.text_changes.append(util.Container(
                 filename=rich_filename(paths[1], kind[0]),
-                file_id=file_id))
+                file_id=file_id,
+                old_revision=self.revid(self.old_inv, file_id),
+                new_revision=self.revid(self.new_inv, file_id)))
         if versioned == 'added':
             self.added.append(util.Container(
                 filename=rich_filename(paths[1], kind),
@@ -588,11 +599,10 @@ iso style "yyyy-mm-dd")
     def get_file_changes_uncached(self, entry):
         repo = self._branch.repository
         if entry.parents:
-            old_tree = repo.revision_tree(entry.parents[0].revid)
+            old_revid = entry.parents[0].revid
         else:
-            old_tree = repo.revision_tree(bzrlib.revision.NULL_REVISION)
-        new_tree = repo.revision_tree(entry.revid)
-        return self.file_changes_from_revision_trees(old_tree, new_tree)
+            old_revid = bzrlib.revision.NULL_REVISION
+        return self.file_changes_for_revision_ids(old_revid, entry.revid)
 
     def get_file_changes(self, entry):
         if self._file_change_cache is None:
@@ -614,7 +624,7 @@ iso style "yyyy-mm-dd")
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def file_changes_from_revision_trees(self, old_tree, new_tree):
+    def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
         Return a nested data structure containing the changes in a delta::
 
@@ -627,7 +637,15 @@ iso style "yyyy-mm-dd")
             ),
             text_changes: list((filename, file_id)),
         """
-        reporter = FileChangeReporter()
+        repo = self._branch.repository
+        if bzrlib.revision.is_null(old_revid) or \
+               bzrlib.revision.is_null(new_revid):
+            old_tree, new_tree = map(
+                repo.revision_tree, [old_revid, new_revid])
+        else:
+            old_tree, new_tree = repo.revision_trees([old_revid, new_revid])
+
+        reporter = FileChangeReporter(old_tree.inventory, new_tree.inventory)
 
         bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 

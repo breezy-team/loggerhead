@@ -70,32 +70,27 @@ class RevisionUI(TemplatedBranchView):
         change = h.get_changes([revid])[0]
 
         if compare_revid is None:
-            if change.parents:
-                cr = change.parents[0].revid
-            else:
-                cr = 'null:'
+            file_changes = h.get_file_changes(change)
         else:
-            cr = compare_revid
+            file_changes = h.file_changes_for_revision_ids(
+                compare_revid, change.revid)
 
         if path in ('', '/'):
             path = None
 
-        old_tree = h._branch.repository.revision_tree(cr)
-        new_tree = h._branch.repository.revision_tree(change.revid)
-        file_changes = h.file_changes_from_revision_trees(
-            old_tree, new_tree)
-
         link_data = {}
         path_to_id = {}
         if path:
+            item = [x for x in file_changes.text_changes if x.filename == path][0]
             diff_chunks = diff_chunks_for_file(
-                new_tree.path2id(path), old_tree, new_tree)
+                self._history._branch.repository, item.file_id,
+                item.old_revision, item.new_revision)
         else:
             diff_chunks = None
             for i, item in enumerate(file_changes.text_changes):
                 item.index = i
                 link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                    dq(revid), dq(cr), dq(item.file_id))
+                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
                 path_to_id[item.filename] = 'diff-' + str(i)
 
         h.add_branch_nicks(change)
