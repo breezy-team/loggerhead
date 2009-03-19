@@ -15,7 +15,7 @@ class RevLogUI(TemplatedBranchView):
 
         change = history.get_changes([revid])[0]
         file_changes = history.get_file_changes(change)
-        history.get_branch_nicks([change])
+        history.add_branch_nicks(change)
 
         return {
             'branch': self._branch,

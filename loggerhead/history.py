@@ -490,31 +490,28 @@ iso style "yyyy-mm-dd")
 
         return [d[revnos][1] for revnos in d.keys()]
 
-    def get_branch_nicks(self, changes):
+    def add_branch_nicks(self, change):
         """
-        given a list of changes from L{get_changes}, fill in the branch nicks
-        on all parents and merge points.
+        given a 'change', fill in the branch nicks on all parents and merge
+        points.
         """
         fetch_set = set()
-        for change in changes:
-            for p in change.parents:
-                fetch_set.add(p.revid)
-            for p in change.merge_points:
-                fetch_set.add(p.revid)
+        for p in change.parents:
+            fetch_set.add(p.revid)
+        for p in change.merge_points:
+            fetch_set.add(p.revid)
         p_changes = self.get_changes(list(fetch_set))
         p_change_dict = dict([(c.revid, c) for c in p_changes])
-        for change in changes:
-            # arch-converted branches may not have merged branch info :(
-            for p in change.parents:
-                if p.revid in p_change_dict:
-                    p.branch_nick = p_change_dict[p.revid].branch_nick
-                else:
-                    p.branch_nick = '(missing)'
-            for p in change.merge_points:
-                if p.revid in p_change_dict:
-                    p.branch_nick = p_change_dict[p.revid].branch_nick
-                else:
-                    p.branch_nick = '(missing)'
+        for p in change.parents:
+            if p.revid in p_change_dict:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+            else:
+                p.branch_nick = '(missing)'
+        for p in change.merge_points:
+            if p.revid in p_change_dict:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+            else:
+                p.branch_nick = '(missing)'
 
     def get_changes(self, revid_list):
         """Return a list of changes objects for the given revids.

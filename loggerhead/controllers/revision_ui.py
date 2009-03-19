@@ -92,14 +92,13 @@ class RevisionUI(TemplatedBranchView):
                 new_tree.path2id(path), old_tree, new_tree)
         else:
             diff_chunks = None
-            for i, item in enumerate(change.changes.text_changes):
+            for i, item in enumerate(file_changes.text_changes):
                 item.index = i
                 link_data['diff-' + str(i)] = '%s/%s/%s' % (
                     dq(revid), dq(cr), dq(item.file_id))
                 path_to_id[item.filename] = 'diff-' + str(i)
 
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([change])
+        h.add_branch_nicks(change)
 
         # Directory Breadcrumbs
         directory_breadcrumbs = (

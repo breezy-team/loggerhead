@@ -146,8 +146,7 @@ class InventoryUI(TemplatedBranchView):
                 revno_url = 'head:'
             else:
                 revno_url = history.get_revno(revid)
-            # add parent & merge-point branch-nick info, in case it's useful
-            history.get_branch_nicks([ change ])
+            history.add_branch_nicks(change)
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')

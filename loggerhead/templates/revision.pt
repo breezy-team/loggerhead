@@ -168,7 +168,7 @@
 
         <tal:block condition="not:specific_path">
           <div class="diff"
-               tal:repeat="item change/changes/text_changes" tal:attributes="id string:diff-${item/index}">
+               tal:repeat="item file_changes/text_changes" tal:attributes="id string:diff-${item/index}">
 
             <div  class="diffBox">
               <a tal:attributes="href python:url(['/revision', change.revno, item.filename], clear=1);
