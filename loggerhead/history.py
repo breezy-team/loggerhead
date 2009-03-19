@@ -44,6 +44,7 @@ from loggerhead.wholehistory import compute_whole_history_data
 
 import bzrlib
 import bzrlib.branch
+import bzrlib.delta
 import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
@@ -128,6 +129,38 @@ class _RevListToTimestamps(object):
 
     def __len__(self):
         return len(self.revid_list)
+
+class FileChangeReporter(object):
+    def __init__(self):
+        self.added = []
+        self.modified = []
+        self.renamed = []
+        self.removed = []
+        self.text_changes = []
+    def report(self, file_id, paths, versioned, renamed, modified,
+               exe_change, kind):
+        if modified not in ('unchanged', 'kind changed'):
+            self.text_changes.append(util.Container(
+                filename=rich_filename(paths[1], kind[0]),
+                file_id=file_id))
+        if versioned == 'added':
+            self.added.append(util.Container(
+                filename=rich_filename(paths[1], kind),
+                file_id=file_id, kind=kind[1]))
+        elif versioned == 'removed':
+            self.removed.append(util.Container(
+                filename=rich_filename(paths[0], kind),
+                file_id=file_id, kind=kind[0]))
+        elif renamed:
+            self.renamed.append(util.Container(
+                old_filename=rich_filename(paths[0], kind[0]),
+                new_filename=rich_filename(paths[1], kind[1]),
+                file_id=file_id,
+                text_modified=modified == 'modified'))
+        else:
+            self.modified.append(util.Container(
+                filename=rich_filename(paths[1], kind),
+                file_id=file_id))
 
 
 class History (object):
@@ -457,31 +490,28 @@ iso style "yyyy-mm-dd")
 
         return [d[revnos][1] for revnos in d.keys()]
 
-    def get_branch_nicks(self, changes):
+    def add_branch_nicks(self, change):
         """
-        given a list of changes from L{get_changes}, fill in the branch nicks
-        on all parents and merge points.
+        given a 'change', fill in the branch nicks on all parents and merge
+        points.
         """
         fetch_set = set()
-        for change in changes:
-            for p in change.parents:
-                fetch_set.add(p.revid)
-            for p in change.merge_points:
-                fetch_set.add(p.revid)
+        for p in change.parents:
+            fetch_set.add(p.revid)
+        for p in change.merge_points:
+            fetch_set.add(p.revid)
         p_changes = self.get_changes(list(fetch_set))
         p_change_dict = dict([(c.revid, c) for c in p_changes])
-        for change in changes:
-            # arch-converted branches may not have merged branch info :(
-            for p in change.parents:
-                if p.revid in p_change_dict:
-                    p.branch_nick = p_change_dict[p.revid].branch_nick
-                else:
-                    p.branch_nick = '(missing)'
-            for p in change.merge_points:
-                if p.revid in p_change_dict:
-                    p.branch_nick = p_change_dict[p.revid].branch_nick
-                else:
-                    p.branch_nick = '(missing)'
+        for p in change.parents:
+            if p.revid in p_change_dict:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+            else:
+                p.branch_nick = '(missing)'
+        for p in change.merge_points:
+            if p.revid in p_change_dict:
+                p.branch_nick = p_change_dict[p.revid].branch_nick
+            else:
+                p.branch_nick = '(missing)'
 
     def get_changes(self, revid_list):
         """Return a list of changes objects for the given revids.
@@ -526,32 +556,6 @@ iso style "yyyy-mm-dd")
 
         return [self._change_from_revision(rev) for rev in rev_list]
 
-    def _get_deltas_for_revisions_with_trees(self, revisions):
-        """Produce a list of revision deltas.
-
-        Note that the input is a sequence of REVISIONS, not revision_ids.
-        Trees will be held in memory until the generator exits.
-        Each delta is relative to the revision's lefthand predecessor.
-        (This is copied from bzrlib.)
-        """
-        required_trees = set()
-        for revision in revisions:
-            required_trees.add(revision.revid)
-            required_trees.update([p.revid for p in revision.parents[:1]])
-        trees = dict((t.get_revision_id(), t) for
-                     t in self._branch.repository.revision_trees(
-                         required_trees))
-        ret = []
-        for revision in revisions:
-            if not revision.parents:
-                old_tree = self._branch.repository.revision_tree(
-                    bzrlib.revision.NULL_REVISION)
-            else:
-                old_tree = trees[revision.parents[0].revid]
-            tree = trees[revision.revid]
-            ret.append(tree.changes_from(old_tree))
-        return ret
-
     def _change_from_revision(self, revision):
         """
         Given a bzrlib Revision, return a processed "change" for use in
@@ -581,22 +585,24 @@ iso style "yyyy-mm-dd")
         }
         return util.Container(entry)
 
-    def get_file_changes_uncached(self, entries):
-        delta_list = self._get_deltas_for_revisions_with_trees(entries)
-
-        return [self.parse_delta(delta) for delta in delta_list]
-
-    def get_file_changes(self, entries):
-        if self._file_change_cache is None:
-            return self.get_file_changes_uncached(entries)
+    def get_file_changes_uncached(self, entry):
+        repo = self._branch.repository
+        if entry.parents:
+            old_tree = repo.revision_tree(entry.parents[0].revid)
         else:
-            return self._file_change_cache.get_file_changes(entries)
+            old_tree = repo.revision_tree(bzrlib.revision.NULL_REVISION)
+        new_tree = repo.revision_tree(entry.revid)
+        return self.file_changes_from_revision_trees(old_tree, new_tree)
 
-    def add_changes(self, entries):
-        changes_list = self.get_file_changes(entries)
+    def get_file_changes(self, entry):
+        if self._file_change_cache is None:
+            return self.get_file_changes_uncached(entry)
+        else:
+            return self._file_change_cache.get_file_changes(entry)
 
-        for entry, changes in zip(entries, changes_list):
-            entry.changes = changes
+    def add_changes(self, entry):
+        changes = self.get_file_changes(entry)
+        entry.changes = changes
 
     def get_file(self, file_id, revid):
         "returns (path, filename, data)"
@@ -608,7 +614,7 @@ iso style "yyyy-mm-dd")
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def parse_delta(self, delta):
+    def file_changes_from_revision_trees(self, old_tree, new_tree):
         """
         Return a nested data structure containing the changes in a delta::
 
@@ -618,31 +624,16 @@ iso style "yyyy-mm-dd")
             modified: list(
                 filename: str,
                 file_id: str,
-            )
+            ),
+            text_changes: list((filename, file_id)),
         """
-        added = []
-        modified = []
-        renamed = []
-        removed = []
+        reporter = FileChangeReporter()
 
-        for path, fid, kind in delta.added:
-            added.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid, kind=kind))
+        bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
-        for path, fid, kind, text_modified, meta_modified in delta.modified:
-            modified.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid))
-
-        for old_path, new_path, fid, kind, text_modified, meta_modified in \
-                delta.renamed:
-            renamed.append(util.Container(
-                old_filename=rich_filename(old_path, kind),
-                new_filename=rich_filename(new_path, kind), file_id=fid,
-                text_modified=text_modified))
-
-        for path, fid, kind in delta.removed:
-            removed.append(util.Container(
-                filename=rich_filename(path, kind), file_id=fid, kind=kind))
-
-        return util.Container(added=added, renamed=renamed,
-                              removed=removed, modified=modified)
+        return util.Container(
+            added=sorted(reporter.added, key=lambda x:x.filename),
+            renamed=sorted(reporter.renamed, key=lambda x:x.new_filename),
+            removed=sorted(reporter.removed, key=lambda x:x.filename),
+            modified=sorted(reporter.modified, key=lambda x:x.filename),
+            text_changes=sorted(reporter.text_changes, key=lambda x:x.filename))
