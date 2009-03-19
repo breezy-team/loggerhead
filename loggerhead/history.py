@@ -149,9 +149,12 @@ class FileChangeReporter(object):
     def report(self, file_id, paths, versioned, renamed, modified,
                exe_change, kind):
         if modified not in ('unchanged', 'kind changed'):
+            if versioned == 'removed':
+                filename = rich_filename(paths[0], kind[0])
+            else:
+                filename = rich_filename(paths[1], kind[1])
             self.text_changes.append(util.Container(
-                filename=rich_filename(paths[1], kind[0]),
-                file_id=file_id,
+                filename=filename, file_id=file_id,
                 old_revision=self.revid(self.old_inv, file_id),
                 new_revision=self.revid(self.new_inv, file_id)))
         if versioned == 'added':
