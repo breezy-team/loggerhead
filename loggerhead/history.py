@@ -160,7 +160,7 @@ class FileChangeReporter(object):
                 file_id=file_id, kind=kind[1]))
         elif versioned == 'removed':
             self.removed.append(util.Container(
-                filename=rich_filename(paths[1], kind),
+                filename=rich_filename(paths[0], kind),
                 file_id=file_id, kind=kind[0]))
         elif renamed:
             self.renamed.append(util.Container(
