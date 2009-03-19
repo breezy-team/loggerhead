@@ -602,7 +602,7 @@ iso style "yyyy-mm-dd")
             old_revid = entry.parents[0].revid
         else:
             old_revid = bzrlib.revision.NULL_REVISION
-        return self.file_changes_from_revision_trees(old_revid, entry.revid)
+        return self.file_changes_for_revision_ids(old_revid, entry.revid)
 
     def get_file_changes(self, entry):
         if self._file_change_cache is None:
@@ -624,7 +624,7 @@ iso style "yyyy-mm-dd")
             path = '/' + path
         return path, inv_entry.name, rev_tree.get_file_text(file_id)
 
-    def file_changes_from_revision_trees(self, old_revid, new_revid):
+    def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
         Return a nested data structure containing the changes in a delta::
 

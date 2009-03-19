@@ -72,18 +72,13 @@ class RevisionUI(TemplatedBranchView):
         change = h.get_changes([revid])[0]
 
         if compare_revid is None:
-            if change.parents:
-                cr = change.parents[0].revid
-            else:
-                cr = 'null:'
+            file_changes = h.get_file_changes(change)
         else:
-            cr = compare_revid
+            file_changes = h.file_changes_for_revision_ids(
+                compare_revid, change.revid)
 
         if path in ('', '/'):
             path = None
-
-        file_changes = h.file_changes_from_revision_trees(
-            cr, change.revid)
 
         link_data = {}
         path_to_id = {}
