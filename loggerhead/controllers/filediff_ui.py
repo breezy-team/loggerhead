@@ -3,6 +3,7 @@ import urllib
 
 from bzrlib import diff
 from bzrlib import errors
+from bzrlib import osutils
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -52,25 +53,24 @@ def _process_diff(difftext):
     return chunks
 
 
-def diff_chunks_for_file(file_id, old_tree, new_tree):
-    try:
-        old_lines = old_tree.get_file_lines(file_id)
-    except errors.NoSuchId:
-        old_lines = []
-    try:
-        new_lines = new_tree.get_file_lines(file_id)
-    except errors.NoSuchId:
-        new_lines = []
-    buffer = StringIO()
-    if old_lines != new_lines:
-        try:
-            diff.internal_diff('', old_lines, '', new_lines, buffer)
-        except errors.BinaryFile:
-            difftext = ''
+def diff_chunks_for_file(repository, file_id, compare_revid, revid):
+    lines = {}
+    args = []
+    for r in (compare_revid, revid):
+        if r == 'null:':
+            lines[r] = []
         else:
-            difftext = buffer.getvalue()
-    else:
+            args.append((file_id, r, r))
+    for r, bytes_iter in repository.iter_files_bytes(args):
+        lines[r] = osutils.split_lines(bytes_iter)
+    print lines.keys()
+    buffer = StringIO()
+    try:
+        diff.internal_diff('', lines[compare_revid], '', lines[revid], buffer)
+    except errors.BinaryFile:
         difftext = ''
+    else:
+        difftext = buffer.getvalue()
 
     return _process_diff(difftext)
 
@@ -87,9 +87,8 @@ class FileDiffUI(TemplatedBranchView):
         file_id = urllib.unquote(self.args[2])
 
         repository = self._history._branch.repository
-        old_tree, new_tree = repository.revision_trees([compare_revid, revid])
-
-        chunks = diff_chunks_for_file(file_id, old_tree, new_tree)
+        chunks = diff_chunks_for_file(
+            self._history._branch.repository, file_id, compare_revid, revid)
 
         return {
             'util': util,

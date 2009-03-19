@@ -23,6 +23,8 @@ except ImportError:
     import json as simplejson
 import urllib
 
+from bzrlib import errors
+
 from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
@@ -88,14 +90,31 @@ class RevisionUI(TemplatedBranchView):
         link_data = {}
         path_to_id = {}
         if path:
+            file_id = new_tree.path2id(path)
+            try:
+                c = old_tree.inventory[file_id].revision
+            except errors.NoSuchId:
+                c = 'null:'
+            try:
+                d = new_tree.inventory[file_id].revision
+            except errors.NoSuchId:
+                d = 'null:'
             diff_chunks = diff_chunks_for_file(
-                new_tree.path2id(path), old_tree, new_tree)
+                self._history._branch.repository, new_tree.path2id(path), c, d)
         else:
             diff_chunks = None
             for i, item in enumerate(file_changes.text_changes):
                 item.index = i
+                try:
+                    c = old_tree.inventory[item.file_id].revision
+                except errors.NoSuchId:
+                    c = 'null:'
+                try:
+                    d = new_tree.inventory[item.file_id].revision
+                except errors.NoSuchId:
+                    d = 'null:'
                 link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                    dq(revid), dq(cr), dq(item.file_id))
+                    dq(d), dq(c), dq(item.file_id))
                 path_to_id[item.filename] = 'diff-' + str(i)
 
         h.add_branch_nicks(change)
