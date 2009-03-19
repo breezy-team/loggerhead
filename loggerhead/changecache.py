@@ -27,9 +27,9 @@ cached a change, it's good forever.
 
 import cPickle
 import os
+import tempfile
 
 from loggerhead import util
-from loggerhead.lockfile import LockFile
 
 with_lock = util.with_lock('_lock', 'ChangeCache')
 
@@ -43,16 +43,21 @@ class FakeShelf(object):
 
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
+        if create_table:
+            fd, path = tempfile.mkstemp(dir=os.path.dirname(filename))
+            self._create_table(path)
+            os.rename(path, filename)
         self.connection = dbapi2.connect(filename)
         self.cursor = self.connection.cursor()
-        if create_table:
-            self._create_table()
 
-    def _create_table(self):
-        self.cursor.execute(
+    def _create_table(self, filename):
+        con = dbapi2.connect(filename)
+        cur = con.cursor()
+        cur.execute(
             "create table RevisionData "
             "(revid binary primary key, data binary)")
-        self.connection.commit()
+        con.commit()
+        con.close()
 
     def _serialize(self, obj):
         r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
@@ -71,10 +76,14 @@ class FakeShelf(object):
             return self._unserialize(filechange[0])
 
     def add(self, revid, object):
-        self.cursor.execute(
-            "insert into revisiondata (revid, data) values (?, ?)",
-            (revid, self._serialize(object)))
-        self.connection.commit()
+        try:
+            self.cursor.execute(
+                "insert into revisiondata (revid, data) values (?, ?)",
+                (revid, self._serialize(object)))
+            self.connection.commit()
+        except dbapi2.IntegrityError:
+            # oh well!
+            pass
 
 
 class FileChangeCache(object):
@@ -87,11 +96,6 @@ class FileChangeCache(object):
 
         self._changes_filename = os.path.join(cache_path, 'filechanges.sql')
 
-        # use a lockfile since the cache folder could be shared across
-        # different processes.
-        self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
-
-    @with_lock
     def get_file_changes(self, entry):
         cache = FakeShelf(self._changes_filename)
         changes = cache.get(entry.revid)
