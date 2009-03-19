@@ -53,8 +53,7 @@ def file_change_summary(url, entry, style='normal', currently_showing=None):
                 url(['/revision', entry.revno]), '#' + filename, cgi.escape(filename),
                 cgi.escape(entry.revno), cgi.escape(filename))
     return _pt('revisionfilechanges').expand(
-        url=url, entry=entry, file_link=file_link,
-        currently_showing=currently_showing, **templatefunctions)
+        file_changes=entry.changes, file_link=file_link, **templatefunctions)
 
 
 @templatefunc

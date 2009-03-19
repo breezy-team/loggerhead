@@ -1,5 +1,5 @@
 <tal:block>
-  <ul tal:repeat="added entry/changes/added">
+  <ul tal:repeat="added file_changes/added">
     <tal:block condition="repeat/added/start">
       <li class="desc">files added:</li>
     </tal:block>
@@ -11,7 +11,7 @@
     </li>
   </ul>
 
-  <ul tal:repeat="removed entry/changes/removed">
+  <ul tal:repeat="removed file_changes/removed">
     <tal:block condition="repeat/removed/start">
       <li class="desc">files removed:</li>
     </tal:block>
@@ -23,7 +23,7 @@
     </li>
   </ul>
 
-  <ul tal:repeat="renamed entry/changes/renamed">
+  <ul tal:repeat="renamed file_changes/renamed">
     <tal:block condition="repeat/renamed/start">
       <li class="desc">files renamed:</li>
     </tal:block>
@@ -39,7 +39,7 @@
     </li>
   </ul>
 
-  <ul tal:repeat="item entry/changes/modified">
+  <ul tal:repeat="item file_changes/modified">
     <tal:block condition="repeat/item/start">
       <li class="desc">files modified:</li>
     </tal:block>
