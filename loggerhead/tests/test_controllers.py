@@ -53,7 +53,7 @@ class TestRevisionUI(BasicTests):
         rev_ui.args = ['2']
         util.set_context({})
         self.assertIsInstance(
-            rev_ui.get_values('2', {}, []),
+            rev_ui.get_values('', {}, []),
             dict)
 
     def test_get_changes_with_diff(self):
