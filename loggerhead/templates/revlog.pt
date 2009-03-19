@@ -16,6 +16,6 @@
          title="Show history" class="link"></a>
     </li>
     <li class="committerli" tal:content="python:', '.join(util.hide_emails(entry.authors))"></li>
-    <tal:block content="structure python:file_change_summary(url, entry, entry.changes)" />
+    <tal:block content="structure python:file_change_summary(url, entry, file_changes)" />
   </ul>
 </div>

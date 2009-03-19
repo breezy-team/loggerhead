@@ -13,13 +13,14 @@ class RevLogUI(TemplatedBranchView):
 
         revid = urllib.unquote(self.args[0])
 
-        changes = list(history.get_changes([revid]))
-        history.add_changes(changes[0])
-        history.get_branch_nicks(changes)
+        change = history.get_changes([revid])[0]
+        file_changes = history.get_file_changes(change)
+        history.get_branch_nicks([change])
 
         return {
             'branch': self._branch,
-            'entry': changes[0],
+            'entry': change,
+            'file_changes': file_changes,
             'util': util,
             'revid': revid,
             'url': self._branch.context_url,

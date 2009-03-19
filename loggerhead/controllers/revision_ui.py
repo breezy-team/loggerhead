@@ -82,7 +82,7 @@ class RevisionUI(TemplatedBranchView):
 
         old_tree = h._branch.repository.revision_tree(cr)
         new_tree = h._branch.repository.revision_tree(change.revid)
-        change.changes = h.file_changes_from_revision_trees(
+        file_changes = h.file_changes_from_revision_trees(
             old_tree, new_tree)
 
         link_data = {}
@@ -112,6 +112,7 @@ class RevisionUI(TemplatedBranchView):
             'branch': self._branch,
             'revid': revid,
             'change': change,
+            'file_changes': file_changes,
             'diff_chunks': diff_chunks,
             'link_data': simplejson.dumps(link_data),
             'specific_path': path,
