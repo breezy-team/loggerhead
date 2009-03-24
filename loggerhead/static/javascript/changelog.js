@@ -53,15 +53,24 @@ Y.on(
     revlogs.each(
       function(item, i)
       {
-        var item_slide = item.query('.revisioninfo');
-        var open_content  = new Array();
-        var close_content = new Array();
-        open_content.push(item.query('.long_description'));
-        close_content.push(item.query('.short_description'));
-        var expand_icon = item.query('.expand_icon');
-        var collapsable = new Collapsable(item_slide, expand_icon, open_content, close_content, false);
+        var revid = revids[item.get('id').replace('log-', '')];
+        var collapsable = new Collapsable(
+          {
+            expand_icon: item.query('.expand_icon'),
+            open_node: item.query('.long_description'),
+            close_node: item.query('.short_description'),
+            source: global_path + '+revlog/' + revid,
+            source_target: item.query('.source_target'),
+            loading: item.query('.loading'),
+            is_open: false
+          });
 
-        item.query('.expand_revisioninfo').on('click',function(){collapsable.toggle();});
+        item.query('.expand_revisioninfo a').on(
+          'click',
+          function(e) {
+            e.preventDefault();
+            collapsable.toggle();
+          });
         item.collapsable = collapsable;
       });
 

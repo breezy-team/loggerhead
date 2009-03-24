@@ -10,24 +10,24 @@ function make_unified(chunk) {
   }
   chunk.get('children').filter(".pseudorow").each(
     function (line) {
-      if (line.hasClass("context")) {
+      if (line.hasClass("context-row")) {
         flush_adds(line);
         line.removeChild(line.query('.code'));
       }
-      else if (line.hasClass("both")) {
-        var added_line = line.create('<div class="pseudorow insert"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
+      else if (line.hasClass("both-row")) {
+        var added_line = line.create('<div class="pseudorow insert-row"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
         var clear = added_line.query('.clear');
         added_line.insertBefore(line.query('.lineNumber.second'), clear);
         added_line.insertBefore(line.query('.code.insert'), clear);
         pending_added[pending_added.length] = added_line;
         line.insertBefore(line.create('<div class="lineNumber second">&nbsp;</div>'), line.query('.code.delete'));
-        line.replaceClass("both", "delete");
+        line.replaceClass("both-row", "delete-row");
       }
-      else if (line.hasClass("insert")) {
+      else if (line.hasClass("insert-row")) {
         flush_adds(line);
         line.removeChild(line.query('.blank'));
       }
-      else if (line.hasClass("delete")) {
+      else if (line.hasClass("delete-row")) {
         line.removeChild(line.query('.blank'));
         line.insertBefore(line.query('.lineNumber.second'), line.query('.code.delete'));
       }
@@ -41,7 +41,6 @@ function make_sbs(chunk) {
   var removed = [];
   function clear_bufs(before) {
     if (!added.length && !removed.length) return;
-    Y.log('hai');
     var common = Math.min(added.length, removed.length);
     for (var i = 0; i < common; i++) {
       var a = added[i];
@@ -50,9 +49,8 @@ function make_sbs(chunk) {
       r.removeChild(r.query('.lineNumber.second'));
       r.insertBefore(a.query('.lineNumber.second'), r.query('.clear'));
       r.insertBefore(a.query('.code.insert'), r.query('.clear'));
-      r.replaceClass('removed', 'both');
+      r.replaceClass('removed-row', 'both-row');
     }
-    Y.log('hai');
     if (added.length > removed.length) {
       for (var j = common; j < added.length; j++) {
         a = added[j];
@@ -71,14 +69,14 @@ function make_sbs(chunk) {
   }
   chunk.get('children').filter(".pseudorow").each(
     function (line) {
-      if (line.hasClass("context")) {
+      if (line.hasClass("context-row")) {
         clear_bufs(line);
         line.insertBefore(line.query('.code').cloneNode(true), line.query(".second"));
       }
-      else if (line.hasClass("insert")) {
+      else if (line.hasClass("insert-row")) {
         added[added.length] = line;
       }
-      else if (line.hasClass("delete")) {
+      else if (line.hasClass("delete-row")) {
         removed[removed.length] = line;
       }
     });
@@ -89,15 +87,16 @@ function make_sbs(chunk) {
 
 function toggle_unified_sbs(event) {
   event.preventDefault();
+  var pts = Y.all(".pseudotable");
   if (unified) {
-    Y.all(".pseudotable").each(make_sbs);
+    pts && pts.each(make_sbs);
     unified = false;
-    Y.get("#toggle_unified_sbs").set('textContent', "Show unified diffs");
+    Y.get("#toggle_unified_sbs").set('innerHTML', "Show unified diffs");
   }
   else {
-    Y.all(".pseudotable").each(make_unified);
+    pts && pts.each(make_unified);
     unified = true;
-    Y.get("#toggle_unified_sbs").set('textContent', "Show diffs side-by-side");
+    Y.get("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
   }
 }
 
@@ -105,7 +104,7 @@ Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
 
 function toggle_expand_all_revisionview(action)
 {
-  var diffs = Y.all('.diffBox');
+  var diffs = Y.all('.diff');
   if (diffs == null) return;
   diffs.each(
     function(item, i)
@@ -144,18 +143,63 @@ Y.on(
   '#collapse_all a'
 );
 
+function node_process(node) {
+  if (!unified) {
+    node.get('children').filter('.pseudotable').each(make_sbs);
+  }
+}
+
+function zoom_to_diff (path) {
+  var collapsable = Y.get('#' + path_to_id[path]).collapsable;
+  if (!collapsable.is_open) {
+    collapsable.open(
+      function () {
+        window.location.hash = '#' + path;
+      });
+  }
+}
+
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
-    var diffs = Y.all('.diffBox');
+    if (!specific_path) {
+      Y.all("#list-files a").on(
+        'click',
+        function (e) {
+          e.preventDefault();
+          var path = decodeURIComponent(e.target.get('href').split('#')[1]);
+          window.location.hash = '#' + path;
+          zoom_to_diff(path);
+        });
+    }
+    var diffs = Y.all('.diff');
     if (diffs == null) return;
     diffs.each(
       function(item, i)
       {
-        var item_slide = item.next('.diffinfo');
-        var expand_icon = item.query( '.expand_diff' );
-        var collapsable = new Collapsable(item_slide, expand_icon, [], [], true);
-        item.query('.expand_diff').on('click', function(){collapsable.toggle();});
-        item.collapsable=collapsable;
-      });
+        var source_url = null;
+        if (!specific_path)
+          source_url = global_path + '+filediff/' + link_data[item.get('id')];
+        item.query('.the-link').on(
+          'click',
+          function(e) {
+            e.preventDefault();
+            collapsable.toggle();
+          });
+        var collapsable = new Collapsable(
+          {
+            expand_icon: item.query('.expand_diff'),
+            open_node: item.query('.diffinfo'),
+            close_node: null,
+            source: source_url,
+            source_target: item.query('.source_target'),
+            is_open: specific_path != null,
+            loading: item.query('.loading'),
+            node_process: node_process
+          });
+       item.collapsable=collapsable;
+       });
+    if (window.location.hash && !specific_path) {
+      zoom_to_diff(window.location.hash.substring(1));
+    }
   });

@@ -1,7 +1,0 @@
-<tal:block>
-<li class="files"><a 
-     tal:attributes="href  string:#${item/filename}-s;
-                     title string:Jump to ${item/filename} below"
-     tal:content="item/filename" >
-</a></li>
-</tal:block>

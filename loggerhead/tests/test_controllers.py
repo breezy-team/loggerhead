@@ -32,8 +32,8 @@ class TestRevisionUI(BasicTests):
         self.build_tree_contents(shape1)
         tree.smart_add([])
         tree.commit('')
-        tree.smart_add([])
         self.build_tree_contents(shape2)
+        tree.smart_add([])
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
@@ -53,8 +53,9 @@ class TestRevisionUI(BasicTests):
         rev_ui.args = ['2']
         util.set_context({})
         self.assertIsInstance(
-            rev_ui.get_values('2', {}, []),
+            rev_ui.get_values('', {}, []),
             dict)
+
 
 class TestAnnotateUI(BasicTests):
 

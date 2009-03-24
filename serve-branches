@@ -127,6 +127,8 @@ def main(args):
         prefix = '/'
     else:
         prefix = options.user_prefix
+        if not prefix.startswith('/'):
+            prefix = '/' + prefix
 
     try:
         from paste.deploy.config import PrefixMiddleware

@@ -17,6 +17,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import cgi
 import os
 import time
 
@@ -26,6 +27,10 @@ import bzrlib.textfile
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
 from loggerhead.controllers import TemplatedBranchView
+try:
+    from loggerhead.highlight import highlight
+except ImportError:
+    highlight = None
 from loggerhead import util
 
 
@@ -41,14 +46,23 @@ class AnnotateUI(TemplatedBranchView):
         file_revid = self._history.get_inventory(revid)[file_id].revision
         tree = self._history._branch.repository.revision_tree(file_revid)
 
+        file_name = os.path.basename(self._history.get_path(revid, file_id))
+
         try:
-            bzrlib.textfile.check_text_lines(tree.get_file_lines(file_id))
+            file_lines = tree.get_file_lines(file_id)
+            bzrlib.textfile.check_text_lines(file_lines)
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
                 yield util.Container(parity=0, lineno=1, status='same',
                                      text='(This is a binary file.)',
                                      change=util.Container())
         else:
+            if highlight is not None:
+                hl_lines = highlight(file_name, ''.join(file_lines))
+                hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
+            else:
+                hl_lines = map(cgi.escape, file_lines)
+
             change_cache = {}
 
             last_line_revid = None
@@ -68,7 +82,7 @@ class AnnotateUI(TemplatedBranchView):
 
                 yield util.Container(
                     parity=parity, lineno=lineno, status=status,
-                    change=change, text=util.fixed_width(text))
+                    change=change, text=hl_lines[lineno - 1])
                 lineno += 1
 
         self.log.debug('annotate: %r secs' % (time.time() - z))

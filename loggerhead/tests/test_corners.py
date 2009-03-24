@@ -46,7 +46,7 @@ class TestCornerCases(BasicTests):
         res = app.get('/changes')
         # It's not much of an assertion, but we only really care about
         # "assert not crashed".
-        res.mustcontain('myfilename')
+        res.mustcontain('1')
 
     def test_whitespace_only_commit_message(self):
         """Check that a whitespace-only commit message does not break the
@@ -61,4 +61,4 @@ class TestCornerCases(BasicTests):
         res = app.get('/changes')
         # It's not much of an assertion, but we only really care about
         # "assert not crashed".
-        res.mustcontain('myfilename')
+        res.mustcontain('1')

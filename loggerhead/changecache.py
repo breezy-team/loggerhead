@@ -17,9 +17,10 @@
 #
 
 """
-a cache for chewed-up "change" data structures, which are basically just a
-different way of storing a revision.  the cache improves lookup times 10x
-over bazaar's xml revision structure, though, so currently still worth doing.
+a cache for chewed-up 'file change' data structures, which are basically just
+a different way of storing a revision delta.  the cache improves lookup times
+10x over bazaar's xml revision structure, though, so currently still worth
+doing.
 
 once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
@@ -27,36 +28,40 @@ cached a change, it's good forever.
 
 import cPickle
 import os
-
-from loggerhead import util
-from loggerhead.lockfile import LockFile
-
-with_lock = util.with_lock('_lock', 'ChangeCache')
+import tempfile
 
 try:
     from sqlite3 import dbapi2
 except ImportError:
     from pysqlite2 import dbapi2
 
+# We take an optimistic approach to concurrency here: we might do work twice
+# in the case of races, but not crash or corrupt data.
 
 class FakeShelf(object):
 
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
+        if create_table:
+            # To avoid races around creating the database, we create the db in
+            # a temporary file and rename it into the ultimate location.
+            fd, path = tempfile.mkstemp(dir=os.path.dirname(filename))
+            self._create_table(path)
+            os.rename(path, filename)
         self.connection = dbapi2.connect(filename)
         self.cursor = self.connection.cursor()
-        if create_table:
-            self._create_table()
 
-    def _create_table(self):
-        self.cursor.execute(
+    def _create_table(self, filename):
+        con = dbapi2.connect(filename)
+        cur = con.cursor()
+        cur.execute(
             "create table RevisionData "
             "(revid binary primary key, data binary)")
-        self.connection.commit()
+        con.commit()
+        con.close()
 
     def _serialize(self, obj):
-        r = dbapi2.Binary(cPickle.dumps(obj, protocol=2))
-        return r
+        return dbapi2.Binary(cPickle.dumps(obj, protocol=2))
 
     def _unserialize(self, data):
         return cPickle.loads(str(data))
@@ -70,12 +75,16 @@ class FakeShelf(object):
         else:
             return self._unserialize(filechange[0])
 
-    def add(self, revid_obj_pairs):
-        for (r, d) in revid_obj_pairs:
+    def add(self, revid, object):
+        try:
             self.cursor.execute(
                 "insert into revisiondata (revid, data) values (?, ?)",
-                (r, self._serialize(d)))
-        self.connection.commit()
+                (revid, self._serialize(object)))
+            self.connection.commit()
+        except dbapi2.IntegrityError:
+            # If another thread or process attempted to set the same key, we
+            # assume it set it to the same value and carry on with our day.
+            pass
 
 
 class FileChangeCache(object):
@@ -88,31 +97,10 @@ class FileChangeCache(object):
 
         self._changes_filename = os.path.join(cache_path, 'filechanges.sql')
 
-        # use a lockfile since the cache folder could be shared across
-        # different processes.
-        self._lock = LockFile(os.path.join(cache_path, 'filechange-lock'))
-
-    @with_lock
-    def get_file_changes(self, entries):
-        out = []
-        missing_entries = []
-        missing_entry_indices = []
+    def get_file_changes(self, entry):
         cache = FakeShelf(self._changes_filename)
-        for entry in entries:
-            changes = cache.get(entry.revid)
-            if changes is not None:
-                out.append(changes)
-            else:
-                missing_entries.append(entry)
-                missing_entry_indices.append(len(out))
-                out.append(None)
-        if missing_entries:
-            missing_changes = self.history.get_file_changes_uncached(
-                                  missing_entries)
-            revid_changes_pairs = []
-            for i, entry, changes in zip(
-                missing_entry_indices, missing_entries, missing_changes):
-                revid_changes_pairs.append((entry.revid, changes))
-                out[i] = changes
-            cache.add(revid_changes_pairs)
-        return out
+        changes = cache.get(entry.revid)
+        if changes is None:
+            changes = self.history.get_file_changes_uncached(entry)
+            cache.add(entry.revid, changes)
+        return changes

@@ -74,7 +74,7 @@ class InventoryUI(TemplatedBranchView):
             if path == '':
                 absolutepath = pathname
             else:
-                absolutepath = urllib.quote(path + '/' + pathname)
+                absolutepath = path + '/' + pathname
             revid = entry.revision
 
             file = util.Container(
@@ -113,6 +113,7 @@ class InventoryUI(TemplatedBranchView):
         navigation = util.Container()
 
         if path is not None:
+            path = path.rstrip('/')
             file_id = rev_tree.path2id(path)
             if file_id is None:
                 raise HTTPNotFound()
@@ -145,8 +146,7 @@ class InventoryUI(TemplatedBranchView):
                 revno_url = 'head:'
             else:
                 revno_url = history.get_revno(revid)
-            # add parent & merge-point branch-nick info, in case it's useful
-            history.get_branch_nicks([ change ])
+            history.add_branch_nicks(change)
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')

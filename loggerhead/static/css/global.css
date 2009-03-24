@@ -11,6 +11,9 @@ a, a:link, a:visited, a:hover {
 	font-weight:normal;
 	outline:none;
 }
+b a:link, b a:visited {
+    font-weight: bold;
+}
 img {
 	padding:0px;
 	margin:0px;
@@ -158,7 +161,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 #loggerheadCont {
 	width:98%;
 	padding:10px 1%;
-	color:#242424;
+	color:#000;
 	background:#fff;
 }
 #loggerheadCont h1 {

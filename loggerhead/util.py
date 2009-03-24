@@ -24,6 +24,8 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
+from simpletal.simpleTALUtils import HTMLStructureCleaner
+
 import base64
 import cgi
 import datetime
@@ -179,6 +181,14 @@ def hide_email(email):
         return '%s at %s' % (username, domains[-2])
     return '%s at %s' % (username, domains[0])
 
+def hide_emails(emails):
+    """
+    try to obscure any email address in a list of bazaar committers' names.
+    """
+    result = []
+    for email in emails:
+        result.append(hide_email(email))
+    return result
 
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
@@ -222,6 +232,7 @@ def fill_div(s):
             s = s.decode('iso-8859-15')
         return s
 
+HSC = HTMLStructureCleaner()
 
 def fixed_width(s):
     """
@@ -238,7 +249,10 @@ def fixed_width(s):
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
-    return s.expandtabs().replace(' ', NONBREAKING_SPACE)
+
+    s = s.expandtabs().replace(' ', NONBREAKING_SPACE)
+
+    return HSC.clean(s).replace('\n', '<br/>')
 
 
 def fake_permissions(kind, executable):
@@ -434,25 +448,6 @@ def decorator(unbound):
     new_decorator.__dict__.update(unbound.__dict__)
     return new_decorator
 
-
-# common threading-lock decorator
-
-
-def with_lock(lockname, debug_name=None):
-    if debug_name is None:
-        debug_name = lockname
-
-    @decorator
-    def _decorator(unbound):
-
-        def locked(self, *args, **kw):
-            getattr(self, lockname).acquire()
-            try:
-                return unbound(self, *args, **kw)
-            finally:
-                getattr(self, lockname).release()
-        return locked
-    return _decorator
 
 
 @decorator

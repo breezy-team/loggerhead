@@ -11,15 +11,19 @@ usual things.
 GETTING STARTED
 ---------------
 
-Loggerhead depends on 
+Loggerhead depends on:
+
 1) SimpleTAL for templating.
-   on Ubuntu package `sudo apt-get install python-simpletal`
+   On Ubuntu, `sudo apt-get install python-simpletal`
    or download from http://www.owlfish.com/software/simpleTAL/download.html
-2) Paste for the server. (You need version 1.2 or newer of Paste.) 
-   on Ubuntu package `sudo apt-get install python-paste`
+2) simplejson for producing JSON data.
+   On Ubuntu, `sudo apt-get install python-simplejson`
+   or use `easy_install simplejson`.
+3) Paste for the server. (You need version 1.2 or newer of Paste.)
+   On Ubuntu, `sudo apt-get install python-paste`
    or use `easy_install Paste`
-3) Paste Deploy  (optional, needed when proxying through Apache)
-   on Ubuntu package `sudo apt-get install python-pastedeploy`
+4) Paste Deploy  (optional, needed when proxying through Apache)
+   On Ubuntu, `sudo apt-get install python-pastedeploy`
    or use `easy_install PasteDeploy`
 
 Then simply run the 'serve-branches' with the branch you want to
@@ -46,6 +50,15 @@ To run loggerhead as a linux daemon:
       update-rc.d loggerheadd defaults
    b) on Sysvinit based systems like Centos or SuSE run:
       chkconfig --add loggerheadd
+
+
+LOGGERHEAD AS A BAZAAR PLUGIN
+-----------------------------
+
+This branch contains experimental support for using Loggerhead as a Bazaar
+plugin.  To use it, place the top-level Loggerhead directory (the one
+containing this file) at ``~/.bazaar/plugins/loggerhead``.
+
 
 USING A CONFIG FILE
 -------------------
@@ -86,8 +99,8 @@ requests to Loggerhead.  Adding lines like this to you Apache
 configuration is one way to do this::
 
     <Location "/branches/">
-        ProxyPass http://127.0.0.1:8080/
-        ProxyPassReverse http://127.0.0.1:8080/
+        ProxyPass http://127.0.0.1:8080/branches/
+        ProxyPassReverse http://127.0.0.1:8080/branches/
     </Location>
 
 If Paste Deploy is installed, the 'serve-branches' script can be
