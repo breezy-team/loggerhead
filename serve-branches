@@ -126,6 +126,7 @@ def main(args):
     memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
 
     # setup_logging() #end
+
     app = TransLogger(app, logger=logger)
     if options.profile:
         from loggerhead.middleware.profile import LSProfMiddleware
