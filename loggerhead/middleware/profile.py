@@ -40,8 +40,6 @@ class MemoryProfileMiddleware(object):
         self.app = app
 
     def __call__(self, environ, start_response):
-        heap = hpy()
         app = self.app(environ, start_response)
-        print heap.iso(app)
         return app
 
