@@ -38,8 +38,16 @@ class MemoryProfileMiddleware(object):
 
     def __init__(self, app):
         self.app = app
+        self.lock = threading.Lock()
 
     def __call__(self, environ, start_response):
-        app = self.app(environ, start_response)
-        return app
+        self.lock.acquire()
+        try:
+            heap = hpy()
+            heap.setrelheap()
+            app = self.app(environ, start_response)
+            print heap.heap()
+            return app
+        finally:
+            self.lock.release()
 
