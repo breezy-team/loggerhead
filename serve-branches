@@ -50,6 +50,9 @@ def command_line_parser():
                             "(defaults to 8080)."))
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
+    parser.add_option('--memory-profile', action='store_true',
+                      dest='memory_profile',
+                      help='Profile the memory usage using heapy.')
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
     parser.add_option("--profile", action="store_true", dest="profile",
@@ -122,6 +125,9 @@ def main(args):
     if options.profile:
         from loggerhead.middleware.profile import LSProfMiddleware
         app = LSProfMiddleware(app)
+    if options.memory_profile:
+        from loggerhead.middleware.profile import MemoryProfileMiddleware
+        app = MemoryProfileMiddleware(app)
 
     if not options.user_prefix:
         prefix = '/'

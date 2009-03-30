@@ -3,6 +3,7 @@ import cgi
 import threading
 
 from bzrlib.lsprof import profile
+from guppy import hpy
 
 class LSProfMiddleware(object):
     '''Paste middleware for profiling with lsprof.'''
@@ -30,4 +31,17 @@ class LSProfMiddleware(object):
             return ret
         finally:
             self.lock.release()
+
+
+class MemoryProfileMiddleware(object):
+    '''Paste middleware for profiling memory with heapy.'''
+
+    def __init__(self, app):
+        self.app = app
+
+    def __call__(self, environ, start_response):
+        heap = hpy()
+        app = self.app(environ, start_response)
+        print heap.iso(app)
+        return app
 
