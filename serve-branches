@@ -121,6 +121,11 @@ def main(args):
     logfile.setFormatter(formatter)
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
+
+    memprofile = logging.getLogger('loggerhead-memprofile')
+    memprofile.setLevel(logging.DEBUG)
+    memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
+
     # setup_logging() #end
     app = TransLogger(app, logger=logger)
     if options.profile:

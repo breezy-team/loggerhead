@@ -47,7 +47,13 @@ class MemoryProfileMiddleware(object):
         self.limit = limit
 
     def update(self):
-        obs = sys.getobjects(0)
+        try:
+            obs = sys.getobjects(0)
+        except AttributeError:
+            logging.error(
+                'Python does not have debug symbols compiled.  Memory will '
+                'not be profiled.')
+            return
         type2count = {}
         type2all = {}
         for o in obs:
@@ -72,20 +78,21 @@ class MemoryProfileMiddleware(object):
         ct.reverse()
         printed = False
 
-        logging.debug("----------------------")
-        logging.debug("Memory profiling")
+        logger = logging.getLogger('loggerhead-memprofile')
+        logger.debug('*' * 20)
+        logger.debug("Loggerhead Memory Profiling")
         i = 0
         for delta1, delta2, t in ct:
             if delta1 or delta2:
                 if not printed:
-                    logging.debug("%-55s %8s %8s" % ('', 'insts', 'refs'))
+                    logger.debug("%-55s %8s %8s" % ('', 'insts', 'refs'))
                     printed = True
 
-                logging.debug("%-55s %8d %8d" % (t, delta1, delta2))
+                logger.debug("%-55s %8d %8d" % (t, delta1, delta2))
 
                 i += 1
                 if i >= self.limit:
-                    break 
+                    break
 
         self.type2count = type2count
         self.type2all = type2all
