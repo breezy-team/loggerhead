@@ -126,9 +126,9 @@ def main(args):
     if options.profile:
         from loggerhead.middleware.profile import LSProfMiddleware
         app = LSProfMiddleware(app)
-    #if options.memory_profile:
-    #    from loggerhead.middleware.profile import MemoryProfileMiddleware
-    #    app = MemoryProfileMiddleware(app)
+    if options.memory_profile:
+        from loggerhead.middleware.profile import MemoryProfileMiddleware
+        app = MemoryProfileMiddleware(app)
 
     if not options.user_prefix:
         prefix = '/'
@@ -157,8 +157,8 @@ def main(args):
 
     app = HTTPExceptionHandler(app)
     app = ErrorHandlerApp(app)
-    if options.memory_profile:
-        app = memory_profile_debug(app)
+    #if options.memory_profile:
+    #    app = memory_profile_debug(app)
 
     if not options.user_port:
         port = '8080'

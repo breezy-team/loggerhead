@@ -1,5 +1,7 @@
 '''Profiling middleware for paste.'''
 import cgi
+import logging
+import sys
 import threading
 
 from bzrlib.lsprof import profile
@@ -36,18 +38,65 @@ class LSProfMiddleware(object):
 class MemoryProfileMiddleware(object):
     '''Paste middleware for profiling memory with heapy.'''
 
-    def __init__(self, app):
+    def __init__(self, app, limit=40):
         self.app = app
         self.lock = threading.Lock()
+
+        self.type2count = {}
+        self.type2all = {}
+        self.limit = limit
+
+    def update(self):
+        obs = sys.getobjects(0)
+        type2count = {}
+        type2all = {}
+        for o in obs:
+            all = sys.getrefcount(o)
+
+            if type(o) is str and o == '<dummy key>':
+                # avoid dictionary madness
+                continue
+            t = type(o)
+            if t in type2count:
+                type2count[t] += 1
+                type2all[t] += all
+            else:
+                type2count[t] = 1
+                type2all[t] = all
+
+        ct = [(type2count[t] - self.type2count.get(t, 0),
+               type2all[t] - self.type2all.get(t, 0),
+               t)
+              for t in type2count.iterkeys()]
+        ct.sort()
+        ct.reverse()
+        printed = False
+
+        logging.debug("----------------------")
+        logging.debug("Memory profiling")
+        i = 0
+        for delta1, delta2, t in ct:
+            if delta1 or delta2:
+                if not printed:
+                    logging.debug("%-55s %8s %8s" % ('', 'insts', 'refs'))
+                    printed = True
+
+                logging.debug("%-55s %8d %8d" % (t, delta1, delta2))
+
+                i += 1
+                if i >= self.limit:
+                    break 
+
+        self.type2count = type2count
+        self.type2all = type2all
 
     def __call__(self, environ, start_response):
         self.lock.acquire()
         try:
-            heap = hpy()
-            heap.setrelheap()
-            app = self.app(environ, start_response)
-            print heap.heap()
-            return app
+            # We don't want to be working with the static images
+            # TODO: There needs to be a better way to do this.
+            self.update()
+            return self.app(environ, start_response)
         finally:
             self.lock.release()
 
