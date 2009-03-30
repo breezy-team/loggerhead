@@ -30,6 +30,7 @@ from paste.translogger import TransLogger
 from loggerhead import __version__
 from loggerhead.apps.filesystem import (
     BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.profile import memory_profile_debug
 from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
 
@@ -156,6 +157,7 @@ def main(args):
 
     app = HTTPExceptionHandler(app)
     app = ErrorHandlerApp(app)
+    app = memory_profile_debug(app)
 
     if not options.user_port:
         port = '8080'
