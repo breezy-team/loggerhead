@@ -87,9 +87,10 @@ def main(args):
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
 
-    memprofile = logging.getLogger('loggerhead-memprofile')
-    memprofile.setLevel(logging.DEBUG)
-    memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
+    if config.get_option('memory_profile'):
+        memprofile = logging.getLogger('loggerhead-memprofile')
+        memprofile.setLevel(logging.DEBUG)
+        memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
 
     # setup_logging() #end
 
