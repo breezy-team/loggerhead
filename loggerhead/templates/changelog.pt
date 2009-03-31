@@ -90,9 +90,7 @@
                      and "title" tag for the contracted URL of the image. This is a bit of a hack, but it's better than
                      other approaches I tried  :)  -->
                 <a href="#">
-                  <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                       alt python:branch.static_url('/static/images/treeExpanded.png');
-                                       title python:branch.static_url('/static/images/treeCollapsed.png')"
+                  <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                        class="expand_icon" />
                 </a>
               </div>

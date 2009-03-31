@@ -156,7 +156,7 @@ Collapsable.prototype.open = function(callback)
     this.close_node.setStyle('display', 'none');
   }
   this.open_node.setStyle('display', 'block');
-  this.expand_icon.set('src', this.expand_icon.get('alt'));
+  this.expand_icon.set('src', expanded_icon_path);
   anim.run();
 };
 
@@ -201,7 +201,7 @@ Collapsable.prototype.closeComplete = function () {
     this.close_node.setStyle('display', 'block');
   }
   this.open_node.ancestor('.container').setStyle('marginBottom', 0);
-  this.expand_icon.set('src', this.expand_icon.get('title'));
+  this.expand_icon.set('src', collapsed_icon_path);
   this.is_open = false;
 };
 
