@@ -49,7 +49,7 @@ class LoggerheadConfig:
 
     def get_option(self, option):
         '''Get an option from the options dict.'''
-        return self._options.__dict__[option]
+        return getattr(self._options, option)
 
     def get_arg(self, index):
         '''Get an arg from the arg list.'''
