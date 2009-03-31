@@ -124,9 +124,7 @@
                                  id string:${specific_path};
                                  title string:View changes to ${specific_path} only"
                  class="the-link">
-                <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png');
-                                     title python:branch.static_url('/static/images/treeCollapsed.png');
-                                     alt python:branch.static_url('/static/images/treeExpanded.png')"
+                <img tal:attributes="src python:branch.static_url('/static/images/treeExpanded.png')"
                      class="expand_diff"/>
                 <tal:b content="specific_path" />
               </a>
@@ -175,22 +173,14 @@
                                  id string:${item/filename};
                                  title string:View changes to ${item/filename} only"
                  class="the-link">
-                <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png');
-                                     title python:branch.static_url('/static/images/treeCollapsed.png');
-                                     alt python:branch.static_url('/static/images/treeExpanded.png')"
+                <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                      class="expand_diff" />
                 <tal:b content="item/filename" />
               </a>
             </div>
-            <div style="overflow: hidden">
-              <div class="container">
-                <div class="loading" style="display:none">
-                  <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-                </div>
-                <div class="diffinfo">
-                  <div class="source_target" >
-                  </div>
-                </div>
+            <div class="diffinfo"  style="display:none">
+              <div class="loading">
+                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
               </div>
             </div>
           </div>
