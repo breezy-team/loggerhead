@@ -131,11 +131,8 @@ Collapsable.prototype._load_finished = function(tid, res, args)
   newNode.setStyle('display', 'none');
   this.loading.ancestor().insertBefore(newNode, this.loading);
   var delta = this.loading.get('region').height - get_height(newNode);
-  Y.log(delta);
   newNode.setStyle('display', 'block');
-  Y.log(this.container.getStyle('marginBottom'));
   this.container.setStyle('marginBottom', parseFloat(this.container.getStyle('marginBottom')) + delta);
-  Y.log(this.container.getStyle('marginBottom'));
   this.loading.ancestor().removeChild(this.loading);
   this._animate(args[0]);
 };
