@@ -86,9 +86,6 @@
             </td>
             <td class="expcell show_if_js">
               <div class="expand_revisioninfo">
-                <!-- So, this is interesting. I'm using "alt" to have the correct URL for the image of the expanded icon
-                     and "title" tag for the contracted URL of the image. This is a bit of a hack, but it's better than
-                     other approaches I tried  :)  -->
                 <a href="#">
                   <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"
                        class="expand_icon" />
@@ -103,16 +100,14 @@
                                        href  python:url(['/revision', entry.revno], clear=1);
                                        class string:link"
                        tal:content="entry/short_comment"></a>
-                    <div class="loading" style="display:none;">
-                      <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-                    </div>
                   </div>
                   <div class="long_description" style="display: none">
                     <a tal:attributes="title python:'Show revision '+entry.revno;
                                        href  python:url(['/revision', entry.revno], clear=1);
                                        class string:link"
                        tal:content="structure python:util.fixed_width(entry.comment)"></a>
-                    <div class="source_target">
+                    <div class="loading">
+                      <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
                     </div>
                   </div>
                 </div>
