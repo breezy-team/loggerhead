@@ -3,15 +3,11 @@
     <li class="mfrom" tal:repeat="parent python:entry.parents[1:]">
       <span class="revnolink">
         <a tal:attributes="href python:url(['/changes', parent.revno])"
-           tal:content="parent/revno"></a>
+           tal:content="python:revno_with_nick(parent)"></a>
       </span>
-      <a tal:condition="parent.branch_nick"
-         tal:attributes="href python:url(['/changes'], start_revid=parent.revno)"
-         tal:content="python:'(' + parent.branch_nick + ')'"
-         title="Show history" class="link"></a>
     </li>
     <li class="mto" tal:repeat="merge_point entry/merge_points">
-      <a tal:attributes="href python:url(['/changes'], start_revid=merge_point.revno)"
+      <a tal:attributes="href python:url(['/changes', merge_point.revno])"
          tal:content="python:revno_with_nick(merge_point)"
          title="Show history" class="link"></a>
     </li>
