@@ -178,13 +178,9 @@
                 <tal:b content="item/filename" />
               </a>
             </div>
-            <div style="overflow: hidden">
-              <div class="container">
-                <div class="diffinfo"  style="display:none">
-                <div class="loading">
-                  <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
-                </div>
-                </div>
+            <div class="diffinfo"  style="display:none">
+              <div class="loading">
+                <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
               </div>
             </div>
           </div>

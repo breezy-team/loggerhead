@@ -140,6 +140,26 @@ Collapsable.prototype._load_finished = function(tid, res, args)
   this._animate(args[0]);
 };
 
+Collapsable.prototype._ensure_container = function(callback)
+{
+  if (this.container == null) {
+    this.container = Y.Node.create('<div style="overflow:hidden;"></div>');
+    if (this.closed_node) {
+      this.closed_node.ancestor().replaceChild(
+        this.container, this.closed_node);
+      this.container.appendChild(this.closed_node);
+      if (this.open_node) {
+        this.container.appendChild(this.open_node);
+      }
+    }
+    else {
+      this.open_node.ancestor().replaceChild(
+        this.container, this.open_node);
+      this.container.appendChild(this.open_node);
+    }
+  }
+}
+
 /* What happens when you click open.
  *
  * 1. The arrow flips to the expanded position.
@@ -168,22 +188,7 @@ Collapsable.prototype.open = function(callback)
 {
   this.expand_icon.set('src', expanded_icon_path);
 
-  if (this.container == null) {
-    this.container = Y.Node.create('<div style="overflow:hidden;"></div>');
-    if (this.closed_node) {
-      this.closed_node.ancestor().replaceChild(
-        this.container, this.closed_node);
-      this.container.appendChild(this.closed_node);
-      if (this.open_node) {
-        this.container.appendChild(this.open_node);
-      }
-    }
-    else {
-      this.open_node.ancestor().replaceChild(
-        this.container, this.open_node);
-      this.container.appendChild(this.open_node);
-    }
-  }
+  this._ensure_container();
 
   var open_height = get_height(this.open_node);
 
@@ -226,7 +231,7 @@ Collapsable.prototype.animComplete = function(evt, callback)
 
 Collapsable.prototype.close = function()
 {
-  var container = this.open_node.ancestor('.container');
+  this._ensure_container();
 
   var open_height = this.open_node.get('region').height;
 
@@ -240,7 +245,7 @@ Collapsable.prototype.close = function()
 
   var anim = new Y.Anim(
     {
-      node: container,
+      node: this.container,
       from: {
         marginBottom: 0
       },
@@ -258,7 +263,7 @@ Collapsable.prototype.closeComplete = function () {
   if (this.close_node) {
     this.close_node.setStyle('display', 'block');
   }
-  this.open_node.ancestor('.container').setStyle('marginBottom', 0);
+  this.container.setStyle('marginBottom', 0);
   this.expand_icon.set('src', collapsed_icon_path);
   this.is_open = false;
 };
