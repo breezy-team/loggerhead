@@ -1,6 +1,7 @@
 '''Configuration tools for Loggerhead.'''
 from optparse import OptionParser
 import sys
+import tempfile
 
 
 def command_line_parser():
@@ -37,12 +38,14 @@ def command_line_parser():
     return parser
 
 
-class LoggerheadConf:
+class LoggerheadConfig:
     '''A configuration object.'''
 
     def __init__(self):
-        parser = command_line_parser()
-        self._options, self._args = parser.parse_args(sys.argv[1:])
+        self._parser = command_line_parser()
+        self._options, self._args = self._parser.parse_args(sys.argv[1:])
+
+        self.SQL_DIR = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
     def get_option(self, option):
         '''Get an option from the options dict.'''
@@ -51,4 +54,13 @@ class LoggerheadConf:
     def get_arg(self, index):
         '''Get an arg from the arg list.'''
         return self._args(index)
+
+    def print_help(self):
+        '''Wrapper around OptionParser.print_help.'''
+        return self._parser.print_help()
+
+    @property
+    def arg_count(self):
+        '''Return the number of args from the option parser.'''
+        return len(self._args)
 
