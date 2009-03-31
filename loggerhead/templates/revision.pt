@@ -180,12 +180,10 @@
             </div>
             <div style="overflow: hidden">
               <div class="container">
-                <div class="loading" style="display:none">
+                <div class="diffinfo"  style="display:none">
+                <div class="loading">
                   <img tal:attributes="src python:branch.static_url('/static/images/spinner.gif')" />
                 </div>
-                <div class="diffinfo">
-                  <div class="source_target" >
-                  </div>
                 </div>
               </div>
             </div>

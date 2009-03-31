@@ -192,7 +192,6 @@ Y.on(
             open_node: item.query('.diffinfo'),
             close_node: null,
             source: source_url,
-            source_target: item.query('.source_target'),
             is_open: specific_path != null,
             loading: item.query('.loading'),
             node_process: node_process
