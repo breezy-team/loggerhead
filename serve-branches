@@ -44,7 +44,7 @@ def main(args):
         config.print_help()
         sys.exit(1)
     elif config.arg_count == 1:
-        [path] = args
+        path = config.get_arg(0)
     else:
         path = '.'
 

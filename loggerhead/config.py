@@ -53,7 +53,7 @@ class LoggerheadConfig:
 
     def get_arg(self, index):
         '''Get an arg from the arg list.'''
-        return self._args(index)
+        return self._args[index]
 
     def print_help(self):
         '''Wrapper around OptionParser.print_help.'''
