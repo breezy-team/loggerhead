@@ -13,6 +13,8 @@
     </tal:comment>
     <script type="text/javascript">
       var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      var collapsed_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeCollapsed.png')+'\''" />;
+      var expanded_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeExpanded.png')+'\''" />;
     </script>
     <script type="text/javascript"
             tal:attributes="src
@@ -41,9 +43,6 @@
     <script type="text/javascript"
             tal:attributes="src
             python:branch.static_url('/static/javascript/yui/build/io/io-base-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src
-            python:branch.static_url('/static/javascript/yui/build/io/io-queue-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
     <metal:block metal:define-slot="header_extras" />

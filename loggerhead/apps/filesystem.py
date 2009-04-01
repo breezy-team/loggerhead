@@ -1,7 +1,6 @@
 """Serve branches at urls that mimic the file system layout."""
 
 import os
-import tempfile
 
 from bzrlib import branch, errors, lru_cache
 
@@ -11,9 +10,8 @@ from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
+from loggerhead.config import LoggerheadConfig
 from loggerhead.controllers.directory_ui import DirectoryUI
-
-sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 
 class BranchesFromFileSystemServer(object):
@@ -22,6 +20,7 @@ class BranchesFromFileSystemServer(object):
         self.path = path
         self.root = root
         self.name = name
+        self._config = LoggerheadConfig()
 
     def app_for_branch(self, branch):
         if not self.name:
@@ -31,8 +30,9 @@ class BranchesFromFileSystemServer(object):
             name = self.name
             is_root = False
         branch_app = BranchWSGIApp(
-            branch, name, {'cachepath': sql_dir}, self.root.graph_cache,
-            is_root=is_root)
+            branch, name,
+            {'cachepath': self._config.SQL_DIR},
+            self.root.graph_cache, is_root=is_root)
         return branch_app.app
 
     def app_for_non_branch(self, environ):

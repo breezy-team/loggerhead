@@ -1,6 +1,4 @@
-Y = YUI().use("node", "io-base", "io-queue", "anim");
-
-Y.io.queue.size(2);
+Y = YUI().use("node", "io-base", "anim");
 
 var global_timeout_id = null;
 var global_search_request = null;
@@ -80,13 +78,15 @@ function hide_search()
 function Collapsable(config)
 {
   this.is_open = config.is_open;
-  this.source_target = config.source_target;
   this.open_node = config.open_node;
   this.close_node = config.close_node;
   this.expand_icon = config.expand_icon;
   this.source = config.source;
   this.loading = config.loading;
   this.node_process = config.node_process;
+  this.container = null;
+  this.anim = null;
+  this._loading = false;
 }
 
 function get_height(node) {
@@ -100,31 +100,95 @@ function get_height(node) {
   return height;
 }
 
+Collapsable.prototype._animate = function (callback)
+{
+  if (this.anim) this.anim.stop();
+
+  this.anim = new Y.Anim(
+    {
+      node: this.container,
+      from: {
+        marginBottom: this.container.getStyle('marginBottom')
+      },
+      to: {
+        marginBottom: 0
+      },
+      duration: 0.2
+    });
+
+  this.anim.run();
+  this.anim.on('end', this.animComplete, this, callback);
+}
+
 Collapsable.prototype._load_finished = function(tid, res, args)
 {
-  var newNode = Y.Node.create(res.responseText.split('\n').splice(1).join(''));
+  var l = res.responseText.split('\n');
+  l.splice(0, 1);
+  var newNode = Y.Node.create(l.join(''));
   if (this.node_process)
     this.node_process(newNode);
-  this.source_target.ancestor().replaceChild(newNode, this.source_target);
-  this.source_target = null;
   this.source = null;
-  this.loading.setStyle('display', 'none');
-  this.open(args[0]);
+  newNode.setStyle('display', 'none');
+  this.loading.ancestor().insertBefore(newNode, this.loading);
+  var delta = this.loading.get('region').height - get_height(newNode);
+  newNode.setStyle('display', 'block');
+  this.container.setStyle('marginBottom', parseFloat(this.container.getStyle('marginBottom')) + delta);
+  this.loading.ancestor().removeChild(this.loading);
+  this._animate(args[0]);
 };
+
+Collapsable.prototype._ensure_container = function(callback)
+{
+  if (this.container == null) {
+    this.container = Y.Node.create('<div></div>');
+    if (this.closed_node) {
+      this.closed_node.ancestor().replaceChild(
+        this.container, this.closed_node);
+      this.container.appendChild(this.closed_node);
+      if (this.open_node) {
+        this.container.appendChild(this.open_node);
+      }
+    }
+    else {
+      this.open_node.ancestor().replaceChild(
+        this.container, this.open_node);
+      this.container.appendChild(this.open_node);
+    }
+    var outer = Y.Node.create('<div style="overflow:hidden;"></div>');
+    this.container.ancestor().replaceChild(outer, this.container);
+    outer.appendChild(this.container);
+  }
+}
+
+/* What happens when you click open.
+ *
+ * 1. The arrow flips to the expanded position.
+ *
+ * 2. If necessary, the div which will be running the animation is
+ * created and the open/closed content stuffed into it (and has height
+ * set to the height of the closed content).
+ *
+ * 3. The open content is shown and the closed content is closed.
+ *
+ * 4. The animation to expose all of the open content is started.
+ *
+ * 5. If we have to do ajax to load content, start the request.
+ *
+ * 6. When the request completes, parse the content into a node, run
+ * the node_process callback over it and replace the spinner (assumed
+ * to be appropriately contained in the open node) with the new node.
+ *
+ * 7. If the animation showing the open content has not completed,
+ * stop it.
+ *
+ * 8. Start a new animation to show the rest of the new content.
+ */
 
 Collapsable.prototype.open = function(callback)
 {
-  if (this.source) {
-    this.loading.setStyle('display', 'block');
-    Y.io.queue(
-      this.source,
-      {
-        on: {complete: this._load_finished},
-        arguments: [callback],
-        context: this
-      });
-    return;
-  }
+  this.expand_icon.set('src', expanded_icon_path);
+
+  this._ensure_container();
 
   var open_height = get_height(this.open_node);
 
@@ -136,39 +200,38 @@ Collapsable.prototype.open = function(callback)
     close_height = 0;
   }
 
-  var container = this.open_node.ancestor('.container');
-
-  var anim = new Y.Anim(
-    {
-      node: container,
-      from: {
-        marginBottom: close_height - open_height
-      },
-      to: {
-        marginBottom: 0
-      },
-      duration: 0.2
-    });
-
-  anim.on('end', this.openComplete, this, callback);
-  container.setStyle('marginBottom', close_height - open_height);
+  this.container.setStyle('marginBottom', close_height - open_height);
   if (this.close_node) {
     this.close_node.setStyle('display', 'none');
   }
   this.open_node.setStyle('display', 'block');
-  this.expand_icon.set('src', this.expand_icon.get('alt'));
-  anim.run();
+
+  this._animate(callback);
+
+  if (this.source) {
+    Y.io(
+      this.source,
+      {
+        on: {complete: this._load_finished},
+        arguments: [callback],
+        context: this
+      });
+    return;
+  }
+
 };
 
-Collapsable.prototype.openComplete = function(evt, callback)
+Collapsable.prototype.animComplete = function(evt, callback)
 {
+  this.anim = null;
+  if (this._loading) return;
   if (callback) callback();
   this.is_open = true;
 };
 
 Collapsable.prototype.close = function()
 {
-  var container = this.open_node.ancestor('.container');
+  this._ensure_container();
 
   var open_height = this.open_node.get('region').height;
 
@@ -182,7 +245,7 @@ Collapsable.prototype.close = function()
 
   var anim = new Y.Anim(
     {
-      node: container,
+      node: this.container,
       from: {
         marginBottom: 0
       },
@@ -200,8 +263,8 @@ Collapsable.prototype.closeComplete = function () {
   if (this.close_node) {
     this.close_node.setStyle('display', 'block');
   }
-  this.open_node.ancestor('.container').setStyle('marginBottom', 0);
-  this.expand_icon.set('src', this.expand_icon.get('title'));
+  this.container.setStyle('marginBottom', 0);
+  this.expand_icon.set('src', collapsed_icon_path);
   this.is_open = false;
 };
 
