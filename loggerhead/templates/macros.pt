@@ -16,24 +16,41 @@
       var collapsed_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeCollapsed.png')+'\''" />;
       var expanded_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeExpanded.png')+'\''" />;
     </script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
-    <script type="text/javascript"
-            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
+    <tal:comment condition="nothing">
+      <!-- If you add or remove a script below, don't forget to change the
+           http://yui.yahooapis.com/combo line! -->
+    </tal:comment>
+    <tal:block condition="not:branch/use_yui_cdn">
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/yui/yui-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/oop/oop-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/event/event-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/attribute/attribute-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/base/base-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/dom/dom-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/node/node-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/anim/anim-min.js')"></script>
+      <script type="text/javascript"
+              tal:attributes="src
+              python:branch.static_url('/static/javascript/yui/build/io/io-base-min.js')"></script>
+    </tal:block>
+    <script tal:condition="branch/use_yui_cdn" type="text/javascript"
+            src="http://yui.yahooapis.com/combo?3.0.0pr2/build/yui/yui-min.js&amp;3.0.0pr2/build/oop/oop-min.js&amp;3.0.0pr2/build/event/event-min.js&amp;3.0.0pr2/build/attribute/attribute-min.js&amp;3.0.0pr2/build/base/base-min.js&amp;3.0.0pr2/build/dom/dom-min.js&amp;3.0.0pr2/build/node/node-min.js&amp;3.0.0pr2/build/anim/anim-min.js&amp;3.0.0pr2/build/io/io-base-min.js"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
     <metal:block metal:define-slot="header_extras" />
