@@ -1,4 +1,4 @@
-<div class="diffinfo">
+<div>
   <div class="pseudotable unified"
        tal:repeat="chunk chunks">
 

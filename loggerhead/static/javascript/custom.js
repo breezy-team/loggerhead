@@ -140,7 +140,7 @@ Collapsable.prototype._load_finished = function(tid, res, args)
 Collapsable.prototype._ensure_container = function(callback)
 {
   if (this.container == null) {
-    this.container = Y.Node.create('<div style="overflow:hidden;"></div>');
+    this.container = Y.Node.create('<div></div>');
     if (this.closed_node) {
       this.closed_node.ancestor().replaceChild(
         this.container, this.closed_node);
@@ -154,6 +154,9 @@ Collapsable.prototype._ensure_container = function(callback)
         this.container, this.open_node);
       this.container.appendChild(this.open_node);
     }
+    var outer = Y.Node.create('<div style="overflow:hidden;"></div>');
+    this.container.ancestor().replaceChild(outer, this.container);
+    outer.appendChild(this.container);
   }
 }
 
