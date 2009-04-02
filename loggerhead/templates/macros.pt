@@ -27,10 +27,8 @@
                'anim/anim-min.js',
                'io/io-base-min.js',
                )">
-      <tal:block condition="not:branch/use_yui_cdn">
-        <script tal:repeat="script yui_scripts" type="text/javascript"
-                tal:attributes="src python:branch.static_url('/static/javascript/yui/build/' + script)"></script>
-      </tal:block>
+      <script tal:condition="not:branch/use_yui_cdn" tal:repeat="script yui_scripts" type="text/javascript"
+              tal:attributes="src python:branch.static_url('/static/javascript/yui/build/' + script)"></script>
       <script tal:condition="branch/use_yui_cdn" type="text/javascript"
               tal:attributes="src python:'http://yui.yahooapis.com/combo?' + '&amp;'.join('3.0.0pr2/build/' + s for s in yui_scripts)"></script>
     </tal:block>
