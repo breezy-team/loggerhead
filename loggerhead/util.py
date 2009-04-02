@@ -250,7 +250,7 @@ def fixed_width(s):
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
 
-    s = s.expandtabs().replace(' ', NONBREAKING_SPACE)
+    s = cgi.escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
 
     return HSC.clean(s).replace('\n', '<br/>')
 

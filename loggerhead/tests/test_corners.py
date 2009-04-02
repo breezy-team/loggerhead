@@ -34,6 +34,16 @@ class TestCornerCases(BasicTests):
         res = app.get('/revision/'+newrevid)
         res.mustcontain('executable')
 
+    def test_revision_escapes_commit_message(self):
+        """XXX."""
+        self.createBranch()
+
+        msg = '<b>hi</b>'
+        self.addFileAndCommit('myfilename', msg)
+        app = self.setUpLoggerhead()
+        res = app.get('/revision/1')
+        self.assertFalse(msg in res.body)
+
     def test_empty_commit_message(self):
         """Check that an empty commit message does not break the rendering."""
         self.createBranch()
