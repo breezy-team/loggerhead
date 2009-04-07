@@ -43,6 +43,9 @@ dev [future]
     - Changelog messages are now displayed with newlines preserved.
       (Peter Bui)
 
+    - serve-branches now has an option, --use-cdn, to load YUI from
+      Yahoo!'s CDN. (Matt Nordhoff)
+
 1.10 [22Dec2008]
 ---------------
 
