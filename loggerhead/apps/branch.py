@@ -80,6 +80,13 @@ class BranchWSGIApp(object):
     def static_url(self, path):
         return self._static_url_base + path
 
+    def yui_url(self, path):
+        if self.use_yui_cdn:
+            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
+        else:
+            base = self.static_url('/static/javascript/yui/build/')
+        return base + path
+
     controllers_dict = {
         '+filediff': FileDiffUI,
         '+revlog': RevLogUI,
