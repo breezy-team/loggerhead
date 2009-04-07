@@ -31,7 +31,7 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT, use_yui_cdn=False):
+                 served_url=_DEFAULT, use_cdn=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -42,7 +42,7 @@ class BranchWSGIApp(object):
         self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
-        self.use_yui_cdn = use_yui_cdn
+        self.use_cdn = use_cdn
 
     def get_history(self):
         _history = History(self.branch, self.graph_cache)
@@ -81,7 +81,7 @@ class BranchWSGIApp(object):
         return self._static_url_base + path
 
     def yui_url(self, path):
-        if self.use_yui_cdn:
+        if self.use_cdn:
             base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
         else:
             base = self.static_url('/static/javascript/yui/build/')
