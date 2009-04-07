@@ -38,7 +38,7 @@ def command_line_parser():
     return parser
 
 
-class LoggerheadConfig:
+class LoggerheadConfig(object):
     '''A configuration object.'''
 
     def __init__(self):
