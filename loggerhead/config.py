@@ -10,6 +10,7 @@ def command_line_parser():
         user_dirs=False,
         show_version=False,
         log_folder=None,
+        use_cdn=False,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -35,6 +36,8 @@ def command_line_parser():
                       type=str, help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
+    parser.add_option('--use-cdn', action='store_true',
+                      help="Serve YUI from Yahoo!'s CDN")
     return parser
 
 
