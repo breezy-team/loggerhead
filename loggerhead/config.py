@@ -4,6 +4,8 @@ import sys
 import tempfile
 
 
+SQL_DIR = tempfile.mkdtemp(prefix='loggerhead-cache-')
+
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
     parser.set_defaults(
@@ -48,7 +50,7 @@ class LoggerheadConfig(object):
         self._parser = command_line_parser()
         self._options, self._args = self._parser.parse_args(sys.argv[1:])
 
-        self.SQL_DIR = tempfile.mkdtemp(prefix='loggerhead-cache-')
+        self.SQL_DIR = SQL_DIR
 
     def get_option(self, option):
         '''Get an option from the options dict.'''
