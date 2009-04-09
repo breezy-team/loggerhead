@@ -5,7 +5,7 @@ dev [future]
 ---------------
 
     - Loggerhead now serves bzr branches over HTTP and exposes the URL
-      to branch them. (Jonathan Lange)
+      to branch them. Addresses bug #240577. (Jonathan Lange)
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
