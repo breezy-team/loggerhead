@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /**
  * Utilities for cookie management
@@ -122,12 +122,14 @@ YUI.add("cookie", function(Y){
                 hashPart /*:Array*/ = NULL,
                 hash /*:Object*/ = {};
             
-            for (var i=0, len=hashParts.length; i < len; i++){
-                hashPart = hashParts[i].split("=");
-                hash[decode(hashPart[0])] = decode(hashPart[1]);
+            if (text.length){
+                for (var i=0, len=hashParts.length; i < len; i++){
+                    hashPart = hashParts[i].split("=");
+                    hash[decode(hashPart[0])] = decode(hashPart[1]);
+                }
             }
             
-            return hash;
+            return hash;          
         },    
         
         /**

@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /**
  * YUI core
@@ -41,7 +41,7 @@ if (typeof YUI === 'undefined' || !YUI) {
      *  <li>------------------------------------------------------------------------</li>
      *  <li>debug:
      *  Turn debug statements on or off</li>
-     *  <li>useConsole:
+     *  <li>useBrowserConsole:
      *  Log to the browser console if debug is on and the console is available</li>
      *  <li>logInclude:
      *  A hash of log sources that should be logged.  If specified, only log messages from these sources will be logged.
@@ -125,8 +125,9 @@ if (typeof YUI === 'undefined' || !YUI) {
     /*global YUI*/
     YUI = function(o) {
         var Y = this;
-        // Allow var yui = YUI() instead of var yui = new YUI()
-        if (Y == window) {
+
+        // Allow instantiation without the new operator
+        if (!(Y instanceof YUI)) {
             return new YUI(o);
         } else {
             // set up the core environment
@@ -159,10 +160,8 @@ YUI.prototype = {
         o.win = w;
         o.doc = w.document;
         o.debug = ('debug' in o) ? o.debug : true;
-        o.useConsole = ('useConsole' in o) ? o.useConsole: true;
-
-        // @TODO default throwFail to true in PR2
-        // o.throwFail = ('throwFail' in o) ? o.debug : true;
+        o.useBrowserConsole = ('useBrowserConsole' in o) ? o.useBrowserConsole : true;
+        o.throwFail = ('throwFail' in o) ? o.throwFail : true;
     
         // add a reference to o for anything that needs it
         // before _setup is called.
@@ -243,7 +242,6 @@ YUI.prototype = {
      * Register a module
      * @method add
      * @param name {string} module name
-     * @param namespace {string} name space for the module
      * @param fn {Function} entry point into the module that
      * is used to bind module to the YUI instance
      * @param version {string} version string
@@ -366,13 +364,14 @@ YUI.prototype = {
         }
        
 
-        // use loader to optimize and sort the requirements if it
-        // is available.
+        // use loader to expand dependencies and sort the 
+        // requirements if it is available.
         if (Y.Loader) {
             dynamic = true;
             loader = new Y.Loader(Y.config);
             loader.require(a);
             loader.ignoreRegistered = true;
+            loader.allowRollup = false;
             loader.calculate();
             a = loader.sorted;
         }
@@ -462,9 +461,9 @@ YUI.prototype = {
      * Returns the namespace specified and creates it if it doesn't exist
      * <pre>
      * YUI.namespace("property.package");
-     * YUI.namespace("YUI.property.package");
+     * YUI.namespace("YAHOO.property.package");
      * </pre>
-     * Either of the above would create YUI.property, then
+     * Either of the above would create YAHOO.property, then
      * YUI.property.package
      *
      * Be careful when naming packages. Reserved words may work in some browsers
@@ -483,7 +482,7 @@ YUI.prototype = {
         for (i=0; i<a.length; i=i+1) {
             d = a[i].split(".");
             o = this;
-            for (j=(d[0] == "YUI") ? 1 : 0; j<d.length; j=j+1) {
+            for (j=(d[0] == "YAHOO") ? 1 : 0; j<d.length; j=j+1) {
                 o[d[j]] = o[d[j]] || {};
                 o = o[d[j]];
             }
@@ -508,11 +507,11 @@ YUI.prototype = {
      * @return {YUI} this YUI instance
      */
     fail: function(msg, e) {
-        var instance = this;
-        instance.log(msg, "error"); // don't scrub this one
-
         if (this.config.throwFail) {
-            throw e || new Error(msg);
+            throw (e || new Error(msg)); 
+        } else {
+            var instance = this;
+            instance.log(msg, "error"); // don't scrub this one
         }
 
         return this;
@@ -563,7 +562,7 @@ YUI.prototype = {
 
     // inheritance utilities are not available yet
     for (i in p) {
-        if (true) { // hasOwnProperty not available yet and not needed
+        if (true) {
             Y[i] = p[i];
         }
     }
@@ -579,7 +578,7 @@ YUI.prototype = {
  * @submodule yui-base
  */
 // This is just a stub to for dependency processing
-YUI.add("yui-base", null, "3.0.0pr1");
+YUI.add("yui-base", null, "3.0.0pr2");
 /*
  * YUI console logger
  * @module yui
@@ -590,7 +589,7 @@ YUI.add("log", function(instance) {
     /**
      * If the 'debug' config is true, a 'yui:log' event will be
      * dispatched, which the logger widget and anything else
-     * can consume.  If the 'useConsole' config is true, it will
+     * can consume.  If the 'useBrowserConsole' config is true, it will
      * write to the browser console if available.
      *
      * @method log
@@ -600,12 +599,14 @@ YUI.add("log", function(instance) {
      *                        categories are "info", "warn", "error", time".
      *                        Custom categories can be used as well. (opt)
      * @param  {String}  src  The source of the the message (opt)
+     * @param  {boolean} silent If true, the log event won't fire
      * @return {YUI}      YUI instance
      */
-    instance.log = function(msg, cat, src) {
+    instance.log = function(msg, cat, src, silent) {
 
         var Y = instance, c = Y.config, es = Y.Env._eventstack,
-            bail = (es && es.logging);
+            // bail = (es && es.logging);
+            bail = false; 
 
         // suppress log message if the config is off or the event stack
         // or the event call stack contains a consumer of the yui:log event
@@ -629,13 +630,17 @@ YUI.add("log", function(instance) {
 
             if (!bail) {
 
-                if (c.useConsole && typeof console != 'undefined') {
-                        var f = (cat && console[cat]) ? cat : 'log',
-                            m = (src) ? src + ': ' + msg : msg;
+                if (c.useBrowserConsole) {
+                    var m = (src) ? src + ': ' + msg : msg;
+                    if (typeof console != 'undefined') {
+                        var f = (cat && console[cat]) ? cat : 'log';
                         console[f](m);
+                    } else if (typeof opera != 'undefined') {
+                        opera.postError(m);
+                    }
                 }
 
-                if (Y.fire && !bail) {
+                if (Y.fire && !bail && !silent) {
                     Y.fire('yui:log', msg, cat, src);
                 }
             }
@@ -644,7 +649,7 @@ YUI.add("log", function(instance) {
         return Y;
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI lang utils
  * @module yui
@@ -659,7 +664,15 @@ YUI.add("lang", function(Y) {
      */
     Y.Lang = Y.Lang || {};
 
-    var L = Y.Lang, SPLICE="splice", LENGTH="length";
+    var L = Y.Lang, 
+
+    ARRAY_TOSTRING = '[object Array]',
+    FUNCTION_TOSTRING = '[object Function]',
+    STRING = 'string',
+    OBJECT = 'object',
+    BOOLEAN = 'boolean',
+    UNDEFINED = 'undefined',
+    OP = Object.prototype;
 
     /**
      * Determines whether or not the provided object is an array.
@@ -674,12 +687,8 @@ YUI.add("lang", function(Y) {
      * @param o The object to test
      * @return {boolean} true if o is an array
      */
-     L.isArray = function(o) { 
-        if (o) {
-           //return L.isNumber(o.length) && L.isFunction(o.splice);
-           return (o[SPLICE] && L.isNumber(o[LENGTH]));
-        }
-        return false;
+    L.isArray = function(o) { 
+        return OP.toString.apply(o) === ARRAY_TOSTRING;
     };
 
     /**
@@ -690,18 +699,29 @@ YUI.add("lang", function(Y) {
      * @return {boolean} true if o is a boolean
      */
     L.isBoolean = function(o) {
-        return typeof o === 'boolean';
+        return typeof o === BOOLEAN;
     };
     
     /**
      * Determines whether or not the provided object is a function
+     * Note: Internet Explorer thinks certain functions are objects:
+     *
+     * var obj = document.createElement("object");
+     * Y.Lang.isFunction(obj.getAttribute) // reports false in IE
+     *
+     * var input = document.createElement("input"); // append to body
+     * Y.Lang.isFunction(input.focus) // reports false in IE
+     *
+     * You will have to implement additional tests if these functions
+     * matter to you.
+     *
      * @method isFunction
      * @static
      * @param o The object to test
      * @return {boolean} true if o is a function
      */
     L.isFunction = function(o) {
-        return typeof o === 'function';
+        return OP.toString.apply(o) === FUNCTION_TOSTRING;
     };
         
     /**
@@ -747,7 +767,7 @@ YUI.add("lang", function(Y) {
      * @return {boolean} true if o is an object
      */  
     L.isObject = function(o, failfn) {
-return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
+return (o && (typeof o === OBJECT || (!failfn && L.isFunction(o)))) || false;
     };
         
     /**
@@ -758,7 +778,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
      * @return {boolean} true if o is a string
      */
     L.isString = function(o) {
-        return typeof o === 'string';
+        return typeof o === STRING;
     };
         
     /**
@@ -769,7 +789,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
      * @return {boolean} true if o is undefined
      */
     L.isUndefined = function(o) {
-        return typeof o === 'undefined';
+        return typeof o === UNDEFINED;
     };
     
     /**
@@ -802,7 +822,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
 return (L.isObject(o) || L.isString(o) || L.isNumber(o) || L.isBoolean(o));
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 
 
 /*
@@ -847,14 +867,22 @@ YUI.add("array", function(Y) {
      */
     Y.Array = function(o, i, al) {
         var t = (al) ? 2 : Y.Array.test(o);
-        switch (t) {
-            case 1:
-                return (i) ? o.slice(o, i) : o;
-            case 2:
-                return Native.slice.call(o, i || 0);
-            default:
-                return [o];
+
+        // switch (t) {
+        //     case 1:
+        //         // return (i) ? o.slice(i) : o;
+        //     case 2:
+        //         return Native.slice.call(o, i || 0);
+        //     default:
+        //         return [o];
+        // }
+
+        if (t) {
+            return Native.slice.call(o, i || 0);
+        } else {
+            return [o];
         }
+
     };
 
     var A = Y.Array;
@@ -883,8 +911,11 @@ YUI.add("array", function(Y) {
             } else {
                 try {
                     // indexed, but no tagName (element) or alert (window)
-                    if ("length" in o && !("tagName" in o)  && !("alert" in o)) {
-                        r = 2;
+                    if ("length" in o && 
+                        !("tagName" in o) && 
+                        !("alert" in o) && 
+                        (!Y.Lang.isFunction(o.size) || o.size() > 1)) {
+                            r = 2;
                     }
                         
                 } catch(ex) {}
@@ -896,6 +927,9 @@ YUI.add("array", function(Y) {
     /**
      * Executes the supplied function on each item in the array.
      * @method Array.each
+     * @param a {Array} the array to iterate
+     * @param f {Function} the function to execute on each item
+     * @param o Optional context object
      * @static
      * @return {YUI} the YUI instance
      */
@@ -910,6 +944,33 @@ YUI.add("array", function(Y) {
                 f.call(o || Y, a[i], i, a);
             }
             return Y;
+        };
+
+    /**
+     * Executes the supplied function on each item in the array.
+     * Returning true from the processing function will stop the 
+     * processing of the remaining
+     * items.
+     * @method Array.some
+     * @param a {Array} the array to iterate
+     * @param f {Function} the function to execute on each item
+     * @param o Optional context object
+     * @static
+     * @return {boolean} true if the 
+     */
+     A.some = (Native.forEach) ?
+        function (a, f, o) { 
+            Native.some.call(a, f, o || Y);
+            return Y;
+        } :
+        function (a, f, o) {
+            var l = a.length;
+            for (var i = 0; i < l; i=i+1) {
+                if (f.call(o, a[i], i, a)) {
+                    return true;
+                }
+            }
+            return false;
         };
 
     /**
@@ -953,7 +1014,7 @@ YUI.add("array", function(Y) {
         return -1;
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI core utilities
  * @module yui
@@ -1055,35 +1116,38 @@ YUI.add("core", function(Y) {
 
                 for (var i in fs) { 
 
-                    // We never want to overwrite the prototype
-                    // if (PROTO === i) {
-                    if (PROTO === i || '_yuid' === i) {
-                        continue;
-                    }
+                    if (fs.hasOwnProperty(i)) {
 
-                    // @TODO deal with the hasownprop issue
+                        // We never want to overwrite the prototype
+                        // if (PROTO === i) {
+                        if (PROTO === i || '_yuid' === i) {
+                            continue;
+                        }
 
-                    // check white list if it was supplied
-                    if (!w || iwl || (i in w)) {
-                        // if the receiver has this property, it is an object,
-                        // and merge is specified, merge the two objects.
-                        if (m && L.isObject(fr[i], true)) {
-                            // console.log('aggregate RECURSE: ' + i);
-                            // @TODO recursive or no?
-                            // Y.mix(fr[i], fs[i]); // not recursive
-                            f(fr[i], fs[i], proto, true); // recursive
-                        // otherwise apply the property only if overwrite
-                        // is specified or the receiver doesn't have one.
-                        // @TODO make sure the 'arr' check isn't desructive
-                        } else if (!arr && (ov || !(i in fr))) {
-                            // console.log('hash: ' + i);
-                            fr[i] = fs[i];
-                        // if merge is specified and the receiver is an array,
-                        // append the array item
-                        } else if (arr) {
-                            // console.log('array: ' + i);
-                            // @TODO probably will need to remove dups
-                            fr.push(fs[i]);
+                        // @TODO deal with the hasownprop issue
+
+                        // check white list if it was supplied
+                        if (!w || iwl || (i in w)) {
+                            // if the receiver has this property, it is an object,
+                            // and merge is specified, merge the two objects.
+                            if (m && L.isObject(fr[i], true)) {
+                                // console.log('aggregate RECURSE: ' + i);
+                                // @TODO recursive or no?
+                                // Y.mix(fr[i], fs[i]); // not recursive
+                                f(fr[i], fs[i], proto, true); // recursive
+                            // otherwise apply the property only if overwrite
+                            // is specified or the receiver doesn't have one.
+                            // @TODO make sure the 'arr' check isn't desructive
+                            } else if (!arr && (ov || !(i in fr))) {
+                                // console.log('hash: ' + i);
+                                fr[i] = fs[i];
+                            // if merge is specified and the receiver is an array,
+                            // append the array item
+                            } else if (arr) {
+                                // console.log('array: ' + i);
+                                // @TODO probably will need to remove dups
+                                fr.push(fs[i]);
+                            }
                         }
                     }
                 }
@@ -1116,7 +1180,7 @@ YUI.add("core", function(Y) {
 
     
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI object utilities
  * @module yui
@@ -1205,7 +1269,7 @@ YUI.add("object", function(Y) {
         }
         return Y;
     };
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI user agent detection
  * @module yui
@@ -1343,7 +1407,7 @@ YUI.add("ua", function(Y) {
         
         return o;
     }();
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI setTimeout/setInterval abstraction
  * @module yui
@@ -1412,7 +1476,7 @@ YUI.add("later", function(Y) {
     Y.later = later;
     L.later = later;
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 
 YUI.add("get", function(Y) {
     
@@ -1528,39 +1592,6 @@ Y.Get = function() {
             }, win);
     };
 
-    /*
-     * The request failed, execute fail handler with whatever
-     * was accomplished.  There isn't a failure case at the
-     * moment unless you count aborted transactions
-     * @method _fail
-     * @param id {string} the id of the request
-     * @private
-     */
-    var _fail = function(id, msg) {
-
-
-        var q = queues[id];
-        if (q.timer) {
-            q.timer.cancel();
-        }
-
-        // execute failure callback
-        if (q.onFailure) {
-            var sc=q.context || q;
-            q.onFailure.call(sc, _returnData(q, msg));
-        }
-    };
-
-    var _get = function(nId, tId) {
-        var q = queues[tId],
-            n = (L.isString(nId)) ? q.win.document.getElementById(nId) : nId;
-        if (!n) {
-            _fail(tId, "target node not found: " + nId);
-        }
-
-        return n;
-    };
-
     /**
      * Removes the nodes for the specified queue
      * @method _purge
@@ -1602,6 +1633,39 @@ Y.Get = function() {
                     _purge(this.tId);
                 }
             };
+    };
+
+    /*
+     * The request failed, execute fail handler with whatever
+     * was accomplished.  There isn't a failure case at the
+     * moment unless you count aborted transactions
+     * @method _fail
+     * @param id {string} the id of the request
+     * @private
+     */
+    var _fail = function(id, msg) {
+
+
+        var q = queues[id];
+        if (q.timer) {
+            q.timer.cancel();
+        }
+
+        // execute failure callback
+        if (q.onFailure) {
+            var sc=q.context || q;
+            q.onFailure.call(sc, _returnData(q, msg));
+        }
+    };
+
+    var _get = function(nId, tId) {
+        var q = queues[tId],
+            n = (L.isString(nId)) ? q.win.document.getElementById(nId) : nId;
+        if (!n) {
+            _fail(tId, "target node not found: " + nId);
+        }
+
+        return n;
     };
 
 
@@ -1687,6 +1751,13 @@ Y.Get = function() {
         } 
 
         var url = q.url[0];
+
+        // if the url is undefined, this is probably a trailing comma problem in IE
+        if (!url) {
+            q.url.shift(); 
+            return _next(id);
+        }
+
 
         if (q.timeout) {
             q.timer = L.later(q.timeout, q, _timeout, id);
@@ -1809,13 +1880,14 @@ Y.Get = function() {
 
         // IE supports the readystatechange event for script and css nodes
         // Opera only for script nodes.  Opera support onload for script
-        // nodes, but this doesn't fire when their is a load failure.
+        // nodes, but this doesn't fire when there is a load failure.
         // The onreadystatechange appears to be a better way to respond
         // to both success and failure.
         if (ua.ie) {
             n.onreadystatechange = function() {
                 var rs = this.readyState;
                 if ("loaded" === rs || "complete" === rs) {
+                    n.onreadystatechange = null;
                     f(id, url);
                 }
             };
@@ -2051,7 +2123,7 @@ Y.Get = function() {
     };
 }();
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /**
  * Loader dynamically loads script and css files.  It includes the dependency
  * info for the version of the library in use, and will automatically pull in
@@ -2178,7 +2250,7 @@ var BASE = 'base',
     CSSBASE = 'cssbase',
     CSS_AFTER = [CSSRESET, CSSFONTS, CSSGRIDS, 'cssreset-context', 'cssfonts-context', 'cssgrids-context'],
     YUI_CSS = ['reset', 'fonts', 'grids', 'base'],
-    VERSION = '3.0.0pr1',
+    VERSION = '3.0.0pr2',
     ROOT = VERSION + '/build/',
     CONTEXT = '-context',
     META = {
@@ -2190,6 +2262,14 @@ var BASE = 'base',
     base: 'http://yui.yahooapis.com/' + ROOT,
 
     comboBase: 'http://yui.yahooapis.com/combo?',
+
+    skin: {
+        defaultSkin: 'sam',
+        base: 'assets/skins/',
+        path: 'skin.css',
+        after: ['reset', 'fonts', 'grids', 'base']
+        //rollup: 3
+    },
 
     modules: {
 
@@ -2223,6 +2303,9 @@ var BASE = 'base',
                 },
                 'node-screen': {
                     requires: ['dom-screen', 'node-base']
+                },
+                'node-event-simulate': {
+                    requires: ['node-base']
                 }
             }
         },
@@ -2262,7 +2345,14 @@ var BASE = 'base',
         },
         
         compat: { 
-            requires: ['node']
+            requires: ['node', 'dump', 'substitute']
+        },
+
+        classnamemanager: { },
+
+        console: {
+            requires: ['widget', 'substitute'],
+            skinnable: true
         },
         
         cookie: { },
@@ -2277,7 +2367,7 @@ var BASE = 'base',
         //     optional: [CSSRESET]
         // },
 
-        'dd':{
+        dd:{
             submodules: {
                 'dd-ddm-base': {
                     requires: ['node', BASE]
@@ -2316,10 +2406,33 @@ var BASE = 'base',
             requires: ['oop']
         },
 
-        get: { },
+        get: { 
+            requires: ['yui-base']
+        },
         
-        io: { 
-            requires: ['node']
+        io:{
+            submodules: {
+
+                'io-base': {
+                    requires: ['node']
+                }, 
+
+                'io-xdr': {
+                    requires: ['io-base']
+                }, 
+
+                'io-form': {
+                    requires: ['io-base']
+                }, 
+
+                'io-upload-iframe': {
+                    requires: ['io-base']
+                },
+
+                'io-queue': {
+                    requires: ['io-base']
+                }
+            }
         },
 
         json: {
@@ -2332,16 +2445,58 @@ var BASE = 'base',
             }
         },
 
-        loader: { },
+        loader: { 
+            requires: ['get']
+        },
+
+        'node-menunav': {
+            requires: ['node', 'classnamemanager'],
+            skinnable: true
+        },
         
         oop: { 
             requires: ['yui-base']
         },
 
-        queue: { },
+        overlay: {
+            requires: ['widget', 'widget-position', 'widget-position-ext', 'widget-stack', 'widget-stdmod'],
+            skinnable: true
+        },
+
+        plugin: { 
+            requires: ['base']
+        },
+
+        profiler: { },
+
+        queue: {
+            requires: ['node']
+        },
+
+        slider: {
+            requires: ['widget', 'dd-constrain'],
+            skinnable: true
+        },
+
+        stylesheet: { },
 
         substitute: {
             optional: ['dump']
+        },
+
+        widget: {
+            requires: ['base', 'node', 'classnamemanager'],
+            plugins: {
+                'widget-position': { },
+                'widget-position-ext': {
+                    requires: ['widget-position']
+                },
+                'widget-stack': {
+                    skinnable: true
+                },
+                'widget-stdmod': { }
+            },
+            skinnable: true
         },
 
         // Since YUI is required for everything else, it should not be specified as
@@ -2350,7 +2505,12 @@ var BASE = 'base',
             supersedes: ['yui-base', 'get', 'loader']
         },
 
-        'yui-base': { }
+        'yui-base': { },
+
+        yuitest: {                                                                                                                                                        
+            requires: ['substitute', 'node', 'json']                                                                                                                     
+        }  
+
     }
 };
 
@@ -2586,6 +2746,46 @@ Y.Env.meta = META;
          */
         // this.moduleInfo = Y.merge(Y.Env.meta.moduleInfo);
         this.moduleInfo = {};
+
+        /**
+         * Provides the information used to skin the skinnable components.
+         * The following skin definition would result in 'skin1' and 'skin2'
+         * being loaded for calendar (if calendar was requested), and
+         * 'sam' for all other skinnable components:
+         *
+         *   <code>
+         *   skin: {
+         *
+         *      // The default skin, which is automatically applied if not
+         *      // overriden by a component-specific skin definition.
+         *      // Change this in to apply a different skin globally
+         *      defaultSkin: 'sam', 
+         *
+         *      // This is combined with the loader base property to get
+         *      // the default root directory for a skin. ex:
+         *      // http://yui.yahooapis.com/2.3.0/build/assets/skins/sam/
+         *      base: 'assets/skins/',
+         *
+         *      // The name of the rollup css file for the skin
+         *      path: 'skin.css',
+         *
+         *      // The number of skinnable components requested that are
+         *      // required before using the rollup file rather than the
+         *      // individual component css files
+         *      rollup: 3,
+         *
+         *      // Any component-specific overrides can be specified here,
+         *      // making it possible to load different skins for different
+         *      // components.  It is possible to load more than one skin
+         *      // for a given component as well.
+         *      overrides: {
+         *          calendar: ['skin1', 'skin2']
+         *      }
+         *   }
+         *   </code>
+         *   @property skin
+         */
+         this.skin = Y.merge(Y.Env.meta.skin);
         
         var defaults = Y.Env.meta.modules;
 
@@ -2655,6 +2855,7 @@ Y.Env.meta = META;
 
         this.skipped = {};
 
+
         // Y.on('yui:load', this.loadNext, this);
 
         this._config(o);
@@ -2674,23 +2875,26 @@ Y.Env.meta = META;
             }
         },
 
+        SKIN_PREFIX: "skin-",
+
         _config: function(o) {
 
             // apply config values
             if (o) {
                 for (var i in o) {
-                    var val = o[i];
                     if (o.hasOwnProperty(i)) {
+                        var val = o[i];
                         if (i == 'require') {
                             this.require(val);
-                        // support the old callback syntax
-                        // } else if (i.indexOf('on') === 0) {
-                            // this.subscribe(i.substr(2).toLowerCase(), o[i], o.context || this);
                         } else if (i == 'modules') {
+
                             // add a hash of module definitions
                             for (var j in val) {
-                                this.addModule(val[j], j);
+                                if (val.hasOwnProperty(j)) {
+                                    this.addModule(val[j], j);
+                                }
                             }
+
                         } else {
                             this[i] = val;
                         }
@@ -2702,21 +2906,96 @@ Y.Env.meta = META;
             var f = this.filter;
 
             if (L.isString(f)) {
-
                 f = f.toUpperCase();
-
                 this.filterName = f;
-
-                // the logger must be available in order to use the debug
-                // versions of the library
-                // @TODO review when logreader is available
-                // if (f === "DEBUG") {
-                //     this.require("log");
-                // }
-
                 this.filter = this.FILTERS[f];
             }
 
+        },
+
+        /**
+         * Returns the skin module name for the specified skin name.  If a
+         * module name is supplied, the returned skin module name is 
+         * specific to the module passed in.
+         * @method formatSkin
+         * @param skin {string} the name of the skin
+         * @param mod {string} optional: the name of a module to skin
+         * @return {string} the full skin module name
+         */
+        formatSkin: function(skin, mod) {
+            var s = this.SKIN_PREFIX + skin;
+            if (mod) {
+                s = s + "-" + mod;
+            }
+
+            return s;
+        },
+
+        /**
+         * Reverses <code>formatSkin</code>, providing the skin name and
+         * module name if the string matches the pattern for skins.
+         * @method parseSkin
+         * @param mod {string} the module name to parse
+         * @return {skin: string, module: string} the parsed skin name 
+         * and module name, or null if the supplied string does not match
+         * the skin pattern
+         */
+        parseSkin: function(mod) {
+            
+            if (mod.indexOf(this.SKIN_PREFIX) === 0) {
+                var a = mod.split("-");
+                return {skin: a[1], module: a[2]};
+            } 
+
+            return null;
+        },
+
+        /**
+         * Adds the skin def to the module info
+         * @method _addSkin
+         * @param skin {string} the name of the skin
+         * @param mod {string} the name of the module
+         * @param parent {string} parent module if this is a skin of a
+         * submodule or plugin
+         * @return {string} the module name for the skin
+         * @private
+         */
+        _addSkin: function(skin, mod, parent) {
+
+            var name = this.formatSkin(skin), info = this.moduleInfo,
+                sinf = this.skin, ext = info[mod] && info[mod].ext;
+
+            /*
+            // Add a module definition for the skin rollup css
+            if (!info[name]) {
+                this.addModule({
+                    'name': name,
+                    'type': 'css',
+                    'path': sinf.base + skin + '/' + sinf.path,
+                    //'supersedes': '*',
+                    'after': sinf.after,
+                    'rollup': sinf.rollup,
+                    'ext': ext
+                });
+            }
+            */
+
+            // Add a module definition for the module-specific skin css
+            if (mod) {
+                name = this.formatSkin(skin, mod);
+                if (!info[name]) {
+                    var mdef = info[mod], pkg = mdef.pkg || mod;
+                    this.addModule({
+                        'name': name,
+                        'type': 'css',
+                        'after': sinf.after,
+                        'path': (parent || pkg) + '/' + sinf.base + skin + '/' + mod + '.css',
+                        'ext': ext
+                    });
+                }
+            }
+
+            return name;
         },
 
         /** Add a new module to the component metadata.         
@@ -2761,24 +3040,49 @@ Y.Env.meta = META;
             o.requires = o.requires || [];
 
 
+            this.moduleInfo[name] = o;
+
             // Handle submodule logic
-            var subs = o.submodules;
+            var subs = o.submodules, i;
             if (subs) {
                 var sup = [], l=0;
 
-                for (var i in subs) {
-                    var s = subs[i];
-                    s.path = _path(name, i, o.type);
-                    this.addModule(s, i);
-                    sup.push(i);
-                    l++;
+                for (i in subs) {
+                    if (subs.hasOwnProperty(i)) {
+                        var s = subs[i];
+                        s.path = _path(name, i, o.type);
+                        this.addModule(s, i);
+                        sup.push(i);
+
+                        if (o.skinnable) {
+                            var smod = this._addSkin(this.skin.defaultSkin, i, name);
+                            sup.push(smod.name);
+                        }
+
+                        l++;
+                    }
                 }
 
                 o.supersedes = sup;
                 o.rollup = Math.min(l-1, 4);
             }
 
-            this.moduleInfo[name] = o;
+            var plugins = o.plugins;
+            if (plugins) {
+                for (i in plugins) {
+                    if (plugins.hasOwnProperty(i)) {
+                        var plug = plugins[i];
+                        plug.path = _path(name, i, o.type);
+                        plug.requires = plug.requires || [];
+                        plug.requires.push(name);
+                        this.addModule(plug, i);
+                        if (o.skinnable) {
+                            this._addSkin(this.skin.defaultSkin, i, name);
+                        }
+                    }
+                }
+            }
+
             this.dirty = true;
 
             return o;
@@ -2938,6 +3242,25 @@ Y.Env.meta = META;
 
             var info = this.moduleInfo, name, i, j;
 
+            // Create skin modules
+            for (name in info) {
+                if (info.hasOwnProperty(name)) {
+                    var m = info[name];
+                    if (m && m.skinnable) {
+                        var o=this.skin.overrides, smod;
+                        if (o && o[name]) {
+                            for (i=0; i<o[name].length; i=i+1) {
+                                smod = this._addSkin(o[name][i], name);
+                            }
+                        } else {
+                            smod = this._addSkin(this.skin.defaultSkin, name);
+                        }
+
+                        m.requires.push(smod);
+                    }
+                }
+            }
+
             var l = Y.merge(this.inserted); // shallow clone
 
             // available modules
@@ -3044,42 +3367,45 @@ Y.Env.meta = META;
                 // go through the rollup candidates
                 for (i in rollups) { 
 
-                    // there can be only one
-                    if (!r[i] && !this.loaded[i]) {
-                        m =this.getModule(i); s = m.supersedes ||[]; roll=false;
+                    if (rollups.hasOwnProperty(i)) {
 
-                        if (!m.rollup) {
-                            continue;
-                        }
+                        // there can be only one
+                        if (!r[i] && !this.loaded[i]) {
+                            m =this.getModule(i); s = m.supersedes ||[]; roll=false;
 
-                        var c=0;
+                            if (!m.rollup) {
+                                continue;
+                            }
 
-                        // check the threshold
-                        for (j=0;j<s.length;j=j+1) {
+                            var c=0;
 
-                            // if the superseded module is loaded, we can't load the rollup
-                            // if (this.loaded[s[j]] && (!_Y.dupsAllowed[s[j]])) {
-                            if (this.loaded[s[j]]) {
-                                roll = false;
-                                break;
-                            // increment the counter if this module is required.  if we are
-                            // beyond the rollup threshold, we will use the rollup module
-                            } else if (r[s[j]]) {
-                                c++;
-                                roll = (c >= m.rollup);
-                                if (roll) {
+                            // check the threshold
+                            for (j=0;j<s.length;j=j+1) {
+
+                                // if the superseded module is loaded, we can't load the rollup
+                                // if (this.loaded[s[j]] && (!_Y.dupsAllowed[s[j]])) {
+                                if (this.loaded[s[j]]) {
+                                    roll = false;
                                     break;
+                                // increment the counter if this module is required.  if we are
+                                // beyond the rollup threshold, we will use the rollup module
+                                } else if (r[s[j]]) {
+                                    c++;
+                                    roll = (c >= m.rollup);
+                                    if (roll) {
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (roll) {
-                            // add the rollup
-                            r[i] = true;
-                            rolled = true;
+                            if (roll) {
+                                // add the rollup
+                                r[i] = true;
+                                rolled = true;
 
-                            // expand the rollup's dependencies
-                            this.getRequires(m);
+                                // expand the rollup's dependencies
+                                this.getRequires(m);
+                            }
                         }
                     }
                 }
@@ -3102,22 +3428,25 @@ Y.Env.meta = META;
             var i, j, s, m, r=this.required;
             for (i in r) {
 
-                // remove if already loaded
-                if (i in this.loaded) { 
-                    delete r[i];
+                if (r.hasOwnProperty(i)) {
 
-                // remove anything this module supersedes
-                } else {
+                    // remove if already loaded
+                    if (i in this.loaded) { 
+                        delete r[i];
 
-                     m = this.getModule(i);
-                     s = m && m.supersedes;
-                     if (s) {
-                         for (j=0; j<s.length; j=j+1) {
-                             if (s[j] in r) {
-                                 delete r[s[j]];
+                    // remove anything this module supersedes
+                    } else {
+
+                         m = this.getModule(i);
+                         s = m && m.supersedes;
+                         if (s) {
+                             for (j=0; j<s.length; j=j+1) {
+                                 if (s[j] in r) {
+                                     delete r[s[j]];
+                                 }
                              }
                          }
-                     }
+                    }
                 }
             }
         },
@@ -3141,8 +3470,12 @@ Y.Env.meta = META;
 
             this._attach();
 
-            for (var i in this.skipped) {
-                delete this.inserted[i];
+            var skipped = this.skipped;
+
+            for (var i in skipped) {
+                if (skipped.hasOwnProperty(i)) {
+                    delete this.inserted[i];
+                }
             }
 
             this.skipped = {};
@@ -3240,7 +3573,7 @@ Y.Env.meta = META;
                 }
 
                 // external css files should be sorted below yui css
-                if (mm.ext && mm.type == CSS && (!other.ext)) {
+                if (mm.ext && mm.type == CSS && !other.ext && other.type == CSS) {
                     return true;
                 }
 
@@ -3329,7 +3662,7 @@ Y.Env.meta = META;
             // flag to indicate we are done with the combo service
             // and any additional files will need to be loaded
             // individually
-            this._combineComplete = false;
+            this._combineComplete = {};
 
             // keep the loadType (js, css or undefined) cached
             this.loadType = type;
@@ -3358,11 +3691,11 @@ Y.Env.meta = META;
                 return;
             }
 
-            var s, len, i, m, url, self=this;
+            var s, len, i, m, url, self=this, type=this.loadType, fn;
 
             // @TODO this will need to handle the two phase insert when
             // CSS support is added
-            if (this.loadType !== CSS && this.combine && (!this._combineComplete)) {
+            if (this.combine && (!this._combineComplete[type])) {
 
                 this._combining = []; 
                 s=this.sorted;
@@ -3373,7 +3706,7 @@ Y.Env.meta = META;
                     m = this.getModule(s[i]);
 // @TODO we can't combine CSS yet until we deliver files with absolute paths to the assets
                     // Do not try to combine non-yui JS
-                    if (m.type == JS && !m.ext) {
+                    if (m && m.type === this.loadType && !m.ext) {
                         url += this.root + m.path;
                         if (i < len-1) {
                             url += '&';
@@ -3387,7 +3720,7 @@ Y.Env.meta = META;
 
 
                     var callback=function(o) {
-                        this._combineComplete = true;
+                        this._combineComplete[type] = true;
 
 
                         var c=this._combining, len=c.length, i, m;
@@ -3398,8 +3731,10 @@ Y.Env.meta = META;
                         this.loadNext(o.data);
                     };
 
+                    fn =(type === CSS) ? Y.Get.css : Y.Get.script;
+
                     // @TODO get rid of the redundant Get code
-                    Y.Get.script(url, {
+                    fn(this._filter(url), {
                         data: this._loading,
                         onSuccess: callback,
                         onFailure: this._onFailure,
@@ -3413,7 +3748,7 @@ Y.Env.meta = META;
                     return;
 
                 } else {
-                    this._combineComplete = true;
+                    this._combineComplete[type] = true;
                 }
             }
 
@@ -3483,16 +3818,18 @@ Y.Env.meta = META;
 
                 // The load type is stored to offer the possibility to load
                 // the css separately from the script.
-                if (!this.loadType || this.loadType === m.type) {
+                if (!type || type === m.type) {
                     this._loading = s[i];
 
-                    var fn=(m.type === CSS) ? Y.Get.css : Y.Get.script,
-                        onsuccess=function(o) {
+                    fn = (m.type === CSS) ? Y.Get.css : Y.Get.script;
+
+                    var onsuccess=function(o) {
                             self.loadNext(o.data);
                         };
                         
-                    url=m.fullpath || this._url(m.path, s[i]);
-                    self=this; 
+                    url = (m.fullpath) ? this._filter(m.fullpath) : this._url(m.path, s[i]);
+
+                    self = this; 
 
                     fn(url, {
                         data: s[i],
@@ -3512,21 +3849,18 @@ Y.Env.meta = META;
             // we are finished
             this._loading = null;
 
-            // internal callback for loading css first
-            if (this._internalCallback) {
+            fn = this._internalCallback;
 
-                var f = this._internalCallback;
+            // internal callback for loading css first
+            if (fn) {
                 this._internalCallback = null;
-                f.call(this);
+                fn.call(this);
 
             // } else if (this.onSuccess) {
             } else {
-
                 // call Y.use passing this instance. Y will use the sorted
                 // dependency list.
-
                 this._onSuccess();
-
             }
 
         },
@@ -3545,25 +3879,24 @@ Y.Env.meta = META;
         },
 
         /**
-         * Generates the full url for a module
-         * method _url
-         * @param path {string} the path fragment
-         * @return {string} the full url
+         * Apply filter defined for this instance to a url/path
+         * method _filter
+         * @param u {string} the string to filter
+         * @return {string} the filtered string
          * @private
          */
-        _url: function(path, name) {
-            
-            var u = (this.base || "") + path, 
-                f = this.filter;
+        _filter: function(u) {
 
-            if (f) {
+
+            var f = this.filter;
+
+            if (u && f) {
                 var useFilter = true;
 
                 if (this.filterName == "DEBUG") {
                 
-                    var self = this, 
-                        exc = self.logExclude,
-                        inc = self.logInclude;
+                    var exc = this.logExclude,
+                        inc = this.logInclude;
                     if (inc && !(name in inc)) {
                         useFilter = false;
                     } else if (exc && (name in exc)) {
@@ -3573,19 +3906,30 @@ Y.Env.meta = META;
                 }
                 
                 if (useFilter) {
-                    u = u.replace(new RegExp(f.searchExp), f.replaceStr);
+                    u = u.replace(new RegExp(f.searchExp, 'g'), f.replaceStr);
                 }
             }
 
-
             return u;
+
+        },
+
+        /**
+         * Generates the full url for a module
+         * method _url
+         * @param path {string} the path fragment
+         * @return {string} the full url
+         * @private
+         */
+        _url: function(path, name) {
+            return this._filter((this.base || "") + path);
         }
 
     };
 
     // Y.augment(Y.Loader, Y.Event.Target);
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI initializer
  * @module yui
@@ -3620,7 +3964,7 @@ Y.Env.meta = META;
 
     };
      
-    YUI.add("yui", M, "3.0.0pr1");
+    YUI.add("yui", M, "3.0.0pr2");
     
     // {
         // the following will be bound automatically when this code is loaded

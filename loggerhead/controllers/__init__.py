@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import re
 import time
 
 from paste.request import path_info_pop, parse_querystring
@@ -34,15 +33,10 @@ class BufferingWriter(object):
         self.buf = []
         self.buflen = 0
         self.writefunc = writefunc
-        self.bytes_saved = 0
         self.buf_limit = buf_limit
 
     def flush(self):
-        chunk = ''.join(self.buf)
-        chunk = re.sub(r'\s*\n\s*', '\n', chunk)
-        chunk = re.sub(r'[ \t]+', ' ', chunk)
-        self.bytes_saved += self.buflen - len(chunk)
-        self.writefunc(chunk)
+        self.writefunc(''.join(self.buf))
         self.buf = []
         self.buflen = 0
 
@@ -84,7 +78,7 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = '/'.join(args[1:])
+            path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
 
         vals = {
@@ -109,19 +103,15 @@ class TemplatedBranchView(object):
         template.expand_into(w, **vals)
         w.flush()
         self.log.info(
-            'Rendering %s: %r secs, %s bytes, %s (%2.1f%%) bytes saved' % (
-                self.__class__.__name__,
-                time.time() - z,
-                w.bytes,
-                w.bytes_saved,
-                100.0*w.bytes_saved/w.bytes))
+            'Rendering %s: %r secs, %s bytes' % (
+                self.__class__.__name__, time.time() - z, w.bytes))
         return []
 
     def get_revid(self):
         h = self._history
         if h is None:
             return None
-        if len(self.args) > 0:
+        if len(self.args) > 0 and self.args != ['']:
             return h.fix_revid(self.args[0])
         else:
             return h.last_revid

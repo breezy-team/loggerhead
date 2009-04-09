@@ -1,4 +1,4 @@
-loggerhead (1.10-2) UNRELEASED; urgency=low
+loggerhead (1.10+bzr324-2) UNRELEASED; urgency=low
 
   [ Roland Mas ]
   * Use the YUI library provided by libjs-yui. (Closes: #511286)

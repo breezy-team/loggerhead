@@ -7,18 +7,35 @@
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+    <tal:comment condition="nothing">
+      <script type="text/javascript"
+              src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>
+    </tal:comment>
+    <script type="text/javascript">
+      var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      var collapsed_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeCollapsed.png')+'\''" />;
+      var expanded_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeExpanded.png')+'\''" />;
+    </script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-core.js')"></script>
+            tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
+            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-      <script type="text/javascript">
-          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
-      </script>
-      <script type="text/javascript"
-              tal:attributes="src
-              python:branch.static_url('/static/javascript/yui/yuiloader/yuiloader-beta-min.js')"></script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 

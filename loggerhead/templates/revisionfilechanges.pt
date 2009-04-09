@@ -1,58 +1,50 @@
 <tal:block>
-<ul tal:repeat="added entry/changes/added">
+  <ul tal:repeat="added file_changes/added">
     <tal:block condition="repeat/added/start">
-        <li class="desc">files added:</li>
-    </tal:block>
-    <li class="files"
-        tal:define="filename python:added[0];
-                    file_id  python:added[1]">
-        <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                           title string:Annotate ${filename}"
-           tal:content="filename" class="link"></a>
-    </li>
-</ul>
-
-<ul tal:repeat="removed entry/changes/removed">
-    <tal:block condition="repeat/removed/start">
-        <li class="desc">files removed:</li>
-    </tal:block>
-    <li class="files"
-        tal:define="filename python:removed[0];
-                    file_id  python:removed[1]">
-      <tal:block content="filename" />
-    </li>
-</ul>
-
-<ul tal:repeat="renamed entry/changes/renamed">
-    <tal:block condition="repeat/renamed/start">
-        <li class="desc">files renamed:</li>
-    </tal:block>
-    <li class="files"
-        tal:define="old_filename python:renamed[0];
-                    new_filename python:renamed[1];
-                    file_id      python:renamed[2]">
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                         title string:Annotate ${old_filename}"
-         tal:content="old_filename" class="filename">
-        old_filename
-      </a>
-      =>
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=file_id);
-                         title string:Annotate ${new_filename}"
-         tal:content="new_filename">
-        new_filename
-      </a>
-    </li>
-</ul>
-
-<ul tal:repeat="item entry/changes/modified">
-    <tal:block condition="repeat/item/start">
-        <li class="desc">files modified:</li>
+      <li class="desc">files added:</li>
     </tal:block>
     <li class="files">
-      <a tal:attributes="href  python:url(['/annotate', entry.revno], file_id=item.file_id);
-                         title string:Annotate ${item/filename}"
-                         tal:content="item/filename"/>
+      <tal:revision condition="python:added.kind == 'file'"
+                    content="structure python:file_link(added.filename)" />
+      <tal:revision condition="python:added.kind != 'file'"
+                    content="added/filename" />
     </li>
-</ul>
+  </ul>
+
+  <ul tal:repeat="removed file_changes/removed">
+    <tal:block condition="repeat/removed/start">
+      <li class="desc">files removed:</li>
+    </tal:block>
+    <li class="files">
+      <tal:revision condition="python:removed.kind == 'file'"
+                    content="structure python:file_link(removed.filename)" />
+      <tal:revision condition="python:removed.kind != 'file'"
+                    content="removed/filename" />
+    </li>
+  </ul>
+
+  <ul tal:repeat="renamed file_changes/renamed">
+    <tal:block condition="repeat/renamed/start">
+      <li class="desc">files renamed:</li>
+    </tal:block>
+    <li class="files">
+      <tal:old-name content="renamed/old_filename" class="filename">
+        old_filename
+      </tal:old-name>
+      =&gt;
+      <tal:revision condition="renamed/text_modified" content="structure python:file_link(renamed.new_filename)" />
+      <tal:old-name condition="not:renamed/text_modified" content="renamed/new_filename" class="filename">
+        new_filename
+      </tal:old-name>
+    </li>
+  </ul>
+
+  <ul tal:repeat="item file_changes/modified">
+    <tal:block condition="repeat/item/start">
+      <li class="desc">files modified:</li>
+    </tal:block>
+    <li class="files">
+      <tal:revision content="structure python:file_link(item.filename)" />
+    </li>
+  </ul>
 </tal:block>

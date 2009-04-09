@@ -1,0 +1,17 @@
+<div class="revisioninfo">
+  <ul class="expandrev">
+    <li class="mfrom" tal:repeat="parent python:entry.parents[1:]">
+      <span class="revnolink">
+        <a tal:attributes="href python:url(['/changes', parent.revno])"
+           tal:content="python:revno_with_nick(parent)"></a>
+      </span>
+    </li>
+    <li class="mto" tal:repeat="merge_point entry/merge_points">
+      <a tal:attributes="href python:url(['/changes', merge_point.revno])"
+         tal:content="python:revno_with_nick(merge_point)"
+         title="Show history" class="link"></a>
+    </li>
+    <li class="committerli" tal:content="python:', '.join(util.hide_emails(entry.authors))"></li>
+    <tal:block content="structure python:file_change_summary(url, entry, file_changes)" />
+  </ul>
+</div>

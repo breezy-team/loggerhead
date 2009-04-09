@@ -23,6 +23,7 @@ import os
 import sys
 import urlparse
 
+from bzrlib.plugin import load_plugins
 from bzrlib.util.configobj.configobj import ConfigObj
 
 from paste import httpserver
@@ -115,7 +116,10 @@ def main():
         def app(environ, start_response, orig=app):
             environ['SCRIPT_NAME'] = path
             environ['HTTP_HOST'] = netloc
+            environ['wsgi.url_scheme'] = scheme
             return orig(environ, start_response)
+
+    load_plugins()
 
     try:
         httpserver.serve(

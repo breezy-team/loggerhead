@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('dd-plugin', function(Y) {
 
@@ -16,9 +16,9 @@ YUI.add('dd-plugin', function(Y) {
         * @class DragPlugin
         * @extends Drag
         * @constructor
+        * @namespace plugin
         */
 
-        Y.Plugin = Y.Plugin || {};
 
         var Drag = function(config) {
             config.node = config.owner;
@@ -40,8 +40,9 @@ YUI.add('dd-plugin', function(Y) {
 
 
         Y.extend(Drag, Y.DD.Drag);
-        Y.Plugin.Drag = Drag;
+        Y.namespace('plugin');
+        Y.plugin.Drag = Drag;
 
 
 
-}, '3.0.0pr1' ,{requires:['dd-drag'], skinnable:false, optional:['dd-constrain', 'dd-proxy']});
+}, '3.0.0pr2' ,{requires:['dd-drag'], skinnable:false, optional:['dd-constrain', 'dd-proxy']});

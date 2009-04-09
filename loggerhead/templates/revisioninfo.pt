@@ -1,6 +1,6 @@
-<div id="infoContainer" class="revision-info">
+<div class="infoContainer">
     <div id="infTxt">
-        <div class="comiter" tal:content="python:util.hide_email(change.author)"></div>
+        <div class="committer" tal:content="python:', '.join(util.hide_emails(change.authors))"></div>
         <div class="timer" tal:content="python:util.date_time(change.date)"></div>
         <div class="mfrom" tal:repeat="parent python:change.parents[1:]">
             <a tal:attributes="title string:Merged From ${parent/revno};
@@ -13,11 +13,10 @@
                tal:content="python:revno_with_nick(merge_point)"></a>
         </div>
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
-        <div class="information" tal:content="python:util.fixed_width(change.comment)"></div>
+        <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
     </div>
-    <ul id="list-files">
-        <tal:block condition="nocall:modified_file_link">
-        <tal:block content="structure python:file_change_summary(url, change, modified_file_link)" /></tal:block>
+    <ul id="list-files" tal:condition="file_changes">
+      <tal:block content="structure python:file_change_summary(url, change, file_changes, 'fragment', currently_showing)" />
     </ul>
     <div class="clear"><!-- --></div>
 </div>

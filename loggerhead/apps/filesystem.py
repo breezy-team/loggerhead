@@ -1,18 +1,17 @@
 """Serve branches at urls that mimic the file system layout."""
 
 import os
-import tempfile
 
 from bzrlib import branch, errors, lru_cache
 
 from paste.request import path_info_pop
 from paste import httpexceptions
+from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
+from loggerhead.config import LoggerheadConfig
 from loggerhead.controllers.directory_ui import DirectoryUI
-
-sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 
 class BranchesFromFileSystemServer(object):
@@ -21,6 +20,7 @@ class BranchesFromFileSystemServer(object):
         self.path = path
         self.root = root
         self.name = name
+        self._config = LoggerheadConfig()
 
     def app_for_branch(self, branch):
         if not self.name:
@@ -30,8 +30,10 @@ class BranchesFromFileSystemServer(object):
             name = self.name
             is_root = False
         branch_app = BranchWSGIApp(
-            branch, name, {'cachepath': sql_dir}, self.root.graph_cache,
-            is_root=is_root)
+            branch, name,
+            {'cachepath': self._config.SQL_DIR},
+            self.root.graph_cache, is_root=is_root,
+            use_cdn=self._config.get_option('use_cdn'))
         return branch_app.app
 
     def app_for_non_branch(self, environ):
@@ -80,6 +82,9 @@ class BranchesFromFileSystemRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif '/.bzr/' in environ['PATH_INFO']:
+            app = urlparser.make_static(None, self.folder)
+            return app(environ, start_response)
         else:
             return BranchesFromFileSystemServer(
                 self.folder, self)(environ, start_response)

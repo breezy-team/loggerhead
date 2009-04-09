@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 /**
  * YUI core
@@ -41,7 +41,7 @@ if (typeof YUI === 'undefined' || !YUI) {
      *  <li>------------------------------------------------------------------------</li>
      *  <li>debug:
      *  Turn debug statements on or off</li>
-     *  <li>useConsole:
+     *  <li>useBrowserConsole:
      *  Log to the browser console if debug is on and the console is available</li>
      *  <li>logInclude:
      *  A hash of log sources that should be logged.  If specified, only log messages from these sources will be logged.
@@ -125,8 +125,9 @@ if (typeof YUI === 'undefined' || !YUI) {
     /*global YUI*/
     YUI = function(o) {
         var Y = this;
-        // Allow var yui = YUI() instead of var yui = new YUI()
-        if (Y == window) {
+
+        // Allow instantiation without the new operator
+        if (!(Y instanceof YUI)) {
             return new YUI(o);
         } else {
             // set up the core environment
@@ -159,10 +160,8 @@ YUI.prototype = {
         o.win = w;
         o.doc = w.document;
         o.debug = ('debug' in o) ? o.debug : true;
-        o.useConsole = ('useConsole' in o) ? o.useConsole: true;
-
-        // @TODO default throwFail to true in PR2
-        // o.throwFail = ('throwFail' in o) ? o.debug : true;
+        o.useBrowserConsole = ('useBrowserConsole' in o) ? o.useBrowserConsole : true;
+        o.throwFail = ('throwFail' in o) ? o.throwFail : true;
     
         // add a reference to o for anything that needs it
         // before _setup is called.
@@ -243,7 +242,6 @@ YUI.prototype = {
      * Register a module
      * @method add
      * @param name {string} module name
-     * @param namespace {string} name space for the module
      * @param fn {Function} entry point into the module that
      * is used to bind module to the YUI instance
      * @param version {string} version string
@@ -366,13 +364,14 @@ YUI.prototype = {
         }
        
 
-        // use loader to optimize and sort the requirements if it
-        // is available.
+        // use loader to expand dependencies and sort the 
+        // requirements if it is available.
         if (Y.Loader) {
             dynamic = true;
             loader = new Y.Loader(Y.config);
             loader.require(a);
             loader.ignoreRegistered = true;
+            loader.allowRollup = false;
             loader.calculate();
             a = loader.sorted;
         }
@@ -462,9 +461,9 @@ YUI.prototype = {
      * Returns the namespace specified and creates it if it doesn't exist
      * <pre>
      * YUI.namespace("property.package");
-     * YUI.namespace("YUI.property.package");
+     * YUI.namespace("YAHOO.property.package");
      * </pre>
-     * Either of the above would create YUI.property, then
+     * Either of the above would create YAHOO.property, then
      * YUI.property.package
      *
      * Be careful when naming packages. Reserved words may work in some browsers
@@ -483,7 +482,7 @@ YUI.prototype = {
         for (i=0; i<a.length; i=i+1) {
             d = a[i].split(".");
             o = this;
-            for (j=(d[0] == "YUI") ? 1 : 0; j<d.length; j=j+1) {
+            for (j=(d[0] == "YAHOO") ? 1 : 0; j<d.length; j=j+1) {
                 o[d[j]] = o[d[j]] || {};
                 o = o[d[j]];
             }
@@ -508,11 +507,11 @@ YUI.prototype = {
      * @return {YUI} this YUI instance
      */
     fail: function(msg, e) {
-        var instance = this;
-        instance.log(msg, "error"); // don't scrub this one
-
         if (this.config.throwFail) {
-            throw e || new Error(msg);
+            throw (e || new Error(msg)); 
+        } else {
+            var instance = this;
+            instance.log(msg, "error"); // don't scrub this one
         }
 
         return this;
@@ -563,7 +562,7 @@ YUI.prototype = {
 
     // inheritance utilities are not available yet
     for (i in p) {
-        if (true) { // hasOwnProperty not available yet and not needed
+        if (true) {
             Y[i] = p[i];
         }
     }
@@ -579,7 +578,7 @@ YUI.prototype = {
  * @submodule yui-base
  */
 // This is just a stub to for dependency processing
-YUI.add("yui-base", null, "3.0.0pr1");
+YUI.add("yui-base", null, "3.0.0pr2");
 /*
  * YUI console logger
  * @module yui
@@ -590,7 +589,7 @@ YUI.add("log", function(instance) {
     /**
      * If the 'debug' config is true, a 'yui:log' event will be
      * dispatched, which the logger widget and anything else
-     * can consume.  If the 'useConsole' config is true, it will
+     * can consume.  If the 'useBrowserConsole' config is true, it will
      * write to the browser console if available.
      *
      * @method log
@@ -600,12 +599,14 @@ YUI.add("log", function(instance) {
      *                        categories are "info", "warn", "error", time".
      *                        Custom categories can be used as well. (opt)
      * @param  {String}  src  The source of the the message (opt)
+     * @param  {boolean} silent If true, the log event won't fire
      * @return {YUI}      YUI instance
      */
-    instance.log = function(msg, cat, src) {
+    instance.log = function(msg, cat, src, silent) {
 
         var Y = instance, c = Y.config, es = Y.Env._eventstack,
-            bail = (es && es.logging);
+            // bail = (es && es.logging);
+            bail = false; 
 
         // suppress log message if the config is off or the event stack
         // or the event call stack contains a consumer of the yui:log event
@@ -629,13 +630,17 @@ YUI.add("log", function(instance) {
 
             if (!bail) {
 
-                if (c.useConsole && typeof console != 'undefined') {
-                        var f = (cat && console[cat]) ? cat : 'log',
-                            m = (src) ? src + ': ' + msg : msg;
+                if (c.useBrowserConsole) {
+                    var m = (src) ? src + ': ' + msg : msg;
+                    if (typeof console != 'undefined') {
+                        var f = (cat && console[cat]) ? cat : 'log';
                         console[f](m);
+                    } else if (typeof opera != 'undefined') {
+                        opera.postError(m);
+                    }
                 }
 
-                if (Y.fire && !bail) {
+                if (Y.fire && !bail && !silent) {
                     Y.fire('yui:log', msg, cat, src);
                 }
             }
@@ -644,7 +649,7 @@ YUI.add("log", function(instance) {
         return Y;
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI lang utils
  * @module yui
@@ -659,7 +664,15 @@ YUI.add("lang", function(Y) {
      */
     Y.Lang = Y.Lang || {};
 
-    var L = Y.Lang, SPLICE="splice", LENGTH="length";
+    var L = Y.Lang, 
+
+    ARRAY_TOSTRING = '[object Array]',
+    FUNCTION_TOSTRING = '[object Function]',
+    STRING = 'string',
+    OBJECT = 'object',
+    BOOLEAN = 'boolean',
+    UNDEFINED = 'undefined',
+    OP = Object.prototype;
 
     /**
      * Determines whether or not the provided object is an array.
@@ -674,12 +687,8 @@ YUI.add("lang", function(Y) {
      * @param o The object to test
      * @return {boolean} true if o is an array
      */
-     L.isArray = function(o) { 
-        if (o) {
-           //return L.isNumber(o.length) && L.isFunction(o.splice);
-           return (o[SPLICE] && L.isNumber(o[LENGTH]));
-        }
-        return false;
+    L.isArray = function(o) { 
+        return OP.toString.apply(o) === ARRAY_TOSTRING;
     };
 
     /**
@@ -690,18 +699,29 @@ YUI.add("lang", function(Y) {
      * @return {boolean} true if o is a boolean
      */
     L.isBoolean = function(o) {
-        return typeof o === 'boolean';
+        return typeof o === BOOLEAN;
     };
     
     /**
      * Determines whether or not the provided object is a function
+     * Note: Internet Explorer thinks certain functions are objects:
+     *
+     * var obj = document.createElement("object");
+     * Y.Lang.isFunction(obj.getAttribute) // reports false in IE
+     *
+     * var input = document.createElement("input"); // append to body
+     * Y.Lang.isFunction(input.focus) // reports false in IE
+     *
+     * You will have to implement additional tests if these functions
+     * matter to you.
+     *
      * @method isFunction
      * @static
      * @param o The object to test
      * @return {boolean} true if o is a function
      */
     L.isFunction = function(o) {
-        return typeof o === 'function';
+        return OP.toString.apply(o) === FUNCTION_TOSTRING;
     };
         
     /**
@@ -747,7 +767,7 @@ YUI.add("lang", function(Y) {
      * @return {boolean} true if o is an object
      */  
     L.isObject = function(o, failfn) {
-return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
+return (o && (typeof o === OBJECT || (!failfn && L.isFunction(o)))) || false;
     };
         
     /**
@@ -758,7 +778,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
      * @return {boolean} true if o is a string
      */
     L.isString = function(o) {
-        return typeof o === 'string';
+        return typeof o === STRING;
     };
         
     /**
@@ -769,7 +789,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
      * @return {boolean} true if o is undefined
      */
     L.isUndefined = function(o) {
-        return typeof o === 'undefined';
+        return typeof o === UNDEFINED;
     };
     
     /**
@@ -802,7 +822,7 @@ return (o && (typeof o === 'object' || (!failfn && L.isFunction(o)))) || false;
 return (L.isObject(o) || L.isString(o) || L.isNumber(o) || L.isBoolean(o));
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 
 
 /*
@@ -847,14 +867,22 @@ YUI.add("array", function(Y) {
      */
     Y.Array = function(o, i, al) {
         var t = (al) ? 2 : Y.Array.test(o);
-        switch (t) {
-            case 1:
-                return (i) ? o.slice(o, i) : o;
-            case 2:
-                return Native.slice.call(o, i || 0);
-            default:
-                return [o];
+
+        // switch (t) {
+        //     case 1:
+        //         // return (i) ? o.slice(i) : o;
+        //     case 2:
+        //         return Native.slice.call(o, i || 0);
+        //     default:
+        //         return [o];
+        // }
+
+        if (t) {
+            return Native.slice.call(o, i || 0);
+        } else {
+            return [o];
         }
+
     };
 
     var A = Y.Array;
@@ -883,8 +911,11 @@ YUI.add("array", function(Y) {
             } else {
                 try {
                     // indexed, but no tagName (element) or alert (window)
-                    if ("length" in o && !("tagName" in o)  && !("alert" in o)) {
-                        r = 2;
+                    if ("length" in o && 
+                        !("tagName" in o) && 
+                        !("alert" in o) && 
+                        (!Y.Lang.isFunction(o.size) || o.size() > 1)) {
+                            r = 2;
                     }
                         
                 } catch(ex) {}
@@ -896,6 +927,9 @@ YUI.add("array", function(Y) {
     /**
      * Executes the supplied function on each item in the array.
      * @method Array.each
+     * @param a {Array} the array to iterate
+     * @param f {Function} the function to execute on each item
+     * @param o Optional context object
      * @static
      * @return {YUI} the YUI instance
      */
@@ -910,6 +944,33 @@ YUI.add("array", function(Y) {
                 f.call(o || Y, a[i], i, a);
             }
             return Y;
+        };
+
+    /**
+     * Executes the supplied function on each item in the array.
+     * Returning true from the processing function will stop the 
+     * processing of the remaining
+     * items.
+     * @method Array.some
+     * @param a {Array} the array to iterate
+     * @param f {Function} the function to execute on each item
+     * @param o Optional context object
+     * @static
+     * @return {boolean} true if the 
+     */
+     A.some = (Native.forEach) ?
+        function (a, f, o) { 
+            Native.some.call(a, f, o || Y);
+            return Y;
+        } :
+        function (a, f, o) {
+            var l = a.length;
+            for (var i = 0; i < l; i=i+1) {
+                if (f.call(o, a[i], i, a)) {
+                    return true;
+                }
+            }
+            return false;
         };
 
     /**
@@ -953,7 +1014,7 @@ YUI.add("array", function(Y) {
         return -1;
     };
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI core utilities
  * @module yui
@@ -1055,35 +1116,38 @@ YUI.add("core", function(Y) {
 
                 for (var i in fs) { 
 
-                    // We never want to overwrite the prototype
-                    // if (PROTO === i) {
-                    if (PROTO === i || '_yuid' === i) {
-                        continue;
-                    }
+                    if (fs.hasOwnProperty(i)) {
 
-                    // @TODO deal with the hasownprop issue
+                        // We never want to overwrite the prototype
+                        // if (PROTO === i) {
+                        if (PROTO === i || '_yuid' === i) {
+                            continue;
+                        }
 
-                    // check white list if it was supplied
-                    if (!w || iwl || (i in w)) {
-                        // if the receiver has this property, it is an object,
-                        // and merge is specified, merge the two objects.
-                        if (m && L.isObject(fr[i], true)) {
-                            // console.log('aggregate RECURSE: ' + i);
-                            // @TODO recursive or no?
-                            // Y.mix(fr[i], fs[i]); // not recursive
-                            f(fr[i], fs[i], proto, true); // recursive
-                        // otherwise apply the property only if overwrite
-                        // is specified or the receiver doesn't have one.
-                        // @TODO make sure the 'arr' check isn't desructive
-                        } else if (!arr && (ov || !(i in fr))) {
-                            // console.log('hash: ' + i);
-                            fr[i] = fs[i];
-                        // if merge is specified and the receiver is an array,
-                        // append the array item
-                        } else if (arr) {
-                            // console.log('array: ' + i);
-                            // @TODO probably will need to remove dups
-                            fr.push(fs[i]);
+                        // @TODO deal with the hasownprop issue
+
+                        // check white list if it was supplied
+                        if (!w || iwl || (i in w)) {
+                            // if the receiver has this property, it is an object,
+                            // and merge is specified, merge the two objects.
+                            if (m && L.isObject(fr[i], true)) {
+                                // console.log('aggregate RECURSE: ' + i);
+                                // @TODO recursive or no?
+                                // Y.mix(fr[i], fs[i]); // not recursive
+                                f(fr[i], fs[i], proto, true); // recursive
+                            // otherwise apply the property only if overwrite
+                            // is specified or the receiver doesn't have one.
+                            // @TODO make sure the 'arr' check isn't desructive
+                            } else if (!arr && (ov || !(i in fr))) {
+                                // console.log('hash: ' + i);
+                                fr[i] = fs[i];
+                            // if merge is specified and the receiver is an array,
+                            // append the array item
+                            } else if (arr) {
+                                // console.log('array: ' + i);
+                                // @TODO probably will need to remove dups
+                                fr.push(fs[i]);
+                            }
                         }
                     }
                 }
@@ -1116,7 +1180,7 @@ YUI.add("core", function(Y) {
 
     
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI object utilities
  * @module yui
@@ -1205,7 +1269,7 @@ YUI.add("object", function(Y) {
         }
         return Y;
     };
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI user agent detection
  * @module yui
@@ -1343,7 +1407,7 @@ YUI.add("ua", function(Y) {
         
         return o;
     }();
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI setTimeout/setInterval abstraction
  * @module yui
@@ -1412,7 +1476,7 @@ YUI.add("later", function(Y) {
     Y.later = later;
     L.later = later;
 
-}, "3.0.0pr1");
+}, "3.0.0pr2");
 /*
  * YUI initializer
  * @module yui
@@ -1447,7 +1511,7 @@ YUI.add("later", function(Y) {
 
     };
      
-    YUI.add("yui", M, "3.0.0pr1");
+    YUI.add("yui", M, "3.0.0pr2");
     
     // {
         // the following will be bound automatically when this code is loaded

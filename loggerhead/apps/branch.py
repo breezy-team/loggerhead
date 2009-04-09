@@ -11,22 +11,27 @@ from paste import request
 from paste import httpexceptions
 
 from loggerhead.apps import static_app
-from loggerhead.controllers.changelog_ui import ChangeLogUI
-from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.atom_ui import AtomUI
-from loggerhead.controllers.download_ui import DownloadUI
-from loggerhead.controllers.search_ui import SearchUI
+from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.diff_ui import DiffUI
+from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.filediff_ui import FileDiffUI
+from loggerhead.controllers.inventory_ui import InventoryUI
+from loggerhead.controllers.revision_ui import RevisionUI
+from loggerhead.controllers.revlog_ui import RevLogUI
+from loggerhead.controllers.search_ui import SearchUI
 from loggerhead.history import History
 from loggerhead import util
 
 
+_DEFAULT = object()
+
 class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
-                 graph_cache=None, branch_link=None, is_root=False):
+                 graph_cache=None, branch_link=None, is_root=False,
+                 served_url=_DEFAULT, use_cdn=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -36,6 +41,8 @@ class BranchWSGIApp(object):
             graph_cache = bzrlib.lru_cache.LRUCache()
         self.graph_cache = graph_cache
         self.is_root = is_root
+        self.served_url = served_url
+        self.use_cdn = use_cdn
 
     def get_history(self):
         _history = History(self.branch, self.graph_cache)
@@ -63,7 +70,7 @@ class BranchWSGIApp(object):
         qs = '&'.join(qs)
         return request.construct_url(
             self._environ, script_name=self._url_base,
-            path_info='/'.join(args),
+            path_info=unicode('/'.join(args)).encode('utf-8'),
             querystring=qs)
 
     def context_url(self, *args, **kw):
@@ -73,15 +80,24 @@ class BranchWSGIApp(object):
     def static_url(self, path):
         return self._static_url_base + path
 
+    def yui_url(self, path):
+        if self.use_cdn:
+            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
+        else:
+            base = self.static_url('/static/javascript/yui/build/')
+        return base + path
+
     controllers_dict = {
+        '+filediff': FileDiffUI,
+        '+revlog': RevLogUI,
         'annotate': AnnotateUI,
+        'atom': AtomUI,
         'changes': ChangeLogUI,
+        'diff': DiffUI,
+        'download': DownloadUI,
         'files': InventoryUI,
         'revision': RevisionUI,
-        'download': DownloadUI,
-        'atom': AtomUI,
         'search': SearchUI,
-        'diff': DiffUI,
         }
 
     def last_updated(self):
@@ -98,6 +114,8 @@ class BranchWSGIApp(object):
         if self._static_url_base is None:
             self._static_url_base = self._url_base
         self._environ = environ
+        if self.served_url is _DEFAULT:
+            self.served_url = self.url([])
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(

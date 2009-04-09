@@ -4,13 +4,55 @@ What's changed in loggerhead?
 dev [future]
 ---------------
 
+    - Loggerhead now serves bzr branches over HTTP and exposes the URL
+      to branch them. (Jonathan Lange)
+
+    - Leading blank lines in commit messages no longer result in an
+      empty summary. (Colin Watson)
+
+    - Added syntax highlighting to annotate view using
+      python-pygments.  Partially addresses bug #306631. (Peter Bui)
+
+    - Convert newlines in commit messages to HTML line breaks for
+      annotate and changelog views.  Addresses bug #273688. (Peter
+      Bui)
+
+    - serve-branches now errors if run behind a proxy without
+      paste.deploy installed.
+
+    - Loggerhead should now handle file and directory names that need
+      URL escaping without crashing.
+
+    - The start-loggerhead script properly sets the wsgi.url_scheme
+      from the server.webpath option. (neror)
+
+    - The revision page defaults to unified style again, and can
+      convert to a side-by-side view using Javascript.
+
+    - Leading blank lines in commit messages no longer result in an
+      empty summary. (Colin Watson)
+
+    - The user-confusing "next" and "previous" links now read "older"
+      and "newer" respectively.
+
+    - The annotate view now contains line number anchors.
+
+    - The annotate view does syntax highlighting using the "pygments"
+      library.  (Peter Bui)
+
+    - Changelog messages are now displayed with newlines preserved.
+      (Peter Bui)
+
+    - serve-branches now has an option, --use-cdn, to load YUI from
+      Yahoo!'s CDN. (Matt Nordhoff)
 
 1.10 [22Dec2008]
 ---------------
+
     - Add startup deamon script for Linux (Marius Kruger)
 
-    - Switch navigation from file_ids to paths. Fixes bugs #260363, #269365
-      and #128926. (Martin Albisetti)
+    - Switch navigation from file_ids to paths. Fixes bugs #260363,
+      #269365 and #128926. (Martin Albisetti)
 
     - Fix bug #258710 ("the /files page explodes in an empty branch").
       Also minor improvements to the /files and /changes pages.

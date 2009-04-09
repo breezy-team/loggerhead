@@ -2,7 +2,7 @@
 Copyright (c) 2008, Yahoo! Inc. All rights reserved.
 Code licensed under the BSD License:
 http://developer.yahoo.net/yui/license.txt
-version: 3.0.0pr1
+version: 3.0.0pr2
 */
 YUI.add('json-parse', function(Y) {
 
@@ -154,7 +154,7 @@ Y.JSON.parse = function (s,reviver) {
 };
 
 
-}, '3.0.0pr1' );
+}, '3.0.0pr2' );
 YUI.add('json-stringify', function(Y) {
 
 /**
@@ -329,6 +329,8 @@ Y.mix(Y.JSON,{
                                 }
                             }
                         }
+
+                        a.sort();
                     }
                 }
 
@@ -350,8 +352,8 @@ Y.mix(Y.JSON,{
 });
 
 
-}, '3.0.0pr1' );
+}, '3.0.0pr2' );
 
 
-YUI.add('json', function(Y){}, '3.0.0pr1' ,{use:['json-parse', 'json-stringify']});
+YUI.add('json', function(Y){}, '3.0.0pr2' ,{use:['json-parse', 'json-stringify']});
 
