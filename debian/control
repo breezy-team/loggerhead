@@ -13,7 +13,8 @@ DM-Upload-Allowed: yes
 
 Package: loggerhead
 Architecture: all
-Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal, python-paste, libjs-yui, ${misc:Depends}
+Depends: bzr (>= 1.5), ${python:Depends}, python-simpletal, python-paste (>= 1.6), libjs-yui, ${misc:Depends}
+Suggests: python-pastedeploy (>= 1.3.0)
 Enhances: bzr
 Recommends: bzr-search
 XB-Python-Version: ${python:Versions}

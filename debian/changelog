@@ -6,8 +6,10 @@ loggerhead (1.10+bzr324-2) UNRELEASED; urgency=low
   [ Jelmer Vernooij ]
   * Use my debian.org address in Uploaders field.
   * Add ${misc:Depends} to please lintian.
+  * Suggest recent version of paste, which doesn't expose internal port
+    numbers in links. (Closes: #507000)
 
- -- Jelmer Vernooij <jelmer@debian.org>  Fri, 09 Jan 2009 22:50:03 +0100
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 09 Apr 2009 19:08:49 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 
