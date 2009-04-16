@@ -99,7 +99,7 @@ class UserBranchesFromFileSystemRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
-        path_info= environ['PATH_INFO']
+        path_info = environ['PATH_INFO']
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
