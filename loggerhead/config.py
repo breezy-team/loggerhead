@@ -59,7 +59,7 @@ class LoggerheadConfig(object):
         self._parser = command_line_parser()
         self._options, self._args = self._parser.parse_args(sys.argv[1:])
 
-        sql_dir = self.get_option('cache_dir')
+        sql_dir = self.get_option('sql_dir')
         if sql_dir is None:
             sql_dir = _get_temporary_sql_dir()
         self.SQL_DIR = sql_dir
