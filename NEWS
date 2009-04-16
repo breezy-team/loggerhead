@@ -46,6 +46,9 @@ dev [future]
     - serve-branches now has an option, --use-cdn, to load YUI from
       Yahoo!'s CDN. (Matt Nordhoff)
 
+    - Fix bug #361238 (serve-branches was calling config.get_option()
+      incorrectly and failing). (Matt Nordhoff)
+
 1.10 [22Dec2008]
 ---------------
 
