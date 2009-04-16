@@ -4,7 +4,13 @@ import sys
 import tempfile
 
 
-_default_sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
+_temporary_sql_dir = None
+
+def _get_temporary_sql_dir():
+    global _temporary_sql_dir
+    if _temporary_sql_dir is None:
+        _temporary_sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
+    return _temporary_sql_dir
 
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
@@ -13,7 +19,7 @@ def command_line_parser():
         show_version=False,
         log_folder=None,
         use_cdn=False,
-        sql_dir=_default_sql_dir,
+        sql_dir=None,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -52,6 +58,11 @@ class LoggerheadConfig(object):
     def __init__(self):
         self._parser = command_line_parser()
         self._options, self._args = self._parser.parse_args(sys.argv[1:])
+
+        sql_dir = self.get_option('cache_dir')
+        if sql_dir is None:
+            sql_dir = _get_temporary_sql_dir()
+        self.SQL_DIR = sql_dir
 
     def get_option(self, option):
         '''Get an option from the options dict.'''
