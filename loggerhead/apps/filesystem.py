@@ -31,7 +31,7 @@ class BranchesFromFileSystemServer(object):
             is_root = False
         branch_app = BranchWSGIApp(
             branch, name,
-            {'cachepath': self._config.SQL_DIR},
+            {'cachepath': self._config.get_option('sql_dir')},
             self.root.graph_cache, is_root=is_root,
             use_cdn=self._config.get_option('use_cdn'))
         return branch_app.app

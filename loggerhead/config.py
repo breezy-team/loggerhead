@@ -4,7 +4,7 @@ import sys
 import tempfile
 
 
-SQL_DIR = tempfile.mkdtemp(prefix='loggerhead-cache-')
+_default_sql_dir = tempfile.mkdtemp(prefix='loggerhead-cache-')
 
 def command_line_parser():
     parser = OptionParser("%prog [options] <path>")
@@ -13,6 +13,7 @@ def command_line_parser():
         show_version=False,
         log_folder=None,
         use_cdn=False,
+        sql_dir=_default_sql_dir,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -40,6 +41,8 @@ def command_line_parser():
                       help="Print the software version and exit")
     parser.add_option('--use-cdn', action='store_true',
                       help="Serve YUI from Yahoo!'s CDN")
+    parser.add_option('--cache-dir', dest='sql_dir',
+                      help="The directory to place the SQL cache in")
     return parser
 
 
@@ -49,8 +52,6 @@ class LoggerheadConfig(object):
     def __init__(self):
         self._parser = command_line_parser()
         self._options, self._args = self._parser.parse_args(sys.argv[1:])
-
-        self.SQL_DIR = SQL_DIR
 
     def get_option(self, option):
         '''Get an option from the options dict.'''
