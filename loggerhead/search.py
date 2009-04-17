@@ -17,7 +17,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-import sets
 _mod_index = None
 def import_search():
     global errors, _mod_index, FileTextHit, RevisionHit
@@ -65,6 +64,6 @@ def search_revisions(branch, query_list, suggest=False):
                     revid_list.append(result.text_key[1])
                 elif isinstance(result, RevisionHit):
                     revid_list.append(result.revision_key[0])
-            return list(sets.Set(revid_list))
+            return list(set(revid_list))
     finally:
         index._branch.unlock()
