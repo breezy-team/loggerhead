@@ -66,10 +66,9 @@ def main(args):
         if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(
-            path, config.get_option('trunk_dir'))
+        app = UserBranchesFromFileSystemRoot(path, config)
     else:
-        app = BranchesFromFileSystemRoot(path)
+        app = BranchesFromFileSystemRoot(path, config)
 
     # setup_logging()
     logging.basicConfig()
