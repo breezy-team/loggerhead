@@ -34,30 +34,23 @@ import logging
 import re
 import textwrap
 import threading
-import time
-import urllib
-from StringIO import StringIO
 
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
 
-import bzrlib
 import bzrlib.branch
 import bzrlib.delta
-import bzrlib.diff
 import bzrlib.errors
 import bzrlib.progress
 import bzrlib.revision
-import bzrlib.textfile
-import bzrlib.tsort
 import bzrlib.ui
 
 # bzrlib's UIFactory is not thread-safe
 uihack = threading.local()
 
 
-class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
+class ThreadSafeUIFactory(bzrlib.ui.SilentUIFactory):
 
     def nested_progress_bar(self):
         if getattr(uihack, '_progress_bar_stack', None) is None:
@@ -131,6 +124,7 @@ class _RevListToTimestamps(object):
         return len(self.revid_list)
 
 class FileChangeReporter(object):
+
     def __init__(self, old_inv, new_inv):
         self.added = []
         self.modified = []
@@ -177,7 +171,7 @@ class FileChangeReporter(object):
                 file_id=file_id))
 
 
-class History (object):
+class History(object):
     """Decorate a branch to provide information for rendering.
 
     History objects are expected to be short lived -- when serving a request
@@ -641,8 +635,8 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename, file_id)),
         """
         repo = self._branch.repository
-        if bzrlib.revision.is_null(old_revid) or \
-               bzrlib.revision.is_null(new_revid):
+        if (bzrlib.revision.is_null(old_revid) or
+            bzrlib.revision.is_null(new_revid)):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
