@@ -17,7 +17,6 @@
 
 
 import logging
-import logging.handlers
 from optparse import OptionParser
 import os
 import sys
@@ -32,7 +31,7 @@ from paste.translogger import make_filter
 
 from loggerhead import daemon
 from loggerhead.apps.config import Root
-from loggerhead.trace import make_handler, setup_logging
+from loggerhead.trace import setup_logging
 from loggerhead.apps.error import ErrorHandlerApp
 
 

@@ -537,7 +537,7 @@ class Reloader(object):
     _reloader_environ_key = 'PYTHON_RELOADER_SHOULD_RUN'
 
     @classmethod
-    def _turn_sigterm_into_systemexit(self):
+    def _turn_sigterm_into_systemexit(cls):
         """
         Attempts to turn a SIGTERM exception into a SystemExit exception.
         """
@@ -551,16 +551,16 @@ class Reloader(object):
         signal.signal(signal.SIGTERM, handle_term)
 
     @classmethod
-    def is_installed(self):
+    def is_installed(cls):
         return os.environ.get(self._reloader_environ_key)
 
     @classmethod
-    def install(self):
+    def install(cls):
         from paste import reloader
         reloader.install(int(1))
 
     @classmethod
-    def restart_with_reloader(self):
+    def restart_with_reloader(cls):
         """Based on restart_with_monitor from paste.script.serve."""
         print 'Starting subprocess with file monitor'
         while 1:
