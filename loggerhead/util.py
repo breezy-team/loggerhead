@@ -129,7 +129,7 @@ def displaydate(date):
     return _wrap_with_date_time_title(date, _displaydate(date))
 
 
-class Container (object):
+class Container(object):
     """
     Convert a dict into an object with attributes.
     """
@@ -552,7 +552,7 @@ class Reloader(object):
 
     @classmethod
     def is_installed(cls):
-        return os.environ.get(self._reloader_environ_key)
+        return os.environ.get(cls._reloader_environ_key)
 
     @classmethod
     def install(cls):
@@ -563,14 +563,14 @@ class Reloader(object):
     def restart_with_reloader(cls):
         """Based on restart_with_monitor from paste.script.serve."""
         print 'Starting subprocess with file monitor'
-        while 1:
+        while True:
             args = [sys.executable] + sys.argv
             new_environ = os.environ.copy()
-            new_environ[self._reloader_environ_key] = 'true'
+            new_environ[cls._reloader_environ_key] = 'true'
             proc = None
             try:
                 try:
-                    self._turn_sigterm_into_systemexit()
+                    cls._turn_sigterm_into_systemexit()
                     proc = subprocess.Popen(args, env=new_environ)
                     exit_code = proc.wait()
                     proc = None
