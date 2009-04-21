@@ -12,7 +12,7 @@ def command_line_parser():
         log_folder=None,
         use_cdn=False,
         )
-    parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
+    parser.add_option("--user-dirs", action="store_true",
                       help="Serve user directories as ~user.")
     parser.add_option("--trunk-dir", metavar="DIR",
                       help="The directory that contains the trunk branches.")
@@ -22,18 +22,17 @@ def command_line_parser():
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
     parser.add_option('--memory-profile', action='store_true',
-                      dest='memory_profile',
                       help='Profile the memory usage using heapy.')
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
-    parser.add_option("--profile", action="store_true", dest="profile",
+    parser.add_option("--profile", action="store_true",
                       help="Generate callgrind profile data to "
                         "%d-stats.callgrind on each request.")
-    parser.add_option("--reload", action="store_true", dest="reload",
+    parser.add_option("--reload", action="store_true",
                       help="Restarts the application when changing python"
                            " files. Only used for development purposes.")
-    parser.add_option('--log-folder', dest="log_folder",
-                      type=str, help="The directory to place log files in.")
+    parser.add_option('--log-folder',
+                      help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     parser.add_option('--use-cdn', action='store_true',
