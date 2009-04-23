@@ -20,7 +20,7 @@ class BranchesFromFileSystemServer(object):
         self.path = path
         self.root = root
         self.name = name
-        self._config = LoggerheadConfig()
+        self._config = root._config
 
     def app_for_branch(self, branch):
         if not self.name:
@@ -70,9 +70,10 @@ class BranchesFromFileSystemServer(object):
 
 class BranchesFromFileSystemRoot(object):
 
-    def __init__(self, folder):
+    def __init__(self, folder, config):
         self.graph_cache = lru_cache.LRUCache()
         self.folder = folder
+        self._config = config
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
@@ -92,10 +93,11 @@ class BranchesFromFileSystemRoot(object):
 
 class UserBranchesFromFileSystemRoot(object):
 
-    def __init__(self, folder, trunk_dir):
+    def __init__(self, folder, config):
         self.graph_cache = lru_cache.LRUCache()
         self.folder = folder
-        self.trunk_dir = trunk_dir
+        self._config = config
+        self.trunk_dir = config.get_option('trunk_dir')
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
