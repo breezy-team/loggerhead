@@ -37,6 +37,10 @@ def _strip_NULL_ghosts(revision_graph):
 
 
 def compute_whole_history_data(branch):
+    """Compute _rev_info and _rev_indices for a branch.
+
+    See History.__doc__ for what these data structures mean.
+    """
     z = time.time()
 
     last_revid = branch.last_revision()

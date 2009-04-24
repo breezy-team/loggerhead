@@ -180,10 +180,27 @@ class FileChangeReporter(object):
 
 
 class RevInfoMemoryCache(object):
+    """A store that validates values against the revids they were stored with.
+
+    We use a unique key for each branch.
+
+    The reason for not just using the revid as the key is so that when a new
+    value is provided for a branch, we replace the old value used for the
+    branch.
+
+    There is another implementation of the same interface in
+    loggerhead.changecache.RevInfoDiskCache.
+    """
+
     def __init__(self, cache):
         self._cache = cache
 
     def get(self, key, revid):
+        """Return the data associated with `key`, subject to a revid check.
+
+        If a value was stored under `key`, with the same revid, return it.
+        Otherwise return None.
+        """
         cached = self._cache.get(key)
         if cached is None:
             return None
@@ -194,6 +211,8 @@ class RevInfoMemoryCache(object):
             return None
 
     def set(self, key, revid, data):
+        """Store `data` under `key`, to be checked against `revid` on get().
+        """
         self._cache[key] = (revid, data)
 
 
@@ -205,12 +224,32 @@ class History (object):
     around it, serve the request, throw the History object away, unlock the
     branch and throw it away.
 
-    :ivar _file_change_cache:
-    :ivar _rev_info:
+    :ivar _file_change_cache: An object that caches information about the
+        files that changed between two revisions.
+    :ivar _rev_info: A list of information about revisions.  This is by far
+        the most cryptic data structure in loggerhead.  At the top level, it
+        is a list of 3-tuples [(merge-info, where-merged, parents)].
+        `merge-info` is (seq, revid, merge_depth, revno_str, end_of_merge) --
+        like a merged sorted list, but the revno is stringified.
+        `where-merged` is a tuple of revisions that have this revision as a
+        non-lefthand parent.  Finally, `parents` is just the usual list of
+        parents of this revision.
+    :ivar _rev_indices: A dictionary mapping each revision id to the index of
+        the information about it in _rev_info.
+    :ivar _full_history: A list of all revision ids in the ancestry of the
+        branch, in merge-sorted order.  This is a bit silly, and shouldn't
+        really be stored on the instance...
+    :ivar _revno_revid: A dictionary mapping stringified revnos to revision
+        ids.
     """
 
     def _load_whole_history_data(self, caches, cache_key):
-        """XXX Write this!"""
+        """Set the attributes relating to the whole history of the branch.
+
+        :param caches: a list of caches with interfaces like
+            `RevInfoMemoryCache` and be ordered from fastest to slowest.
+        :param cache_key: the key to use with the caches.
+        """
         self._rev_indices = None
         self._rev_info = None
 
