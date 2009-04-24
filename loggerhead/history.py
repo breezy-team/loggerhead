@@ -199,12 +199,16 @@ class History (object):
 
         self.last_revid = branch.last_revision()
 
-        whole_history_data = whole_history_data_cache.get(self.last_revid)
-        if whole_history_data is None:
+        cached_whole_history_data = whole_history_data_cache.get(self.last_revid)
+        if cached_whole_history_data is None:
             whole_history_data = compute_whole_history_data(branch)
-            whole_history_data_cache[self.last_revid] = whole_history_data
+            (self._full_history, self._rev_info, self._rev_indices) = whole_history_data
+            whole_history_data_cache[self.last_revid] = whole_history_data[:2]
+        else:
+            self._full_history, self._rev_info = cached_whole_history_data
+            self._rev_indices = dict((revid, seq) for
+                                 ((seq, revid, _, _, _), _, _) in self._rev_info)
 
-        (self._full_history, self._rev_info, self._rev_indices) = whole_history_data
         self._revno_revid = dict((revno_str, revid) for
                                  ((_, revid, _, revno_str, _), _, _) in self._rev_info)
 
