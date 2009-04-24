@@ -31,6 +31,7 @@
 import bisect
 import datetime
 import logging
+import os
 import re
 import textwrap
 import threading
@@ -199,18 +200,23 @@ class History (object):
 
         self.last_revid = branch.last_revision()
 
+        self._rev_indices = None
+
         cached_whole_history_data = whole_history_data_cache.get(self.last_revid)
         if cached_whole_history_data is None:
-            whole_history_data = compute_whole_history_data(branch)
+            whole_history_data = compute_whole_history_data(branch, None)
             (self._rev_info, self._rev_indices) = whole_history_data
             whole_history_data_cache[self.last_revid] = whole_history_data[0]
+        else:
+            self._rev_info = cached_whole_history_data
+
+        if self._rev_indices is not None:
             self._full_history = []
             self._revno_revid = {}
             for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._revno_revid[revno_str] = revid
                 self._full_history.append(revid)
         else:
-            self._rev_info = cached_whole_history_data
             self._full_history = []
             self._revno_revid = {}
             self._rev_indices = {}
