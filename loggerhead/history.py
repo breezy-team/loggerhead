@@ -204,13 +204,15 @@ class History (object):
             whole_history_data = compute_whole_history_data(branch)
             (self._full_history, self._rev_info, self._rev_indices) = whole_history_data
             whole_history_data_cache[self.last_revid] = whole_history_data[:2]
+            self._revno_revid = dict((revno_str, revid) for
+                                     ((_, revid, _, revno_str, _), _, _) in self._rev_info)
         else:
             self._full_history, self._rev_info = cached_whole_history_data
-            self._rev_indices = dict((revid, seq) for
-                                 ((seq, revid, _, _, _), _, _) in self._rev_info)
-
-        self._revno_revid = dict((revno_str, revid) for
-                                 ((_, revid, _, revno_str, _), _, _) in self._rev_info)
+            self._revno_revid = {}
+            self._rev_indices = {}
+            for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
+                self._rev_indices[revid] = seq
+                self._revno_revid[revno_str] = revid
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
