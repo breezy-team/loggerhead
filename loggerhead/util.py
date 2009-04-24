@@ -579,7 +579,7 @@ class Reloader(object):
                     return 1
             finally:
                 if (proc is not None
-                    and hasattr(os, 'kill')):
+                    and getattr(os, 'kill', None) is not None):
                     import signal
                     try:
                         os.kill(proc.pid, signal.SIGTERM)
