@@ -30,6 +30,7 @@ import cPickle
 import marshal
 import os
 import tempfile
+import zlib
 
 try:
     from sqlite3 import dbapi2
@@ -140,18 +141,19 @@ class RevInfoDiskCache(object):
         elif str(row[0]) != revid:
             return None
         else:
-            return marshal.loads(row[1])
+            return marshal.loads(zlib.decompress(row[1]))
 
     def set(self, key, revid, data):
         try:
             self.cursor.execute(
                 'delete from data where key = ?', (dbapi2.Binary(key), ))
+            blob = zlib.compress(marshal.dumps(data))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
-                (dbapi2.Binary(key), dbapi2.Binary(revid), dbapi2.Binary(marshal.dumps(data))))
+                map(dbapi2.Binary, [key, revid, blob]))
             self.connection.commit()
         except dbapi2.IntegrityError:
             # If another thread or process attempted to set the same key, we
-            # assume it set it to the same value and carry on with our day.
+            # don't care too much -- it's only a cache after all!
             pass
 
