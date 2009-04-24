@@ -206,20 +206,18 @@ class History (object):
             whole_history_data_cache[self.last_revid] = whole_history_data[0]
             self._full_history = []
             self._revno_revid = {}
-            for ((_, revid, md, revno_str, _), _, _) in self._rev_info:
+            for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._revno_revid[revno_str] = revid
-                if md == 0:
-                    self._full_history.append(revid)
+                self._full_history.append(revid)
         else:
             self._rev_info = cached_whole_history_data
             self._full_history = []
             self._revno_revid = {}
             self._rev_indices = {}
-            for ((seq, revid, md, revno_str, _), _, _) in self._rev_info:
+            for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
-                if md == 0:
-                    self._full_history.append(revid)
+                self._full_history.append(revid)
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
