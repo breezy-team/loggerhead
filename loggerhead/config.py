@@ -65,4 +65,3 @@ class LoggerheadConfig(object):
     def arg_count(self):
         '''Return the number of args from the option parser.'''
         return len(self._args)
-
