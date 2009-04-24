@@ -16,8 +16,6 @@
 #
 
 import logging
-import marshal
-import os
 import time
 
 from bzrlib.revision import is_null, NULL_REVISION
@@ -38,25 +36,13 @@ def _strip_NULL_ghosts(revision_graph):
     return revision_graph
 
 
-def compute_whole_history_data(branch, cachedir):
+def compute_whole_history_data(branch):
     z = time.time()
 
     log = logging.getLogger('loggerhead.%s' %
                             branch.get_config().get_nickname())
 
     last_revid = branch.last_revision()
-
-    if cachedir:
-        cachefilename = os.path.join(cachedir, 'graphcache')
-
-        if os.path.exists(cachefilename):
-            cachefile = open(cachefilename, 'rb')
-            revid = marshal.load(cachefile)
-            if revid == last_revid:
-                _rev_info = marshal.load(cachefile)
-                print type(_rev_info)
-                log.info('loaded revision graph cache: %r secs' % (time.time() - z))
-                return _rev_info, None
 
     graph = branch.repository.get_graph()
     parent_map = dict(((key, value) for key, value in
@@ -89,11 +75,6 @@ def compute_whole_history_data(branch, cachedir):
             c = _rev_info[_rev_indices[parent]]
             if revid not in c[1]:
                 c[1] = c[1] + (revid,)
-
-    if cachedir:
-        cachefile = open(cachefilename, 'wb')
-        marshal.dump(last_revid, cachefile)
-        marshal.dump(_rev_info, cachefile)
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 

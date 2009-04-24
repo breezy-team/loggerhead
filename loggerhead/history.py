@@ -31,7 +31,7 @@
 import bisect
 import datetime
 import logging
-import os
+import marshal
 import re
 import textwrap
 import threading
@@ -189,10 +189,15 @@ class History (object):
     :ivar _file_change_cache: xx
     """
 
-    def __init__(self, branch, whole_history_data_cache):
+    def __init__(self, branch, whole_history_data_cache, file_cache=None,
+                 revgraph_cache=None, cache_key=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
-        self._file_change_cache = None
+        if file_cache is not None:
+            self._file_change_cache = file_cache
+            file_cache.history = self
+        else:
+            self._file_change_cache = None
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
@@ -201,14 +206,29 @@ class History (object):
         self.last_revid = branch.last_revision()
 
         self._rev_indices = None
+        self._rev_info = None
 
         cached_whole_history_data = whole_history_data_cache.get(self.last_revid)
-        if cached_whole_history_data is None:
-            whole_history_data = compute_whole_history_data(branch, None)
-            (self._rev_info, self._rev_indices) = whole_history_data
-            whole_history_data_cache[self.last_revid] = whole_history_data[0]
-        else:
+        if cached_whole_history_data is not None:
+            print 'hi'
             self._rev_info = cached_whole_history_data
+
+        if self._rev_info is None and revgraph_cache is not None:
+            revid, marsalled_data = revgraph_cache.get(cache_key)
+            if marsalled_data is not None and revid == self.last_revid:
+                try:
+                    self._rev_info = marshal.loads(marsalled_data)
+                    whole_history_data_cache[self.last_revid] = self._rev_info
+                except ValueError:
+                    self.log.debug('ignoring bad marshalled data')
+
+        if self._rev_info is None:
+            whole_history_data = compute_whole_history_data(branch)
+            self._rev_info, self._rev_indices = whole_history_data
+            whole_history_data_cache[self.last_revid] = self._rev_info
+            if revgraph_cache is not None:
+                revgraph_cache.set(
+                    cache_key, self.last_revid, marshal.dumps(self._rev_info))
 
         if self._rev_indices is not None:
             self._full_history = []
@@ -224,9 +244,6 @@ class History (object):
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
                 self._full_history.append(revid)
-
-    def use_file_cache(self, cache):
-        self._file_change_cache = cache
 
     @property
     def has_revisions(self):

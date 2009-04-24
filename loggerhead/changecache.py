@@ -89,8 +89,7 @@ class FakeShelf(object):
 
 class FileChangeCache(object):
 
-    def __init__(self, history, cache_path):
-        self.history = history
+    def __init__(self, cache_path):
 
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
@@ -104,3 +103,60 @@ class FileChangeCache(object):
             changes = self.history.get_file_changes_uncached(entry)
             cache.add(entry.revid, changes)
         return changes
+
+
+class RevGraphCache(object):
+
+    def __init__(self, cache_path):
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
+        filename = os.path.join(cache_path, 'graph.sql')
+        create_table = not os.path.exists(filename)
+        if create_table:
+            # To avoid races around creating the database, we create the db in
+            # a temporary file and rename it into the ultimate location.
+            fd, path = tempfile.mkstemp(dir=os.path.dirname(filename))
+            self._create_table(path)
+            os.rename(path, filename)
+        self.connection = dbapi2.connect(filename)
+        self.cursor = self.connection.cursor()
+
+    def _create_table(self, filename):
+        con = dbapi2.connect(filename)
+        cur = con.cursor()
+        cur.execute(
+            "create table Data "
+            "(key binary primary key, revid binary, data binary)")
+        con.commit()
+        con.close()
+
+    def get(self, key):
+        self.cursor.execute("select revid, key from data")
+        print self.cursor.fetchall()
+        print 'get', key
+        self.cursor.execute(
+            "select revid, data from data where key = ?", (dbapi2.Binary(key), ))
+        row = self.cursor.fetchone()
+        if row is None:
+            print 'not found'
+            return None, None
+        else:
+            print 'got', row[0], len(row[1])
+            return str(row[0]), row[1]
+
+    def set(self, key, revid, data):
+        print 'set', key, revid, len(data)
+        try:
+            self.cursor.execute(
+                'delete from data where key = ?', (dbapi2.Binary(key), ))
+            self.cursor.execute(
+                "insert into data (key, revid, data) values (?, ?, ?)",
+                (dbapi2.Binary(key), dbapi2.Binary(revid), dbapi2.Binary(data)))
+            self.connection.commit()
+            print 'committed'
+        except dbapi2.IntegrityError:
+            print 'aborted'
+            # If another thread or process attempted to set the same key, we
+            # assume it set it to the same value and carry on with our day.
+            pass
+
