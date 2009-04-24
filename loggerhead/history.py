@@ -204,9 +204,8 @@ class History (object):
             whole_history_data = compute_whole_history_data(branch)
             whole_history_data_cache[self.last_revid] = whole_history_data
 
-        (self._revision_graph, self._full_history, self._revision_info,
-         self._revno_revid, self._merge_sort, self._where_merged,
-         ) = whole_history_data
+        (self._full_history, self._rev_info, self._rev_indices,
+         self._revno_revid) = whole_history_data
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
@@ -219,12 +218,12 @@ class History (object):
         return self._branch.get_config()
 
     def get_revno(self, revid):
-        if revid not in self._revision_info:
+        if revid not in self._rev_indices:
             # ghost parent?
             return 'unknown'
-        (seq, revid, merge_depth,
-         revno_str, end_of_merge) = self._revision_info[revid]
-        return revno_str
+        seq = self._rev_indices[revid]
+        revno = self._rev_info[seq][0][3]
+        return revno
 
     def get_revids_from(self, revid_list, start_revid):
         """
@@ -238,10 +237,11 @@ class History (object):
 
         def introduced_revisions(revid):
             r = set([revid])
-            seq, revid, md, revno, end_of_merge = self._revision_info[revid]
+            seq = self._rev_indices[revid]
+            md = self._rev_info[seq][0][2]
             i = seq + 1
-            while i < len(self._merge_sort) and self._merge_sort[i][2] > md:
-                r.add(self._merge_sort[i][1])
+            while i < len(self._rev_info) and self._rev_info[i][0][2] > md:
+                r.add(self._rev_info[i][0][1])
                 i += 1
             return r
         while 1:
@@ -249,7 +249,7 @@ class History (object):
                 return
             if introduced_revisions(revid) & revid_set:
                 yield revid
-            parents = self._revision_graph[revid]
+            parents = self._rev_info[self._rev_indices[revid]][2]
             if len(parents) == 0:
                 return
             revid = parents[0]
@@ -466,10 +466,10 @@ iso style "yyyy-mm-dd")
 
         merge_point = []
         while True:
-            children = self._where_merged.get(revid, ())
+            children = self._rev_info[self._rev_indices[revid]][1]
             nexts = []
             for child in children:
-                child_parents = self._revision_graph[child]
+                child_parents = self._rev_info[self._rev_indices[child]][2]
                 if child_parents[0] == revid:
                     nexts.append(child)
                 else:
