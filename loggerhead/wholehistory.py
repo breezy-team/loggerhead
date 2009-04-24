@@ -39,10 +39,10 @@ def _strip_NULL_ghosts(revision_graph):
 def compute_whole_history_data(branch):
     z = time.time()
 
+    last_revid = branch.last_revision()
+
     log = logging.getLogger('loggerhead.%s' %
                             branch.get_config().get_nickname())
-
-    last_revid = branch.last_revision()
 
     graph = branch.repository.get_graph()
     parent_map = dict(((key, value) for key, value in
@@ -78,4 +78,4 @@ def compute_whole_history_data(branch):
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 
-    return _rev_info, _rev_indices
+    return (_rev_info, _rev_indices)
