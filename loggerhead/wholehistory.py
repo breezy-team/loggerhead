@@ -50,7 +50,6 @@ def compute_whole_history_data(branch):
 
     _revision_graph = _strip_NULL_ghosts(parent_map)
     _full_history = []
-    _revno_revid = {}
 
     _rev_info = []
     _rev_indices = {}
@@ -65,7 +64,6 @@ def compute_whole_history_data(branch):
         seq, revid, merge_depth, revno, end_of_merge = info
         _full_history.append(revid)
         revno_str = '.'.join(str(n) for n in revno)
-        _revno_revid[revno_str] = revid
         parents = _revision_graph[revid]
         _rev_indices[revid] = len(_rev_info)
         _rev_info.append([(seq, revid, merge_depth, revno_str, end_of_merge), (), parents])
@@ -80,4 +78,4 @@ def compute_whole_history_data(branch):
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 
-    return (_full_history, _rev_info, _rev_indices, _revno_revid)
+    return (_full_history, _rev_info, _rev_indices)

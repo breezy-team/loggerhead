@@ -204,8 +204,9 @@ class History (object):
             whole_history_data = compute_whole_history_data(branch)
             whole_history_data_cache[self.last_revid] = whole_history_data
 
-        (self._full_history, self._rev_info, self._rev_indices,
-         self._revno_revid) = whole_history_data
+        (self._full_history, self._rev_info, self._rev_indices) = whole_history_data
+        self._revno_revid = dict((revno_str, revid) for
+                                 ((_, revid, _, revno_str, _), _, _) in self._rev_info)
 
     def use_file_cache(self, cache):
         self._file_change_cache = cache
