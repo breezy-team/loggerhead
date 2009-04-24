@@ -466,7 +466,7 @@ iso style "yyyy-mm-dd")
 
         merge_point = []
         while True:
-            children = self._where_merged.get(revid, [])
+            children = self._where_merged.get(revid, ())
             nexts = []
             for child in children:
                 child_parents = self._revision_graph[child]

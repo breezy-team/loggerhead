@@ -71,7 +71,9 @@ def compute_whole_history_data(branch):
         if _revision_info[revid][2] == 0:
             continue
         for parent in _revision_graph[revid]:
-            _where_merged.setdefault(parent, set()).add(revid)
+            c = _where_merged.setdefault(parent, ())
+            if revid not in c:
+                _where_merged[parent] = c + (revid,)
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 
