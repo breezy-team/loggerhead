@@ -78,4 +78,4 @@ def compute_whole_history_data(branch):
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 
-    return (_full_history, _rev_info, _rev_indices)
+    return (_rev_info, _rev_indices)
