@@ -48,6 +48,7 @@ import bzrlib.branch
 import bzrlib.delta
 import bzrlib.diff
 import bzrlib.errors
+import bzrlib.lru_cache
 import bzrlib.progress
 import bzrlib.revision
 import bzrlib.textfile
@@ -178,6 +179,24 @@ class FileChangeReporter(object):
                 file_id=file_id))
 
 
+class RevInfoMemoryCache(object):
+    def __init__(self, cache):
+        self._cache = cache
+
+    def get(self, key, revid):
+        cached = self._cache.get(key)
+        if cached is None:
+            return None
+        stored_revid, data = cached
+        if revid == stored_revid:
+            return data
+        else:
+            return None
+
+    def set(self, key, revid, data):
+        self._cache[key] = (revid, data)
+
+
 class History (object):
     """Decorate a branch to provide information for rendering.
 
@@ -186,49 +205,31 @@ class History (object):
     around it, serve the request, throw the History object away, unlock the
     branch and throw it away.
 
-    :ivar _file_change_cache: xx
+    :ivar _file_change_cache:
+    :ivar _rev_info:
     """
 
-    def __init__(self, branch, whole_history_data_cache, file_cache=None,
-                 revgraph_cache=None, cache_key=None):
-        assert branch.is_locked(), (
-            "Can only construct a History object with a read-locked branch.")
-        if file_cache is not None:
-            self._file_change_cache = file_cache
-            file_cache.history = self
-        else:
-            self._file_change_cache = None
-        self._branch = branch
-        self._inventory_cache = {}
-        self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
-
-        self.last_revid = branch.last_revision()
-
+    def _load_whole_history_data(self, caches, cache_key):
+        """XXX Write this!"""
         self._rev_indices = None
         self._rev_info = None
 
-        cached_whole_history_data = whole_history_data_cache.get(self.last_revid)
-        if cached_whole_history_data is not None:
-            print 'hi'
-            self._rev_info = cached_whole_history_data
-
-        if self._rev_info is None and revgraph_cache is not None:
-            revid, marsalled_data = revgraph_cache.get(cache_key)
-            if marsalled_data is not None and revid == self.last_revid:
-                try:
-                    self._rev_info = marshal.loads(marsalled_data)
-                    whole_history_data_cache[self.last_revid] = self._rev_info
-                except ValueError:
-                    self.log.debug('ignoring bad marshalled data')
-
-        if self._rev_info is None:
-            whole_history_data = compute_whole_history_data(branch)
+        missed_caches = []
+        def update_missed_caches():
+            for cache in missed_caches:
+                cache.set(cache_key, self.last_revid, self._rev_info)
+        for cache in caches:
+            data = cache.get(cache_key, self.last_revid)
+            if data is not None:
+                self._rev_info = data
+                update_missed_caches()
+                break
+            else:
+                missed_caches.append(cache)
+        else:
+            whole_history_data = compute_whole_history_data(self._branch)
             self._rev_info, self._rev_indices = whole_history_data
-            whole_history_data_cache[self.last_revid] = self._rev_info
-            if revgraph_cache is not None:
-                revgraph_cache.set(
-                    cache_key, self.last_revid, marshal.dumps(self._rev_info))
+            update_missed_caches()
 
         if self._rev_indices is not None:
             self._full_history = []
@@ -244,6 +245,27 @@ class History (object):
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
                 self._full_history.append(revid)
+
+    def __init__(self, branch, whole_history_data_cache, file_cache=None,
+                 revinfo_disk_cache=None, cache_key=None):
+        assert branch.is_locked(), (
+            "Can only construct a History object with a read-locked branch.")
+        if file_cache is not None:
+            self._file_change_cache = file_cache
+            file_cache.history = self
+        else:
+            self._file_change_cache = None
+        self._branch = branch
+        self._inventory_cache = {}
+        self._branch_nick = self._branch.get_config().get_nickname()
+        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+
+        self.last_revid = branch.last_revision()
+
+        caches = [RevInfoMemoryCache(whole_history_data_cache)]
+        if revinfo_disk_cache:
+            caches.append(revinfo_disk_cache)
+        self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):

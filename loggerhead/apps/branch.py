@@ -46,23 +46,23 @@ class BranchWSGIApp(object):
 
     def get_history(self):
         file_cache = None
-        revgraph_cache = None
+        revinfo_disk_cache = None
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
             try:
                 from loggerhead.changecache import (
-                    FileChangeCache, RevGraphCache)
+                    FileChangeCache, RevInfoDiskCache)
             except ImportError:
                 self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
             else:
                 file_cache = FileChangeCache(cache_path)
-                revgraph_cache = RevGraphCache(cache_path)
+                revinfo_disk_cache = RevInfoDiskCache(cache_path)
         return History(
-            self.branch, self.graph_cache, revgraph_cache=revgraph_cache,
-            file_cache=file_cache, cache_key=self.friendly_name)
+            self.branch, self.graph_cache, file_cache=file_cache,
+            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
