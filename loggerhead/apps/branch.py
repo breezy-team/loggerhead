@@ -31,33 +31,38 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT):
+                 served_url=_DEFAULT, use_cdn=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % friendly_name)
         if graph_cache is None:
-            graph_cache = bzrlib.lru_cache.LRUCache()
+            graph_cache = bzrlib.lru_cache.LRUCache(10)
         self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
+        self.use_cdn = use_cdn
 
     def get_history(self):
-        _history = History(self.branch, self.graph_cache)
+        file_cache = None
+        revinfo_disk_cache = None
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
             try:
-                from loggerhead.changecache import FileChangeCache
+                from loggerhead.changecache import (
+                    FileChangeCache, RevInfoDiskCache)
             except ImportError:
                 self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
             else:
-                _history.use_file_cache(
-                    FileChangeCache(_history, cache_path))
-        return _history
+                file_cache = FileChangeCache(cache_path)
+                revinfo_disk_cache = RevInfoDiskCache(cache_path)
+        return History(
+            self.branch, self.graph_cache, file_cache=file_cache,
+            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
@@ -78,6 +83,13 @@ class BranchWSGIApp(object):
 
     def static_url(self, path):
         return self._static_url_base + path
+
+    def yui_url(self, path):
+        if self.use_cdn:
+            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
+        else:
+            base = self.static_url('/static/javascript/yui/build/')
+        return base + path
 
     controllers_dict = {
         '+filediff': FileDiffUI,

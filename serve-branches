@@ -63,13 +63,12 @@ def main(args):
             return Reloader.restart_with_reloader()
 
     if config.get_option('user_dirs'):
-        if not config.get_option['trunk_dir']:
+        if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(
-            path, config.get_option('trunk_dir'))
+        app = UserBranchesFromFileSystemRoot(path, config)
     else:
-        app = BranchesFromFileSystemRoot(path)
+        app = BranchesFromFileSystemRoot(path, config)
 
     # setup_logging()
     logging.basicConfig()
@@ -77,7 +76,7 @@ def main(args):
     logger = getattr(app, 'log', logging.getLogger('loggerhead'))
     if config.get_option('log_folder'):
         logfile_path = os.path.join(
-            config.get_option['log_folder'], 'serve-branches.log')
+            config.get_option('log_folder'), 'serve-branches.log')
     else:
         logfile_path = 'serve-branches.log'
     logfile = logging.FileHandler(logfile_path, 'a')

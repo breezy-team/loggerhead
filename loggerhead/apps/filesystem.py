@@ -20,7 +20,7 @@ class BranchesFromFileSystemServer(object):
         self.path = path
         self.root = root
         self.name = name
-        self._config = LoggerheadConfig()
+        self._config = root._config
 
     def app_for_branch(self, branch):
         if not self.name:
@@ -32,7 +32,8 @@ class BranchesFromFileSystemServer(object):
         branch_app = BranchWSGIApp(
             branch, name,
             {'cachepath': self._config.SQL_DIR},
-            self.root.graph_cache, is_root=is_root)
+            self.root.graph_cache, is_root=is_root,
+            use_cdn=self._config.get_option('use_cdn'))
         return branch_app.app
 
     def app_for_non_branch(self, environ):
@@ -69,9 +70,10 @@ class BranchesFromFileSystemServer(object):
 
 class BranchesFromFileSystemRoot(object):
 
-    def __init__(self, folder):
-        self.graph_cache = lru_cache.LRUCache()
+    def __init__(self, folder, config):
+        self.graph_cache = lru_cache.LRUCache(10)
         self.folder = folder
+        self._config = config
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
@@ -91,14 +93,15 @@ class BranchesFromFileSystemRoot(object):
 
 class UserBranchesFromFileSystemRoot(object):
 
-    def __init__(self, folder, trunk_dir):
-        self.graph_cache = lru_cache.LRUCache()
+    def __init__(self, folder, config):
+        self.graph_cache = lru_cache.LRUCache(10)
         self.folder = folder
-        self.trunk_dir = trunk_dir
+        self._config = config
+        self.trunk_dir = config.get_option('trunk_dir')
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
-        path_info= environ['PATH_INFO']
+        path_info = environ['PATH_INFO']
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
