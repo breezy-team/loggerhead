@@ -37,6 +37,10 @@ def _strip_NULL_ghosts(revision_graph):
 
 
 def compute_whole_history_data(branch):
+    """Compute _rev_info and _rev_indices for a branch.
+
+    See History.__doc__ for what these data structures mean.
+    """
     z = time.time()
 
     last_revid = branch.last_revision()
@@ -50,32 +54,32 @@ def compute_whole_history_data(branch):
 
     _revision_graph = _strip_NULL_ghosts(parent_map)
     _full_history = []
-    _revision_info = {}
-    _revno_revid = {}
+
+    _rev_info = []
+    _rev_indices = {}
+
     if is_null(last_revid):
         _merge_sort = []
     else:
         _merge_sort = merge_sort(
             _revision_graph, last_revid, generate_revno=True)
 
-    for (seq, revid, merge_depth, revno, end_of_merge) in _merge_sort:
+    for info in _merge_sort:
+        seq, revid, merge_depth, revno, end_of_merge = info
         _full_history.append(revid)
         revno_str = '.'.join(str(n) for n in revno)
-        _revno_revid[revno_str] = revid
-        _revision_info[revid] = (
-            seq, revid, merge_depth, revno_str, end_of_merge)
-
-    _where_merged = {}
+        parents = _revision_graph[revid]
+        _rev_indices[revid] = len(_rev_info)
+        _rev_info.append([(seq, revid, merge_depth, revno_str, end_of_merge), (), parents])
 
     for revid in _revision_graph.keys():
-        if _revision_info[revid][2] == 0:
+        if _rev_info[_rev_indices[revid]][0][2] == 0:
             continue
         for parent in _revision_graph[revid]:
-            c = _where_merged.setdefault(parent, ())
-            if revid not in c:
-                _where_merged[parent] = c + (revid,)
+            c = _rev_info[_rev_indices[parent]]
+            if revid not in c[1]:
+                c[1] = c[1] + (revid,)
 
     log.info('built revision graph cache: %r secs' % (time.time() - z))
 
-    return (_revision_graph, _full_history, _revision_info,
-            _revno_revid, _merge_sort, _where_merged)
+    return (_rev_info, _rev_indices)

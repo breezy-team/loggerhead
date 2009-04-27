@@ -71,7 +71,7 @@ class BranchesFromFileSystemServer(object):
 class BranchesFromFileSystemRoot(object):
 
     def __init__(self, folder, config):
-        self.graph_cache = lru_cache.LRUCache()
+        self.graph_cache = lru_cache.LRUCache(10)
         self.folder = folder
         self._config = config
 
@@ -94,7 +94,7 @@ class BranchesFromFileSystemRoot(object):
 class UserBranchesFromFileSystemRoot(object):
 
     def __init__(self, folder, config):
-        self.graph_cache = lru_cache.LRUCache()
+        self.graph_cache = lru_cache.LRUCache(10)
         self.folder = folder
         self._config = config
         self.trunk_dir = config.get_option('trunk_dir')
