@@ -95,6 +95,15 @@ class RevisionUI(TemplatedBranchView):
 
         h.add_branch_nicks(change)
 
+        if '.' in change.revid:
+            ri = self._history._rev_info
+            i = self._history._rev_indices[change.revid]
+            while ri[i][0][2] > 0:
+                i += 1
+            merged_in = ri[i][0][3]
+        else:
+            merged_in = None
+
         # Directory Breadcrumbs
         directory_breadcrumbs = (
             util.directory_breadcrumbs(
@@ -116,6 +125,7 @@ class RevisionUI(TemplatedBranchView):
             'filter_file_id': filter_file_id,
             'util': util,
             'history': h,
+            'merged_in': merged_in,
             'navigation': navigation,
             'query': query,
             'remember': remember,
