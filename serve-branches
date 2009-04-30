@@ -66,10 +66,9 @@ def main(args):
         if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(
-            path, config.get_option('trunk_dir'))
+        app = UserBranchesFromFileSystemRoot(path, config)
     else:
-        app = BranchesFromFileSystemRoot(path)
+        app = BranchesFromFileSystemRoot(path, config)
 
     # setup_logging()
     logging.basicConfig()
@@ -87,11 +86,6 @@ def main(args):
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
 
-    if config.get_option('memory_profile'):
-        memprofile = logging.getLogger('loggerhead-memprofile')
-        memprofile.setLevel(logging.DEBUG)
-        memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
-
     # setup_logging() #end
 
     app = TransLogger(app, logger=logger)
@@ -99,8 +93,8 @@ def main(args):
         from loggerhead.middleware.profile import LSProfMiddleware
         app = LSProfMiddleware(app)
     if config.get_option('memory_profile'):
-        from loggerhead.middleware.profile import MemoryProfileMiddleware
-        app = MemoryProfileMiddleware(app)
+        from dozer import Dozer
+        app = Dozer(app)
 
     if not config.get_option('user_prefix'):
         prefix = '/'
