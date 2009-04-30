@@ -66,7 +66,7 @@ class BranchWSGIApp(object):
         qs = []
         for k, v in kw.iteritems():
             if v is not None:
-                qs.append('%s=%s'%(k, urllib.quote(v)))
+                qs.append('%s=%s' % (k, urllib.quote(v)))
         qs = '&'.join(qs)
         return request.construct_url(
             self._environ, script_name=self._url_base,
