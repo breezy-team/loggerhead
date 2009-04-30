@@ -28,7 +28,7 @@
                   <img tal:attributes="src python:branch.static_url('/static/images/ico_branch.gif')" alt="Branch" />
                 </td>
                 <td class="autcell">
-                    <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)" 
+                    <a tal:attributes="href python:branch.static_url(project.name + '/' +  view.name)"
                        tal:content="view/friendly_name" />
                 </td>
                 <td class="autcell"

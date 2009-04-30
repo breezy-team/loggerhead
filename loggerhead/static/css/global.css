@@ -180,7 +180,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 }
 #loggerheadCont p.expand, #loggerheadCont p.expand a, #loggerheadCont p.expand a:link, #loggerheadCont p.expand a:visited, #loggerheadCont p.expand a:hover {
 	color:#000;
-	text-decoration:none;	
+	text-decoration:none;
 }
 #loggerheadCont p img {
 	vertical-align:middle;
@@ -192,7 +192,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 }
 .revnolink a, .revnolink a:visited, .revnolink a:link, .revnolink a:hover {
 	color:#CC6600;
-	text-decoration:none;		
+	text-decoration:none;
 }
 
 /*Log Table*/
@@ -214,7 +214,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 }
 .blueRow0, .blueRow1 {
 	background:#eef6fa;
-	font:normal 14px/normal sans-serif;	
+	font:normal 14px/normal sans-serif;
 	padding:0px;
 	margin:0px;
 }
@@ -228,7 +228,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 	border:1px solid #d2d2d2;
 }
 .expandcell, .expcell {
-	width:28px;	
+	width:28px;
 }
 .summarycell, .authorcell, .datecell, .timedate{
   padding: 4px 8px;

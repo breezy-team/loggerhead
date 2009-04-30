@@ -26,7 +26,7 @@
 
 """Loggerhead web viewer for Bazaar branches.
 
-This provides a new option "--http" to the "bzr serve" command, that 
+This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
@@ -47,7 +47,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     # seems reasonable to have in-line here: bzrlib.commands and options are
     # normally loaded, and the rest of loggerhead won't be loaded until serve
     # --http is run.
-        
+
     import bzrlib.builtins
     from bzrlib.commands import get_cmd_object, register_command
     from bzrlib.option import Option
