@@ -33,5 +33,3 @@ class LSProfMiddleware(object):
             return ret
         finally:
             self.lock.release()
-
-
