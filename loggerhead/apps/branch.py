@@ -119,7 +119,11 @@ class BranchWSGIApp(object):
             self._static_url_base = self._url_base
         self._environ = environ
         if self.served_url is _DEFAULT:
-            self.served_url = self.url([])
+            public_branch = self.branch_url()
+            if public_branch is not None:
+                self.served_url = public_branch
+            else:
+                self.served_url = self.url([])
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
