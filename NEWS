@@ -50,7 +50,7 @@ dev [future]
       incorrectly and failing). (Matt Nordhoff)
 
     - Use transport API internally, so it is possible to specify a remote 
-      URL to serve-branches. (Jelmer vernooij, #371787)
+      URL to serve-branches. (Jelmer Vernooij, #371787)
 
 1.10 [22Dec2008]
 ---------------
