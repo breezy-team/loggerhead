@@ -27,8 +27,8 @@ from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
 from loggerhead import __version__
-from loggerhead.apps.filesystem import (
-    BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.apps.transport import (
+    BranchesFromTransportRoot, UserBranchesFromTransportRoot)
 from loggerhead.config import LoggerheadConfig
 from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
@@ -67,9 +67,9 @@ def main(args):
         if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(transport, config)
+        app = UserBranchesFromTransportRoot(transport, config)
     else:
-        app = BranchesFromFileSystemRoot(transport, config)
+        app = BranchesFromTransportRoot(transport, config)
 
     # setup_logging()
     logging.basicConfig()

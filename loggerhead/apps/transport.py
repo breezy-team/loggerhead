@@ -1,4 +1,4 @@
-"""Serve branches at urls that mimic the file system layout."""
+"""Serve branches at urls that mimic a transport's file system layout."""
 
 from bzrlib import branch, errors, lru_cache, urlutils
 
@@ -12,7 +12,7 @@ from loggerhead.config import LoggerheadConfig
 from loggerhead.controllers.directory_ui import DirectoryUI
 
 
-class BranchesFromFileSystemServer(object):
+class BranchesFromTransportServer(object):
 
     def __init__(self, transport, root, name=None):
         self.transport = transport
@@ -53,7 +53,7 @@ class BranchesFromFileSystemServer(object):
                 new_name = urlutils.join(self.name, segment)
             else:
                 new_name = '/' + segment
-            return BranchesFromFileSystemServer(new_transport, self.root, new_name)
+            return BranchesFromTransportServer(new_transport, self.root, new_name)
 
     def __call__(self, environ, start_response):
         try:
@@ -66,7 +66,7 @@ class BranchesFromFileSystemServer(object):
             return self.app_for_branch(b)(environ, start_response)
 
 
-class BranchesFromFileSystemRoot(object):
+class BranchesFromTransportRoot(object):
 
     def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
@@ -85,11 +85,11 @@ class BranchesFromFileSystemRoot(object):
             app = urlparser.make_static(None, self.transport)
             return app(environ, start_response)
         else:
-            return BranchesFromFileSystemServer(
+            return BranchesFromTransportServer(
                 self.transport, self)(environ, start_response)
 
 
-class UserBranchesFromFileSystemRoot(object):
+class UserBranchesFromTransportRoot(object):
 
     def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
@@ -111,9 +111,9 @@ class UserBranchesFromFileSystemRoot(object):
             if path_info.startswith('/~'):
                 segment = path_info_pop(environ)
                 new_transport = self.transport.clone(segment[1:])
-                return BranchesFromFileSystemServer(
+                return BranchesFromTransportServer(
                     new_transport, self, segment)(environ, start_response)
             else:
                 new_transport = self.transport.clone(self.trunk_dir)
-                return BranchesFromFileSystemServer(
+                return BranchesFromTransportServer(
                     new_transport, self)(environ, start_response)

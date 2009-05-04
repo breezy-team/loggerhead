@@ -64,7 +64,9 @@ class DirectoryUI(TemplatedBranchView):
         self.log = logging.getLogger('')
 
     def get_values(self, path, kwargs, response):
-        listing = self.transport.list_dir('.')
+        listing = [d for d in self.transport.list_dir('.')
+                   if not d.startswith('.')
+                   and stat.S_ISDIR(self.transport.stat(d).st_mode)]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
@@ -73,8 +75,6 @@ class DirectoryUI(TemplatedBranchView):
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
             except:
                 b = None
-                if not stat.S_ISDIR(self.transport.stat(d).st_mode):
-                    continue
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
         # Create breadcrumb trail
