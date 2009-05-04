@@ -20,14 +20,15 @@ import os
 import sys
 
 from bzrlib.plugin import load_plugins
+from bzrlib.transport import get_transport
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
 from loggerhead import __version__
-from loggerhead.apps.filesystem import (
-    BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.apps.transport import (
+    BranchesFromTransportRoot, UserBranchesFromTransportRoot)
 from loggerhead.config import LoggerheadConfig
 from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
@@ -48,9 +49,9 @@ def main(args):
     else:
         path = '.'
 
-    if not os.path.isdir(path):
-        print "%s is not a directory" % path
-        sys.exit(1)
+    load_plugins()
+
+    transport = get_transport(path)
 
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
@@ -66,9 +67,9 @@ def main(args):
         if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(path, config)
+        app = UserBranchesFromTransportRoot(transport, config)
     else:
-        app = BranchesFromFileSystemRoot(path, config)
+        app = BranchesFromTransportRoot(transport, config)
 
     # setup_logging()
     logging.basicConfig()
@@ -133,8 +134,6 @@ def main(args):
         host = '0.0.0.0'
     else:
         host = config.get_option('user_host')
-
-    load_plugins()
 
     httpserver.serve(app, host=host, port=port)
 

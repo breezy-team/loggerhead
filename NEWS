@@ -49,6 +49,9 @@ dev [future]
     - Fix bug #361238 (serve-branches was calling config.get_option()
       incorrectly and failing). (Matt Nordhoff)
 
+    - Use transport API internally, so it is possible to specify a remote 
+      URL to serve-branches. (Jelmer vernooij, #371787)
+
 1.10 [22Dec2008]
 ---------------
 
