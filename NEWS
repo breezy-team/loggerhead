@@ -59,6 +59,11 @@ dev [future]
 
     - Replace homebrew memory profiling code with Dozer. (Paul Hummer)
 
+    - Use the branch's public_branch as the default suggested URL to
+      branch from (Matt Nordhoff, #369767)
+
+    - Fix a file descriptor leak (Matt Nordhoff, #370845)
+
 1.10 [22Dec2008]
 ---------------
 
