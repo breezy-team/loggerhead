@@ -5,7 +5,7 @@ dev [future]
 ---------------
 
     - Loggerhead now serves bzr branches over HTTP and exposes the URL
-      to branch them. (Jonathan Lange)
+      to branch them. Addresses bug #240577. (Jonathan Lange)
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
@@ -45,6 +45,12 @@ dev [future]
 
     - serve-branches now has an option, --use-cdn, to load YUI from
       Yahoo!'s CDN. (Matt Nordhoff)
+
+    - Fix bug #361238 (serve-branches was calling config.get_option()
+      incorrectly and failing). (Matt Nordhoff)
+
+    - Use transport API internally, so it is possible to specify a remote 
+      URL to serve-branches. (Jelmer Vernooij, #371787)
 
 1.10 [22Dec2008]
 ---------------

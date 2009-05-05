@@ -20,14 +20,15 @@ import os
 import sys
 
 from bzrlib.plugin import load_plugins
+from bzrlib.transport import get_transport
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
 from loggerhead import __version__
-from loggerhead.apps.filesystem import (
-    BranchesFromFileSystemRoot, UserBranchesFromFileSystemRoot)
+from loggerhead.apps.transport import (
+    BranchesFromTransportRoot, UserBranchesFromTransportRoot)
 from loggerhead.config import LoggerheadConfig
 from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
@@ -48,9 +49,9 @@ def main(args):
     else:
         path = '.'
 
-    if not os.path.isdir(path):
-        print "%s is not a directory" % path
-        sys.exit(1)
+    load_plugins()
+
+    transport = get_transport(path)
 
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
@@ -63,13 +64,12 @@ def main(args):
             return Reloader.restart_with_reloader()
 
     if config.get_option('user_dirs'):
-        if not config.get_option['trunk_dir']:
+        if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromFileSystemRoot(
-            path, config.get_option('trunk_dir'))
+        app = UserBranchesFromTransportRoot(transport, config)
     else:
-        app = BranchesFromFileSystemRoot(path)
+        app = BranchesFromTransportRoot(transport, config)
 
     # setup_logging()
     logging.basicConfig()
@@ -77,7 +77,7 @@ def main(args):
     logger = getattr(app, 'log', logging.getLogger('loggerhead'))
     if config.get_option('log_folder'):
         logfile_path = os.path.join(
-            config.get_option['log_folder'], 'serve-branches.log')
+            config.get_option('log_folder'), 'serve-branches.log')
     else:
         logfile_path = 'serve-branches.log'
     logfile = logging.FileHandler(logfile_path, 'a')
@@ -87,11 +87,6 @@ def main(args):
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
 
-    if config.get_option('memory_profile'):
-        memprofile = logging.getLogger('loggerhead-memprofile')
-        memprofile.setLevel(logging.DEBUG)
-        memprofile.addHandler(logging.FileHandler('loggerhead-memprofile'))
-
     # setup_logging() #end
 
     app = TransLogger(app, logger=logger)
@@ -99,8 +94,8 @@ def main(args):
         from loggerhead.middleware.profile import LSProfMiddleware
         app = LSProfMiddleware(app)
     if config.get_option('memory_profile'):
-        from loggerhead.middleware.profile import MemoryProfileMiddleware
-        app = MemoryProfileMiddleware(app)
+        from dozer import Dozer
+        app = Dozer(app)
 
     if not config.get_option('user_prefix'):
         prefix = '/'
@@ -139,8 +134,6 @@ def main(args):
         host = '0.0.0.0'
     else:
         host = config.get_option('user_host')
-
-    load_plugins()
 
     httpserver.serve(app, host=host, port=port)
 

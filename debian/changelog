@@ -1,4 +1,4 @@
-loggerhead (1.10+bzr324-2) UNRELEASED; urgency=low
+loggerhead (1.10+bzr339-1) UNRELEASED; urgency=low
 
   [ Roland Mas ]
   * Use the YUI library provided by libjs-yui. (Closes: #511286)
@@ -8,8 +8,9 @@ loggerhead (1.10+bzr324-2) UNRELEASED; urgency=low
   * Add ${misc:Depends} to please lintian.
   * Suggest recent version of paste, which doesn't expose internal port
     numbers in links. (Closes: #507000)
+  * New upstream snapshot.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Thu, 09 Apr 2009 19:08:49 +0200
+ -- Jelmer Vernooij <jelmer@debian.org>  Tue, 05 May 2009 18:21:22 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 

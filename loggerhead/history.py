@@ -31,6 +31,7 @@
 import bisect
 import datetime
 import logging
+import marshal
 import re
 import textwrap
 import threading
@@ -47,6 +48,7 @@ import bzrlib.branch
 import bzrlib.delta
 import bzrlib.diff
 import bzrlib.errors
+import bzrlib.lru_cache
 import bzrlib.progress
 import bzrlib.revision
 import bzrlib.textfile
@@ -177,6 +179,43 @@ class FileChangeReporter(object):
                 file_id=file_id))
 
 
+class RevInfoMemoryCache(object):
+    """A store that validates values against the revids they were stored with.
+
+    We use a unique key for each branch.
+
+    The reason for not just using the revid as the key is so that when a new
+    value is provided for a branch, we replace the old value used for the
+    branch.
+
+    There is another implementation of the same interface in
+    loggerhead.changecache.RevInfoDiskCache.
+    """
+
+    def __init__(self, cache):
+        self._cache = cache
+
+    def get(self, key, revid):
+        """Return the data associated with `key`, subject to a revid check.
+
+        If a value was stored under `key`, with the same revid, return it.
+        Otherwise return None.
+        """
+        cached = self._cache.get(key)
+        if cached is None:
+            return None
+        stored_revid, data = cached
+        if revid == stored_revid:
+            return data
+        else:
+            return None
+
+    def set(self, key, revid, data):
+        """Store `data` under `key`, to be checked against `revid` on get().
+        """
+        self._cache[key] = (revid, data)
+
+
 class History (object):
     """Decorate a branch to provide information for rendering.
 
@@ -185,13 +224,76 @@ class History (object):
     around it, serve the request, throw the History object away, unlock the
     branch and throw it away.
 
-    :ivar _file_change_cache: xx
+    :ivar _file_change_cache: An object that caches information about the
+        files that changed between two revisions.
+    :ivar _rev_info: A list of information about revisions.  This is by far
+        the most cryptic data structure in loggerhead.  At the top level, it
+        is a list of 3-tuples [(merge-info, where-merged, parents)].
+        `merge-info` is (seq, revid, merge_depth, revno_str, end_of_merge) --
+        like a merged sorted list, but the revno is stringified.
+        `where-merged` is a tuple of revisions that have this revision as a
+        non-lefthand parent.  Finally, `parents` is just the usual list of
+        parents of this revision.
+    :ivar _rev_indices: A dictionary mapping each revision id to the index of
+        the information about it in _rev_info.
+    :ivar _full_history: A list of all revision ids in the ancestry of the
+        branch, in merge-sorted order.  This is a bit silly, and shouldn't
+        really be stored on the instance...
+    :ivar _revno_revid: A dictionary mapping stringified revnos to revision
+        ids.
     """
 
-    def __init__(self, branch, whole_history_data_cache):
+    def _load_whole_history_data(self, caches, cache_key):
+        """Set the attributes relating to the whole history of the branch.
+
+        :param caches: a list of caches with interfaces like
+            `RevInfoMemoryCache` and be ordered from fastest to slowest.
+        :param cache_key: the key to use with the caches.
+        """
+        self._rev_indices = None
+        self._rev_info = None
+
+        missed_caches = []
+        def update_missed_caches():
+            for cache in missed_caches:
+                cache.set(cache_key, self.last_revid, self._rev_info)
+        for cache in caches:
+            data = cache.get(cache_key, self.last_revid)
+            if data is not None:
+                self._rev_info = data
+                update_missed_caches()
+                break
+            else:
+                missed_caches.append(cache)
+        else:
+            whole_history_data = compute_whole_history_data(self._branch)
+            self._rev_info, self._rev_indices = whole_history_data
+            update_missed_caches()
+
+        if self._rev_indices is not None:
+            self._full_history = []
+            self._revno_revid = {}
+            for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
+                self._revno_revid[revno_str] = revid
+                self._full_history.append(revid)
+        else:
+            self._full_history = []
+            self._revno_revid = {}
+            self._rev_indices = {}
+            for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
+                self._rev_indices[revid] = seq
+                self._revno_revid[revno_str] = revid
+                self._full_history.append(revid)
+
+    def __init__(self, branch, whole_history_data_cache, file_cache=None,
+                 revinfo_disk_cache=None, cache_key=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
-        self._file_change_cache = None
+        if file_cache is not None:
+            self._file_change_cache = file_cache
+            file_cache.history = self
+        else:
+            self._file_change_cache = None
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
@@ -199,17 +301,10 @@ class History (object):
 
         self.last_revid = branch.last_revision()
 
-        whole_history_data = whole_history_data_cache.get(self.last_revid)
-        if whole_history_data is None:
-            whole_history_data = compute_whole_history_data(branch)
-            whole_history_data_cache[self.last_revid] = whole_history_data
-
-        (self._revision_graph, self._full_history, self._revision_info,
-         self._revno_revid, self._merge_sort, self._where_merged,
-         ) = whole_history_data
-
-    def use_file_cache(self, cache):
-        self._file_change_cache = cache
+        caches = [RevInfoMemoryCache(whole_history_data_cache)]
+        if revinfo_disk_cache:
+            caches.append(revinfo_disk_cache)
+        self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):
@@ -219,12 +314,12 @@ class History (object):
         return self._branch.get_config()
 
     def get_revno(self, revid):
-        if revid not in self._revision_info:
+        if revid not in self._rev_indices:
             # ghost parent?
             return 'unknown'
-        (seq, revid, merge_depth,
-         revno_str, end_of_merge) = self._revision_info[revid]
-        return revno_str
+        seq = self._rev_indices[revid]
+        revno = self._rev_info[seq][0][3]
+        return revno
 
     def get_revids_from(self, revid_list, start_revid):
         """
@@ -238,10 +333,11 @@ class History (object):
 
         def introduced_revisions(revid):
             r = set([revid])
-            seq, revid, md, revno, end_of_merge = self._revision_info[revid]
+            seq = self._rev_indices[revid]
+            md = self._rev_info[seq][0][2]
             i = seq + 1
-            while i < len(self._merge_sort) and self._merge_sort[i][2] > md:
-                r.add(self._merge_sort[i][1])
+            while i < len(self._rev_info) and self._rev_info[i][0][2] > md:
+                r.add(self._rev_info[i][0][1])
                 i += 1
             return r
         while 1:
@@ -249,7 +345,7 @@ class History (object):
                 return
             if introduced_revisions(revid) & revid_set:
                 yield revid
-            parents = self._revision_graph[revid]
+            parents = self._rev_info[self._rev_indices[revid]][2]
             if len(parents) == 0:
                 return
             revid = parents[0]
@@ -466,10 +562,10 @@ iso style "yyyy-mm-dd")
 
         merge_point = []
         while True:
-            children = self._where_merged.get(revid, [])
+            children = self._rev_info[self._rev_indices[revid]][1]
             nexts = []
             for child in children:
-                child_parents = self._revision_graph[child]
+                child_parents = self._rev_info[self._rev_indices[child]][2]
                 if child_parents[0] == revid:
                     nexts.append(child)
                 else:
