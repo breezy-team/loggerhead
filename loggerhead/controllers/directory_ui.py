@@ -65,8 +65,7 @@ class DirectoryUI(TemplatedBranchView):
 
     def get_values(self, path, kwargs, response):
         listing = [d for d in self.transport.list_dir('.')
-                   if not d.startswith('.')
-                   and stat.S_ISDIR(self.transport.stat(d).st_mode)]
+                   if not d.startswith('.')]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
@@ -74,6 +73,8 @@ class DirectoryUI(TemplatedBranchView):
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
             except:
+                if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                    continue
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
