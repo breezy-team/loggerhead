@@ -1,8 +1,6 @@
-"""Serve branches at urls that mimic the file system layout."""
+"""Serve branches at urls that mimic a transport's file system layout."""
 
-import os
-
-from bzrlib import branch, errors, lru_cache
+from bzrlib import branch, errors, lru_cache, urlutils
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -14,17 +12,17 @@ from loggerhead.config import LoggerheadConfig
 from loggerhead.controllers.directory_ui import DirectoryUI
 
 
-class BranchesFromFileSystemServer(object):
+class BranchesFromTransportServer(object):
 
-    def __init__(self, path, root, name=None):
-        self.path = path
+    def __init__(self, transport, root, name=None):
+        self.transport = transport
         self.root = root
         self.name = name
         self._config = root._config
 
     def app_for_branch(self, branch):
         if not self.name:
-            name = branch.get_config().get_nickname()
+            name = branch._get_nick(local=True)
             is_root = True
         else:
             name = self.name
@@ -47,32 +45,32 @@ class BranchesFromFileSystemServer(object):
             else:
                 name = '/'
             return DirectoryUI(environ['loggerhead.static.url'],
-                               self.path,
+                               self.transport,
                                name)
         else:
-            new_path = os.path.join(self.path, segment)
+            new_transport = self.transport.clone(segment)
             if self.name:
-                new_name = os.path.join(self.name, segment)
+                new_name = urlutils.join(self.name, segment)
             else:
                 new_name = '/' + segment
-            return BranchesFromFileSystemServer(new_path, self.root, new_name)
+            return BranchesFromTransportServer(new_transport, self.root, new_name)
 
     def __call__(self, environ, start_response):
-        if not os.path.isdir(self.path):
-            raise httpexceptions.HTTPNotFound()
         try:
-            b = branch.Branch.open(self.path)
+            b = branch.Branch.open_from_transport(self.transport)
         except errors.NotBranchError:
+            if not self.transport.listable() or not self.transport.has('.'):
+                raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
             return self.app_for_branch(b)(environ, start_response)
 
 
-class BranchesFromFileSystemRoot(object):
+class BranchesFromTransportRoot(object):
 
-    def __init__(self, folder, config):
+    def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
-        self.folder = folder
+        self.transport = transport
         self._config = config
 
     def __call__(self, environ, start_response):
@@ -84,18 +82,18 @@ class BranchesFromFileSystemRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            app = urlparser.make_static(None, self.folder)
+            app = urlparser.make_static(None, self.transport)
             return app(environ, start_response)
         else:
-            return BranchesFromFileSystemServer(
-                self.folder, self)(environ, start_response)
+            return BranchesFromTransportServer(
+                self.transport, self)(environ, start_response)
 
 
-class UserBranchesFromFileSystemRoot(object):
+class UserBranchesFromTransportRoot(object):
 
-    def __init__(self, folder, config):
+    def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
-        self.folder = folder
+        self.transport = transport
         self._config = config
         self.trunk_dir = config.get_option('trunk_dir')
 
@@ -112,10 +110,10 @@ class UserBranchesFromFileSystemRoot(object):
             # segments starting with ~ are user branches
             if path_info.startswith('/~'):
                 segment = path_info_pop(environ)
-                new_path = os.path.join(self.folder, segment[1:])
-                return BranchesFromFileSystemServer(
-                    new_path, self, segment)(environ, start_response)
+                new_transport = self.transport.clone(segment[1:])
+                return BranchesFromTransportServer(
+                    new_transport, self, segment)(environ, start_response)
             else:
-                new_path = os.path.join(self.folder, self.trunk_dir)
-                return BranchesFromFileSystemServer(
-                    new_path, self)(environ, start_response)
+                new_transport = self.transport.clone(self.trunk_dir)
+                return BranchesFromTransportServer(
+                    new_transport, self)(environ, start_response)
