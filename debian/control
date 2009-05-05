@@ -6,10 +6,9 @@ Uploaders: Jelmer Vernooij <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
 Build-Depends-Indep: bzr (>= 1.5)
 Build-Depends: python-central (>= 0.5), cdbs (>= 0.4.43), debhelper (>= 5.0.37.2), python-dev
-Standards-Version: 3.8.0
+Standards-Version: 3.8.1
 XS-Python-Version: >= 2.4
 Vcs-Bzr: http://bzr.debian.org/pkg-bazaar/loggerhead/unstable/
-DM-Upload-Allowed: yes
 
 Package: loggerhead
 Architecture: all
