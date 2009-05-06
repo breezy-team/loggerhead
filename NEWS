@@ -13,7 +13,7 @@ dev [future]
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
 
-    - Added syntax highlighting to annotate view using
+    - Added optional syntax highlighting to annotate view using
       python-pygments.  Partially addresses bug #306631. (Peter Bui)
 
     - Convert newlines in commit messages to HTML line breaks for
@@ -32,10 +32,19 @@ dev [future]
     - The revision page defaults to unified style again, and can
       convert to a side-by-side view using JavaScript. (Michael Hudson)
 
-    - Finish converting JavaScript from MooTools to YUI 3.
+    - Clean up and improve performance of the annotate view. (Michael
+      Hudson)
+
+    - Finish converting JavaScript from MooTools to YUI 3. (Michael
+      Hudson)
+
+    - Improve compatibility with IE 6. (Michael Hudson)
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
+
+    - Clip long lines in side-by-side diff view. (Michael Hudson,
+      #334837)
 
     - The user-confusing "next" and "previous" links now read "older"
       and "newer" respectively. (Michael Hudson, #297930)
@@ -49,13 +58,22 @@ dev [future]
       other funny characters. (Peter Bui)
 
     - Changelog messages are now displayed with newlines preserved.
-      (Peter Bui)
+      (Peter Bui, #273688)
 
     - Offer a link to see the full file diffs for a file path. (Michael
       Hudson, #333797)
 
+    - Fix annotate error caused by Pygments stripping trailing
+      whitespace. (Michael Hudson, #338762)
+
     - Loggerhead can be installed as a Bazaar plugin and run by
       'bzr serve --http'. (Martin Pool)
+
+    - Load parts of the changelog and revision pages via XMLHttpRequest
+      to improve performance. This adds a dependency on simplejson or
+      json. Partially addresses bug #253950. (Michael Hudson)
+
+    - Various improvements to the animation JavaScript. (Michael Hudson)
 
     - Fix HTML content of source files being displayed unescaped when
       Pygments was unavailable. (Michael Hudson, #344970)
