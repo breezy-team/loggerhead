@@ -36,7 +36,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [(1, 11, 0), (1, 13, 0)])
+    require_any_api(bzrlib, [(1, 11, 0), (1, 13, 0), (1, 15, 0)])
 
     # TODO: This should provide a new type of server that can be used by bzr
     # serve, maybe through a registry, rather than overriding the command.  Though
