@@ -43,8 +43,13 @@ dev [future]
     - Changelog messages are now displayed with newlines preserved.
       (Peter Bui)
 
+    - Fix serve-branches's path argument. (Michael Hudson, #353230)
+
     - serve-branches now has an option, --use-cdn, to load YUI from
       Yahoo!'s CDN. (Matt Nordhoff)
+
+    - Fix certain race conditions for loading bzr-search. (Robert
+      Collins, #334250)
 
     - Fix errors when using serve-branches --log-folder or --user-dirs.
       (It was calling config.get_option() incorrectly.) (Matt Nordhoff,
