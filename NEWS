@@ -4,13 +4,16 @@ What's changed in loggerhead?
 dev [future]
 ---------------
 
+    - Make sure that binary files aren't annotated. (Martin Albisetti,
+      #258848)
+
     - Loggerhead now serves bzr branches over HTTP and exposes the URL
       to branch them. Addresses bug #240577. (Jonathan Lange)
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
 
-    - Added syntax highlighting to annotate view using
+    - Added optional syntax highlighting to annotate view using
       python-pygments.  Partially addresses bug #306631. (Peter Bui)
 
     - Convert newlines in commit messages to HTML line breaks for
@@ -18,36 +21,88 @@ dev [future]
       Bui)
 
     - serve-branches now errors if run behind a proxy without
-      paste.deploy installed.
+      paste.deploy installed. (Michael Hudson)
 
     - Loggerhead should now handle file and directory names that need
       URL escaping without crashing.
 
     - The start-loggerhead script properly sets the wsgi.url_scheme
-      from the server.webpath option. (neror)
+      from the server.webpath option. (neror, #260547)
 
     - The revision page defaults to unified style again, and can
-      convert to a side-by-side view using Javascript.
+      convert to a side-by-side view using JavaScript. (Michael Hudson)
+
+    - Clean up and improve performance of the annotate view. (Michael
+      Hudson)
+
+    - Finish converting JavaScript from MooTools to YUI 3. (Michael
+      Hudson)
+
+    - Improve compatibility with IE 6. (Michael Hudson)
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
 
+    - Clip long lines in side-by-side diff view. (Michael Hudson,
+      #334837)
+
     - The user-confusing "next" and "previous" links now read "older"
-      and "newer" respectively.
+      and "newer" respectively. (Michael Hudson, #297930)
 
-    - The annotate view now contains line number anchors.
+    - The annotate view now contains line number anchors. (Michael
+      Hudson)
 
-    - The annotate view does syntax highlighting using the "pygments"
-      library.  (Peter Bui)
+    - Fix inventory pages using "//" in links. (Michael Hudson, #329668)
+
+    - Fix problems viewing files and directories containing spaces and
+      other funny characters. (Peter Bui)
 
     - Changelog messages are now displayed with newlines preserved.
-      (Peter Bui)
+      (Peter Bui, #273688)
+
+    - Offer a link to see the full file diffs for a file path. (Michael
+      Hudson, #333797)
+
+    - Fix annotate error caused by Pygments stripping trailing
+      whitespace. (Michael Hudson, #338762)
+
+    - Loggerhead can be installed as a Bazaar plugin and run by
+      'bzr serve --http'. (Martin Pool)
+
+    - Load parts of the changelog and revision pages via XMLHttpRequest
+      to improve performance. This adds a dependency on simplejson or
+      json. Partially addresses bug #253950. (Michael Hudson)
+
+    - Various improvements to the animation JavaScript. (Michael Hudson)
+
+    - Fix HTML content of source files being displayed unescaped when
+      Pygments was unavailable. (Michael Hudson, #344970)
+
+    - Fix serve-branches's path argument. (Michael Hudson, #353230)
 
     - serve-branches now has an option, --use-cdn, to load YUI from
       Yahoo!'s CDN. (Matt Nordhoff)
 
-    - Fix bug #361238 (serve-branches was calling config.get_option()
-      incorrectly and failing). (Matt Nordhoff)
+    - Fix certain race conditions for loading bzr-search. (Robert
+      Collins, #334250)
+
+    - Fix errors when using serve-branches --log-folder or --user-dirs.
+      (It was calling config.get_option() incorrectly.) (Matt Nordhoff,
+      bug #361238)
+
+    - Move some caching from RAM to the disk, and other caching and
+      memory usage improvements. (Michael Hudson)
+
+    - Add a --cache-dir option to serve-branches to choose where to
+      place the SQL cache, and only create one temporary SQL dir per
+      process. (Matt Nordhoff, #358322)
+
+    - Replace homebrew memory profiling code with Dozer. (Paul Hummer)
+
+    - Use the branch's public_branch as the default suggested URL to
+      branch from (Matt Nordhoff, #369767)
+
+    - Fix a file descriptor leak (Matt Nordhoff, #370845)
 
     - Use transport API internally, so it is possible to specify a remote 
       URL to serve-branches. (Jelmer Vernooij, #371787)
