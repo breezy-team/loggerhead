@@ -4,6 +4,9 @@ What's changed in loggerhead?
 dev [future]
 ---------------
 
+    - Make sure that binary files aren't annotated. (Martin Albisetti,
+      #258848)
+
     - Loggerhead now serves bzr branches over HTTP and exposes the URL
       to branch them. Addresses bug #240577. (Jonathan Lange)
 
@@ -18,30 +21,44 @@ dev [future]
       Bui)
 
     - serve-branches now errors if run behind a proxy without
-      paste.deploy installed.
+      paste.deploy installed. (Michael Hudson)
 
     - Loggerhead should now handle file and directory names that need
       URL escaping without crashing.
 
     - The start-loggerhead script properly sets the wsgi.url_scheme
-      from the server.webpath option. (neror)
+      from the server.webpath option. (neror, #260547)
 
     - The revision page defaults to unified style again, and can
-      convert to a side-by-side view using Javascript.
+      convert to a side-by-side view using JavaScript. (Michael Hudson)
+
+    - Finish converting JavaScript from MooTools to YUI 3.
 
     - Leading blank lines in commit messages no longer result in an
       empty summary. (Colin Watson)
 
     - The user-confusing "next" and "previous" links now read "older"
-      and "newer" respectively.
+      and "newer" respectively. (Michael Hudson, #297930)
 
-    - The annotate view now contains line number anchors.
+    - The annotate view now contains line number anchors. (Michael
+      Hudson)
 
-    - The annotate view does syntax highlighting using the "pygments"
-      library.  (Peter Bui)
+    - Fix inventory pages using "//" in links. (Michael Hudson, #329668)
+
+    - Fix problems viewing files and directories containing spaces and
+      other funny characters. (Peter Bui)
 
     - Changelog messages are now displayed with newlines preserved.
       (Peter Bui)
+
+    - Offer a link to see the full file diffs for a file path. (Michael
+      Hudson, #333797)
+
+    - Loggerhead can be installed as a Bazaar plugin and run by
+      'bzr serve --http'. (Martin Pool)
+
+    - Fix HTML content of source files being displayed unescaped when
+      Pygments was unavailable. (Michael Hudson, #344970)
 
     - Fix serve-branches's path argument. (Michael Hudson, #353230)
 
