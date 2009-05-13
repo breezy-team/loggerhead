@@ -107,6 +107,9 @@ dev [future]
     - Use transport API internally, so it is possible to specify a remote 
       URL to serve-branches. (Jelmer Vernooij, #371787)
 
+    - Fix internal server errors when using start-loggerhead. (Matt
+      Nordhoff, #375948)
+
 1.10 [22Dec2008]
 ---------------
 
