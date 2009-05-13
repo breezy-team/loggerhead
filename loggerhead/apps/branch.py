@@ -109,7 +109,7 @@ class BranchWSGIApp(object):
         change = h.get_changes([h.last_revid])[0]
         return change.date
 
-    def branch_url(self):
+    def public_branch_url(self):
         return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
@@ -119,7 +119,7 @@ class BranchWSGIApp(object):
             self._static_url_base = self._url_base
         self._environ = environ
         if self.served_url is _DEFAULT:
-            public_branch = self.branch_url()
+            public_branch = self.public_branch_url()
             if public_branch is not None:
                 self.served_url = public_branch
             else:
