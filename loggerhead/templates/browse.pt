@@ -43,12 +43,12 @@
                   </a>
                 </td>
               </tr>
-              <tr tal:condition="view/branch_url">
+              <tr tal:condition="view/served_url">
                 <td class="name">
                 </td>
                 <td class="description url" colspan="2">
-                  <a tal:attributes="href view/branch_url"
-                     tal:content="view/branch_url" />
+                  <a tal:attributes="href view/served_url"
+                     tal:content="view/served_url" />
                 </td>
               </tr>
             </tal:block>
