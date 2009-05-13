@@ -36,7 +36,7 @@ class BranchWSGIApp(object):
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
-        self.log = logging.getLogger('loggerhead.%s' % friendly_name)
+        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
         if graph_cache is None:
             graph_cache = bzrlib.lru_cache.LRUCache(10)
         self.graph_cache = graph_cache

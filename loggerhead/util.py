@@ -316,7 +316,7 @@ def human_size(size, min_divisor=0):
 
     out = str(base)
     if (base < 100) and (dot != 0):
-        out += '.%d' % (dot)
+        out += '.%d' % (dot,)
     if divisor == KILO:
         out += 'K'
     elif divisor == MEG:
@@ -465,7 +465,7 @@ def lsprof(f):
         now = time.time()
         msec = int(now * 1000) % 1000
         timestr = time.strftime('%Y%m%d%H%M%S',
-                                time.localtime(now)) + ('%03d' % msec)
+                                time.localtime(now)) + ('%03d' % (msec,))
         filename = f.__name__ + '-' + timestr + '.lsprof'
         cPickle.dump(stats, open(filename, 'w'), 2)
         return ret

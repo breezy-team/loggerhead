@@ -292,7 +292,7 @@ class History(object):
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 

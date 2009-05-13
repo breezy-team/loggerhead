@@ -62,7 +62,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         takes_options = _original_command.takes_options + [
             Option('http',
                 help='Run an http (Loggerhead) server to browse code, '
-                    'by default on port %s.' % DEFAULT_PORT)]
+                    'by default on port %s.' % (DEFAULT_PORT,))]
 
         def run(self, *args, **kw):
             if 'http' in kw:

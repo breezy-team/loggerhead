@@ -92,7 +92,7 @@ def main():
     if not options.foreground:
         sys.stderr.write('\n')
         sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % options.pidfile)
+        sys.stderr.write('PID file: %s\n' % (options.pidfile,))
         sys.stderr.write('\n')
 
         daemon.daemonize(options.pidfile, home)

@@ -85,7 +85,7 @@ class AnnotateUI(TemplatedBranchView):
                     change=change, text=hl_lines[lineno - 1])
                 lineno += 1
 
-        self.log.debug('annotate: %r secs' % (time.time() - z))
+        self.log.debug('annotate: %r secs' % (time.time() - z,))
 
     def get_values(self, path, kwargs, headers):
         history = self._history
