@@ -41,14 +41,6 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-      <div id="finderBox">
-         <tal:search-box define="navigation navigation"
-                        replace="structure python:search_box(branch,
-                                 navigation)" />
-        <div>
-          <tal:feed-link replace="structure python:feed_link(branch, url)" />
-        </div>
-      </div>
 
       <tal:menu define="fileview_active fileview_active"
                 replace="structure python:menu(branch, url, fileview_active)" />
