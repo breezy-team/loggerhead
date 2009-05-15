@@ -3,7 +3,7 @@
   <title>
     bazaar changes for <tal:branch-name content="branch/friendly_name">branch name</tal:branch-name>
   </title>
-  <updated tal:content="updated">${updated}</updated>
+  <updated tal:content="string:${updated}Z">${updated}</updated>
   <id tal:content="python:branch.url(['/atom'])">url</id>
   <link rel="self" tal:attributes="href python:branch.url([''])" />
 
@@ -11,8 +11,8 @@
     <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
       ${entry/revno}: ${entry/short_comment}
     </title>
-    <updated tal:content="entry/date/isoformat">
-    Z
+    <updated tal:content="string: ${entry/date/isoformat}Z">
+      updated
     </updated>
     <id tal:content="python:branch.url(['/revision', entry.revno])">
       ID
