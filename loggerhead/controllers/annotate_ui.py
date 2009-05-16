@@ -68,7 +68,7 @@ class AnnotateUI(TemplatedBranchView):
                                      change=util.Container())
         else:
             if highlight is not None:
-                hl_lines = highlight(file_name, ''.join(file_lines), encoding)
+                hl_lines = highlight(file_name, file_text, encoding)
                 hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
             else:
                 hl_lines = map(cgi.escape, file_lines)
