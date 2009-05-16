@@ -110,6 +110,9 @@ dev [future]
     - Fix internal server errors when using start-loggerhead. (Matt
       Nordhoff, #375948)
 
+    - Fix annotating non-UTF-8 files when Pygments is disabled. (Matt
+      Nordhoff, #376957)
+
 1.10 [22Dec2008]
 ---------------
 
