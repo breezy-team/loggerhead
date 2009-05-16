@@ -23,6 +23,7 @@ import time
 
 import bzrlib.errors
 import bzrlib.textfile
+import bzrlib.osutils
 
 from paste.httpexceptions import HTTPBadRequest, HTTPServerError
 
@@ -48,8 +49,15 @@ class AnnotateUI(TemplatedBranchView):
 
         file_name = os.path.basename(self._history.get_path(revid, file_id))
 
+        file_text = tree.get_file_text(file_id)
         try:
-            file_lines = tree.get_file_lines(file_id)
+            file_text = file_text.decode('utf-8')
+        except UnicodeDecodeError:
+            file_text = file_text.decode('iso-8859-15')
+
+        file_lines = bzrlib.osutils.split_lines(file_text)
+
+        try:
             bzrlib.textfile.check_text_lines(file_lines)
         except bzrlib.errors.BinaryFile:
                 # bail out; this isn't displayable text
