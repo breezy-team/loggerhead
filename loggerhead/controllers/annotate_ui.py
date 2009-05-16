@@ -50,10 +50,12 @@ class AnnotateUI(TemplatedBranchView):
         file_name = os.path.basename(self._history.get_path(revid, file_id))
 
         file_text = tree.get_file_text(file_id)
+        encoding = 'utf-8'
         try:
-            file_text = file_text.decode('utf-8')
+            file_text = file_text.decode(encoding)
         except UnicodeDecodeError:
-            file_text = file_text.decode('iso-8859-15')
+            encoding = 'iso-8859-15'
+            file_text = file_text.decode(encoding)
 
         file_lines = bzrlib.osutils.split_lines(file_text)
 
@@ -66,7 +68,7 @@ class AnnotateUI(TemplatedBranchView):
                                      change=util.Container())
         else:
             if highlight is not None:
-                hl_lines = highlight(file_name, ''.join(file_lines))
+                hl_lines = highlight(file_name, ''.join(file_lines), encoding)
                 hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
             else:
                 hl_lines = map(cgi.escape, file_lines)

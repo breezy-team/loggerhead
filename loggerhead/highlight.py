@@ -24,19 +24,12 @@ from pygments.util import ClassNotFound
 DEFAULT_PYGMENT_STYLE = 'colorful'
 
 
-def highlight(path, text, style=DEFAULT_PYGMENT_STYLE):
+def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
     Returns a list of highlighted (i.e. HTML formatted) strings.
     """
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
-
-    encoding = 'utf-8'
-    try:
-        text = text.decode(encoding)
-    except UnicodeDecodeError:
-        encoding = 'iso-8859-15'
-        text = text.decode(encoding)
 
     try:
         lexer = guess_lexer_for_filename(path, text[:1024], encoding=encoding)
