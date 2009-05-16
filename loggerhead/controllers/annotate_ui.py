@@ -52,10 +52,10 @@ class AnnotateUI(TemplatedBranchView):
             file_lines = tree.get_file_lines(file_id)
             bzrlib.textfile.check_text_lines(file_lines)
         except bzrlib.errors.BinaryFile:
-                # bail out; this isn't displayable text
-                yield util.Container(parity=0, lineno=1, status='same',
-                                     text='(This is a binary file.)',
-                                     change=util.Container())
+            # bail out; this isn't displayable text
+            yield util.Container(parity=0, lineno=1, status='same',
+                                 text='(This is a binary file.)',
+                                 change=util.Container())
         else:
             if highlight is not None:
                 hl_lines = highlight(file_name, ''.join(file_lines))
