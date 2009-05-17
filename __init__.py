@@ -71,17 +71,23 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                 import os.path, sys
                 sys.path.append(os.path.dirname(__file__))
 
+                from bzrlib.transport import get_transport
                 from loggerhead.apps.transport import BranchesFromTransportRoot
+                from loggerhead.config import LoggerheadConfig
                 from paste.httpexceptions import HTTPExceptionHandler
                 from paste.httpserver import serve
-                a = HTTPExceptionHandler(BranchesFromTransportRoot('.'))
                 port = kw.get('port', DEFAULT_PORT)
                 # port might be an int already...
                 if isinstance(port, basestring) and ':' in port:
                     host, port = port.split(':')
                 else:
                     host = '0.0.0.0'
-                serve(a, host=host, port=port)
+                argv = ['--host', host, '--port', str(port)]
+                config = LoggerheadConfig(argv)
+                transport = get_transport('.')
+                app = BranchesFromTransportRoot(transport, config)
+                app = HTTPExceptionHandler(app)
+                serve(app, host=host, port=port)
             else:
                 super(cmd_serve, self).run(*args, **kw)
 
