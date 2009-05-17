@@ -113,6 +113,8 @@ dev [future]
     - Fix annotating non-UTF-8 files when Pygments is disabled. (Matt
       Nordhoff, #376957)
 
+    - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
+
 1.10 [22Dec2008]
 ---------------
 
