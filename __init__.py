@@ -76,15 +76,16 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                 from loggerhead.config import LoggerheadConfig
                 from paste.httpexceptions import HTTPExceptionHandler
                 from paste.httpserver import serve
+                path = kw.get('directory', '.')
                 port = kw.get('port', DEFAULT_PORT)
                 # port might be an int already...
                 if isinstance(port, basestring) and ':' in port:
                     host, port = port.split(':')
                 else:
                     host = '0.0.0.0'
-                argv = ['--host', host, '--port', str(port)]
+                argv = ['--host', host, '--port', str(port), path]
                 config = LoggerheadConfig(argv)
-                transport = get_transport('.')
+                transport = get_transport(path)
                 app = BranchesFromTransportRoot(transport, config)
                 app = HTTPExceptionHandler(app)
                 serve(app, host=host, port=port)
