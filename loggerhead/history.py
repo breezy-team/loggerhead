@@ -31,13 +31,9 @@
 import bisect
 import datetime
 import logging
-import marshal
 import re
 import textwrap
 import threading
-import time
-import urllib
-from StringIO import StringIO
 
 from loggerhead import search
 from loggerhead import util
