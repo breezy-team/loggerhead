@@ -57,7 +57,7 @@ class LoggerheadConfig(object):
 
     def __init__(self, argv=None):
         if argv is None:
-            sys.argv[1:]
+            argv = sys.argv[1:]
         self._parser = command_line_parser()
         self._options, self._args = self._parser.parse_args(argv)
 
