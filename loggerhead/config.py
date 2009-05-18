@@ -55,9 +55,11 @@ def command_line_parser():
 class LoggerheadConfig(object):
     '''A configuration object.'''
 
-    def __init__(self):
+    def __init__(self, argv=None):
+        if argv is None:
+            sys.argv[1:]
         self._parser = command_line_parser()
-        self._options, self._args = self._parser.parse_args(sys.argv[1:])
+        self._options, self._args = self._parser.parse_args(argv)
 
         sql_dir = self.get_option('sql_dir')
         if sql_dir is None:
