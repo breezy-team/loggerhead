@@ -57,12 +57,12 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
 
 
 @templatefunc
-def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None):
+def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None, merged_in=None):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
         file_changes=file_changes, currently_showing=currently_showing,
-        **templatefunctions)
+        merged_in=merged_in, **templatefunctions)
 
 
 @templatefunc
