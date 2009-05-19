@@ -82,7 +82,10 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            app = urlparser.make_static(None, self.transport)
+            # TODO: Use something here that uses the transport API 
+            # rather than relying on the local filesystem API.
+            app = urlparser.make_static(None, 
+                self.transport.local_abspath('.'))
             return app(environ, start_response)
         else:
             return BranchesFromTransportServer(
