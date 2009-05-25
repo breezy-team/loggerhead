@@ -82,6 +82,8 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
+            # TODO: Use something here that uses the transport API 
+            # rather than relying on the local filesystem API.
             try:
                 path = urlutils.local_path_from_url(self.transport.base)
             except errors.InvalidURL:
