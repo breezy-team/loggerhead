@@ -3,6 +3,7 @@ import logging
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
+from bzrlib import config, osutils
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
@@ -117,4 +118,21 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/files')
         res.mustcontain('No revisions!')
+
+
+class TestHiddenBranch(BasicTests):
+
+    def setUp(self):
+        BasicTests.setUp(self)
+        self.createBranch()
+        locations = config.locations_config_filename()
+        config.ensure_config_dir_exists()
+        open(locations, 'wb').write('[%s]\nhttp_serve = False'
+                                    % (self.tree.branch.base,))
+
+    def test_no_access(self):
+        app = self.setUpLoggerhead()
+        print self.tree.branch.get_config().get_user_option('http_serve')
+        print app.get('/changes')
+        res = app.get('/changes', status=404)
 

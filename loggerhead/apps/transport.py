@@ -1,6 +1,7 @@
 """Serve branches at urls that mimic a transport's file system layout."""
 
 from bzrlib import branch, errors, lru_cache, urlutils
+from bzrlib.bzrdir import BzrDir
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -63,7 +64,10 @@ class BranchesFromTransportServer(object):
                 raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
-            return self.app_for_branch(b)(environ, start_response)
+            if b.get_config().get_user_option('http_serve') == 'False':
+                raise httpexceptions.HTTPNotFound()
+            else:
+                return self.app_for_branch(b)(environ, start_response)
 
 
 class BranchesFromTransportRoot(object):
@@ -82,6 +86,14 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
+            try:
+                bzrdir = BzrDir.open_containing_from_transport(
+                         self.transport.clone(environ['PATH_INFO']))
+                branch = bzrdir.open_branch()
+                if branch.get_config().get_user_option('http_serve') == 'False':
+                    raise httpexceptions.HTTPNotFound()
+            except errors.NotBranchError:
+                pass
             app = urlparser.make_static(None, self.transport)
             return app(environ, start_response)
         else:
