@@ -115,6 +115,10 @@ dev [future]
 
     - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
 
+    - Added the option to hide branches by setting http_serve = False
+      in locations.conf (Martin Albisetti)
+
+
 1.10 [22Dec2008]
 ---------------
 
