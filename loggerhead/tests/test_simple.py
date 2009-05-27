@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009  Canonical Ltd.
+# Copyright (C) 2008, 2009 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -121,7 +121,7 @@ class TestWithSimpleTree(BasicTests):
 
 
 class TestEmptyBranch(BasicTests):
-    """ Test that an empty branch doesn't break"""
+    """Test that an empty branch doesn't break"""
 
     def setUp(self):
         BasicTests.setUp(self)
