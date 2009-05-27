@@ -113,6 +113,8 @@ class BranchWSGIApp(object):
         return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
+        # Check again if the branch is blocked from being served, this is
+        # mostly for tests. It's already checked in apps/transport.py
         if self.branch.get_config().get_user_option('http_serve') == 'False':
             raise httpexceptions.HTTPNotFound()
         self._url_base = environ['SCRIPT_NAME']
