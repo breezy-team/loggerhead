@@ -20,7 +20,7 @@ import logging
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
-from bzrlib import config, osutils
+from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
