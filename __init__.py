@@ -53,8 +53,8 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
-    HELP = ('Loggerhead web-based code viewer and server. (default port: '
-            '%d)' % (DEFAULT_PORT,))
+    HELP = ('Loggerhead web-based code viewer and server. (default port: %d)' %
+            (DEFAULT_PORT,))
 
     def serve_http(transport, host=None, port=None, inet=None):
         # loggerhead internal code will try to 'import loggerhead', so
