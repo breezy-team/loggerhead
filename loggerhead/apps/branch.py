@@ -113,6 +113,8 @@ class BranchWSGIApp(object):
         return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
+        if self.branch.get_config().get_user_option('http_serve') == 'False':
+            raise httpexceptions.HTTPNotFound()
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:

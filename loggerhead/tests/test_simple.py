@@ -132,7 +132,5 @@ class TestHiddenBranch(BasicTests):
 
     def test_no_access(self):
         app = self.setUpLoggerhead()
-        print self.tree.branch.get_config().get_user_option('http_serve')
-        print app.get('/changes')
         res = app.get('/changes', status=404)
 
