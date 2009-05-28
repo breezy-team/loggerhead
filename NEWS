@@ -115,6 +115,9 @@ dev [future]
 
     - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
 
+    - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
+      #380026)
+
 1.10 [22Dec2008]
 ---------------
 
