@@ -118,6 +118,9 @@ dev [future]
     - Added the option to hide branches by setting http_serve = False
       in locations.conf (Martin Albisetti)
 
+    - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
+      #380026)
+
 
 1.10 [22Dec2008]
 ---------------

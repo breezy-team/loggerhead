@@ -143,7 +143,12 @@ class BranchWSGIApp(object):
             if public_branch is not None:
                 self.served_url = public_branch
             else:
-                self.served_url = self.url([])
+                # Loggerhead only supports serving .bzr/ on local branches, so
+                # we shouldn't suggest something that won't work.
+                if self.branch.base.startswith('file://'):
+                    self.served_url = self.url([])
+                else:
+                    self.served_url = None
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(

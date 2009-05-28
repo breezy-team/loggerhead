@@ -93,6 +93,29 @@ class BranchesFromTransportRoot(object):
         self.transport = transport
         self._config = config
 
+    def get_local_path(self):
+        """Raise exception if it's not a local path, otherwise return it"""
+
+        # TODO: Use something here that uses the transport API 
+        # rather than relying on the local filesystem API.
+        try:
+            path = urlutils.local_path_from_url(self.transport.base)
+        except errors.InvalidURL:
+            raise httpexceptions.HTTPNotFound()
+        else:
+            return path
+
+    def check_is_a_branch(self, path_info):
+        """Check if it's a branch, and that it's allowed to be shown"""
+        try:
+	    bzrdir = BzrDir.open_containing_from_transport(
+	               self.transport.clone(path_info))
+	    branch = bzrdir.open_branch()
+	    if branch.get_config().get_user_option('http_serve') == 'False':
+	        raise httpexceptions.HTTPNotFound()
+        except errors.NotBranchError:
+	    return
+
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         if environ['PATH_INFO'].startswith('/static/'):
@@ -102,15 +125,9 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            try:
-                bzrdir = BzrDir.open_containing_from_transport(
-                         self.transport.clone(environ['PATH_INFO']))
-                branch = bzrdir.open_branch()
-                if branch.get_config().get_user_option('http_serve') == 'False':
-                    raise httpexceptions.HTTPNotFound()
-            except errors.NotBranchError:
-                pass
-            app = urlparser.make_static(None, self.transport)
+            check_is_a_branch(environ['PATH_INFO'])
+            path = get_local_path()
+            app = urlparser.make_static(None, path)
             return app(environ, start_response)
         else:
             return BranchesFromTransportServer(
