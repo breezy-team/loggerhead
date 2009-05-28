@@ -1,8 +1,23 @@
+#
+# Copyright (C) 2008, 2009 Canonical Ltd
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
 '''Configuration tools for Loggerhead.'''
+
 from optparse import OptionParser
 import sys
 import tempfile
 
+from bzrlib import config
 
 _temporary_sql_dir = None
 
@@ -67,8 +82,13 @@ class LoggerheadConfig(object):
         self.SQL_DIR = sql_dir
 
     def get_option(self, option):
-        '''Get an option from the options dict.'''
-        return getattr(self._options, option)
+        """Get the value for the config option, either 
+           from ~/.bazaar/bazaar.conf or from the command line"""
+        global_config = config.GlobalConfig().get_user_option('http_'+option)
+        if global_config is not None:
+            return global_config
+        else:
+            return getattr(self._options, option)
 
     def get_arg(self, index):
         '''Get an arg from the arg list.'''
