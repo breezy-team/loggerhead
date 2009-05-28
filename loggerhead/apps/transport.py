@@ -108,13 +108,13 @@ class BranchesFromTransportRoot(object):
     def check_is_a_branch(self, path_info):
         """Check if it's a branch, and that it's allowed to be shown"""
         try:
-	    bzrdir = BzrDir.open_containing_from_transport(
-	               self.transport.clone(path_info))
-	    branch = bzrdir.open_branch()
-	    if branch.get_config().get_user_option('http_serve') == 'False':
-	        raise httpexceptions.HTTPNotFound()
+            bzrdir = BzrDir.open_containing_from_transport(
+                       self.transport.clone(path_info))
+            branch = bzrdir.open_branch()
+            if branch.get_config().get_user_option('http_serve') == 'False':
+                raise httpexceptions.HTTPNotFound()
         except errors.NotBranchError:
-	    return
+            return
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
