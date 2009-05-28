@@ -681,6 +681,7 @@ iso style "yyyy-mm-dd")
             'comment': revision.message,
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': revision.parent_ids,
+            'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
         }
         return util.Container(entry)
 

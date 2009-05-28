@@ -31,7 +31,7 @@ ul#list-files li.desc {
     width:493px;
     margin:0px 0px 5px 0px;
 }
-.information, .committer, .timer, .mfrom, .mto, .revid {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug {
     clear:both;
     margin:0px;
     padding:0px 0px 2px 18px;
@@ -64,6 +64,9 @@ ul#list-files li.desc {
 }
 .mto {
     background:url(../images/ico_mergeto.gif) no-repeat top left;
+}
+.bug {
+    background:url(../images/ico_bug.png) no-repeat top left;
 }
 /**/
 #loggerheadCont p.expand, #loggerheadCont p.expand a, #loggerheadCont p.expand a:link, #loggerheadCont p.expand a:visited, #loggerheadCont p.expand a:hover {
