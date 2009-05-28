@@ -84,6 +84,7 @@ class LoggerheadConfig(object):
     def get_option(self, option):
         """Get the value for the config option, either 
            from ~/.bazaar/bazaar.conf or from the command line"""
+        #XXX: need to turn this around, cmd line wins over config
         global_config = config.GlobalConfig().get_user_option('http_'+option)
         if global_config is not None:
             return global_config
