@@ -109,7 +109,7 @@ class BranchesFromTransportRoot(object):
         """Check if it's a branch, and that it's allowed to be shown"""
         try:
             bzrdir = BzrDir.open_containing_from_transport(
-                       self.transport.clone(path_info))
+                       self.transport.clone(path_info))[0]
             branch = bzrdir.open_branch()
             if branch.get_config().get_user_option('http_serve') == 'False':
                 raise httpexceptions.HTTPNotFound()
