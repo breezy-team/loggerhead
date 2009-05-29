@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2008  Canonical Ltd.
+# Copyright (C) 2008, 2009 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
@@ -106,9 +106,6 @@ def rich_filename(path, kind):
     if kind == 'symlink':
         path += '@'
     return path
-
-
-# from bzrlib
 
 
 class _RevListToTimestamps(object):
@@ -342,25 +339,17 @@ class History (object):
     def get_short_revision_history_by_fileid(self, file_id):
         # FIXME: would be awesome if we could get, for a folder, the list of
         # revisions where items within that folder changed.i
-        try:
-            # FIXME: Workaround for bzr versions prior to 1.6b3.
-            # Remove me eventually pretty please  :)
-            w = self._branch.repository.weave_store.get_weave(
-                    file_id, self._branch.repository.get_transaction())
-            w_revids = w.versions()
-            revids = [r for r in self._rev_indices if r in w_revids]
-        except AttributeError:
-            possible_keys = [(file_id, revid) for revid in self._rev_indices]
-            get_parent_map = self._branch.repository.texts.get_parent_map
-            # We chunk the requests as this works better with GraphIndex.
-            # See _filter_revisions_touching_file_id in bzrlib/log.py
-            # for more information.
-            revids = []
-            chunk_size = 1000
-            for start in xrange(0, len(possible_keys), chunk_size):
-                next_keys = possible_keys[start:start + chunk_size]
-                revids += [k[1] for k in get_parent_map(next_keys)]
-            del possible_keys, next_keys
+        possible_keys = [(file_id, revid) for revid in self._rev_indices]
+        get_parent_map = self._branch.repository.texts.get_parent_map
+        # We chunk the requests as this works better with GraphIndex.
+        # See _filter_revisions_touching_file_id in bzrlib/log.py
+        # for more information.
+        revids = []
+        chunk_size = 1000
+        for start in xrange(0, len(possible_keys), chunk_size):
+            next_keys = possible_keys[start:start + chunk_size]
+            revids += [k[1] for k in get_parent_map(next_keys)]
+        del possible_keys, next_keys
         return revids
 
     def get_revision_history_since(self, revid_list, date):
