@@ -118,6 +118,8 @@ dev [future]
     - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
       #380026)
 
+    - Bumped minimunm bzrlib version to 1.13 (Martin Albisetti)
+
 1.10 [22Dec2008]
 ---------------
 
