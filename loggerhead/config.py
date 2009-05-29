@@ -60,9 +60,9 @@ def command_line_parser():
                       type=str, help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
-    parser.add_option('--use-cdn', action='store_true',
+    parser.add_option("--use-cdn", action="store_true", dest="use_cdn",
                       help="Serve YUI from Yahoo!'s CDN")
-    parser.add_option('--cache-dir', dest='sql_dir',
+    parser.add_option("--cache-dir", dest="sql_dir",
                       help="The directory to place the SQL cache in")
     return parser
 
@@ -83,25 +83,26 @@ class LoggerheadConfig(object):
 
     def get_option(self, option):
         """Get the value for the config option, either 
-           from ~/.bazaar/bazaar.conf or from the command line"""
-        #XXX: need to turn this around, cmd line wins over config
+           from ~/.bazaar/bazaar.conf or from the command line.
+           All loggerhead-specific settings start with 'http_'"""
         global_config = config.GlobalConfig().get_user_option('http_'+option)
         cmd_config = getattr(self._options, option)
-        if global_config is not None and cmd_config is None:
+        if global_config is not None and (
+                cmd_config is None or cmd_config is False):
             return global_config
         else:
             return cmd_config
 
     def get_arg(self, index):
-        '''Get an arg from the arg list.'''
+        """Get an arg from the arg list."""
         return self._args[index]
 
     def print_help(self):
-        '''Wrapper around OptionParser.print_help.'''
+        """Wrapper around OptionParser.print_help."""
         return self._parser.print_help()
 
     @property
     def arg_count(self):
-        '''Return the number of args from the option parser.'''
+        """Return the number of args from the option parser."""
         return len(self._args)
 
