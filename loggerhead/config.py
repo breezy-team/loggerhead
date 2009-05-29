@@ -86,10 +86,11 @@ class LoggerheadConfig(object):
            from ~/.bazaar/bazaar.conf or from the command line"""
         #XXX: need to turn this around, cmd line wins over config
         global_config = config.GlobalConfig().get_user_option('http_'+option)
-        if global_config is not None:
+        cmd_config = getattr(self._options, option)
+        if global_config is not None and cmd_config is None:
             return global_config
         else:
-            return getattr(self._options, option)
+            return cmd_config
 
     def get_arg(self, index):
         '''Get an arg from the arg list.'''
