@@ -66,6 +66,11 @@ ul#list-files li.desc {
     background:url(../images/ico_mergeto.gif) no-repeat top left;
 }
 .bug {
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    float:left;
+    clear:none;
+    display:inline;
     background:url(../images/ico_bug.png) no-repeat top left;
 }
 /**/
