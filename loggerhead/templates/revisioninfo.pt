@@ -18,6 +18,10 @@
             <tal:b content="merged_in"/></a>.
         </div>
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
+        <div class="clear"><!-- --></div>
+        <div class="bug" tal:repeat="bug change/bugs">
+            <a tal:attributes="href bug" tal:content="bug"></a>
+        </div>
         <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
     </div>
     <ul id="list-files" tal:condition="file_changes">
