@@ -58,9 +58,12 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     def serve_http(transport, host=None, port=None, inet=None):
         # loggerhead internal code will try to 'import loggerhead', so
-        # let's put it on the path
-        import os.path, sys
-        sys.path.append(os.path.dirname(__file__))
+        # let's put it on the path if we can't find it in the existing path
+        try:
+            import loggerhead
+        except ImportError:
+            import os.path, sys
+            sys.path.append(os.path.dirname(__file__))
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
