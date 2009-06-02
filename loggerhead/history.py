@@ -685,14 +685,17 @@ iso style "yyyy-mm-dd")
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
         }
         if isinstance(revision, bzrlib.foreign.ForeignRevision):
-            entry["foreign"] = (rev.foreign_revid, rev.mapping)
+            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
         elif ":" in revision.revision_id:
             try:
-                entry["foreign"] = \
+                foreign_revid, mapping = \
                     bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
                         revision.revision_id)
             except bzrlib.errors.InvalidRevisionId:
-                pass
+                foreign_revid = None
+                mapping = None
+        if foreign_revid is not None:
+            entry["foreign"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
