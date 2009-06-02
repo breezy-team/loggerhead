@@ -44,6 +44,7 @@ import bzrlib.branch
 import bzrlib.delta
 import bzrlib.diff
 import bzrlib.errors
+import bzrlib.foreign
 import bzrlib.lru_cache
 import bzrlib.progress
 import bzrlib.revision
@@ -683,6 +684,15 @@ iso style "yyyy-mm-dd")
             'parents': revision.parent_ids,
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
         }
+        if isinstance(revision, bzrlib.foreign.ForeignRevision):
+            entry["foreign"] = (rev.foreign_revid, rev.mapping)
+        elif ":" in revision.revision_id:
+            try:
+                entry["foreign"] = \
+                    bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
+                        revision.revision_id)
+            except bzrlib.errors.InvalidRevisionId:
+                pass
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
