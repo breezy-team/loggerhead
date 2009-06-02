@@ -32,7 +32,7 @@ def command_line_parser():
                       help="Host Loggerhead should listen on.")
     parser.add_option('--memory-profile', action='store_true',
                       dest='memory_profile',
-                      help='Profile the memory usage using heapy.')
+                      help='Profile the memory usage using Dozer.')
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
     parser.add_option("--profile", action="store_true", dest="profile",
