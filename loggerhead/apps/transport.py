@@ -1,6 +1,8 @@
 """Serve branches at urls that mimic a transport's file system layout."""
 
 from bzrlib import branch, errors, lru_cache, urlutils
+from bzrlib.transport import get_transport
+from bzrlib.transport.http import wsgi
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -81,6 +83,12 @@ class BranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'].endswith("/.bzr/smart"):
+            # Only do readonly for now
+            transport = get_transport("readonly+" + self.transport.base)
+            wsgi_app = wsgi.SmartWSGIApp(self.transport)
+            wsgi_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
+            return wsgi_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
             # TODO: Use something here that uses the transport API 
             # rather than relying on the local filesystem API.
