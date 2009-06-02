@@ -73,6 +73,10 @@ class BranchesFromTransportRoot(object):
     def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
         self.transport = transport
+        self.readonly_transport = get_transport("readonly+" + 
+            self.transport.base)
+        wsgi_app = wsgi.SmartWSGIApp(self.readonly_transport)
+        self.smart_server_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         self._config = config
 
     def __call__(self, environ, start_response):
@@ -84,11 +88,7 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif environ['PATH_INFO'].endswith("/.bzr/smart"):
-            # Only do readonly for now
-            transport = get_transport("readonly+" + self.transport.base)
-            wsgi_app = wsgi.SmartWSGIApp(self.transport)
-            wsgi_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
-            return wsgi_app(environ, start_response)
+            return self.smart_server_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
             # TODO: Use something here that uses the transport API 
             # rather than relying on the local filesystem API.
