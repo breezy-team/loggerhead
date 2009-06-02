@@ -1,5 +1,5 @@
 /*Info Box*/
-.information, .committer, .timer, .mfrom, .mto, .revid {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug {
 	float:left;
 	margin:0px 10px 5px 0px;
 	padding:0px 0px 2px 18px;
@@ -38,4 +38,7 @@
     clear:both;
     width:100%;
     position:relative;
+}
+.bug {
+	background:url(../images/ico_bug.png) no-repeat top left;
 }

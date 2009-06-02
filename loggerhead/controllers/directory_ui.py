@@ -20,7 +20,7 @@ import datetime
 import logging
 import stat
 
-from bzrlib import branch
+from bzrlib import branch, errors
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -75,7 +75,10 @@ class DirectoryUI(TemplatedBranchView):
                 if b.get_config().get_user_option('http_serve') == 'False':
                     continue
             except:
-                if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                try:
+                    if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                        continue
+                except errors.NoSuchFile:
                     continue
                 b = None
             dirs.append(DirEntry(d, parity, b))
