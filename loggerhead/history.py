@@ -694,6 +694,8 @@ iso style "yyyy-mm-dd")
             except bzrlib.errors.InvalidRevisionId:
                 foreign_revid = None
                 mapping = None
+        else:
+            foreign_revid = None
         if foreign_revid is not None:
             entry["foreign"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
