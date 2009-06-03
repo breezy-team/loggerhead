@@ -120,6 +120,8 @@ dev [future]
     - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
       #380026)
 
+    - Install loggerhead as a bzr plugin by default (Jelmer Vernooij)
+
     - Support serving branches over HTTP using the smart server protocol. 
       (Jelmer Vernooij, #306853)
 

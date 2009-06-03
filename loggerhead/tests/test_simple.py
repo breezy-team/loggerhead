@@ -3,6 +3,7 @@ import logging
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
+from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
@@ -117,4 +118,20 @@ class TestEmptyBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/files')
         res.mustcontain('No revisions!')
+
+#class TestGlobalConfig(BasicTests):
+#    """
+#    Test that global config settings are respected
+#    """
+
+#    def setUp(self):
+#        BasicTests.setUp(self)
+#        self.createBranch()
+#        config.GlobalConfig().set_user_option('http_version', 'True')
+
+#    def test_setting_respected(self):
+        #FIXME: Figure out how to test this properly
+#        app = self.setUpLoggerhead()
+#        res = app.get('/changes', status=200)
+
 
