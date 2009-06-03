@@ -120,6 +120,9 @@ dev [future]
     - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
       #380026)
 
+    - Support serving branches over HTTP using the smart server protocol. 
+      (Jelmer Vernooij, #306853)
+
 1.10 [22Dec2008]
 ---------------
 
