@@ -73,7 +73,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             host = DEFAULT_HOST
         if port is None:
             port = DEFAULT_PORT
-        argv = ['--host', host, '--port', str(port), transport.base]
+        argv = ['--host', host, '--port', str(port), '--', transport.base]
+        if not transport.is_readonly():
+            argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
         app = BranchesFromTransportRoot(transport, config)
         app = HTTPExceptionHandler(app)
@@ -97,6 +99,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             def run(self, *args, **kw):
                 if 'http' in kw:
                     from bzrlib.transport import get_transport
+                    allow_writes = kw.get('allow_writes', False)
                     path = kw.get('directory', '.')
                     port = kw.get('port', DEFAULT_PORT)
                     # port might be an int already...
@@ -104,7 +107,10 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                         host, port = port.split(':')
                     else:
                         host = DEFAULT_HOST
-                    transport = get_transport(path)
+                    if allow_writes:
+                        transport = get_transport(path)
+                    else:
+                        transport = get_transport('readonly+' + path)
                     serve_http(transport, host, port)
                 else:
                     super(cmd_serve, self).run(*args, **kw)

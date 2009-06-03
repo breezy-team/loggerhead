@@ -35,6 +35,7 @@ def command_line_parser():
         log_folder=None,
         use_cdn=False,
         sql_dir=None,
+        allow_writes=False,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -64,6 +65,8 @@ def command_line_parser():
                       help="Serve YUI from Yahoo!'s CDN")
     parser.add_option("--cache-dir", dest="sql_dir",
                       help="The directory to place the SQL cache in")
+    parser.add_option('--allow-writes', action='store_true',
+                      help="Allow writing to the Bazaar server.")
     return parser
 
 
