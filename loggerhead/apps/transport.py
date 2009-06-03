@@ -73,9 +73,7 @@ class BranchesFromTransportRoot(object):
     def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
         self.transport = transport
-        self.readonly_transport = get_transport("readonly+" + 
-            self.transport.base)
-        wsgi_app = wsgi.SmartWSGIApp(self.readonly_transport)
+        wsgi_app = wsgi.SmartWSGIApp(self.transport)
         self.smart_server_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         self._config = config
 
