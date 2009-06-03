@@ -42,7 +42,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     # seems reasonable to have in-line here: bzrlib.commands and options are
     # normally loaded, and the rest of loggerhead won't be loaded until serve
     # --http is run.
-        
+
     # transport_server_registry was added in bzr 1.16. When we drop support for
     # older releases, we can remove the code to override cmd_serve.
 
@@ -53,14 +53,17 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
-    HELP = ('Loggerhead web-based code viewer and server. (default port: %d)' %
+    HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
             (DEFAULT_PORT,))
 
     def serve_http(transport, host=None, port=None, inet=None):
         # loggerhead internal code will try to 'import loggerhead', so
-        # let's put it on the path
-        import os.path, sys
-        sys.path.append(os.path.dirname(__file__))
+        # let's put it on the path if we can't find it in the existing path
+        try:
+            import loggerhead
+        except ImportError:
+            import os.path, sys
+            sys.path.append(os.path.dirname(__file__))
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
