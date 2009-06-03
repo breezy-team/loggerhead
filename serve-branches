@@ -51,7 +51,10 @@ def main(args):
 
     load_plugins()
 
-    transport = get_transport(path)
+    if config.get_option('allow_writes'):
+        transport = get_transport(path)
+    else:
+        transport = get_transport('readonly+' + path)
 
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
