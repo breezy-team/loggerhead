@@ -70,9 +70,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             host = DEFAULT_HOST
         if port is None:
             port = DEFAULT_PORT
-        allow_writes = not transport.is_readonly()
-        argv = ['--host', host, '--port', str(port),
-            '--allow-writes', allow_writes, transport.base]
+        argv = ['--host', host, '--port', str(port), '--', transport.base]
+        if not transport.is_readonly():
+            argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
         app = BranchesFromTransportRoot(transport, config)
         app = HTTPExceptionHandler(app)
