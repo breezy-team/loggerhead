@@ -122,6 +122,8 @@ dev [future]
 
     - Install loggerhead as a bzr plugin by default (Jelmer Vernooij)
 
+    - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
+
 1.10 [22Dec2008]
 ---------------
 
