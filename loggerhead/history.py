@@ -671,8 +671,6 @@ iso style "yyyy-mm-dd")
         Given a bzrlib Revision, return a processed "change" for use in
         templates.
         """
-        commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
-
         parents = [util.Container(revid=r,
                    revno=self.get_revno(r)) for r in revision.parent_ids]
 
@@ -685,7 +683,8 @@ iso style "yyyy-mm-dd")
 
         entry = {
             'revid': revision.revision_id,
-            'date': commit_time,
+            'date': datetime.datetime.fromtimestamp(revision.timestamp),
+            'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
             'authors': authors,
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,
