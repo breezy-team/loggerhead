@@ -15,6 +15,7 @@
     <updated tal:content="string: ${entry/utc_date/isoformat}Z">
       updated
     </updated>
+    <!-- TODO: The feed validator will generate warnings because this is URL-encoded -->
     <id tal:content="python:branch.url(['/revision', entry.revno])">
       ID
     </id>
