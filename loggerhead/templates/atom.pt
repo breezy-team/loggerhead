@@ -9,10 +9,10 @@
   <link rel="alternate" type="text/html" tal:attributes="href python:branch.url(['/changes'])" />
 
   <entry tal:repeat="entry changes">
-    <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
+    <title tal:content="string:${entry/revno}: ${entry/short_comment}">
       ${entry/revno}: ${entry/short_comment}
     </title>
-    <updated tal:content="string: ${entry/utc_date/isoformat}Z">
+    <updated tal:content="string:${entry/utc_date/isoformat}Z">
       updated
     </updated>
     <!-- TODO: The feed validator will generate warnings because this is URL-encoded -->
