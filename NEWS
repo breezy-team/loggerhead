@@ -124,6 +124,8 @@ dev [future]
 
     - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
 
+    - Make sure the Atom feeds (nearly) validate. (Matt Nordhoff, #247162)
+
 1.10 [22Dec2008]
 ---------------
 
