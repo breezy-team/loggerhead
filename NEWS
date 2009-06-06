@@ -4,6 +4,8 @@ What's changed in loggerhead?
 dev [future]
 ---------------
 
+    - Add bug links in revision informations (Alexandre Garnier, #314052)
+
     - Make sure that binary files aren't annotated. (Martin Albisetti,
       #258848)
 
@@ -109,6 +111,18 @@ dev [future]
 
     - Fix internal server errors when using start-loggerhead. (Matt
       Nordhoff, #375948)
+
+    - Fix annotating non-UTF-8 files when Pygments is disabled. (Matt
+      Nordhoff, #376957)
+
+    - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
+
+    - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
+      #380026)
+
+    - Install loggerhead as a bzr plugin by default (Jelmer Vernooij)
+
+    - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
 
 1.10 [22Dec2008]
 ---------------

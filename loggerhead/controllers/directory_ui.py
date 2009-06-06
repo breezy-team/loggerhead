@@ -20,7 +20,7 @@ import datetime
 import logging
 import stat
 
-from bzrlib import branch
+from bzrlib import branch, errors
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -73,7 +73,10 @@ class DirectoryUI(TemplatedBranchView):
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
             except:
-                if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                try:
+                    if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                        continue
+                except errors.NoSuchFile:
                     continue
                 b = None
             dirs.append(DirEntry(d, parity, b))

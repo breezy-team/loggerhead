@@ -31,13 +31,9 @@
 import bisect
 import datetime
 import logging
-import marshal
 import re
 import textwrap
 import threading
-import time
-import urllib
-from StringIO import StringIO
 
 from loggerhead import search
 from loggerhead import util
@@ -236,9 +232,6 @@ class History (object):
         parents of this revision.
     :ivar _rev_indices: A dictionary mapping each revision id to the index of
         the information about it in _rev_info.
-    :ivar _full_history: A list of all revision ids in the ancestry of the
-        branch, in merge-sorted order.  This is a bit silly, and shouldn't
-        really be stored on the instance...
     :ivar _revno_revid: A dictionary mapping stringified revnos to revision
         ids.
     """
@@ -271,19 +264,15 @@ class History (object):
             update_missed_caches()
 
         if self._rev_indices is not None:
-            self._full_history = []
             self._revno_revid = {}
             for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._revno_revid[revno_str] = revid
-                self._full_history.append(revid)
         else:
-            self._full_history = []
             self._revno_revid = {}
             self._rev_indices = {}
             for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
-                self._full_history.append(revid)
 
     def __init__(self, branch, whole_history_data_cache, file_cache=None,
                  revinfo_disk_cache=None, cache_key=None):
@@ -327,7 +316,7 @@ class History (object):
         revid in revid_list.
         """
         if revid_list is None:
-            revid_list = self._full_history
+            revid_list = [r[0][1] for r in self._rev_info]
         revid_set = set(revid_list)
         revid = start_revid
 
@@ -359,9 +348,9 @@ class History (object):
             w = self._branch.repository.weave_store.get_weave(
                     file_id, self._branch.repository.get_transaction())
             w_revids = w.versions()
-            revids = [r for r in self._full_history if r in w_revids]
+            revids = [r for r in self._rev_indices if r in w_revids]
         except AttributeError:
-            possible_keys = [(file_id, revid) for revid in self._full_history]
+            possible_keys = [(file_id, revid) for revid in self._rev_indices]
             get_parent_map = self._branch.repository.texts.get_parent_map
             # We chunk the requests as this works better with GraphIndex.
             # See _filter_revisions_touching_file_id in bzrlib/log.py
@@ -691,6 +680,7 @@ iso style "yyyy-mm-dd")
             'comment': revision.message,
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': revision.parent_ids,
+            'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
         }
         return util.Container(entry)
 

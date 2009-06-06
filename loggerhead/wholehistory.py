@@ -53,7 +53,6 @@ def compute_whole_history_data(branch):
          graph.iter_ancestry([last_revid]) if value is not None))
 
     _revision_graph = _strip_NULL_ghosts(parent_map)
-    _full_history = []
 
     _rev_info = []
     _rev_indices = {}
@@ -66,7 +65,6 @@ def compute_whole_history_data(branch):
 
     for info in _merge_sort:
         seq, revid, merge_depth, revno, end_of_merge = info
-        _full_history.append(revid)
         revno_str = '.'.join(str(n) for n in revno)
         parents = _revision_graph[revid]
         _rev_indices[revid] = len(_rev_info)
