@@ -1,6 +1,23 @@
+# Copyright (C) 2008, 2009 Canonical Ltd.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 """Serve branches at urls that mimic a transport's file system layout."""
 
 from bzrlib import branch, errors, lru_cache, urlutils
+from bzrlib.bzrdir import BzrDir
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -63,7 +80,10 @@ class BranchesFromTransportServer(object):
                 raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
-            return self.app_for_branch(b)(environ, start_response)
+            if b.get_config().get_user_option('http_serve') == 'False':
+                raise httpexceptions.HTTPNotFound()
+            else:
+                return self.app_for_branch(b)(environ, start_response)
 
 
 class BranchesFromTransportRoot(object):
@@ -72,6 +92,29 @@ class BranchesFromTransportRoot(object):
         self.graph_cache = lru_cache.LRUCache(10)
         self.transport = transport
         self._config = config
+
+    def get_local_path(self):
+        """Raise exception if it's not a local path, otherwise return it"""
+
+        # TODO: Use something here that uses the transport API 
+        # rather than relying on the local filesystem API.
+        try:
+            path = urlutils.local_path_from_url(self.transport.base)
+        except errors.InvalidURL:
+            raise httpexceptions.HTTPNotFound()
+        else:
+            return path
+
+    def check_is_a_branch(self, path_info):
+        """Check if it's a branch, and that it's allowed to be shown"""
+        try:
+            bzrdir = BzrDir.open_containing_from_transport(
+                       self.transport.clone(path_info))[0]
+            branch = bzrdir.open_branch()
+            if branch.get_config().get_user_option('http_serve') == 'False':
+                raise httpexceptions.HTTPNotFound()
+        except errors.NotBranchError:
+            return
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
@@ -82,15 +125,10 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            # TODO: Use something here that uses the transport API 
-            # rather than relying on the local filesystem API.
-            try:
-                path = urlutils.local_path_from_url(self.transport.base)
-            except errors.InvalidURL:
-                raise httpexceptions.HTTPNotFound()
-            else:
-                app = urlparser.make_static(None, path)
-                return app(environ, start_response)
+            self.check_is_a_branch(environ['PATH_INFO'])
+            path = self.get_local_path()
+            app = urlparser.make_static(None, path)
+            return app(environ, start_response)
         else:
             return BranchesFromTransportServer(
                 self.transport, self)(environ, start_response)
