@@ -127,6 +127,8 @@ dev [future]
 
     - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
 
+    - Bumped minimunm bzrlib version to 1.13 (Martin Albisetti)
+
 
 1.10 [22Dec2008]
 ---------------

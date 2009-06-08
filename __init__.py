@@ -36,7 +36,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [(1, 11, 0), (1, 13, 0), (1, 15, 0)])
+    require_any_api(bzrlib, [(1, 13, 0), (1, 15, 0)])
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
