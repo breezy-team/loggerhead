@@ -659,6 +659,12 @@ iso style "yyyy-mm-dd")
         except AttributeError:
             authors = [revision.get_apparent_author()]
 
+        tags = self._branch.tags.get_reverse_tag_dict()
+
+        revtags = None
+        if tags.has_key(revision.revision_id):
+          revtags = ', '.join(tags[revision.revision_id])
+
         entry = {
             'revid': revision.revision_id,
             'date': datetime.datetime.fromtimestamp(revision.timestamp),
@@ -670,6 +676,7 @@ iso style "yyyy-mm-dd")
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': revision.parent_ids,
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
+            'tags': revtags,
         }
         return util.Container(entry)
 

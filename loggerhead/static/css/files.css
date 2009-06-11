@@ -1,5 +1,5 @@
 /*Info Box*/
-.information, .committer, .timer, .mfrom, .mto, .revid, .bug {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags {
 	float:left;
 	margin:0px 10px 5px 0px;
 	padding:0px 0px 2px 18px;
@@ -7,7 +7,7 @@
 	color:#666;
 	background:url(../images/ico_description.gif) no-repeat top left;
 }
-.revid {
+.revid, .tags {
     float:left;
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
