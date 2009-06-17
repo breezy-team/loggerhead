@@ -128,6 +128,7 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif environ['PATH_INFO'].endswith("/.bzr/smart"):
+            self.check_is_a_branch(environ['PATH_INFO'])
             return self.smart_server_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
             self.check_is_a_branch(environ['PATH_INFO'])
