@@ -35,6 +35,6 @@ class AtomUI (TemplatedBranchView):
         headers['Content-Type'] = 'application/atom+xml'
         return {
             'changes': entries,
-            'updated': entries[0].date.isoformat() + 'Z',
+            'updated': entries[0].utc_date.isoformat(),
             'history': self._history,
         }

@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008, 2009 Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #

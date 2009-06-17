@@ -117,10 +117,19 @@ dev [future]
 
     - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
 
+    - Added the option to hide branches by setting http_serve = False
+      in locations.conf (Martin Albisetti)
+
     - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
       #380026)
 
     - Install loggerhead as a bzr plugin by default (Jelmer Vernooij)
+
+    - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
+
+    - Bumped minimunm bzrlib version to 1.13 (Martin Albisetti)
+
+    - Make sure the Atom feeds (nearly) validate. (Matt Nordhoff, #247162)
 
     - Support serving branches over HTTP using the smart server protocol. 
       (Jelmer Vernooij, #306853)
