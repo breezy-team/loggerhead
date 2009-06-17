@@ -39,9 +39,14 @@ ul#list-files li.desc {
     color:#666;
     background:url(../images/ico_description.gif) no-repeat top left;
 }
-.revid, .tags {
+.revid {
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
+}
+.tags {
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    background:url(../images/ico_tag.gif) no-repeat top left;
 }
 .committer, .mfrom, .mto {
     color:#000;

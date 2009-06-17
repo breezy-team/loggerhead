@@ -7,10 +7,16 @@
 	color:#666;
 	background:url(../images/ico_description.gif) no-repeat top left;
 }
-.revid, .tags {
+.revid {
     float:left;
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
+}
+.tags {
+    float:left;
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    background:url(../images/ico_tag.gif) no-repeat top left;
 }
 .comiter, .mfrom, .mto {
 	color:#000;
