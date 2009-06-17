@@ -1,7 +1,6 @@
 """Serve branches at urls that mimic a transport's file system layout."""
 
 from bzrlib import branch, errors, lru_cache, urlutils
-from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
 from paste.request import path_info_pop
