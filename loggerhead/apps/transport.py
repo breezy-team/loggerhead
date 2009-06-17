@@ -18,6 +18,7 @@
 
 from bzrlib import branch, errors, lru_cache, urlutils
 from bzrlib.bzrdir import BzrDir
+from bzrlib.transport.http import wsgi
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -91,6 +92,8 @@ class BranchesFromTransportRoot(object):
     def __init__(self, transport, config):
         self.graph_cache = lru_cache.LRUCache(10)
         self.transport = transport
+        wsgi_app = wsgi.SmartWSGIApp(self.transport)
+        self.smart_server_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         self._config = config
 
     def get_local_path(self):
@@ -124,6 +127,9 @@ class BranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'].endswith("/.bzr/smart"):
+            self.check_is_a_branch(environ['PATH_INFO'])
+            return self.smart_server_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
             self.check_is_a_branch(environ['PATH_INFO'])
             path = self.get_local_path()

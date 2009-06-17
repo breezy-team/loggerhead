@@ -131,6 +131,9 @@ dev [future]
 
     - Make sure the Atom feeds (nearly) validate. (Matt Nordhoff, #247162)
 
+    - Support serving branches over HTTP using the smart server protocol. 
+      (Jelmer Vernooij, #306853)
+
 1.10 [22Dec2008]
 ---------------
 
