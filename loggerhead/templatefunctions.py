@@ -168,8 +168,12 @@ def generator_string():
         import simpletal
         versions.append(('SimpleTAL', simpletal.__version__))
 
-        import pygments
-        versions.append(('Pygments', pygments.__version__))
+        try:
+            import pygments
+        except ImportError:
+            pass
+        else:
+            versions.append(('Pygments', pygments.__version__))
 
         try:
             import bzrlib.plugins.search
