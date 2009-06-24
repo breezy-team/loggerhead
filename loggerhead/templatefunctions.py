@@ -144,6 +144,9 @@ def version_info():
     if _cached_version_info is None:
         versions = []
 
+        # TODO: Errors -- e.g. from a missing/invalid __version__ attribute, or
+        # ValueError accessing Distribution.version -- should be non-fatal.
+
         versions.append(('Loggerhead', loggerhead.__version__))
 
         import sys
