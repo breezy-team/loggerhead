@@ -13,8 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+
 import cgi
 import os
+
+import pkg_resources
+
+import bzrlib
+
+import loggerhead
 from loggerhead.zptsupport import zpt
 
 
@@ -123,3 +130,55 @@ def revision_link(url, revno, path, frag=''):
     return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>'%(
         url(['/revision', revno, path]), frag, cgi.escape(path),
         cgi.escape(revno), cgi.escape(path))
+
+
+@templatefunc
+def loggerhead_version():
+    return loggerhead.__version__
+
+_cached_version_info = None
+
+@templatefunc
+def version_info():
+    global _cached_version_info
+    if _cached_version_info is None:
+        versions = []
+
+        versions.append(('Loggerhead', loggerhead.__version__))
+
+        import sys
+        python_version = bzrlib._format_version_tuple(sys.version_info)
+        versions.append(('Python', python_version))
+
+        versions.append(('Bazaar', bzrlib.__version__))
+
+        Paste = pkg_resources.get_distribution('Paste')
+        versions.append(('Paste', Paste.version))
+
+        try:
+            PasteDeploy = pkg_resources.get_distribution('PasteDeploy')
+        except pkg_resources.DistributionNotFound:
+            pass
+        else:
+            versions.append(('PasteDeploy', PasteDeploy.version))
+
+        import simpletal
+        versions.append(('SimpleTAL', simpletal.__version__))
+
+        try:
+            import simplejson
+        except ImportError:
+            pass
+        else:
+            versions.append(('simplejson', simplejson.__version__))
+
+        try:
+            Dozer = pkg_resources.get_distribution('Dozer')
+        except pkg_resources.DistributionNotFound:
+            pass
+        else:
+            versions.append(('Dozer', Dozer.version))
+
+        version_strings = ("%s/%s" % t for t in versions)
+        _cached_version_info = ' '.join(version_strings)
+    return _cached_version_info
