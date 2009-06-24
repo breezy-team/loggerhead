@@ -58,7 +58,6 @@ uihack = threading.local()
 class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
 
     def nested_progress_bar(self):
-        1/0
         if getattr(uihack, '_progress_bar_stack', None) is None:
             pbs = bzrlib.progress.ProgressBarStack(
                       klass=bzrlib.progress.DummyProgress)

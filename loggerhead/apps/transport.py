@@ -103,8 +103,7 @@ class BranchesFromTransportRoot(object):
         # rather than relying on the local filesystem API.
         try:
             path = urlutils.local_path_from_url(self.transport.base)
-        except errors.InvalidURL, e:
-            print e
+        except errors.InvalidURL:
             raise httpexceptions.HTTPNotFound()
         else:
             return path
@@ -132,17 +131,13 @@ class BranchesFromTransportRoot(object):
             self.check_is_a_branch(environ['PATH_INFO'])
             return self.smart_server_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            print 'hi'
             self.check_is_a_branch(environ['PATH_INFO'])
-            print 'ho'
             path = self.get_local_path()
-            print 'ha', path
             app = urlparser.make_static(None, path)
             return app(environ, start_response)
         else:
-            from bzrlib.transport import get_transport
             return BranchesFromTransportServer(
-                get_transport(self.transport.base), self)(environ, start_response)
+                self.transport, self)(environ, start_response)
 
 
 class UserBranchesFromTransportRoot(object):
