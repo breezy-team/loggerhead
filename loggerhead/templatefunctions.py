@@ -165,6 +165,9 @@ def version_info():
         import simpletal
         versions.append(('SimpleTAL', simpletal.__version__))
 
+        import pygments
+        versions.append(('Pygments', pygments.__version__))
+
         try:
             import simplejson
         except ImportError:
