@@ -16,8 +16,11 @@
 #
 """Serve branches at urls that mimic a transport's file system layout."""
 
+import threading
+
 from bzrlib import branch, errors, lru_cache, urlutils
 from bzrlib.bzrdir import BzrDir
+from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
 from paste.request import path_info_pop
@@ -87,13 +90,24 @@ class BranchesFromTransportServer(object):
                 return self.app_for_branch(b)(environ, start_response)
 
 
+_transport_store = threading.local()
+
+def get_transport_for_thread(base):
+    """ """
+    thread_transports = getattr(_transport_store, 'transports', None)
+    if thread_transports is None:
+        thread_transports = _transport_store.transports = {}
+    if base in thread_transports:
+        return thread_transports[base]
+    transport = get_transport(base)
+    return transport
+
+
 class BranchesFromTransportRoot(object):
 
-    def __init__(self, transport, config):
+    def __init__(self, base, config):
         self.graph_cache = lru_cache.LRUCache(10)
-        self.transport = transport
-        wsgi_app = wsgi.SmartWSGIApp(self.transport)
-        self.smart_server_app = wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
+        self.base = base
         self._config = config
 
     def get_local_path(self):
@@ -102,17 +116,18 @@ class BranchesFromTransportRoot(object):
         # TODO: Use something here that uses the transport API 
         # rather than relying on the local filesystem API.
         try:
-            path = urlutils.local_path_from_url(self.transport.base)
-        except errors.InvalidURL:
+            path = urlutils.local_path_from_url(get_transport(self.base).base)
+        except errors.InvalidURL, e:
+            print e
             raise httpexceptions.HTTPNotFound()
         else:
             return path
 
-    def check_is_a_branch(self, path_info):
+    def check_is_a_branch(self, transport, path_info):
         """Check if it's a branch, and that it's allowed to be shown"""
         try:
             bzrdir = BzrDir.open_containing_from_transport(
-                       self.transport.clone(path_info))[0]
+                       transport.clone(path_info))[0]
             branch = bzrdir.open_branch()
             if branch.get_config().get_user_option('http_serve') == 'False':
                 raise httpexceptions.HTTPNotFound()
@@ -120,6 +135,7 @@ class BranchesFromTransportRoot(object):
             return
 
     def __call__(self, environ, start_response):
+        transport = get_transport_for_thread(self.base)
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         if environ['PATH_INFO'].startswith('/static/'):
             segment = path_info_pop(environ)
@@ -128,23 +144,24 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         elif environ['PATH_INFO'].endswith("/.bzr/smart"):
-            self.check_is_a_branch(environ['PATH_INFO'])
-            return self.smart_server_app(environ, start_response)
+            self.check_is_a_branch(transport, environ['PATH_INFO'])
+            # smart_server_app = ...
+            return smart_server_app(environ, start_response)
         elif '/.bzr/' in environ['PATH_INFO']:
-            self.check_is_a_branch(environ['PATH_INFO'])
+            self.check_is_a_branch(transport, environ['PATH_INFO'])
             path = self.get_local_path()
             app = urlparser.make_static(None, path)
             return app(environ, start_response)
         else:
             return BranchesFromTransportServer(
-                self.transport, self)(environ, start_response)
+                transport, self)(environ, start_response)
 
 
 class UserBranchesFromTransportRoot(object):
 
-    def __init__(self, transport, config):
+    def __init__(self, base, config):
         self.graph_cache = lru_cache.LRUCache(10)
-        self.transport = transport
+        self.base = base
         self._config = config
         self.trunk_dir = config.get_option('trunk_dir')
 

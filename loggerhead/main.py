@@ -48,16 +48,14 @@ def main(args):
         config.print_help()
         sys.exit(1)
     elif config.arg_count == 1:
-        path = config.get_arg(0)
+        base = config.get_arg(0)
     else:
-        path = '.'
+        base = '.'
 
     load_plugins()
 
-    if config.get_option('allow_writes'):
-        transport = get_transport(path)
-    else:
-        transport = get_transport('readonly+' + path)
+    if not config.get_option('allow_writes'):
+        base = 'readonly+' + base
 
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
@@ -73,9 +71,9 @@ def main(args):
         if not config.get_option('trunk_dir'):
             print "You didn't specify a directory for the trunk directories."
             sys.exit(1)
-        app = UserBranchesFromTransportRoot(transport, config)
+        app = UserBranchesFromTransportRoot(base, config)
     else:
-        app = BranchesFromTransportRoot(transport, config)
+        app = BranchesFromTransportRoot(base, config)
 
     # setup_logging()
     logging.basicConfig()
