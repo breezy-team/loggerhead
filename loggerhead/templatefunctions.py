@@ -136,12 +136,12 @@ def revision_link(url, revno, path, frag=''):
 def loggerhead_version():
     return loggerhead.__version__
 
-_cached_version_info = None
+_cached_generator_string = None
 
 @templatefunc
-def version_info():
-    global _cached_version_info
-    if _cached_version_info is None:
+def generator_string():
+    global _cached_generator_string
+    if _cached_generator_string is None:
         versions = []
 
         # TODO: Errors -- e.g. from a missing/invalid __version__ attribute, or
@@ -207,5 +207,5 @@ def version_info():
             versions.append(('Dozer', Dozer.version))
 
         version_strings = ("%s/%s" % t for t in versions)
-        _cached_version_info = ' '.join(version_strings)
-    return _cached_version_info
+        _cached_generator_string = ' '.join(version_strings)
+    return _cached_generator_string
