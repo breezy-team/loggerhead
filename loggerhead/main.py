@@ -37,7 +37,7 @@ from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
 
 
-def main(args):
+def get_config_and_path(args):
     config = LoggerheadConfig()
 
     if config.get_option('show_version'):
@@ -51,9 +51,28 @@ def main(args):
         path = config.get_arg(0)
     else:
         path = '.'
+    return config, path
 
-    load_plugins()
 
+def setup_logging(config):
+    logging.basicConfig()
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logger = logging.getLogger('loggerhead')
+    if config.get_option('log_folder'):
+        logfile_path = os.path.join(
+            config.get_option('log_folder'), 'serve-branches.log')
+    else:
+        logfile_path = 'serve-branches.log'
+    logfile = logging.FileHandler(logfile_path, 'a')
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                  ' %(message)s')
+    logfile.setFormatter(formatter)
+    logfile.setLevel(logging.DEBUG)
+    logger.addHandler(logfile)
+    return logger
+
+
+def make_app_for_config_and_path(config, path):
     if config.get_option('allow_writes'):
         transport = get_transport(path)
     else:
@@ -77,23 +96,7 @@ def main(args):
     else:
         app = BranchesFromTransportRoot(transport, config)
 
-    # setup_logging()
-    logging.basicConfig()
-    logging.getLogger('').setLevel(logging.DEBUG)
-    logger = getattr(app, 'log', logging.getLogger('loggerhead'))
-    if config.get_option('log_folder'):
-        logfile_path = os.path.join(
-            config.get_option('log_folder'), 'serve-branches.log')
-    else:
-        logfile_path = 'serve-branches.log'
-    logfile = logging.FileHandler(logfile_path, 'a')
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
-                                  ' %(message)s')
-    logfile.setFormatter(formatter)
-    logfile.setLevel(logging.DEBUG)
-    logger.addHandler(logfile)
-
-    # setup_logging() #end
+    setup_logging(config)
 
     if config.get_option('profile'):
         from loggerhead.middleware.profile import LSProfMiddleware
@@ -129,7 +132,17 @@ def main(args):
 
     app = HTTPExceptionHandler(app)
     app = ErrorHandlerApp(app)
-    app = TransLogger(app, logger=logger)
+    app = TransLogger(app, logger=logging.getLogger('loggerhead'))
+
+    return app
+
+
+def main(args):
+    load_plugins()
+
+    config, path = get_config_and_path(args)
+
+    app = make_app_for_config_and_path(config, path)
 
     if not config.get_option('user_port'):
         port = '8080'
