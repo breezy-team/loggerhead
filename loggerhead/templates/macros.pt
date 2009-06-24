@@ -4,7 +4,7 @@
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
     <meta name="generator"
-          tal:attributes="content python:generator_string()" />
+          tal:attributes="content generator_string" />
 
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
