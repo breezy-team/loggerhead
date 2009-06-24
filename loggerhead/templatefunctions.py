@@ -176,12 +176,12 @@ def generator_string():
             versions.append(('Pygments', pygments.__version__))
 
         try:
-            import bzrlib.plugins.search
+            from bzrlib.plugins import search
         except ImportError:
             pass
         else:
             bzr_search_version = bzrlib._format_version_tuple(
-                bzrlib.plugins.search.version_info)
+                search.version_info)
             versions.append(('bzr-search', bzr_search_version))
 
         # TODO: On old Python versions, elementtree may be used.
