@@ -169,11 +169,32 @@ def version_info():
         versions.append(('Pygments', pygments.__version__))
 
         try:
+            import bzrlib.plugins.search
+        except ImportError:
+            pass
+        else:
+            bzr_search_version = bzrlib._format_version_tuple(
+                bzrlib.plugins.search.version_info)
+            versions.append(('bzr-search', bzr_search_version))
+
+        # TODO: On old Python versions, elementtree may be used.
+
+        import setuptools
+        versions.append(('setuptools', setuptools.__version__))
+
+        try:
             import simplejson
         except ImportError:
             pass
         else:
             versions.append(('simplejson', simplejson.__version__))
+
+        try:
+            guppy = pkg_resources.get_distribution('guppy')
+        except pkg_resources.DistributionNotFound:
+            pass
+        else:
+            versions.append(('Guppy', guppy.version))
 
         try:
             Dozer = pkg_resources.get_distribution('Dozer')
