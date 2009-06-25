@@ -143,7 +143,6 @@ class BranchesFromTransportRoot(object):
         self._config = config
 
     def __call__(self, environ, start_response):
-        transport = get_transport_for_thread(self.base)
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         if environ['PATH_INFO'].startswith('/static/'):
             segment = path_info_pop(environ)
@@ -152,6 +151,7 @@ class BranchesFromTransportRoot(object):
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
         else:
+            transport = get_transport_for_thread(self.base)
             return BranchesFromTransportServer(
                 transport, self)(environ, start_response)
 
@@ -167,7 +167,6 @@ class UserBranchesFromTransportRoot(object):
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         path_info = environ['PATH_INFO']
-        transport = get_transport_for_thread(self.base)
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
@@ -175,6 +174,7 @@ class UserBranchesFromTransportRoot(object):
         elif path_info == '/favicon.ico':
             return favicon_app(environ, start_response)
         else:
+            transport = get_transport_for_thread(self.base)
             # segments starting with ~ are user branches
             if path_info.startswith('/~'):
                 segment = path_info_pop(environ)
