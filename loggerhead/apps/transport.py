@@ -19,7 +19,6 @@
 import threading
 
 from bzrlib import branch, errors, lru_cache, urlutils
-from bzrlib.bzrdir import BzrDir
 from bzrlib.config import LocationConfig
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
@@ -30,7 +29,6 @@ from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
-from loggerhead.config import LoggerheadConfig
 from loggerhead.controllers.directory_ui import DirectoryUI
 
 
