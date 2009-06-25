@@ -74,14 +74,11 @@ class BranchesFromTransportServer(object):
                 new_name = '/' + segment
             return BranchesFromTransportServer(new_transport, self.root, new_name)
 
-    def app_for_bazaar_data(self, relpath, check_location_config=True):
+    def app_for_bazaar_data(self, relpath):
         if relpath == '/.bzr/smart':
             wsgi_app = wsgi.SmartWSGIApp(self.transport)
             return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         else:
-            config = LocationConfig(self.transport.base)
-            if config.get_user_option('http_serve') == 'False':
-                raise httpexceptions.HTTPNotFound()
             base = self.transport.base
             readonly_prefix = 'readonly+'
             if base.startswith(readonly_prefix):
@@ -93,21 +90,25 @@ class BranchesFromTransportServer(object):
             else:
                 return urlparser.make_static(None, path)
 
+    def check_serveable(self, config):
+        if config.get_user_option('http_serve') == 'False':
+            raise httpexceptions.HTTPNotFound()
+
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO']
         try:
             b = branch.Branch.open_from_transport(self.transport)
         except errors.NotBranchError:
             if path.startswith('/.bzr'):
+                self.check_serveable(LocationConfig(self.transport.base))
                 return self.app_for_bazaar_data(path)(environ, start_response)
             if not self.transport.listable() or not self.transport.has('.'):
                 raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
-            if b.get_config().get_user_option('http_serve') == 'False':
-                raise httpexceptions.HTTPNotFound()
-            elif path.startswith('/.bzr'):
-                return self.app_for_bazaar_data(path, False)(environ, start_response)
+            self.check_serveable(b.get_config())
+            if path.startswith('/.bzr'):
+                return self.app_for_bazaar_data(path)(environ, start_response)
             else:
                 return self.app_for_branch(b)(environ, start_response)
 
@@ -157,6 +158,7 @@ class UserBranchesFromTransportRoot(object):
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
         path_info = environ['PATH_INFO']
+        transport = get_transport_for_thread(self.base)
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
@@ -167,10 +169,11 @@ class UserBranchesFromTransportRoot(object):
             # segments starting with ~ are user branches
             if path_info.startswith('/~'):
                 segment = path_info_pop(environ)
-                new_transport = self.transport.clone(segment[1:])
+                new_transport = transport.clone(segment[1:])
                 return BranchesFromTransportServer(
-                    new_transport, self, segment)(environ, start_response)
+                    transport.clone(segment[1:]), self, segment)(
+                    environ, start_response)
             else:
-                new_transport = self.transport.clone(self.trunk_dir)
                 return BranchesFromTransportServer(
-                    new_transport, self)(environ, start_response)
+                    transport.clone(self.trunk_dir), self)(
+                    environ, start_response)
