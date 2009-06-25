@@ -131,8 +131,23 @@ dev [future]
 
     - Make sure the Atom feeds (nearly) validate. (Matt Nordhoff, #247162)
 
-    - Support serving branches over HTTP using the smart server protocol. 
+    - Support serving branches over HTTP using the smart server protocol.
       (Jelmer Vernooij, #306853)
+
+    - Serving branch data was broken when --allow-writes was *not*
+      passed. (Michael Hudson, #388730)
+
+    - http_serve config values are interpreted more forgivingly.
+      (Michael Hudson)
+
+    - When specifying a remote url to serve-branches, do not share
+      connections between threads. (Michael Hudson, #390972)
+
+    - http_serve values from locations.conf are now applied to
+      non-branch .bzr data (e.g shared repositories). (Michael Hudson)
+
+    - tags are now displayed. (Cris Boylan, Alexandre Garnier, Michael
+      Hudson, #246739)
 
     - Add a <meta> generator tag and display Loggerhead's version at the
       bottom of the page. (Matt Nordhoff, #370155)

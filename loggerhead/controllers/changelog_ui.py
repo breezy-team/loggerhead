@@ -89,9 +89,16 @@ class ChangeLogUI(TemplatedBranchView):
                 self._branch.is_root,
                 'changes'))
 
+        show_tag_col = False
+        for change in changes:
+            if change.tags is not None:
+                show_tag_col = True
+                break
+
         return {
             'branch': self._branch,
             'changes': changes,
+            'show_tag_col': show_tag_col,
             'data': simplejson.dumps(data),
             'util': util,
             'history': history,

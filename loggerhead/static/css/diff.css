@@ -31,7 +31,7 @@ ul#list-files li.desc {
     width:493px;
     margin:0px 0px 5px 0px;
 }
-.information, .committer, .timer, .mfrom, .mto, .revid, .bug {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags {
     clear:both;
     margin:0px;
     padding:0px 0px 2px 18px;
@@ -42,6 +42,11 @@ ul#list-files li.desc {
 .revid {
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
+}
+.tags {
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    background:url(../images/ico_tag.gif) no-repeat top left;
 }
 .committer, .mfrom, .mto {
     color:#000;
