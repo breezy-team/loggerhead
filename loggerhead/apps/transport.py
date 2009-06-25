@@ -85,6 +85,8 @@ class BranchesFromTransportServer(object):
             wsgi_app = wsgi.SmartWSGIApp(self.transport)
             return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         else:
+            # TODO: Use something here that uses the transport API
+            # rather than relying on the local filesystem API.
             base = self.transport.base
             readonly_prefix = 'readonly+'
             if base.startswith(readonly_prefix):
