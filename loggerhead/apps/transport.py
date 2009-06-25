@@ -20,6 +20,7 @@ import threading
 
 from bzrlib import branch, errors, lru_cache, urlutils
 from bzrlib.bzrdir import BzrDir
+from bzrlib.config import LocationConfig
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
@@ -76,16 +77,35 @@ class BranchesFromTransportServer(object):
                 new_name = '/' + segment
             return BranchesFromTransportServer(new_transport, self.root, new_name)
 
+    def app_for_bazaar_data(self, relpath, check_location_config=True):
+        if relpath == '/.bzr/smart':
+            pass
+        else:
+            config = LocationConfig(self.transport.clone(relpath).base)
+            if config.get_user_option('http_serve') == 'False':
+                raise httpexceptions.HTTPNotFound()
+            try:
+                path = urlutils.local_path_from_url(self.transport.base)
+            except errors.InvalidURL, e:
+                raise httpexceptions.HTTPNotFound()
+            else:
+                return urlparser.make_static(None, path)
+
     def __call__(self, environ, start_response):
+        path = environ['PATH_INFO']
         try:
             b = branch.Branch.open_from_transport(self.transport)
         except errors.NotBranchError:
+            if path.startswith('/.bzr'):
+                return self.app_for_bazaar_data(path)(environ, start_response)
             if not self.transport.listable() or not self.transport.has('.'):
                 raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
             if b.get_config().get_user_option('http_serve') == 'False':
                 raise httpexceptions.HTTPNotFound()
+            elif path.startswith('/.bzr'):
+                return self.app_for_bazaar_data(path, False)(environ, start_response)
             else:
                 return self.app_for_branch(b)(environ, start_response)
 
@@ -110,30 +130,6 @@ class BranchesFromTransportRoot(object):
         self.base = base
         self._config = config
 
-    def get_local_path(self):
-        """Raise exception if it's not a local path, otherwise return it"""
-
-        # TODO: Use something here that uses the transport API 
-        # rather than relying on the local filesystem API.
-        try:
-            path = urlutils.local_path_from_url(get_transport(self.base).base)
-        except errors.InvalidURL, e:
-            print e
-            raise httpexceptions.HTTPNotFound()
-        else:
-            return path
-
-    def check_is_a_branch(self, transport, path_info):
-        """Check if it's a branch, and that it's allowed to be shown"""
-        try:
-            bzrdir = BzrDir.open_containing_from_transport(
-                       transport.clone(path_info))[0]
-            branch = bzrdir.open_branch()
-            if branch.get_config().get_user_option('http_serve') == 'False':
-                raise httpexceptions.HTTPNotFound()
-        except errors.NotBranchError:
-            return
-
     def __call__(self, environ, start_response):
         transport = get_transport_for_thread(self.base)
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
@@ -147,11 +143,6 @@ class BranchesFromTransportRoot(object):
             self.check_is_a_branch(transport, environ['PATH_INFO'])
             # smart_server_app = ...
             return smart_server_app(environ, start_response)
-        elif '/.bzr/' in environ['PATH_INFO']:
-            self.check_is_a_branch(transport, environ['PATH_INFO'])
-            path = self.get_local_path()
-            app = urlparser.make_static(None, path)
-            return app(environ, start_response)
         else:
             return BranchesFromTransportServer(
                 transport, self)(environ, start_response)
