@@ -73,7 +73,7 @@
           <td class="expandcell show_if_js">&nbsp;</td>
           <td class="summarycell">Summary</td>
           <td class="authorcell">Authors</td>
-          <td class="tagscell">Tags</td>
+          <td tal:condition="show_tag_col" class="tagscell">Tags</td>
           <td class="datecell">Date</td>
           <td class="diffcell">Diff</td>
           <td class="downloadcell">Files</td>
@@ -112,7 +112,7 @@
             </td>
             <td tal:content="python:util.trunc(util.hide_email(entry.authors[0]), 20)"
                 class="autcell"></td>
-            <td tal:content="string:${entry/tags}"
+            <td tal:condition="show_tag_col" tal:content="string:${entry/tags}"
                 class="tagcell"></td>
             <td class="date">
               <span tal:attributes="title python:util.date_time(entry.date)"
