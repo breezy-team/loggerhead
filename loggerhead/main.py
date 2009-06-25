@@ -37,7 +37,7 @@ from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
 
 
-def main(args):
+def get_config_and_path(args):
     config = LoggerheadConfig()
 
     if config.get_option('show_version'):
@@ -57,6 +57,28 @@ def main(args):
     if not config.get_option('allow_writes'):
         base = 'readonly+' + base
 
+    return config, base
+
+
+def setup_logging(config):
+    logging.basicConfig()
+    logging.getLogger('').setLevel(logging.DEBUG)
+    logger = logging.getLogger('loggerhead')
+    if config.get_option('log_folder'):
+        logfile_path = os.path.join(
+            config.get_option('log_folder'), 'serve-branches.log')
+    else:
+        logfile_path = 'serve-branches.log'
+    logfile = logging.FileHandler(logfile_path, 'a')
+    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                  ' %(message)s')
+    logfile.setFormatter(formatter)
+    logfile.setLevel(logging.DEBUG)
+    logger.addHandler(logfile)
+    return logger
+
+
+def make_app_for_config_and_path(config, base):
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
         sys.exit(1)
@@ -75,23 +97,7 @@ def main(args):
     else:
         app = BranchesFromTransportRoot(base, config)
 
-    # setup_logging()
-    logging.basicConfig()
-    logging.getLogger('').setLevel(logging.DEBUG)
-    logger = getattr(app, 'log', logging.getLogger('loggerhead'))
-    if config.get_option('log_folder'):
-        logfile_path = os.path.join(
-            config.get_option('log_folder'), 'serve-branches.log')
-    else:
-        logfile_path = 'serve-branches.log'
-    logfile = logging.FileHandler(logfile_path, 'a')
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
-                                  ' %(message)s')
-    logfile.setFormatter(formatter)
-    logfile.setLevel(logging.DEBUG)
-    logger.addHandler(logfile)
-
-    # setup_logging() #end
+    setup_logging(config)
 
     if config.get_option('profile'):
         from loggerhead.middleware.profile import LSProfMiddleware
@@ -127,7 +133,17 @@ def main(args):
 
     app = HTTPExceptionHandler(app)
     app = ErrorHandlerApp(app)
-    app = TransLogger(app, logger=logger)
+    app = TransLogger(app, logger=logging.getLogger('loggerhead'))
+
+    return app
+
+
+def main(args):
+    load_plugins()
+
+    config, path = get_config_and_path(args)
+
+    app = make_app_for_config_and_path(config, path)
 
     if not config.get_option('user_port'):
         port = '8080'
