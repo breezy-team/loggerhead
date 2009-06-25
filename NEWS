@@ -146,6 +146,9 @@ dev [future]
     - http_serve values from locations.conf are now applied to
       non-branch .bzr data (e.g shared repositories). (Michael Hudson)
 
+    - tags are now displayed. (Cris Boylan, Alexandre Garnier, Michael
+      Hudson, #246739)
+
 1.10 [22Dec2008]
 ---------------
 

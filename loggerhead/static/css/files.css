@@ -1,5 +1,5 @@
 /*Info Box*/
-.information, .committer, .timer, .mfrom, .mto, .revid, .bug {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags {
 	float:left;
 	margin:0px 10px 5px 0px;
 	padding:0px 0px 2px 18px;
@@ -11,6 +11,12 @@
     float:left;
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
+}
+.tags {
+    float:left;
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    background:url(../images/ico_tag.gif) no-repeat top left;
 }
 .comiter, .mfrom, .mto {
 	color:#000;
