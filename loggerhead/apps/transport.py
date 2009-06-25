@@ -100,7 +100,7 @@ class BranchesFromTransportServer(object):
         value = config.get_user_option('http_serve')
         if value is None:
             return
-        elif _bools.get(value.lower(), True):
+        elif not _bools.get(value.lower(), True):
             raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):
