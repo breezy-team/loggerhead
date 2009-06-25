@@ -79,11 +79,15 @@ class BranchesFromTransportServer(object):
             wsgi_app = wsgi.SmartWSGIApp(self.transport)
             return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         else:
-            config = LocationConfig(self.transport.clone(relpath).base)
+            config = LocationConfig(self.transport.base)
             if config.get_user_option('http_serve') == 'False':
                 raise httpexceptions.HTTPNotFound()
+            base = self.transport.base
+            readonly_prefix = 'readonly+'
+            if base.startswith(readonly_prefix):
+                base = base[len(readonly_prefix):]
             try:
-                path = urlutils.local_path_from_url(self.transport.base)
+                path = urlutils.local_path_from_url(base)
             except errors.InvalidURL, e:
                 raise httpexceptions.HTTPNotFound()
             else:
