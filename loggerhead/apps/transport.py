@@ -31,6 +31,12 @@ from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
+_bools = {
+    'yes': True, 'no': False,
+    'on': True, 'off': False,
+    '1': True, '0': False,
+    'true': True, 'false': False,
+    }
 
 class BranchesFromTransportServer(object):
 
@@ -91,7 +97,10 @@ class BranchesFromTransportServer(object):
                 return urlparser.make_static(None, path)
 
     def check_serveable(self, config):
-        if config.get_user_option('http_serve') == 'False':
+        value = config.get_user_option('http_serve')
+        if value is None:
+            return
+        elif _bools.get(value.lower(), True):
             raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):
