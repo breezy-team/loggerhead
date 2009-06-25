@@ -66,9 +66,8 @@ class BranchesFromTransportServer(object):
                 name = self.name
             else:
                 name = '/'
-            return DirectoryUI(environ['loggerhead.static.url'],
-                               self.transport,
-                               name)
+            return DirectoryUI(
+                environ['loggerhead.static.url'], self.transport, name)
         else:
             new_transport = self.transport.clone(segment)
             if self.name:
@@ -79,7 +78,8 @@ class BranchesFromTransportServer(object):
 
     def app_for_bazaar_data(self, relpath, check_location_config=True):
         if relpath == '/.bzr/smart':
-            pass
+            wsgi_app = wsgi.SmartWSGIApp(self.transport)
+            return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
         else:
             config = LocationConfig(self.transport.clone(relpath).base)
             if config.get_user_option('http_serve') == 'False':
@@ -139,10 +139,6 @@ class BranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
-        elif environ['PATH_INFO'].endswith("/.bzr/smart"):
-            self.check_is_a_branch(transport, environ['PATH_INFO'])
-            # smart_server_app = ...
-            return smart_server_app(environ, start_response)
         else:
             return BranchesFromTransportServer(
                 transport, self)(environ, start_response)
