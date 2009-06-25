@@ -52,8 +52,6 @@ def get_config_and_path(args):
     else:
         base = '.'
 
-    load_plugins()
-
     if not config.get_option('allow_writes'):
         base = 'readonly+' + base
 
