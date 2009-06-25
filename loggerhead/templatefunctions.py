@@ -197,13 +197,6 @@ def generator_string():
             versions.append(('simplejson', simplejson.__version__))
 
         try:
-            guppy = pkg_resources.get_distribution('guppy')
-        except pkg_resources.DistributionNotFound:
-            pass
-        else:
-            versions.append(('Guppy', guppy.version))
-
-        try:
             Dozer = pkg_resources.get_distribution('Dozer')
         except pkg_resources.DistributionNotFound:
             pass
