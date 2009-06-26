@@ -37,7 +37,7 @@ from loggerhead.apps.error import ErrorHandlerApp
 
 
 def get_config_and_path(args):
-    config = LoggerheadConfig()
+    config = LoggerheadConfig(args)
 
     if config.get_option('show_version'):
         print "loggerhead %s" % __version__
