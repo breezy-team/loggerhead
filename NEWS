@@ -149,6 +149,10 @@ dev [future]
     - tags are now displayed. (Cris Boylan, Alexandre Garnier, Michael
       Hudson, #246739)
 
+    - Display Loggerhead's version number at the bottom of the page, and
+      add a <meta> generator tag also including the version numbers of
+      its dependencies. (Matt Nordhoff, #370155)
+
 1.10 [22Dec2008]
 ---------------
 
