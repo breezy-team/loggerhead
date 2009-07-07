@@ -649,11 +649,7 @@ iso style "yyyy-mm-dd")
         Given a bzrlib Revision, return a processed "change" for use in
         templates.
         """
-        parents = [util.Container(revid=r,
-                   revno=self.get_revno(r)) for r in revision.parent_ids]
-
         message, short_message = clean_message(revision.message)
-
 
         tags = self._branch.tags.get_reverse_tag_dict()
 
@@ -677,7 +673,6 @@ iso style "yyyy-mm-dd")
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
-        repo = self._branch.repository
         if entry.parents:
             old_revid = entry.parents[0].revid
         else:

@@ -19,7 +19,6 @@
 
 import logging
 import mimetypes
-import time
 import urllib
 
 from paste import httpexceptions
@@ -34,7 +33,6 @@ class DownloadUI (TemplatedBranchView):
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
-        z = time.time()
 
         h = self._history
 

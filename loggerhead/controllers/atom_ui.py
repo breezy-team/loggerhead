@@ -26,7 +26,6 @@ class AtomUI (TemplatedBranchView):
 
     def get_values(self, path, kwargs, headers):
         history = self._history
-        revid = self.get_revid()
         pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
         revid_list = history.get_file_view(history.last_revid, None)

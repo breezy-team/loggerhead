@@ -93,7 +93,7 @@ class BranchesFromTransportServer(object):
                 base = base[len(readonly_prefix):]
             try:
                 path = urlutils.local_path_from_url(base)
-            except errors.InvalidURL, e:
+            except errors.InvalidURL:
                 raise httpexceptions.HTTPNotFound()
             else:
                 return urlparser.make_static(None, path)
@@ -180,7 +180,6 @@ class UserBranchesFromTransportRoot(object):
             # segments starting with ~ are user branches
             if path_info.startswith('/~'):
                 segment = path_info_pop(environ)
-                new_transport = transport.clone(segment[1:])
                 return BranchesFromTransportServer(
                     transport.clone(segment[1:]), self, segment)(
                     environ, start_response)

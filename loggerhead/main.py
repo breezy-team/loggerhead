@@ -22,7 +22,6 @@ import os
 import sys
 
 from bzrlib.plugin import load_plugins
-from bzrlib.transport import get_transport
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
