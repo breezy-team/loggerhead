@@ -33,7 +33,6 @@ import datetime
 import logging
 import re
 import textwrap
-import threading
 
 from loggerhead import search
 from loggerhead import util
@@ -42,29 +41,8 @@ from loggerhead.wholehistory import compute_whole_history_data
 import bzrlib
 import bzrlib.branch
 import bzrlib.delta
-import bzrlib.diff
 import bzrlib.errors
-import bzrlib.lru_cache
-import bzrlib.progress
-import bzrlib.revision
-import bzrlib.textfile
-import bzrlib.tsort
-import bzrlib.ui
 
-# bzrlib's UIFactory is not thread-safe
-uihack = threading.local()
-
-
-class ThreadSafeUIFactory (bzrlib.ui.SilentUIFactory):
-
-    def nested_progress_bar(self):
-        if getattr(uihack, '_progress_bar_stack', None) is None:
-            pbs = bzrlib.progress.ProgressBarStack(
-                      klass=bzrlib.progress.DummyProgress)
-            uihack._progress_bar_stack = pbs
-        return uihack._progress_bar_stack.get_nested()
-
-bzrlib.ui.ui_factory = ThreadSafeUIFactory()
 
 def is_branch(folder):
     try:
