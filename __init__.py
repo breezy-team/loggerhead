@@ -36,53 +36,83 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [(1, 11, 0), (1, 13, 0)])
-
-    # TODO: This should provide a new type of server that can be used by bzr
-    # serve, maybe through a registry, rather than overriding the command.  Though
-    # maybe we should keep the wrapper to work with older bzr releases, at least
-    # for a bit.
+    require_any_api(bzrlib, [(1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0)])
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
     # normally loaded, and the rest of loggerhead won't be loaded until serve
     # --http is run.
-        
-    import bzrlib.builtins
-    from bzrlib.commands import get_cmd_object, register_command
-    from bzrlib.option import Option
 
-    _original_command = get_cmd_object('serve')
+    # transport_server_registry was added in bzr 1.16. When we drop support for
+    # older releases, we can remove the code to override cmd_serve.
 
+    try:
+        from bzrlib.transport import transport_server_registry
+    except ImportError:
+        transport_server_registry = None
+
+    DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
+    HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
+            (DEFAULT_PORT,))
 
-    class cmd_serve(bzrlib.builtins.cmd_serve):
-        __doc__ = _original_command.__doc__
+    def serve_http(transport, host=None, port=None, inet=None):
+        # loggerhead internal code will try to 'import loggerhead', so
+        # let's put it on the path if we can't find it in the existing path
+        try:
+            import loggerhead
+        except ImportError:
+            import os.path, sys
+            sys.path.append(os.path.dirname(__file__))
 
-        takes_options = _original_command.takes_options + [
-            Option('http',
-                help='Run an http (Loggerhead) server to browse code, '
-                    'by default on port %s.' % DEFAULT_PORT)]
+        from loggerhead.apps.transport import BranchesFromTransportRoot
+        from loggerhead.config import LoggerheadConfig
+        from paste.httpexceptions import HTTPExceptionHandler
+        from paste.httpserver import serve
+        if host is None:
+            host = DEFAULT_HOST
+        if port is None:
+            port = DEFAULT_PORT
+        argv = ['--host', host, '--port', str(port), '--', transport.base]
+        if not transport.is_readonly():
+            argv.insert(0, '--allow-writes')
+        config = LoggerheadConfig(argv)
+        app = BranchesFromTransportRoot(transport, config)
+        app = HTTPExceptionHandler(app)
+        serve(app, host=host, port=port)
 
-        def run(self, *args, **kw):
-            if 'http' in kw:
-                # loggerhead internal code will try to 'import loggerhead', so
-                # let's put it on the path
-                import os.path, sys
-                sys.path.append(os.path.dirname(__file__))
+    if transport_server_registry is not None:
+        transport_server_registry.register('http', serve_http, help=HELP)
+    else:
+        import bzrlib.builtins
+        from bzrlib.commands import get_cmd_object, register_command
+        from bzrlib.option import Option
 
-                from loggerhead.apps.filesystem import BranchesFromFileSystemRoot
-                from paste.httpexceptions import HTTPExceptionHandler
-                from paste.httpserver import serve
-                a = HTTPExceptionHandler(BranchesFromFileSystemRoot('.'))
-                port = kw.get('port', DEFAULT_PORT)
-                # port might be an int already...
-                if isinstance(port, basestring) and ':' in port:
-                    host, port = port.split(':')
+        _original_command = get_cmd_object('serve')
+
+        class cmd_serve(bzrlib.builtins.cmd_serve):
+            __doc__ = _original_command.__doc__
+
+            takes_options = _original_command.takes_options + [
+                Option('http', help=HELP)]
+
+            def run(self, *args, **kw):
+                if 'http' in kw:
+                    from bzrlib.transport import get_transport
+                    allow_writes = kw.get('allow_writes', False)
+                    path = kw.get('directory', '.')
+                    port = kw.get('port', DEFAULT_PORT)
+                    # port might be an int already...
+                    if isinstance(port, basestring) and ':' in port:
+                        host, port = port.split(':')
+                    else:
+                        host = DEFAULT_HOST
+                    if allow_writes:
+                        transport = get_transport(path)
+                    else:
+                        transport = get_transport('readonly+' + path)
+                    serve_http(transport, host, port)
                 else:
-                    host = '0.0.0.0'
-                serve(a, host=host, port=port)
-            else:
-                super(cmd_serve, self).run(*args, **kw)
+                    super(cmd_serve, self).run(*args, **kw)
 
-    register_command(cmd_serve)
+        register_command(cmd_serve)

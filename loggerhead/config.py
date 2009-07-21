@@ -1,8 +1,23 @@
+#
+# Copyright (C) 2008, 2009 Canonical Ltd
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
 '''Configuration tools for Loggerhead.'''
+
 from optparse import OptionParser
 import sys
 import tempfile
 
+from bzrlib import config
 
 _temporary_sql_dir = None
 
@@ -20,6 +35,7 @@ def command_line_parser():
         log_folder=None,
         use_cdn=False,
         sql_dir=None,
+        allow_writes=False,
         )
     parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
                       help="Serve user directories as ~user.")
@@ -32,7 +48,7 @@ def command_line_parser():
                       help="Host Loggerhead should listen on.")
     parser.add_option('--memory-profile', action='store_true',
                       dest='memory_profile',
-                      help='Profile the memory usage using heapy.')
+                      help='Profile the memory usage using Dozer.')
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
     parser.add_option("--profile", action="store_true", dest="profile",
@@ -45,19 +61,23 @@ def command_line_parser():
                       type=str, help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
-    parser.add_option('--use-cdn', action='store_true',
+    parser.add_option("--use-cdn", action="store_true", dest="use_cdn",
                       help="Serve YUI from Yahoo!'s CDN")
-    parser.add_option('--cache-dir', dest='sql_dir',
+    parser.add_option("--cache-dir", dest="sql_dir",
                       help="The directory to place the SQL cache in")
+    parser.add_option('--allow-writes', action='store_true',
+                      help="Allow writing to the Bazaar server.")
     return parser
 
 
 class LoggerheadConfig(object):
     '''A configuration object.'''
 
-    def __init__(self):
+    def __init__(self, argv=None):
+        if argv is None:
+            argv = sys.argv[1:]
         self._parser = command_line_parser()
-        self._options, self._args = self._parser.parse_args(sys.argv[1:])
+        self._options, self._args = self._parser.parse_args(argv)
 
         sql_dir = self.get_option('sql_dir')
         if sql_dir is None:
@@ -65,19 +85,27 @@ class LoggerheadConfig(object):
         self.SQL_DIR = sql_dir
 
     def get_option(self, option):
-        '''Get an option from the options dict.'''
-        return getattr(self._options, option)
+        """Get the value for the config option, either 
+           from ~/.bazaar/bazaar.conf or from the command line.
+           All loggerhead-specific settings start with 'http_'"""
+        global_config = config.GlobalConfig().get_user_option('http_'+option)
+        cmd_config = getattr(self._options, option)
+        if global_config is not None and (
+                cmd_config is None or cmd_config is False):
+            return global_config
+        else:
+            return cmd_config
 
     def get_arg(self, index):
-        '''Get an arg from the arg list.'''
+        """Get an arg from the arg list."""
         return self._args[index]
 
     def print_help(self):
-        '''Wrapper around OptionParser.print_help.'''
+        """Wrapper around OptionParser.print_help."""
         return self._parser.print_help()
 
     @property
     def arg_count(self):
-        '''Return the number of args from the option parser.'''
+        """Return the number of args from the option parser."""
         return len(self._args)
 

@@ -13,8 +13,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
+
 import cgi
 import os
+
+import pkg_resources
+
+import bzrlib
+
+import loggerhead
 from loggerhead.zptsupport import zpt
 
 
@@ -57,12 +64,12 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
 
 
 @templatefunc
-def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None):
+def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None, merged_in=None):
     from loggerhead import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
         file_changes=file_changes, currently_showing=currently_showing,
-        **templatefunctions)
+        merged_in=merged_in, **templatefunctions)
 
 
 @templatefunc
@@ -123,3 +130,79 @@ def revision_link(url, revno, path, frag=''):
     return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>'%(
         url(['/revision', revno, path]), frag, cgi.escape(path),
         cgi.escape(revno), cgi.escape(path))
+
+
+@templatefunc
+def loggerhead_version():
+    return loggerhead.__version__
+
+_cached_generator_string = None
+
+@templatefunc
+def generator_string():
+    global _cached_generator_string
+    if _cached_generator_string is None:
+        versions = []
+
+        # TODO: Errors -- e.g. from a missing/invalid __version__ attribute, or
+        # ValueError accessing Distribution.version -- should be non-fatal.
+
+        versions.append(('Loggerhead', loggerhead.__version__))
+
+        import sys
+        python_version = bzrlib._format_version_tuple(sys.version_info)
+        versions.append(('Python', python_version))
+
+        versions.append(('Bazaar', bzrlib.__version__))
+
+        Paste = pkg_resources.get_distribution('Paste')
+        versions.append(('Paste', Paste.version))
+
+        try:
+            PasteDeploy = pkg_resources.get_distribution('PasteDeploy')
+        except pkg_resources.DistributionNotFound:
+            pass
+        else:
+            versions.append(('PasteDeploy', PasteDeploy.version))
+
+        import simpletal
+        versions.append(('SimpleTAL', simpletal.__version__))
+
+        try:
+            import pygments
+        except ImportError:
+            pass
+        else:
+            versions.append(('Pygments', pygments.__version__))
+
+        try:
+            from bzrlib.plugins import search
+        except ImportError:
+            pass
+        else:
+            bzr_search_version = bzrlib._format_version_tuple(
+                search.version_info)
+            versions.append(('bzr-search', bzr_search_version))
+
+        # TODO: On old Python versions, elementtree may be used.
+
+        import setuptools
+        versions.append(('setuptools', setuptools.__version__))
+
+        try:
+            import simplejson
+        except ImportError:
+            pass
+        else:
+            versions.append(('simplejson', simplejson.__version__))
+
+        try:
+            Dozer = pkg_resources.get_distribution('Dozer')
+        except pkg_resources.DistributionNotFound:
+            pass
+        else:
+            versions.append(('Dozer', Dozer.version))
+
+        version_strings = ("%s/%s" % t for t in versions)
+        _cached_generator_string = ' '.join(version_strings)
+    return _cached_generator_string

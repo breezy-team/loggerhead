@@ -1,14 +1,11 @@
-'''Profiling middleware for paste.'''
-import cgi
-import logging
-import sys
+"""Profiling middleware for Paste."""
+
 import threading
 
 from bzrlib.lsprof import profile
-from guppy import hpy
 
 class LSProfMiddleware(object):
-    '''Paste middleware for profiling with lsprof.'''
+    """Paste middleware for profiling with lsprof."""
 
     def __init__(self, app, global_conf=None):
         self.app = app
@@ -33,5 +30,3 @@ class LSProfMiddleware(object):
             return ret
         finally:
             self.lock.release()
-
-

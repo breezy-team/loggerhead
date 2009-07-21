@@ -95,7 +95,7 @@
           </ul>
         </tal:we-are-comparing>
 
-        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, file_changes, specific_path)" />
+        <tal:revision-info replace="structure python:revisioninfo(url, branch, change, file_changes, specific_path, merged_in)" />
         <tal:specific-path condition="not:specific_path">
           <p class="expand show_if_js" id="expand_all"><a href="#">
               <img tal:attributes="src python:branch.static_url('/static/images/treeCollapsed.png')"

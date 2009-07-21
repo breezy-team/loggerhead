@@ -79,13 +79,10 @@ class FileDiffUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.filediff'
 
     def get_values(self, path, kwargs, headers):
-        history = self._history
-
         revid = urllib.unquote(self.args[0])
         compare_revid = urllib.unquote(self.args[1])
         file_id = urllib.unquote(self.args[2])
 
-        repository = self._history._branch.repository
         chunks = diff_chunks_for_file(
             self._history._branch.repository, file_id, compare_revid, revid)
 

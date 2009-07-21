@@ -3,6 +3,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" metal:define-macro="main">
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <meta name="generator"
+          tal:attributes="content generator_string" />
 
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
@@ -51,7 +53,7 @@
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Loggerhead is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
+        <p class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
       </div>
   </body>
 </html>

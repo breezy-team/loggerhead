@@ -108,20 +108,17 @@ class Project(object):
                 friendly_name = history.get_config().get_nickname()
                 if friendly_name is None:
                     friendly_name = view_name
+            branch_url = self._get_branch_url(view, view_config, view_name)
+            description = self._get_description(view, view_config, history)
             self.view_data_by_name[view_name] = {
                 'branch_path': folder,
-                'args': (view_name, view_config, self.graph_cache),
-                'description': self._get_description(view,
-                                                     view_config,
-                                                     history),
-                '_src_folder': folder,
-                '_view_config': view_config,
+                'config': view_config,
+                'description': description,
                 'friendly_name': friendly_name,
+                'graph_cache': self.graph_cache,
                 'name': view_name,
+                'served_url': branch_url,
                 }
-            branch_url = self._get_branch_url(view, view_config, view_name)
-            if branch_url is not None:
-                self.view_data_by_name[view_name]['branch_url'] = branch_url
             self.view_names.append(view_name)
         finally:
             b.unlock()
@@ -132,12 +129,13 @@ class Project(object):
             return None
         view_data = view_data.copy()
         branch_path = view_data.pop('branch_path')
-        args = view_data.pop('args')
+        description = view_data.pop('description')
+        name = view_data.pop('name')
         b = bzrlib.branch.Branch.open(branch_path)
         b.lock_read()
-        view = BranchWSGIApp(b, *args)
-        for k in view_data:
-            setattr(view, k, view_data[k])
+        view = BranchWSGIApp(b, **view_data)
+        view.description = description
+        view.name = name
         return view
 
     def call(self, environ, start_response):

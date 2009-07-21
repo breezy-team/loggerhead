@@ -1,7 +1,7 @@
 LOGGERHEAD
 ==========
 
-[ Version 1.6 for Bazaar 1.6 ]
+[ Version 1.10 for Bazaar 1.6 ]
 
 Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
@@ -63,31 +63,14 @@ containing this file) at ``~/.bazaar/plugins/loggerhead``.
 USING A CONFIG FILE
 -------------------
 
-Previous versions of Loggerhead read their configuration from a config
-file.  This mode of operation is still supported by the
-'start-loggerhead' script.  A 'loggerhead.conf.example' file is
-included in the source which has comments explaining the various
-options.
+To hide branches from being displayed, add to ``~/.bazaar/locations.conf``,
+under the branch's section:
 
-Loggerhead can then be started by running::
+    [/path/to/branch]
+    http_serve = False
 
-    $ ./start-loggerhead
 
-This will run loggerhead in the background, listening on port 8080 by
-default.
-
-To stop Loggerhead, run::
-
-    $ ./stop-loggerhead
-
-In the configuration file you can configure projects, and branches per
-project.  The idea is that you could be publishing several (possibly
-unrelated) projects through the same loggerhead instance, and several
-branches for the same project.  See the "loggerhead.conf.example" file
-included with the source.
-
-A debug and access log are stored in the logs/ folder, relative to
-the location of the start-loggerhead script.
+More configuration options to come soon.
 
 
 SERVING LOGGERHEAD FROM BEHIND APACHE
@@ -107,13 +90,14 @@ If Paste Deploy is installed, the 'serve-branches' script can be
 run behind a proxy at the root of a site, but if you're running it at
 some path into the site, you'll need to specify is using '--prefix=/some_path'.
 
-FILES CHANGED CACHE
--------------------
 
-To speed up the display of the changelog view for large trees,
-loggerhead can be configured to cache the files changes between
-revisions.  Set the 'cachepath' value in the config file.
+SEARCH
+------
 
+Search is currently supported by using the bzr-search plugin (available
+at: ``https://launchpad.net/bzr-search``
+You need to have the plugin installed and each branch indexed to allow
+searching on branches.
 
 SUPPORT
 -------

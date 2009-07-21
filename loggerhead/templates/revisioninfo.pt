@@ -12,7 +12,17 @@
                                href python:url(['/revision', merge_point.revno], clear=1)"
                tal:content="python:revno_with_nick(merge_point)"></a>
         </div>
+        <div class="mto" tal:condition="merged_in">
+          This revision was merged to the branch mainline in
+          <a tal:attributes="href python:url(['/revision', merged_in], clear=1)">revision
+            <tal:b content="merged_in"/></a>.
+        </div>
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
+        <div class="tags" tal:condition="change/tags" tal:content="string:Tags: ${change/tags}"></div>
+        <div class="clear"><!-- --></div>
+        <div class="bug" tal:repeat="bug change/bugs">
+            <a tal:attributes="href bug" tal:content="bug"></a>
+        </div>
         <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
     </div>
     <ul id="list-files" tal:condition="file_changes">

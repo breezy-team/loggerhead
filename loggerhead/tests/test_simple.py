@@ -1,8 +1,26 @@
+# Copyright (C) 2008, 2009 Canonical Ltd.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+
 import cgi
 import logging
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
+from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
@@ -103,6 +121,7 @@ class TestWithSimpleTree(BasicTests):
 
 
 class TestEmptyBranch(BasicTests):
+    """Test that an empty branch doesn't break"""
 
     def setUp(self):
         BasicTests.setUp(self)
@@ -118,3 +137,37 @@ class TestEmptyBranch(BasicTests):
         res = app.get('/files')
         res.mustcontain('No revisions!')
 
+
+class TestHiddenBranch(BasicTests):
+    """
+    Test that hidden branches aren't shown
+    FIXME: not tested that it doesn't show up on listings
+    """
+
+    def setUp(self):
+        BasicTests.setUp(self)
+        self.createBranch()
+        locations = config.locations_config_filename()
+        config.ensure_config_dir_exists()
+        open(locations, 'wb').write('[%s]\nhttp_serve = False'
+                                    % (self.tree.branch.base,))
+
+    def test_no_access(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes', status=404)
+
+
+#class TestGlobalConfig(BasicTests):
+#    """
+#    Test that global config settings are respected
+#    """
+
+#    def setUp(self):
+#        BasicTests.setUp(self)
+#        self.createBranch()
+#        config.GlobalConfig().set_user_option('http_version', 'True')
+
+#    def test_setting_respected(self):
+        #FIXME: Figure out how to test this properly
+#        app = self.setUpLoggerhead()
+#        res = app.get('/changes', status=200)
