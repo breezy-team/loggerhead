@@ -186,9 +186,6 @@ def generator_string():
 
         # TODO: On old Python versions, elementtree may be used.
 
-        import setuptools
-        versions.append(('setuptools', setuptools.__version__))
-
         try:
             import simplejson
         except ImportError:
