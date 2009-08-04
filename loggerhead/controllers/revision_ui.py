@@ -96,13 +96,13 @@ class RevisionUI(TemplatedBranchView):
         h.add_branch_nicks(change)
 
         if '.' in change.revno:
-            # Walk "down" though the merge-sorted graph until we find a
+            # Walk "up" though the merge-sorted graph until we find a
             # revision with merge depth 0: this is the revision that merged
             # this one to mainline.
             ri = self._history._rev_info
             i = self._history._rev_indices[change.revid]
             while ri[i][0][2] > 0:
-                i += 1
+                i -= 1
             merged_in = ri[i][0][3]
         else:
             merged_in = None
