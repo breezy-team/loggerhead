@@ -1,7 +1,7 @@
 What's changed in loggerhead?
 =============================
 
-dev [future]
+1.17 [20Aug2009]
 ---------------
 
     - Add bug links in revision informations (Alexandre Garnier, #314052)
@@ -152,6 +152,7 @@ dev [future]
     - Display Loggerhead's version number at the bottom of the page, and
       add a <meta> generator tag also including the version numbers of
       its dependencies. (Matt Nordhoff, #370155)
+
 
 1.10 [22Dec2008]
 ---------------

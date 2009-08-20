@@ -1,7 +1,7 @@
 LOGGERHEAD
 ==========
 
-[ Version 1.10 for Bazaar 1.6 ]
+[ Version 1.17 for Bazaar 1.17 ]
 
 Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the

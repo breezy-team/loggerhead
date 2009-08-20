@@ -30,7 +30,7 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
-version_info = (1, 11, 0)
+version_info = (1, 17, 0)
 
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
