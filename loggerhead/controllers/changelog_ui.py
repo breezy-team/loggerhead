@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008, 2009 Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -88,9 +89,16 @@ class ChangeLogUI(TemplatedBranchView):
                 self._branch.is_root,
                 'changes'))
 
+        show_tag_col = False
+        for change in changes:
+            if change.tags is not None:
+                show_tag_col = True
+                break
+
         return {
             'branch': self._branch,
             'changes': changes,
+            'show_tag_col': show_tag_col,
             'data': simplejson.dumps(data),
             'util': util,
             'history': history,

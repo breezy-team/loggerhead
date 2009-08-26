@@ -20,7 +20,7 @@ import datetime
 import logging
 import stat
 
-from bzrlib import branch
+from bzrlib import branch, errors
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -65,15 +65,21 @@ class DirectoryUI(TemplatedBranchView):
 
     def get_values(self, path, kwargs, response):
         listing = [d for d in self.transport.list_dir('.')
-                   if not d.startswith('.')
-                   and stat.S_ISDIR(self.transport.stat(d).st_mode)]
+                   if not d.startswith('.')]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
         for d in listing:
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
+                if b.get_config().get_user_option('http_serve') == 'False':
+                    continue
             except:
+                try:
+                    if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                        continue
+                except errors.NoSuchFile:
+                    continue
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity

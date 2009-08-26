@@ -384,8 +384,6 @@ def directory_breadcrumbs(path, is_root, view):
     """
     # Is our root directory itself a branch?
     if is_root:
-        if view == 'directory':
-            directory = 'files'
         breadcrumbs = [{
             'dir_name': path,
             'path': '',

@@ -8,10 +8,3 @@ include /usr/share/cdbs/1/class/python-distutils.mk
 clean::
 	-rm -rf build test*.tmp 
 	find . -name "*.pyc" -print0 | xargs -0 rm -f
-
-UPSTREAM_REVNO=$(shell dpkg-parsechangelog -l$(CURDIR)/debian/changelog | sed -n 's/^Version: \(.*:\|\)//p' | sed 's/^[0-9.]\+~bzr//' | sed 's/-[0-9.]\+$$//')
-
-get-orig-source:
-	bzr export -r$(UPSTREAM_REVNO) \
-		loggerhead_0.0.1~bzr$(UPSTREAM_REVNO).orig.tar.gz \
-		lp:loggerhead
