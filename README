@@ -40,7 +40,7 @@ You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
-To run loggerhead as a linux daemon: 
+To run loggerhead as a linux daemon:
 1) Copy loggerheadd to /etc/init.d
 2) Edit the file to configure where your loggerhead is installed, and which
    serve-branches options you would like.
