@@ -8,7 +8,7 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
   * Add ${misc:Depends} to please lintian.
   * Suggest recent version of paste, which doesn't expose internal port
     numbers in links. (Closes: #507000)
-  * Bump standards version to 3.8.1.
+  * Bump standards version to 3.8.3.
 
   [ James Westby ]
   * New upstream release.
@@ -17,7 +17,7 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
     python-pkg-resources to Depends and python-simplejson to
     Recommends due to dependency changes.
 
- -- James Westby <james.westby@ubuntu.com>  Wed, 26 Aug 2009 13:18:03 +0100
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 10 Sep 2009 14:58:19 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 
