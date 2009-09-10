@@ -8,10 +8,6 @@
 # use this if you want loggerhead to listen to another interface than 127.0.0.1
 # server.socket_host = 'your_hostname_or_ip'
 
-# where's bzrlib?
-# (you only need this if you don't install bzr.)
-#bzrpath = '/Users/robey/code/bzr/bzr'
-
 # if you want a special title on the front page, set it here:
 title = 'branches in loggerhead'
 

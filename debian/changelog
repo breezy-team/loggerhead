@@ -17,7 +17,10 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
     python-pkg-resources to Depends and python-simplejson to
     Recommends due to dependency changes.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Thu, 10 Sep 2009 14:58:19 +0200
+  [ Jelmer Vernooij ]
+  * Remove references to bzrlib installation from example config file.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 10 Sep 2009 15:06:01 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 
