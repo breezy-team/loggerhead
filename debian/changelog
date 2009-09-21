@@ -2,6 +2,8 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
 
   [ Roland Mas ]
   * Use the YUI library provided by libjs-yui. (Closes: #511286)
+  * Switch init script to use serve-branches rather than
+    start-loggerhead (closes: #511295).
 
   [ Jelmer Vernooij ]
   * Use my debian.org address in Uploaders field.
@@ -20,7 +22,7 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
   [ Jelmer Vernooij ]
   * Remove references to bzrlib installation from example config file.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Thu, 10 Sep 2009 15:06:01 +0200
+ -- Roland Mas <lolando@debian.org>  Mon, 21 Sep 2009 18:30:00 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 
