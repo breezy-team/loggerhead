@@ -30,7 +30,7 @@ SCRIPTNAME=/etc/init.d/$NAME
 #	Function that starts the daemon/service.
 #
 d_start() {
-    start-stop-daemon -p $PIDFILE -S --startas /usr/bin/serve-branches --chuid loggerhead --make-pidfile --background --chdir $served_branches -- --prefix=$prefix --log-folder /var/log/loggerhead 2>/dev/null
+    start-stop-daemon -p $PIDFILE -S --startas /usr/bin/serve-branches --chuid loggerhead --make-pidfile --background --chdir $served_branches -- --prefix=$prefix --port=$port --log-folder /var/log/loggerhead 2>/dev/null
 }
 
 #
