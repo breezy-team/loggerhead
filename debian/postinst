@@ -1,2 +1,5 @@
 #!/bin/sh -e
 #DEBHELPER#
+
+adduser --system --group --home / loggerhead > /dev/null 2>&1
+chown loggerhead /var/log/loggerhead

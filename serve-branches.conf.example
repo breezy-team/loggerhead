@@ -1,0 +1,3 @@
+served_branches=/srv/bzr
+prefix=/loggerhead
+port=8080
