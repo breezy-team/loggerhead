@@ -1,4 +1,7 @@
 loggerhead (1.17-1) UNRELEASED; urgency=low
+  
+  * New upstream release.  Loggerhead no longer flattens branch
+    hierarchies (closes: #507001).
 
   [ Roland Mas ]
   * Use the YUI library provided by libjs-yui. (Closes: #511286)
@@ -22,7 +25,7 @@ loggerhead (1.17-1) UNRELEASED; urgency=low
   [ Jelmer Vernooij ]
   * Remove references to bzrlib installation from example config file.
 
- -- Roland Mas <lolando@debian.org>  Mon, 21 Sep 2009 18:30:00 +0200
+ -- Roland Mas <lolando@debian.org>  Wed, 23 Sep 2009 09:46:16 +0200
 
 loggerhead (1.10-1) unstable; urgency=low
 
