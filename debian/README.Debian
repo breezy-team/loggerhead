@@ -8,3 +8,10 @@ your local environment.
 After this, you should be able to start loggerhead.
 
  -- Jelmer Vernooij <jelmer@samba.org>, Mo 25. Aug 15:06:25 CEST 2008 
+
+Note that the YUI currently shipped by Debian is version 2.x, and
+Loggerhead uses some features of YUI 3.  To use the YUI library hosted
+on the Yahoo content distribution network, you can temporarily add the
+--use-cdn command-line switch.
+
+ -- Roland Mas <lolando@debian.org>  Tue, 29 Sep 2009 15:28:19 +0200
