@@ -112,3 +112,13 @@ moderation.
 Bugs are tracked on Launchpad; start at:
 
     https://bugs.launchpad.net/loggerhead
+
+
+HACKING
+-------
+
+To run loggerhead tests, you will need the package python-nose,
+and run in the loggerhead directory:
+
+    nosetests
+
