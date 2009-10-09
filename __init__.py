@@ -79,7 +79,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
-        app = BranchesFromTransportRoot(transport, config)
+        app = BranchesFromTransportRoot(transport.base, config)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 
