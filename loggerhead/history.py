@@ -547,14 +547,14 @@ iso style "yyyy-mm-dd")
             revnol = revno.split(".")
             revnos = ".".join(revnol[:-2])
             revnolast = int(revnol[-1])
-            if revnos in d.keys():
+            if revnos in d:
                 m = d[revnos][0]
                 if revnolast < m:
                     d[revnos] = (revnolast, revid)
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [d[revnos][1] for revnos in d.keys()]
+        return [d[revnos][1] for revnos in d.iterkeys()]
 
     def add_branch_nicks(self, change):
         """
