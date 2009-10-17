@@ -73,7 +73,7 @@ class DiffUI(TemplatedBranchView):
         headers = [
             ('Content-Type', 'application/octet-stream'),
             ('Content-Length', len(content)),
-            ('Content-Disposition', 'attachment; filename=%s' % filename),
+            ('Content-Disposition', 'attachment; filename=%s' % (filename,)),
             ]
         start_response('200 OK', headers)
         return [content]

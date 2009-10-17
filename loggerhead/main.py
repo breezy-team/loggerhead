@@ -39,7 +39,7 @@ def get_config_and_path(args):
     config = LoggerheadConfig(args)
 
     if config.get_option('show_version'):
-        print "loggerhead %s" % __version__
+        print "loggerhead %s" % (__version__,)
         sys.exit(0)
 
     if config.arg_count > 1:

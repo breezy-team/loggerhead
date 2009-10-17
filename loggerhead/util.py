@@ -314,7 +314,7 @@ def human_size(size, min_divisor=0):
 
     out = str(base)
     if (base < 100) and (dot != 0):
-        out += '.%d' % (dot)
+        out += '.%d' % (dot,)
     if divisor == KILO:
         out += 'K'
     elif divisor == MEG:
@@ -461,7 +461,7 @@ def lsprof(f):
         now = time.time()
         msec = int(now * 1000) % 1000
         timestr = time.strftime('%Y%m%d%H%M%S',
-                                time.localtime(now)) + ('%03d' % msec)
+                                time.localtime(now)) + ('%03d' % (msec,))
         filename = f.__name__ + '-' + timestr + '.lsprof'
         cPickle.dump(stats, open(filename, 'w'), 2)
         return ret
@@ -533,7 +533,7 @@ class Reloader(object):
     _reloader_environ_key = 'PYTHON_RELOADER_SHOULD_RUN'
 
     @classmethod
-    def _turn_sigterm_into_systemexit(self):
+    def _turn_sigterm_into_systemexit(cls):
         """
         Attempts to turn a SIGTERM exception into a SystemExit exception.
         """
@@ -547,26 +547,26 @@ class Reloader(object):
         signal.signal(signal.SIGTERM, handle_term)
 
     @classmethod
-    def is_installed(self):
-        return os.environ.get(self._reloader_environ_key)
+    def is_installed(cls):
+        return os.environ.get(cls._reloader_environ_key)
 
     @classmethod
-    def install(self):
+    def install(cls):
         from paste import reloader
         reloader.install(int(1))
 
     @classmethod
-    def restart_with_reloader(self):
+    def restart_with_reloader(cls):
         """Based on restart_with_monitor from paste.script.serve."""
         print 'Starting subprocess with file monitor'
-        while 1:
+        while True:
             args = [sys.executable] + sys.argv
             new_environ = os.environ.copy()
-            new_environ[self._reloader_environ_key] = 'true'
+            new_environ[cls._reloader_environ_key] = 'true'
             proc = None
             try:
                 try:
-                    self._turn_sigterm_into_systemexit()
+                    cls._turn_sigterm_into_systemexit()
                     proc = subprocess.Popen(args, env=new_environ)
                     exit_code = proc.wait()
                     proc = None
@@ -575,7 +575,7 @@ class Reloader(object):
                     return 1
             finally:
                 if (proc is not None
-                    and hasattr(os, 'kill')):
+                    and getattr(os, 'kill', None) is not None):
                     import signal
                     try:
                         os.kill(proc.pid, signal.SIGTERM)

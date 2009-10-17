@@ -34,10 +34,10 @@ import logging
 import re
 import textwrap
 
-import bzrlib
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+import bzrlib.revision
 
 from loggerhead import search
 from loggerhead import util
@@ -104,6 +104,7 @@ class _RevListToTimestamps(object):
         return len(self.revid_list)
 
 class FileChangeReporter(object):
+
     def __init__(self, old_inv, new_inv):
         self.added = []
         self.modified = []
@@ -187,7 +188,7 @@ class RevInfoMemoryCache(object):
         self._cache[key] = (revid, data)
 
 
-class History (object):
+class History(object):
     """Decorate a branch to provide information for rendering.
 
     History objects are expected to be short lived -- when serving a request
@@ -261,7 +262,7 @@ class History (object):
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
@@ -691,8 +692,8 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename, file_id)),
         """
         repo = self._branch.repository
-        if bzrlib.revision.is_null(old_revid) or \
-               bzrlib.revision.is_null(new_revid):
+        if (bzrlib.revision.is_null(old_revid) or
+            bzrlib.revision.is_null(new_revid)):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:

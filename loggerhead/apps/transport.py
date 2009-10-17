@@ -54,10 +54,13 @@ class BranchesFromTransportServer(object):
             name = self.name
             is_root = False
         branch_app = BranchWSGIApp(
-            branch, name,
+            branch,
+            name,
             {'cachepath': self._config.SQL_DIR},
-            self.root.graph_cache, is_root=is_root,
-            use_cdn=self._config.get_option('use_cdn'))
+            self.root.graph_cache,
+            is_root=is_root,
+            use_cdn=self._config.get_option('use_cdn'),
+            )
         return branch_app.app
 
     def app_for_non_branch(self, environ):

@@ -63,7 +63,7 @@ class DownloadUI (TemplatedBranchView):
             ('Content-Type', mime_type),
             ('Content-Length', len(content)),
             ('Content-Disposition',
-             'attachment; filename*=utf-8\'\'%s' % encoded_filename),
+             'attachment; filename*=utf-8\'\'%s' % (encoded_filename,)),
             ]
         start_response('200 OK', headers)
         return [content]

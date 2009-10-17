@@ -48,7 +48,7 @@ def compute_whole_history_data(branch):
     last_revid = branch.last_revision()
 
     log = logging.getLogger('loggerhead.%s' %
-                            branch.get_config().get_nickname())
+                            (branch.get_config().get_nickname(),))
 
     graph = branch.repository.get_graph()
     parent_map = dict(((key, value) for key, value in

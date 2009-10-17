@@ -4,6 +4,7 @@ import threading
 
 from bzrlib.lsprof import profile
 
+
 class LSProfMiddleware(object):
     """Paste middleware for profiling with lsprof."""
 
