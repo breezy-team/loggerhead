@@ -46,7 +46,7 @@ To run loggerhead as a linux daemon:
    serve-branches options you would like.
 3) Register the service
    cd /etc/init.d
-   a) on upstart based systems like Ubuntu run: 
+   a) on upstart based systems like Ubuntu run:
       update-rc.d loggerheadd defaults
    b) on Sysvinit based systems like Centos or SuSE run:
       chkconfig --add loggerheadd

@@ -106,7 +106,7 @@ What's changed in loggerhead?
 
     - Fix a file descriptor leak (Matt Nordhoff, #370845)
 
-    - Use transport API internally, so it is possible to specify a remote 
+    - Use transport API internally, so it is possible to specify a remote
       URL to serve-branches. (Jelmer Vernooij, #371787)
 
     - Fix internal server errors when using start-loggerhead. (Matt
