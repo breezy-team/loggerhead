@@ -13,7 +13,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""A script for starting the loggerhead process."""
+"""
+WARNING! This script has been deprecated and will go away soon!
+A script for starting the loggerhead process.
+"""
 
 
 import logging
@@ -36,6 +39,13 @@ from loggerhead.apps.error import ErrorHandlerApp
 
 
 def main():
+    sys.stderr.write('\n\n')
+    sys.stderr.write('WARNING!!! This script has been deprecated by '
+                     'serve-branches, and will be removed in the next '
+                     'release. Please migrate to serve-branches and report '
+                     'any missing features.\n')
+    sys.stderr.write('\n\n')
+
     home = os.path.realpath(os.path.dirname(__file__))
     default_pidfile = os.path.join(home, 'loggerhead.pid')
     default_configfile = os.path.join(home, 'loggerhead.conf')
@@ -92,7 +102,7 @@ def main():
     if not options.foreground:
         sys.stderr.write('\n')
         sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % options.pidfile)
+        sys.stderr.write('PID file: %s\n' % (options.pidfile,))
         sys.stderr.write('\n')
 
         daemon.daemonize(options.pidfile, home)

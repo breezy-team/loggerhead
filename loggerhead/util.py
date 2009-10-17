@@ -19,13 +19,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-try:
-    from xml.etree import ElementTree as ET
-except ImportError:
-    from elementtree import ElementTree as ET
-
-from simpletal.simpleTALUtils import HTMLStructureCleaner
-
 import base64
 import cgi
 import datetime
@@ -37,6 +30,13 @@ import time
 import sys
 import os
 import subprocess
+
+try:
+    from xml.etree import ElementTree as ET
+except ImportError:
+    from elementtree import ElementTree as ET
+
+from simpletal.simpleTALUtils import HTMLStructureCleaner
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -217,8 +217,6 @@ def fill_div(s):
 
     return: the same value recieved if not empty, and a '&nbsp;' if it is.
     """
-
-
     if s is None:
         return '&nbsp;'
     elif isinstance(s, int):
@@ -316,7 +314,7 @@ def human_size(size, min_divisor=0):
 
     out = str(base)
     if (base < 100) and (dot != 0):
-        out += '.%d' % (dot)
+        out += '.%d' % (dot,)
     if divisor == KILO:
         out += 'K'
     elif divisor == MEG:
@@ -384,8 +382,6 @@ def directory_breadcrumbs(path, is_root, view):
     """
     # Is our root directory itself a branch?
     if is_root:
-        if view == 'directory':
-            directory = 'files'
         breadcrumbs = [{
             'dir_name': path,
             'path': '',
@@ -465,7 +461,7 @@ def lsprof(f):
         now = time.time()
         msec = int(now * 1000) % 1000
         timestr = time.strftime('%Y%m%d%H%M%S',
-                                time.localtime(now)) + ('%03d' % msec)
+                                time.localtime(now)) + ('%03d' % (msec,))
         filename = f.__name__ + '-' + timestr + '.lsprof'
         cPickle.dump(stats, open(filename, 'w'), 2)
         return ret

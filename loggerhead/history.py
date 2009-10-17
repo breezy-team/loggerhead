@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2008  Canonical Ltd.
+# Copyright (C) 2008, 2009 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
@@ -31,38 +31,18 @@
 import bisect
 import datetime
 import logging
-import marshal
 import re
 import textwrap
-import threading
-from StringIO import StringIO
+
+import bzrlib.branch
+import bzrlib.delta
+import bzrlib.errors
+import bzrlib.revision
 
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
 
-import bzrlib.branch
-import bzrlib.delta
-import bzrlib.errors
-import bzrlib.lru_cache
-import bzrlib.progress
-import bzrlib.revision
-import bzrlib.ui
-
-# bzrlib's UIFactory is not thread-safe
-uihack = threading.local()
-
-
-class ThreadSafeUIFactory(bzrlib.ui.SilentUIFactory):
-
-    def nested_progress_bar(self):
-        if getattr(uihack, '_progress_bar_stack', None) is None:
-            pbs = bzrlib.progress.ProgressBarStack(
-                      klass=bzrlib.progress.DummyProgress)
-            uihack._progress_bar_stack = pbs
-        return uihack._progress_bar_stack.get_nested()
-
-bzrlib.ui.ui_factory = ThreadSafeUIFactory()
 
 def is_branch(folder):
     try:
@@ -104,9 +84,6 @@ def rich_filename(path, kind):
     if kind == 'symlink':
         path += '@'
     return path
-
-
-# from bzrlib
 
 
 class _RevListToTimestamps(object):
@@ -231,9 +208,6 @@ class History(object):
         parents of this revision.
     :ivar _rev_indices: A dictionary mapping each revision id to the index of
         the information about it in _rev_info.
-    :ivar _full_history: A list of all revision ids in the ancestry of the
-        branch, in merge-sorted order.  This is a bit silly, and shouldn't
-        really be stored on the instance...
     :ivar _revno_revid: A dictionary mapping stringified revnos to revision
         ids.
     """
@@ -266,19 +240,15 @@ class History(object):
             update_missed_caches()
 
         if self._rev_indices is not None:
-            self._full_history = []
             self._revno_revid = {}
             for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._revno_revid[revno_str] = revid
-                self._full_history.append(revid)
         else:
-            self._full_history = []
             self._revno_revid = {}
             self._rev_indices = {}
             for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
-                self._full_history.append(revid)
 
     def __init__(self, branch, whole_history_data_cache, file_cache=None,
                  revinfo_disk_cache=None, cache_key=None):
@@ -292,7 +262,7 @@ class History(object):
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
@@ -322,7 +292,7 @@ class History(object):
         revid in revid_list.
         """
         if revid_list is None:
-            revid_list = self._full_history
+            revid_list = [r[0][1] for r in self._rev_info]
         revid_set = set(revid_list)
         revid = start_revid
 
@@ -348,25 +318,17 @@ class History(object):
     def get_short_revision_history_by_fileid(self, file_id):
         # FIXME: would be awesome if we could get, for a folder, the list of
         # revisions where items within that folder changed.i
-        try:
-            # FIXME: Workaround for bzr versions prior to 1.6b3.
-            # Remove me eventually pretty please  :)
-            w = self._branch.repository.weave_store.get_weave(
-                    file_id, self._branch.repository.get_transaction())
-            w_revids = w.versions()
-            revids = [r for r in self._full_history if r in w_revids]
-        except AttributeError:
-            possible_keys = [(file_id, revid) for revid in self._full_history]
-            get_parent_map = self._branch.repository.texts.get_parent_map
-            # We chunk the requests as this works better with GraphIndex.
-            # See _filter_revisions_touching_file_id in bzrlib/log.py
-            # for more information.
-            revids = []
-            chunk_size = 1000
-            for start in xrange(0, len(possible_keys), chunk_size):
-                next_keys = possible_keys[start:start + chunk_size]
-                revids += [k[1] for k in get_parent_map(next_keys)]
-            del possible_keys, next_keys
+        possible_keys = [(file_id, revid) for revid in self._rev_indices]
+        get_parent_map = self._branch.repository.texts.get_parent_map
+        # We chunk the requests as this works better with GraphIndex.
+        # See _filter_revisions_touching_file_id in bzrlib/log.py
+        # for more information.
+        revids = []
+        chunk_size = 1000
+        for start in xrange(0, len(possible_keys), chunk_size):
+            next_keys = possible_keys[start:start + chunk_size]
+            revids += [k[1] for k in get_parent_map(next_keys)]
+        del possible_keys, next_keys
         return revids
 
     def get_revision_history_since(self, revid_list, date):
@@ -586,14 +548,14 @@ iso style "yyyy-mm-dd")
             revnol = revno.split(".")
             revnos = ".".join(revnol[:-2])
             revnolast = int(revnol[-1])
-            if revnos in d.keys():
+            if revnos in d:
                 m = d[revnos][0]
                 if revnolast < m:
                     d[revnos] = (revnolast, revid)
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [d[revnos][1] for revnos in d.keys()]
+        return [revid for (_, revid) in d.itervalues()]
 
     def add_branch_nicks(self, change):
         """
@@ -666,32 +628,30 @@ iso style "yyyy-mm-dd")
         Given a bzrlib Revision, return a processed "change" for use in
         templates.
         """
-        commit_time = datetime.datetime.fromtimestamp(revision.timestamp)
-
-        parents = [util.Container(revid=r,
-                   revno=self.get_revno(r)) for r in revision.parent_ids]
-
         message, short_message = clean_message(revision.message)
 
-        try:
-            authors = revision.get_apparent_authors()
-        except AttributeError:
-            authors = [revision.get_apparent_author()]
+        tags = self._branch.tags.get_reverse_tag_dict()
+
+        revtags = None
+        if tags.has_key(revision.revision_id):
+          revtags = ', '.join(tags[revision.revision_id])
 
         entry = {
             'revid': revision.revision_id,
-            'date': commit_time,
-            'authors': authors,
+            'date': datetime.datetime.fromtimestamp(revision.timestamp),
+            'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
+            'authors': revision.get_apparent_authors(),
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,
             'comment': revision.message,
             'comment_clean': [util.html_clean(s) for s in message],
             'parents': revision.parent_ids,
+            'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
+            'tags': revtags,
         }
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
-        repo = self._branch.repository
         if entry.parents:
             old_revid = entry.parents[0].revid
         else:

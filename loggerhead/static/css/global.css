@@ -230,12 +230,18 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .expandcell, .expcell {
 	width:28px;
 }
-.summarycell, .authorcell, .datecell, .timedate{
+.summarycell, .authorcell, .tagscell, .datecell, .timedate{
   padding: 4px 8px;
   border: 1px solid #d2d2d2;
 }
 .icocell {
   width: 18px;
+}
+.authorcell, .autcell {
+  width: 240px;
+}
+.tagscell, .tagcell {
+  width: 240px;
 }
 .datecell, .date {
   width: 180px;
@@ -246,7 +252,7 @@ ul#submenuTabs li#last a, ul#submenuTabs li#last a:link, ul#submenuTabs li#last 
 .downloadcell, .downr {
 	width:47px;
 }
-.revnro, .expcell, .diffr, .summcell, .autcell, .icocell, .date, .downr, .allicones, .timedate2 {
+.revnro, .expcell, .diffr, .summcell, .autcell, .tagcell, .icocell, .date, .downr, .allicones, .timedate2 {
   border: 0;
   padding: 4px 4px;
   border-bottom:1px solid #d2d2d2;

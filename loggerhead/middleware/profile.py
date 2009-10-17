@@ -1,14 +1,12 @@
-'''Profiling middleware for paste.'''
+"""Profiling middleware for Paste."""
 
-import logging
-import sys
 import threading
 
 from bzrlib.lsprof import profile
 
 
 class LSProfMiddleware(object):
-    '''Paste middleware for profiling with lsprof.'''
+    """Paste middleware for profiling with lsprof."""
 
     def __init__(self, app, global_conf=None):
         self.app = app

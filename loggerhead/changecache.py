@@ -44,6 +44,7 @@ def safe_init_db(filename, init_sql):
     # To avoid races around creating the database, we create the db in
     # a temporary file and rename it into the ultimate location.
     fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(filename))
+    os.close(fd)
     con = dbapi2.connect(temp_path)
     cur = con.cursor()
     cur.execute(init_sql)

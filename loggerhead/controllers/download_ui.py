@@ -19,7 +19,6 @@
 
 import logging
 import mimetypes
-import time
 import urllib
 
 from paste import httpexceptions
@@ -34,7 +33,6 @@ class DownloadUI (TemplatedBranchView):
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
-        z = time.time()
 
         h = self._history
 
@@ -65,7 +63,7 @@ class DownloadUI (TemplatedBranchView):
             ('Content-Type', mime_type),
             ('Content-Length', len(content)),
             ('Content-Disposition',
-             'attachment; filename*=utf-8\'\'%s' % encoded_filename),
+             'attachment; filename*=utf-8\'\'%s' % (encoded_filename,)),
             ]
         start_response('200 OK', headers)
         return [content]

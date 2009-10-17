@@ -18,9 +18,9 @@
 
 import datetime
 import logging
-import os
+import stat
 
-from bzrlib import branch
+from bzrlib import branch, errors
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -48,7 +48,7 @@ class DirectoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.directory'
 
-    def __init__(self, static_url_base, path, name):
+    def __init__(self, static_url_base, transport, name):
 
         class _branch(object):
             context_url = 1
@@ -57,24 +57,29 @@ class DirectoryUI(TemplatedBranchView):
             def static_url(path):
                 return self._static_url_base + path
         self._branch = _branch
-        self._history_callable = lambda:None
-        self._path = path
+        self._history_callable = lambda: None
         self._name = name
         self._static_url_base = static_url_base
+        self.transport = transport
         self.log = logging.getLogger('')
 
     def get_values(self, path, kwargs, response):
-        listing = [d for d in os.listdir(self._path)
-                   if not d.startswith('.')
-                   and os.path.isdir(os.path.join(self._path, d))]
+        listing = [d for d in self.transport.list_dir('.')
+                   if not d.startswith('.')]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
         for d in listing:
-            p = os.path.join(self._path, d)
             try:
-                b = branch.Branch.open(p)
+                b = branch.Branch.open_from_transport(self.transport.clone(d))
+                if b.get_config().get_user_option('http_serve') == 'False':
+                    continue
             except:
+                try:
+                    if not stat.S_ISDIR(self.transport.stat(d).st_mode):
+                        continue
+                except errors.NoSuchFile:
+                    continue
                 b = None
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity

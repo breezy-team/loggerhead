@@ -18,8 +18,8 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-
 from distutils.core import setup
+
 import loggerhead
 
 
@@ -34,7 +34,9 @@ setup(
     packages = ["loggerhead",
                 "loggerhead/apps",
                 "loggerhead/controllers",
-                "loggerhead/templates"],
+                "loggerhead/templates",
+                "bzrlib.plugins.loggerhead"],
+    package_dir={'bzrlib.plugins.loggerhead':'.'},
     package_data = {"loggerhead": ["templates/*.pt",
                                    "static/css/*.css",
                                    "static/javascript/*.js",
