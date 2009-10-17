@@ -34,14 +34,14 @@ import logging
 import re
 import textwrap
 
-from loggerhead import search
-from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
-
 import bzrlib
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+
+from loggerhead import search
+from loggerhead import util
+from loggerhead.wholehistory import compute_whole_history_data
 
 
 def is_branch(folder):
@@ -554,7 +554,7 @@ iso style "yyyy-mm-dd")
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [d[revnos][1] for revnos in d.iterkeys()]
+        return [revid for (_, revid) in d.itervalues()]
 
     def add_branch_nicks(self, change):
         """

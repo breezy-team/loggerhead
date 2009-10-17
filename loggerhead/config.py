@@ -91,7 +91,7 @@ class LoggerheadConfig(object):
         global_config = config.GlobalConfig().get_user_option('http_'+option)
         cmd_config = getattr(self._options, option)
         if global_config is not None and (
-                cmd_config is None or cmd_config is False):
+            cmd_config is None or cmd_config is False):
             return global_config
         else:
             return cmd_config

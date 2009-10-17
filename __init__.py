@@ -59,6 +59,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             (DEFAULT_PORT,))
 
     def serve_http(transport, host=None, port=None, inet=None):
+        from paste.httpexceptions import HTTPExceptionHandler
+        from paste.httpserver import serve
+
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
@@ -69,8 +72,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
-        from paste.httpexceptions import HTTPExceptionHandler
-        from paste.httpserver import serve
+
         if host is None:
             host = DEFAULT_HOST
         if port is None:

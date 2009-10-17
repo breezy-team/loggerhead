@@ -19,13 +19,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-try:
-    from xml.etree import ElementTree as ET
-except ImportError:
-    from elementtree import ElementTree as ET
-
-from simpletal.simpleTALUtils import HTMLStructureCleaner
-
 import base64
 import cgi
 import datetime
@@ -37,6 +30,13 @@ import time
 import sys
 import os
 import subprocess
+
+try:
+    from xml.etree import ElementTree as ET
+except ImportError:
+    from elementtree import ElementTree as ET
+
+from simpletal.simpleTALUtils import HTMLStructureCleaner
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -129,7 +129,7 @@ def displaydate(date):
     return _wrap_with_date_time_title(date, _displaydate(date))
 
 
-class Container (object):
+class Container(object):
     """
     Convert a dict into an object with attributes.
     """
@@ -217,8 +217,6 @@ def fill_div(s):
 
     return: the same value recieved if not empty, and a '&nbsp;' if it is.
     """
-
-
     if s is None:
         return '&nbsp;'
     elif isinstance(s, int):
