@@ -99,6 +99,7 @@ at: ``https://launchpad.net/bzr-search``
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
 
+
 SUPPORT
 -------
 
@@ -121,4 +122,3 @@ To run loggerhead tests, you will need the package python-nose,
 and run in the loggerhead directory:
 
     nosetests
-
