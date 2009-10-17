@@ -27,7 +27,7 @@ class LSProfMiddleware(object):
         try:
             ret, stats = profile(self.__run_app, environ, start_response)
             self.__count += 1
-            stats.save("%d-stats.callgrind" % self.__count, format="callgrind")
+            stats.save("%d-stats.callgrind" % (self.__count,), format="callgrind")
             return ret
         finally:
             self.lock.release()

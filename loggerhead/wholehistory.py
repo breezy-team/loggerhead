@@ -80,6 +80,6 @@ def compute_whole_history_data(branch):
             if revid not in c[1]:
                 c[1] = c[1] + (revid,)
 
-    log.info('built revision graph cache: %r secs' % (time.time() - z))
+    log.info('built revision graph cache: %r secs' % (time.time() - z,))
 
     return (_rev_info, _rev_indices)

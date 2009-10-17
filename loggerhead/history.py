@@ -669,7 +669,7 @@ iso style "yyyy-mm-dd")
         entry.changes = changes
 
     def get_file(self, file_id, revid):
-        "returns (path, filename, data)"
+        """Returns (path, filename, file contents)"""
         inv = self.get_inventory(revid)
         inv_entry = inv[file_id]
         rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
@@ -704,8 +704,8 @@ iso style "yyyy-mm-dd")
         bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
         return util.Container(
-            added=sorted(reporter.added, key=lambda x:x.filename),
-            renamed=sorted(reporter.renamed, key=lambda x:x.new_filename),
-            removed=sorted(reporter.removed, key=lambda x:x.filename),
-            modified=sorted(reporter.modified, key=lambda x:x.filename),
-            text_changes=sorted(reporter.text_changes, key=lambda x:x.filename))
+            added=sorted(reporter.added, key=lambda x: x.filename),
+            renamed=sorted(reporter.renamed, key=lambda x: x.new_filename),
+            removed=sorted(reporter.removed, key=lambda x: x.filename),
+            modified=sorted(reporter.modified, key=lambda x: x.filename),
+            text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))
