@@ -84,7 +84,7 @@ class LoggerheadConfig(object):
         self.SQL_DIR = sql_dir
 
     def get_option(self, option):
-        """Get the value for the config option, either 
+        """Get the value for the config option, either
            from ~/.bazaar/bazaar.conf or from the command line.
            All loggerhead-specific settings start with 'http_'"""
         global_config = config.GlobalConfig().get_user_option('http_'+option)
