@@ -37,7 +37,7 @@ class DownloadUI (TemplatedBranchView):
         h = self._history
 
         args = []
-        while 1:
+        while True:
             arg = path_info_pop(environ)
             if arg is None:
                 break

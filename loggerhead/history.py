@@ -305,7 +305,7 @@ class History(object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
-        while 1:
+        while True:
             if bzrlib.revision.is_null(revid):
                 return
             if introduced_revisions(revid) & revid_set:
