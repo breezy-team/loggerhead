@@ -20,6 +20,7 @@ import threading
 
 from bzrlib import branch, errors, lru_cache, urlutils
 from bzrlib.config import LocationConfig
+from bzrlib.smart import request
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
@@ -82,8 +83,9 @@ class BranchesFromTransportServer(object):
 
     def app_for_bazaar_data(self, relpath):
         if relpath == '/.bzr/smart':
-            wsgi_app = wsgi.SmartWSGIApp(self.transport)
-            return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
+            root_transport = get_transport_for_thread(self.root.base)
+            wsgi_app = wsgi.SmartWSGIApp(root_transport)
+            return wsgi.RelpathSetter(wsgi_app, '', 'loggerhead.path_info')
         else:
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
@@ -134,6 +136,7 @@ def get_transport_for_thread(base):
     if base in thread_transports:
         return thread_transports[base]
     transport = get_transport(base)
+    thread_transports[base] = transport
     return transport
 
 
@@ -146,6 +149,7 @@ class BranchesFromTransportRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        environ['loggerhead.path_info'] = environ['PATH_INFO']
         if environ['PATH_INFO'].startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
@@ -168,6 +172,7 @@ class UserBranchesFromTransportRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        environ['loggerhead.path_info'] = environ['PATH_INFO']
         path_info = environ['PATH_INFO']
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
