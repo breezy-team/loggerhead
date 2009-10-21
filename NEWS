@@ -1,6 +1,12 @@
 What's changed in loggerhead?
 =============================
 
+dev [future]
+------------
+
+    - Fix .bzr/smart access to branches in shared repos. (Andrew Bennetts)
+
+
 1.17 [20Aug2009]
 ---------------
 
