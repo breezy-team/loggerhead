@@ -70,7 +70,7 @@ class TemplatedBranchView(object):
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
-        while 1:
+        while True:
             arg = path_info_pop(environ)
             if arg is None:
                 break

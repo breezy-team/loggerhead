@@ -11,7 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-'''Configuration tools for Loggerhead.'''
+"""Configuration tools for Loggerhead."""
 
 from optparse import OptionParser
 import sys
@@ -37,7 +37,7 @@ def command_line_parser():
         sql_dir=None,
         allow_writes=False,
         )
-    parser.add_option("--user-dirs", action="store_true", dest="user_dirs",
+    parser.add_option("--user-dirs", action="store_true",
                       help="Serve user directories as ~user.")
     parser.add_option("--trunk-dir", metavar="DIR",
                       help="The directory that contains the trunk branches.")
@@ -46,32 +46,31 @@ def command_line_parser():
                             "(defaults to 8080)."))
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
-    parser.add_option('--memory-profile', action='store_true',
-                      dest='memory_profile',
-                      help='Profile the memory usage using Dozer.')
+    parser.add_option("--memory-profile", action="store_true",
+                      help="Profile the memory usage using Dozer.")
     parser.add_option("--prefix", dest="user_prefix",
                       help="Specify host prefix.")
-    parser.add_option("--profile", action="store_true", dest="profile",
+    parser.add_option("--profile", action="store_true",
                       help="Generate callgrind profile data to "
                         "%d-stats.callgrind on each request.")
-    parser.add_option("--reload", action="store_true", dest="reload",
+    parser.add_option("--reload", action="store_true",
                       help="Restarts the application when changing python"
                            " files. Only used for development purposes.")
-    parser.add_option('--log-folder', dest="log_folder",
-                      type=str, help="The directory to place log files in.")
+    parser.add_option("--log-folder",
+                      help="The directory to place log files in.")
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     parser.add_option("--use-cdn", action="store_true", dest="use_cdn",
                       help="Serve YUI from Yahoo!'s CDN")
     parser.add_option("--cache-dir", dest="sql_dir",
                       help="The directory to place the SQL cache in")
-    parser.add_option('--allow-writes', action='store_true',
+    parser.add_option("--allow-writes", action="store_true",
                       help="Allow writing to the Bazaar server.")
     return parser
 
 
 class LoggerheadConfig(object):
-    '''A configuration object.'''
+    """A configuration object."""
 
     def __init__(self, argv=None):
         if argv is None:
@@ -86,12 +85,13 @@ class LoggerheadConfig(object):
 
     def get_option(self, option):
         """Get the value for the config option, either 
-           from ~/.bazaar/bazaar.conf or from the command line.
-           All loggerhead-specific settings start with 'http_'"""
+        from ~/.bazaar/bazaar.conf or from the command line.
+        All loggerhead-specific settings start with 'http_'
+        """
         global_config = config.GlobalConfig().get_user_option('http_'+option)
         cmd_config = getattr(self._options, option)
         if global_config is not None and (
-                cmd_config is None or cmd_config is False):
+            cmd_config is None or cmd_config is False):
             return global_config
         else:
             return cmd_config
@@ -108,4 +108,3 @@ class LoggerheadConfig(object):
     def arg_count(self):
         """Return the number of args from the option parser."""
         return len(self._args)
-

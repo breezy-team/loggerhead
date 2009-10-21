@@ -62,10 +62,10 @@ class AnnotateUI(TemplatedBranchView):
         try:
             bzrlib.textfile.check_text_lines(file_lines)
         except bzrlib.errors.BinaryFile:
-                # bail out; this isn't displayable text
-                yield util.Container(parity=0, lineno=1, status='same',
-                                     text='(This is a binary file.)',
-                                     change=util.Container())
+            # bail out; this isn't displayable text
+            yield util.Container(parity=0, lineno=1, status='same',
+                                 text='(This is a binary file.)',
+                                 change=util.Container())
         else:
             if highlight is not None:
                 hl_lines = highlight(file_name, file_text, encoding)
@@ -95,7 +95,7 @@ class AnnotateUI(TemplatedBranchView):
                     change=change, text=hl_lines[lineno - 1])
                 lineno += 1
 
-        self.log.debug('annotate: %r secs' % (time.time() - z))
+        self.log.debug('annotate: %r secs' % (time.time() - z,))
 
     def get_values(self, path, kwargs, headers):
         history = self._history

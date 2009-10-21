@@ -53,6 +53,6 @@ class ErrorHandlerApp(object):
 
 
 def errapp(environ, start_response):
-    '''Default (and trivial) error handling WSGI application.'''
+    """Default (and trivial) error handling WSGI application."""
     c = ErrorUI(environ['branch'], environ['exc_info'])
     return c(environ, start_response)

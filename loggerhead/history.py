@@ -34,14 +34,14 @@ import logging
 import re
 import textwrap
 
-from loggerhead import search
-from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
-
-import bzrlib
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+import bzrlib.revision
+
+from loggerhead import search
+from loggerhead import util
+from loggerhead.wholehistory import compute_whole_history_data
 
 
 def is_branch(folder):
@@ -104,6 +104,7 @@ class _RevListToTimestamps(object):
         return len(self.revid_list)
 
 class FileChangeReporter(object):
+
     def __init__(self, old_inv, new_inv):
         self.added = []
         self.modified = []
@@ -187,7 +188,7 @@ class RevInfoMemoryCache(object):
         self._cache[key] = (revid, data)
 
 
-class History (object):
+class History(object):
     """Decorate a branch to provide information for rendering.
 
     History objects are expected to be short lived -- when serving a request
@@ -261,7 +262,7 @@ class History (object):
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
@@ -304,7 +305,7 @@ class History (object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
-        while 1:
+        while True:
             if bzrlib.revision.is_null(revid):
                 return
             if introduced_revisions(revid) & revid_set:
@@ -554,7 +555,7 @@ iso style "yyyy-mm-dd")
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [d[revnos][1] for revnos in d.iterkeys()]
+        return [revid for (_, revid) in d.itervalues()]
 
     def add_branch_nicks(self, change):
         """
@@ -668,7 +669,7 @@ iso style "yyyy-mm-dd")
         entry.changes = changes
 
     def get_file(self, file_id, revid):
-        "returns (path, filename, data)"
+        """Returns (path, filename, file contents)"""
         inv = self.get_inventory(revid)
         inv_entry = inv[file_id]
         rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
@@ -691,8 +692,8 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename, file_id)),
         """
         repo = self._branch.repository
-        if bzrlib.revision.is_null(old_revid) or \
-               bzrlib.revision.is_null(new_revid):
+        if (bzrlib.revision.is_null(old_revid) or
+            bzrlib.revision.is_null(new_revid)):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
@@ -703,8 +704,8 @@ iso style "yyyy-mm-dd")
         bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
         return util.Container(
-            added=sorted(reporter.added, key=lambda x:x.filename),
-            renamed=sorted(reporter.renamed, key=lambda x:x.new_filename),
-            removed=sorted(reporter.removed, key=lambda x:x.filename),
-            modified=sorted(reporter.modified, key=lambda x:x.filename),
-            text_changes=sorted(reporter.text_changes, key=lambda x:x.filename))
+            added=sorted(reporter.added, key=lambda x: x.filename),
+            renamed=sorted(reporter.renamed, key=lambda x: x.new_filename),
+            removed=sorted(reporter.removed, key=lambda x: x.filename),
+            modified=sorted(reporter.modified, key=lambda x: x.filename),
+            text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))

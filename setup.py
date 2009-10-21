@@ -18,8 +18,8 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-
 from distutils.core import setup
+
 import loggerhead
 
 
