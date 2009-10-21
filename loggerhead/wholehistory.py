@@ -52,7 +52,7 @@ def compute_whole_history_data(branch):
 
     graph = branch.repository.get_graph()
     parent_map = dict((key, value) for key, value in
-         graph.iter_ancestry([last_revid]) if value is not None)
+        graph.iter_ancestry([last_revid]) if value is not None)
 
     _revision_graph = _strip_NULL_ghosts(parent_map)
 
