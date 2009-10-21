@@ -51,8 +51,8 @@ def compute_whole_history_data(branch):
                             (branch.get_config().get_nickname(),))
 
     graph = branch.repository.get_graph()
-    parent_map = dict(((key, value) for key, value in
-         graph.iter_ancestry([last_revid]) if value is not None))
+    parent_map = dict((key, value) for key, value in
+         graph.iter_ancestry([last_revid]) if value is not None)
 
     _revision_graph = _strip_NULL_ghosts(parent_map)
 
@@ -80,6 +80,6 @@ def compute_whole_history_data(branch):
             if revid not in c[1]:
                 c[1] = c[1] + (revid,)
 
-    log.info('built revision graph cache: %r secs' % (time.time() - z))
+    log.info('built revision graph cache: %r secs' % (time.time() - z,))
 
     return (_rev_info, _rev_indices)

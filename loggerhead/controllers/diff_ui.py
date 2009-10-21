@@ -38,7 +38,7 @@ class DiffUI(TemplatedBranchView):
         z = time.time()
 
         args = []
-        while 1:
+        while True:
             arg = path_info_pop(environ)
             if arg is None:
                 break
