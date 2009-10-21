@@ -85,8 +85,7 @@ class BranchesFromTransportServer(object):
         if relpath == '/.bzr/smart':
             root_transport = get_transport_for_thread(self.root.base)
             wsgi_app = wsgi.SmartWSGIApp(root_transport)
-            app = wsgi.RelpathSetter(wsgi_app, '', 'loggerhead.path_info')
-            return app
+            return wsgi.RelpathSetter(wsgi_app, '', 'loggerhead.path_info')
         else:
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
@@ -173,6 +172,7 @@ class UserBranchesFromTransportRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        environ['loggerhead.path_info'] = environ['PATH_INFO']
         path_info = environ['PATH_INFO']
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
