@@ -29,7 +29,7 @@ from paste import httpexceptions
 from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, static_app
+from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
 _bools = {
@@ -158,6 +158,8 @@ class BranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'] == '/robots.txt':
+            return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
             return BranchesFromTransportServer(
@@ -182,6 +184,8 @@ class UserBranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif path_info == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'] == '/robots.txt':
+            return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
             # segments starting with ~ are user branches

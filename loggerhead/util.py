@@ -587,3 +587,20 @@ class Reloader(object):
             if exit_code != 3:
                 return exit_code
             print '-'*20, 'Restarting', '-'*20
+
+
+def convert_file_errors(application):
+    """WSGI wrapper to convert some file errors to Paste exceptions"""
+    def new_application(environ, start_response):
+        try:
+            return application(environ, start_response)
+        except (IOError, OSError), e:
+            import errno
+            from paste import httpexceptions
+            if e.errno == errno.ENOENT:
+                raise httpexceptions.HTTPNotFound()
+            elif e.errno == errno.EACCES:
+                raise httpexceptions.HTTPForbidden()
+            else:
+                raise
+    return new_application
