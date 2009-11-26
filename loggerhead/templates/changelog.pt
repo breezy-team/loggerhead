@@ -95,12 +95,16 @@
             </td>
             <td class="summcell">
               <div class="short_description">
+                <img tal:condition="python:entry.parents[1:]"
+                     tal:attributes="src python:branch.static_url('/static/images/ico_mergefrom.gif')" />
                 <a tal:attributes="title python:'Show revision '+entry.revno;
                                    href  python:url(['/revision', entry.revno], clear=1);
                                    class string:link"
                    tal:content="entry/short_comment"></a>
               </div>
               <div class="long_description" style="display: none">
+                <img tal:condition="python:entry.parents[1:]"
+                     tal:attributes="src python:branch.static_url('/static/images/ico_mergefrom.gif')" />
                 <a tal:attributes="title python:'Show revision '+entry.revno;
                                    href  python:url(['/revision', entry.revno], clear=1);
                                    class string:link"
