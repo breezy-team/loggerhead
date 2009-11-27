@@ -22,10 +22,10 @@
           
           <tr class="blueRow0" tal:condition="python:name != '/'">
             <td class="icocell">
-                <a href=".."><img tal:attributes="src python:static_url('/static/images/ico_folder_up.gif')" /></a>
+                <a href="../"><img tal:attributes="src python:static_url('/static/images/ico_folder_up.gif')" /></a>
             </td>
             <td class="summcell" colspan="3">
-                <a href="..">..</a>
+                <a href="../">..</a>
             </td>
           </tr>
           <tal:block repeat="dir dirs">
@@ -50,12 +50,12 @@
             <tal:non-branch-row tal:condition="not:dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
                 <td class="icocell">
-                    <a tal:attributes="href string:${dir/dirname}">
+                    <a tal:attributes="href string:${dir/dirname}/">
                         <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" alt="Folder" />
                     </a>
                 </td>
                 <td class="autcell">
-                  <a tal:attributes="href string:${dir/dirname}" tal:content="dir/dirname" /></td>
+                  <a tal:attributes="href string:${dir/dirname}/" tal:content="dir/dirname" /></td>
                 <td class="date"></td>
                 <td class="date" tal:content="dir/last_change"></td>
               </tr>
