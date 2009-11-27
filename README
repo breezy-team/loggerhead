@@ -25,6 +25,9 @@ Loggerhead depends on:
 4) Paste Deploy  (optional, needed when proxying through Apache)
    On Ubuntu, `sudo apt-get install python-pastedeploy`
    or use `easy_install PasteDeploy`
+5) flup (optional, needed to use FastCGI, SCGI or AJP)
+   On Ubuntu, `sudo apt-get install python-flup`
+   or use `easy_install flup`
 
 Then simply run the 'serve-branches' with the branch you want to
 serve on the command line:
