@@ -7,6 +7,7 @@ dev [future]
     - Fix .bzr/smart access to branches in shared repos. (You also need
       a version of bzr with bug #348308 fixed.) (Andrew Bennetts)
 
+    - Support FastCGI, SCGI and AJP using flup. (Denis Martinez)
 
 1.17 [20Aug2009]
 ---------------
