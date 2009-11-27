@@ -46,6 +46,9 @@ def command_line_parser():
                             "(defaults to 8080)."))
     parser.add_option("--host", dest="user_host",
                       help="Host Loggerhead should listen on.")
+    parser.add_option("--protocol", dest="protocol",
+                      help=("Protocol to use: http, scgi, fcgi, ajp"
+                           "(defaults to http)."))
     parser.add_option("--memory-profile", action="store_true",
                       help="Profile the memory usage using Dozer.")
     parser.add_option("--prefix", dest="user_prefix",
