@@ -167,5 +167,5 @@ def main(args):
             from flup.server.ajp import WSGIServer
         else:
             print 'Unknown protocol: %s.' % (protocol)
-            sys.exit(0)
+            sys.exit(1)
         WSGIServer(app, bindAddress=(host, int(port))).run()
