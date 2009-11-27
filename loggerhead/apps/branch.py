@@ -91,7 +91,7 @@ class BranchWSGIApp(object):
         path_info = urllib.quote(
             unicode('/'.join(args)).encode('utf-8'), safe='/~:')
         if qs:
-            path_info += qs
+            path_info += '?' + qs
         return self._url_base + path_info
 
     def context_url(self, *args, **kw):
