@@ -20,6 +20,7 @@ import threading
 
 from bzrlib import branch, errors, lru_cache, urlutils
 from bzrlib.config import LocationConfig
+from bzrlib.smart import request
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
@@ -28,7 +29,7 @@ from paste import httpexceptions
 from paste import urlparser
 
 from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, static_app
+from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
 _bools = {
@@ -54,10 +55,13 @@ class BranchesFromTransportServer(object):
             name = self.name
             is_root = False
         branch_app = BranchWSGIApp(
-            branch, name,
+            branch,
+            name,
             {'cachepath': self._config.SQL_DIR},
-            self.root.graph_cache, is_root=is_root,
-            use_cdn=self._config.get_option('use_cdn'))
+            self.root.graph_cache,
+            is_root=is_root,
+            use_cdn=self._config.get_option('use_cdn'),
+            )
         return branch_app.app
 
     def app_for_non_branch(self, environ):
@@ -82,8 +86,9 @@ class BranchesFromTransportServer(object):
 
     def app_for_bazaar_data(self, relpath):
         if relpath == '/.bzr/smart':
-            wsgi_app = wsgi.SmartWSGIApp(self.transport)
-            return wsgi.RelpathSetter(wsgi_app, '', 'PATH_INFO')
+            root_transport = get_transport_for_thread(self.root.base)
+            wsgi_app = wsgi.SmartWSGIApp(root_transport)
+            return wsgi.RelpathSetter(wsgi_app, '', 'loggerhead.path_info')
         else:
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
@@ -127,13 +132,13 @@ class BranchesFromTransportServer(object):
 _transport_store = threading.local()
 
 def get_transport_for_thread(base):
-    """ """
     thread_transports = getattr(_transport_store, 'transports', None)
     if thread_transports is None:
         thread_transports = _transport_store.transports = {}
     if base in thread_transports:
         return thread_transports[base]
     transport = get_transport(base)
+    thread_transports[base] = transport
     return transport
 
 
@@ -146,12 +151,15 @@ class BranchesFromTransportRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        environ['loggerhead.path_info'] = environ['PATH_INFO']
         if environ['PATH_INFO'].startswith('/static/'):
             segment = path_info_pop(environ)
             assert segment == 'static'
             return static_app(environ, start_response)
         elif environ['PATH_INFO'] == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'] == '/robots.txt':
+            return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
             return BranchesFromTransportServer(
@@ -168,6 +176,7 @@ class UserBranchesFromTransportRoot(object):
 
     def __call__(self, environ, start_response):
         environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
+        environ['loggerhead.path_info'] = environ['PATH_INFO']
         path_info = environ['PATH_INFO']
         if path_info.startswith('/static/'):
             segment = path_info_pop(environ)
@@ -175,6 +184,8 @@ class UserBranchesFromTransportRoot(object):
             return static_app(environ, start_response)
         elif path_info == '/favicon.ico':
             return favicon_app(environ, start_response)
+        elif environ['PATH_INFO'] == '/robots.txt':
+            return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
             # segments starting with ~ are user branches

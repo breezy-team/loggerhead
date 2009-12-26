@@ -25,6 +25,9 @@ Loggerhead depends on:
 4) Paste Deploy  (optional, needed when proxying through Apache)
    On Ubuntu, `sudo apt-get install python-pastedeploy`
    or use `easy_install PasteDeploy`
+5) flup (optional, needed to use FastCGI, SCGI or AJP)
+   On Ubuntu, `sudo apt-get install python-flup`
+   or use `easy_install flup`
 
 Then simply run the 'serve-branches' with the branch you want to
 serve on the command line:
@@ -99,6 +102,7 @@ at: ``https://launchpad.net/bzr-search``
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
 
+
 SUPPORT
 -------
 
@@ -112,3 +116,12 @@ moderation.
 Bugs are tracked on Launchpad; start at:
 
     https://bugs.launchpad.net/loggerhead
+
+
+HACKING
+-------
+
+To run loggerhead tests, you will need the package python-nose,
+and run in the loggerhead directory:
+
+    nosetests
