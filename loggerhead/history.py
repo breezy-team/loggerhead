@@ -663,7 +663,8 @@ iso style "yyyy-mm-dd")
         else:
             foreign_revid = None
         if foreign_revid is not None:
-            entry["foreign"] = mapping.vcs.show_foreign_revid(foreign_revid)
+            entry["foreign_vcs"] = mapping.vcs.abbreviation
+            entry["foreign_revid"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
