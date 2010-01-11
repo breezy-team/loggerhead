@@ -37,6 +37,7 @@ import textwrap
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+import bzrlib.foreign
 import bzrlib.revision
 
 from loggerhead import search
@@ -649,6 +650,21 @@ iso style "yyyy-mm-dd")
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
             'tags': revtags,
         }
+        if isinstance(revision, bzrlib.foreign.ForeignRevision):
+            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
+        elif ":" in revision.revision_id:
+            try:
+                foreign_revid, mapping = \
+                    bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
+                        revision.revision_id)
+            except bzrlib.errors.InvalidRevisionId:
+                foreign_revid = None
+                mapping = None
+        else:
+            foreign_revid = None
+        if foreign_revid is not None:
+            entry["foreign_vcs"] = mapping.vcs.abbreviation
+            entry["foreign_revid"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):

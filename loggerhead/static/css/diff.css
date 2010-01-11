@@ -31,7 +31,7 @@ ul#list-files li.desc {
     width:493px;
     margin:0px 0px 5px 0px;
 }
-.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags, .foreign-svn, .foreign-git, .foreign-hg {
     clear:both;
     margin:0px;
     padding:0px 0px 2px 18px;

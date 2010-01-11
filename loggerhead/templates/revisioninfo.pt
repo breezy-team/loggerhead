@@ -18,6 +18,10 @@
             <tal:b content="merged_in"/></a>.
         </div>
         <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
+	<div tal:attributes="class string:foreign-${change/foreign_vcs}"
+	     tal:condition="change/foreign_vcs" 
+	     tal:repeat="revid_part python:change.foreign_revid.keys()"
+	     tal:content="python:'%s: %s' % (revid_part, change.foreign_revid[revid_part])"/>
         <div class="tags" tal:condition="change/tags" tal:content="string:Tags: ${change/tags}"></div>
         <div class="clear"><!-- --></div>
         <div class="bug" tal:repeat="bug change/bugs">
