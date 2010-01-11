@@ -3,17 +3,19 @@
   <title>
     bazaar changes for <tal:branch-name content="branch/friendly_name">branch name</tal:branch-name>
   </title>
-  <updated tal:content="updated">${updated}</updated>
+  <updated tal:content="string:${updated}Z">${updated}</updated>
   <id tal:content="python:branch.url(['/atom'])">url</id>
-  <link rel="self" tal:attributes="href python:branch.url([''])" />
+  <link rel="self" type="application/atom+xml" tal:attributes="href python:branch.url(['/atom'])" />
+  <link rel="alternate" type="text/html" tal:attributes="href python:branch.url(['/changes'])" />
 
   <entry tal:repeat="entry changes">
-    <title tal:content="string: ${entry/revno}: ${entry/short_comment}">
+    <title tal:content="string:${entry/revno}: ${entry/short_comment}">
       ${entry/revno}: ${entry/short_comment}
     </title>
-    <updated tal:content="entry/date/isoformat">
-    Z
+    <updated tal:content="string:${entry/utc_date/isoformat}Z">
+      updated
     </updated>
+    <!-- TODO: The feed validator will generate warnings because this is URL-encoded -->
     <id tal:content="python:branch.url(['/revision', entry.revno])">
       ID
     </id>
@@ -25,7 +27,7 @@
     <content type="text" tal:content="entry/comment">
       comment
     </content>
-    <link rel="alternate"
+    <link rel="alternate" type="text/html"
           tal:attributes="href python:branch.url(['/revision', entry.revno])" />
   </entry>
 </feed>

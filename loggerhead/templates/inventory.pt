@@ -90,7 +90,7 @@
             <!-- Show this if it's a symlink -->
             <tr tal:attributes="class string:blueRow${repeat/file/even}" tal:condition="python:file.kind=='symlink'">
                 <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath])">
-                        <img tal:attributes="src python:branch.static_url('/static/images/ico_flecha.gif')" alt="Symlink" />
+                        <img tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
                     </a>
 
                  <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])" 

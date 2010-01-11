@@ -2,6 +2,14 @@ What's changed in loggerhead?
 =============================
 
 dev [future]
+------------
+
+    - Fix .bzr/smart access to branches in shared repos. (You also need
+      a version of bzr with bug #348308 fixed.) (Andrew Bennetts)
+
+    - Support FastCGI, SCGI and AJP using flup. (Denis Martinez)
+
+1.17 [20Aug2009]
 ---------------
 
     - Add bug links in revision informations (Alexandre Garnier, #314052)
@@ -117,8 +125,42 @@ dev [future]
 
     - Fix 'bzr serve --http' errors. (Matt Nordhoff, #377551)
 
+    - Added the option to hide branches by setting http_serve = False
+      in locations.conf (Martin Albisetti)
+
     - Fix serving branches over HTTP. (Matt Nordhoff, Jelmer Vernooij,
       #380026)
+
+    - Install loggerhead as a bzr plugin by default (Jelmer Vernooij)
+
+    - Fix logging 404 Not Found responses (Matt Nordhoff, #381029)
+
+    - Bumped minimunm bzrlib version to 1.13 (Martin Albisetti)
+
+    - Make sure the Atom feeds (nearly) validate. (Matt Nordhoff, #247162)
+
+    - Support serving branches over HTTP using the smart server protocol.
+      (Jelmer Vernooij, #306853)
+
+    - Serving branch data was broken when --allow-writes was *not*
+      passed. (Michael Hudson, #388730)
+
+    - http_serve config values are interpreted more forgivingly.
+      (Michael Hudson)
+
+    - When specifying a remote url to serve-branches, do not share
+      connections between threads. (Michael Hudson, #390972)
+
+    - http_serve values from locations.conf are now applied to
+      non-branch .bzr data (e.g shared repositories). (Michael Hudson)
+
+    - tags are now displayed. (Cris Boylan, Alexandre Garnier, Michael
+      Hudson, #246739)
+
+    - Display Loggerhead's version number at the bottom of the page, and
+      add a <meta> generator tag also including the version numbers of
+      its dependencies. (Matt Nordhoff, #370155)
+
 
 1.10 [22Dec2008]
 ---------------

@@ -28,22 +28,19 @@ class ErrorUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.error'
 
     def __init__(self, branch, exc_info):
-        super(ErrorUI, self).__init__(branch, lambda:None)
+        super(ErrorUI, self).__init__(branch, lambda: None)
         self.exc_info = exc_info
 
     def get_values(self, path, kwargs, response):
         exc_type, exc_object, exc_tb = self.exc_info
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
-        directory_breadcrumbs = (
-            util.directory_breadcrumbs(
-                self._branch.friendly_name,
-                self._branch.is_root,
-                'changes'))
+        directory_breadcrumbs = util.directory_breadcrumbs(
+            self._branch.friendly_name, self._branch.is_root, 'changes')
         return {
             'branch': self._branch,
             'error_title': ('An unexpected error occurred while'
-                            'proccesing the request:'),
+                            'processing the request:'),
             'error_description': description.getvalue(),
             'directory_breadcrumbs': directory_breadcrumbs,
         }

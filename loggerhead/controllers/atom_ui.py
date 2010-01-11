@@ -26,7 +26,6 @@ class AtomUI (TemplatedBranchView):
 
     def get_values(self, path, kwargs, headers):
         history = self._history
-        revid = self.get_revid()
         pagesize = int(20)#self._branch.config.get('pagesize', '20'))
 
         revid_list = history.get_file_view(history.last_revid, None)
@@ -35,6 +34,6 @@ class AtomUI (TemplatedBranchView):
         headers['Content-Type'] = 'application/atom+xml'
         return {
             'changes': entries,
-            'updated': entries[0].date.isoformat() + 'Z',
+            'updated': entries[0].utc_date.isoformat(),
             'history': self._history,
         }

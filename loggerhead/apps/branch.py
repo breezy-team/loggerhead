@@ -1,3 +1,19 @@
+# Copyright (C) 2008, 2009 Canonical Ltd.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
 """The WSGI application for serving a Bazaar branch."""
 
 import logging
@@ -36,7 +52,7 @@ class BranchWSGIApp(object):
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
-        self.log = logging.getLogger('loggerhead.%s' % friendly_name)
+        self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
         if graph_cache is None:
             graph_cache = bzrlib.lru_cache.LRUCache(10)
         self.graph_cache = graph_cache
@@ -70,7 +86,7 @@ class BranchWSGIApp(object):
         qs = []
         for k, v in kw.iteritems():
             if v is not None:
-                qs.append('%s=%s'%(k, urllib.quote(v)))
+                qs.append('%s=%s' % (k, urllib.quote(v)))
         qs = '&'.join(qs)
         return request.construct_url(
             self._environ, script_name=self._url_base,
@@ -113,6 +129,10 @@ class BranchWSGIApp(object):
         return self.branch.get_config().get_user_option('public_branch')
 
     def app(self, environ, start_response):
+        # Check again if the branch is blocked from being served, this is
+        # mostly for tests. It's already checked in apps/transport.py
+        if self.branch.get_config().get_user_option('http_serve') == 'False':
+            raise httpexceptions.HTTPNotFound()
         self._url_base = environ['SCRIPT_NAME']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:

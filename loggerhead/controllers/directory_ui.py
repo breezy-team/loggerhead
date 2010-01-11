@@ -57,7 +57,7 @@ class DirectoryUI(TemplatedBranchView):
             def static_url(path):
                 return self._static_url_base + path
         self._branch = _branch
-        self._history_callable = lambda:None
+        self._history_callable = lambda: None
         self._name = name
         self._static_url_base = static_url_base
         self.transport = transport
@@ -72,6 +72,8 @@ class DirectoryUI(TemplatedBranchView):
         for d in listing:
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
+                if b.get_config().get_user_option('http_serve') == 'False':
+                    continue
             except:
                 try:
                     if not stat.S_ISDIR(self.transport.stat(d).st_mode):
