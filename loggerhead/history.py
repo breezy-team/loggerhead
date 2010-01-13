@@ -33,6 +33,7 @@ import datetime
 import logging
 import re
 import textwrap
+import threading
 
 import bzrlib.branch
 import bzrlib.delta
@@ -188,6 +189,12 @@ class RevInfoMemoryCache(object):
         """
         self._cache[key] = (revid, data)
 
+"""Used to store locks that prevent mulitple threads from building a 
+revision graph for the same branch at the same time, because that can
+cause severe performance issues that are so bad that the system seems
+to hang.
+"""
+revision_graph_locks = {};
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -227,18 +234,28 @@ class History(object):
         def update_missed_caches():
             for cache in missed_caches:
                 cache.set(cache_key, self.last_revid, self._rev_info)
-        for cache in caches:
-            data = cache.get(cache_key, self.last_revid)
-            if data is not None:
-                self._rev_info = data
-                update_missed_caches()
-                break
+
+        branch_path = self._branch._transport.base
+        global revision_graph_locks
+        if branch_path not in revision_graph_locks:
+            revision_graph_locks[branch_path] = threading.Lock()
+        revision_graph_locks[branch_path].acquire()
+
+        try:
+            for cache in caches:
+                data = cache.get(cache_key, self.last_revid)
+                if data is not None:
+                    self._rev_info = data
+                    update_missed_caches()
+                    break
+                else:
+                    missed_caches.append(cache)
             else:
-                missed_caches.append(cache)
-        else:
-            whole_history_data = compute_whole_history_data(self._branch)
-            self._rev_info, self._rev_indices = whole_history_data
-            update_missed_caches()
+                whole_history_data = compute_whole_history_data(self._branch)
+                self._rev_info, self._rev_indices = whole_history_data
+                update_missed_caches()
+        finally:
+            revision_graph_locks[branch_path].release()
 
         if self._rev_indices is not None:
             self._revno_revid = {}
