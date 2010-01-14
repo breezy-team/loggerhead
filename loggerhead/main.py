@@ -39,7 +39,7 @@ def get_config_and_path(args):
     config = LoggerheadConfig(args)
 
     if config.get_option('show_version'):
-        print "loggerhead %s" % __version__
+        print "loggerhead %s" % (__version__,)
         sys.exit(0)
 
     if config.arg_count > 1:
@@ -151,4 +151,21 @@ def main(args):
     else:
         host = config.get_option('user_host')
 
-    httpserver.serve(app, host=host, port=port)
+    if not config.get_option('protocol'):
+        protocol = 'http'
+    else:
+        protocol = config.get_option('protocol')
+
+    if protocol == 'http':
+        httpserver.serve(app, host=host, port=port)
+    else:
+        if protocol == 'fcgi':
+            from flup.server.fcgi import WSGIServer
+        elif protocol == 'scgi':
+            from flup.server.scgi import WSGIServer
+        elif protocol == 'ajp':
+            from flup.server.ajp import WSGIServer
+        else:
+            print 'Unknown protocol: %s.' % (protocol)
+            sys.exit(1)
+        WSGIServer(app, bindAddress=(host, int(port))).run()

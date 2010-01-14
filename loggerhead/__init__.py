@@ -22,8 +22,8 @@ We also check the versions of some dependencies.
 
 import pkg_resources
 
-__version__ = '1.10'
-required_bzrlib = (1, 13)
+__version__ = '1.17'
+required_bzrlib = (1, 17)
 
 pkg_resources.get_distribution('Paste>=1.6')
 try:

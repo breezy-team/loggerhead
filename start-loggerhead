@@ -20,7 +20,6 @@ A script for starting the loggerhead process.
 
 
 import logging
-import logging.handlers
 from optparse import OptionParser
 import os
 import sys
@@ -35,7 +34,7 @@ from paste.translogger import make_filter
 
 from loggerhead import daemon
 from loggerhead.apps.config import Root
-from loggerhead.trace import make_handler, setup_logging
+from loggerhead.trace import setup_logging
 from loggerhead.apps.error import ErrorHandlerApp
 
 
@@ -103,7 +102,7 @@ def main():
     if not options.foreground:
         sys.stderr.write('\n')
         sys.stderr.write('Launching loggerhead into the background.\n')
-        sys.stderr.write('PID file: %s\n' % options.pidfile)
+        sys.stderr.write('PID file: %s\n' % (options.pidfile,))
         sys.stderr.write('\n')
 
         daemon.daemonize(options.pidfile, home)

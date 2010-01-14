@@ -33,15 +33,17 @@ import datetime
 import logging
 import re
 import textwrap
+import threading
+
+import bzrlib.branch
+import bzrlib.delta
+import bzrlib.errors
+import bzrlib.foreign
+import bzrlib.revision
 
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
-
-import bzrlib
-import bzrlib.branch
-import bzrlib.delta
-import bzrlib.errors
 
 
 def is_branch(folder):
@@ -104,6 +106,7 @@ class _RevListToTimestamps(object):
         return len(self.revid_list)
 
 class FileChangeReporter(object):
+
     def __init__(self, old_inv, new_inv):
         self.added = []
         self.modified = []
@@ -186,8 +189,14 @@ class RevInfoMemoryCache(object):
         """
         self._cache[key] = (revid, data)
 
+# Used to store locks that prevent multiple threads from building a 
+# revision graph for the same branch at the same time, because that can
+# cause severe performance issues that are so bad that the system seems
+# to hang.
+revision_graph_locks = {}
+revision_graph_check_lock = threading.Lock()
 
-class History (object):
+class History(object):
     """Decorate a branch to provide information for rendering.
 
     History objects are expected to be short lived -- when serving a request
@@ -225,18 +234,33 @@ class History (object):
         def update_missed_caches():
             for cache in missed_caches:
                 cache.set(cache_key, self.last_revid, self._rev_info)
-        for cache in caches:
-            data = cache.get(cache_key, self.last_revid)
-            if data is not None:
-                self._rev_info = data
-                update_missed_caches()
-                break
+
+        # Theoretically, it's possible for two threads to race in creating
+        # the Lock() object for their branch, so we put a lock around
+        # creating the per-branch Lock().
+        revision_graph_check_lock.acquire()
+        try:
+            if cache_key not in revision_graph_locks:
+                revision_graph_locks[cache_key] = threading.Lock()
+        finally:
+            revision_graph_check_lock.release()
+
+        revision_graph_locks[cache_key].acquire()
+        try:
+            for cache in caches:
+                data = cache.get(cache_key, self.last_revid)
+                if data is not None:
+                    self._rev_info = data
+                    update_missed_caches()
+                    break
+                else:
+                    missed_caches.append(cache)
             else:
-                missed_caches.append(cache)
-        else:
-            whole_history_data = compute_whole_history_data(self._branch)
-            self._rev_info, self._rev_indices = whole_history_data
-            update_missed_caches()
+                whole_history_data = compute_whole_history_data(self._branch)
+                self._rev_info, self._rev_indices = whole_history_data
+                update_missed_caches()
+        finally:
+            revision_graph_locks[cache_key].release()
 
         if self._rev_indices is not None:
             self._revno_revid = {}
@@ -261,7 +285,7 @@ class History (object):
         self._branch = branch
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % self._branch_nick)
+        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
@@ -304,7 +328,7 @@ class History (object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
-        while 1:
+        while True:
             if bzrlib.revision.is_null(revid):
                 return
             if introduced_revisions(revid) & revid_set:
@@ -547,14 +571,14 @@ iso style "yyyy-mm-dd")
             revnol = revno.split(".")
             revnos = ".".join(revnol[:-2])
             revnolast = int(revnol[-1])
-            if revnos in d.keys():
+            if revnos in d:
                 m = d[revnos][0]
                 if revnolast < m:
                     d[revnos] = (revnolast, revid)
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [d[revnos][1] for revnos in d.keys()]
+        return [revid for (_, revid) in d.itervalues()]
 
     def add_branch_nicks(self, change):
         """
@@ -648,6 +672,21 @@ iso style "yyyy-mm-dd")
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
             'tags': revtags,
         }
+        if isinstance(revision, bzrlib.foreign.ForeignRevision):
+            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
+        elif ":" in revision.revision_id:
+            try:
+                foreign_revid, mapping = \
+                    bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
+                        revision.revision_id)
+            except bzrlib.errors.InvalidRevisionId:
+                foreign_revid = None
+                mapping = None
+        else:
+            foreign_revid = None
+        if foreign_revid is not None:
+            entry["foreign_vcs"] = mapping.vcs.abbreviation
+            entry["foreign_revid"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):
@@ -668,7 +707,7 @@ iso style "yyyy-mm-dd")
         entry.changes = changes
 
     def get_file(self, file_id, revid):
-        "returns (path, filename, data)"
+        """Returns (path, filename, file contents)"""
         inv = self.get_inventory(revid)
         inv_entry = inv[file_id]
         rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
@@ -691,8 +730,8 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename, file_id)),
         """
         repo = self._branch.repository
-        if bzrlib.revision.is_null(old_revid) or \
-               bzrlib.revision.is_null(new_revid):
+        if (bzrlib.revision.is_null(old_revid) or
+            bzrlib.revision.is_null(new_revid)):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
@@ -703,8 +742,8 @@ iso style "yyyy-mm-dd")
         bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
         return util.Container(
-            added=sorted(reporter.added, key=lambda x:x.filename),
-            renamed=sorted(reporter.renamed, key=lambda x:x.new_filename),
-            removed=sorted(reporter.removed, key=lambda x:x.filename),
-            modified=sorted(reporter.modified, key=lambda x:x.filename),
-            text_changes=sorted(reporter.text_changes, key=lambda x:x.filename))
+            added=sorted(reporter.added, key=lambda x: x.filename),
+            renamed=sorted(reporter.renamed, key=lambda x: x.new_filename),
+            removed=sorted(reporter.removed, key=lambda x: x.filename),
+            modified=sorted(reporter.modified, key=lambda x: x.filename),
+            text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))

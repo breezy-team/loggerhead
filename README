@@ -1,7 +1,7 @@
 LOGGERHEAD
 ==========
 
-[ Version 1.10 for Bazaar 1.6 ]
+[ Version 1.17 for Bazaar 1.17 ]
 
 Loggerhead is a web viewer for Bazaar branches.  It can be used to
 navigate a branch history, annotate files, perform searches... all the
@@ -25,6 +25,9 @@ Loggerhead depends on:
 4) Paste Deploy  (optional, needed when proxying through Apache)
    On Ubuntu, `sudo apt-get install python-pastedeploy`
    or use `easy_install PasteDeploy`
+5) flup (optional, needed to use FastCGI, SCGI or AJP)
+   On Ubuntu, `sudo apt-get install python-flup`
+   or use `easy_install flup`
 
 Then simply run the 'serve-branches' with the branch you want to
 serve on the command line:
@@ -40,7 +43,7 @@ You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
-To run loggerhead as a linux daemon: 
+To run loggerhead as a linux daemon:
 1) Copy loggerheadd to /etc/init.d
 2) Edit the file to configure where your loggerhead is installed, and which
    serve-branches options you would like.
@@ -99,6 +102,7 @@ at: ``https://launchpad.net/bzr-search``
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
 
+
 SUPPORT
 -------
 
@@ -112,3 +116,12 @@ moderation.
 Bugs are tracked on Launchpad; start at:
 
     https://bugs.launchpad.net/loggerhead
+
+
+HACKING
+-------
+
+To run loggerhead tests, you will need the package python-nose,
+and run in the loggerhead directory:
+
+    nosetests

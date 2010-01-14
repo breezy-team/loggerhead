@@ -30,13 +30,15 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
-version_info = (1, 11, 0)
+version_info = (1, 17, 0)
 
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [(1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0)])
+    require_any_api(bzrlib, [
+        (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
+        (2, 0, 0), (2, 1, 0)])
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
@@ -57,6 +59,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             (DEFAULT_PORT,))
 
     def serve_http(transport, host=None, port=None, inet=None):
+        from paste.httpexceptions import HTTPExceptionHandler
+        from paste.httpserver import serve
+
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
@@ -67,8 +72,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
-        from paste.httpexceptions import HTTPExceptionHandler
-        from paste.httpserver import serve
+
         if host is None:
             host = DEFAULT_HOST
         if port is None:
@@ -77,7 +81,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
-        app = BranchesFromTransportRoot(transport, config)
+        app = BranchesFromTransportRoot(transport.base, config)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 

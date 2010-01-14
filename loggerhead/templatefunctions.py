@@ -56,7 +56,7 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
                     url, entry.revno, filename, '#' + filename)
     else:
         def file_link(filename):
-            return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>'%(
+            return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>' % (
                 url(['/revision', entry.revno]), '#' + filename, cgi.escape(filename),
                 cgi.escape(entry.revno), cgi.escape(filename))
     return _pt('revisionfilechanges').expand(
@@ -100,7 +100,7 @@ def revno_with_nick(entry):
         extra = ' ' + entry.branch_nick
     else:
         extra = ''
-    return '(%s%s)'%(entry.revno, extra)
+    return '(%s%s)' % (entry.revno, extra)
 
 
 @templatefunc
@@ -122,12 +122,12 @@ def menu(branch, url, fileview_active=False):
 
 @templatefunc
 def annotate_link(url, revno, path):
-    return '<a href="%s" title="Annotate %s">%s</a>'%(
+    return '<a href="%s" title="Annotate %s">%s</a>' % (
         url(['/annotate', revno, path]), cgi.escape(path), cgi.escape(path))
 
 @templatefunc
 def revision_link(url, revno, path, frag=''):
-    return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>'%(
+    return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>' % (
         url(['/revision', revno, path]), frag, cgi.escape(path),
         cgi.escape(revno), cgi.escape(path))
 
@@ -185,9 +185,6 @@ def generator_string():
             versions.append(('bzr-search', bzr_search_version))
 
         # TODO: On old Python versions, elementtree may be used.
-
-        import setuptools
-        versions.append(('setuptools', setuptools.__version__))
 
         try:
             import simplejson
