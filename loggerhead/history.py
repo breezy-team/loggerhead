@@ -189,12 +189,12 @@ class RevInfoMemoryCache(object):
         """
         self._cache[key] = (revid, data)
 
-"""Used to store locks that prevent mulitple threads from building a 
-revision graph for the same branch at the same time, because that can
-cause severe performance issues that are so bad that the system seems
-to hang.
-"""
-revision_graph_locks = {};
+# Used to store locks that prevent multiple threads from building a 
+# revision graph for the same branch at the same time, because that can
+# cause severe performance issues that are so bad that the system seems
+# to hang.
+revision_graph_locks = {}
+revision_graph_check_lock = threading.Lock()
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -235,11 +235,14 @@ class History(object):
             for cache in missed_caches:
                 cache.set(cache_key, self.last_revid, self._rev_info)
 
-        branch_path = self._branch._transport.base
-        global revision_graph_locks
-        if branch_path not in revision_graph_locks:
-            revision_graph_locks[branch_path] = threading.Lock()
-        revision_graph_locks[branch_path].acquire()
+        # Theoretically, it's possible for two threads to race in creating
+        # the Lock() object for their branch, so we put a lock around
+        # creating the per-branch Lock().
+        revision_graph_check_lock.acquire()
+        if cache_key not in revision_graph_locks:
+            revision_graph_locks[cache_key] = threading.Lock()
+        revision_graph_check_lock.release()
+        revision_graph_locks[cache_key].acquire()
 
         try:
             for cache in caches:
@@ -255,7 +258,7 @@ class History(object):
                 self._rev_info, self._rev_indices = whole_history_data
                 update_missed_caches()
         finally:
-            revision_graph_locks[branch_path].release()
+            revision_graph_locks[cache_key].release()
 
         if self._rev_indices is not None:
             self._revno_revid = {}
