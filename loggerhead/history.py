@@ -239,11 +239,13 @@ class History(object):
         # the Lock() object for their branch, so we put a lock around
         # creating the per-branch Lock().
         revision_graph_check_lock.acquire()
-        if cache_key not in revision_graph_locks:
-            revision_graph_locks[cache_key] = threading.Lock()
-        revision_graph_check_lock.release()
-        revision_graph_locks[cache_key].acquire()
+        try:
+            if cache_key not in revision_graph_locks:
+                revision_graph_locks[cache_key] = threading.Lock()
+        finally:
+            revision_graph_check_lock.release()
 
+        revision_graph_locks[cache_key].acquire()
         try:
             for cache in caches:
                 data = cache.get(cache_key, self.last_revid)
