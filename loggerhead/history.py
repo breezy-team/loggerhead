@@ -33,10 +33,12 @@ import datetime
 import logging
 import re
 import textwrap
+import threading
 
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+import bzrlib.foreign
 import bzrlib.revision
 
 from loggerhead import search
@@ -187,6 +189,12 @@ class RevInfoMemoryCache(object):
         """
         self._cache[key] = (revid, data)
 
+# Used to store locks that prevent multiple threads from building a 
+# revision graph for the same branch at the same time, because that can
+# cause severe performance issues that are so bad that the system seems
+# to hang.
+revision_graph_locks = {}
+revision_graph_check_lock = threading.Lock()
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -226,18 +234,33 @@ class History(object):
         def update_missed_caches():
             for cache in missed_caches:
                 cache.set(cache_key, self.last_revid, self._rev_info)
-        for cache in caches:
-            data = cache.get(cache_key, self.last_revid)
-            if data is not None:
-                self._rev_info = data
-                update_missed_caches()
-                break
+
+        # Theoretically, it's possible for two threads to race in creating
+        # the Lock() object for their branch, so we put a lock around
+        # creating the per-branch Lock().
+        revision_graph_check_lock.acquire()
+        try:
+            if cache_key not in revision_graph_locks:
+                revision_graph_locks[cache_key] = threading.Lock()
+        finally:
+            revision_graph_check_lock.release()
+
+        revision_graph_locks[cache_key].acquire()
+        try:
+            for cache in caches:
+                data = cache.get(cache_key, self.last_revid)
+                if data is not None:
+                    self._rev_info = data
+                    update_missed_caches()
+                    break
+                else:
+                    missed_caches.append(cache)
             else:
-                missed_caches.append(cache)
-        else:
-            whole_history_data = compute_whole_history_data(self._branch)
-            self._rev_info, self._rev_indices = whole_history_data
-            update_missed_caches()
+                whole_history_data = compute_whole_history_data(self._branch)
+                self._rev_info, self._rev_indices = whole_history_data
+                update_missed_caches()
+        finally:
+            revision_graph_locks[cache_key].release()
 
         if self._rev_indices is not None:
             self._revno_revid = {}
@@ -649,6 +672,21 @@ iso style "yyyy-mm-dd")
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
             'tags': revtags,
         }
+        if isinstance(revision, bzrlib.foreign.ForeignRevision):
+            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
+        elif ":" in revision.revision_id:
+            try:
+                foreign_revid, mapping = \
+                    bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
+                        revision.revision_id)
+            except bzrlib.errors.InvalidRevisionId:
+                foreign_revid = None
+                mapping = None
+        else:
+            foreign_revid = None
+        if foreign_revid is not None:
+            entry["foreign_vcs"] = mapping.vcs.abbreviation
+            entry["foreign_revid"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
     def get_file_changes_uncached(self, entry):

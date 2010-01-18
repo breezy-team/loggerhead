@@ -1,8 +1,8 @@
-loggerhead (1.17+bzr398-1) karmic; urgency=low
+loggerhead (1.17+bzr400-1) unstable; urgency=low
 
   * New upstream snapshot.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Sat, 26 Dec 2009 17:48:58 +0100
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 18 Jan 2010 18:33:40 +1300
 
 loggerhead (1.17-1) unstable; urgency=low
   

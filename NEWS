@@ -4,6 +4,9 @@ What's changed in loggerhead?
 dev [future]
 ------------
 
+    - Show svn/git/hg revision ids in loggerhead revision view.
+      (Jelmer Vernooij)
+
     - Fix .bzr/smart access to branches in shared repos. (You also need
       a version of bzr with bug #348308 fixed.) (Andrew Bennetts)
 
