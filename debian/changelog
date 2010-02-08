@@ -4,6 +4,13 @@ loggerhead (1.17+bzr400-1) unstable; urgency=low
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 18 Jan 2010 18:33:40 +1300
 
+loggerhead (1.17-2) UNRELEASED; urgency=low
+
+  * Use source format version 3.
+  * Bump standards version to 3.8.4
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 08 Feb 2010 01:17:39 +0100
+
 loggerhead (1.17-1) unstable; urgency=low
   
   * New upstream release.  Loggerhead no longer flattens branch
@@ -65,3 +72,4 @@ loggerhead (1.6-1) unstable; urgency=low
   * Initial release. (Closes: #492477)
 
  -- Jelmer Vernooij <jelmer@samba.org>  Fri, 25 Jul 2008 22:43:49 +0200
+
