@@ -421,7 +421,7 @@ class History (object):
     def get_inventory(self, revid):
         if revid not in self._inventory_cache:
             self._inventory_cache[revid] = (
-                self._branch.repository.get_revision_inventory(revid))
+                self._branch.repository.get_inventory(revid))
         return self._inventory_cache[revid]
 
     def get_path(self, revid, file_id):
