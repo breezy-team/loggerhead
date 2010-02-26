@@ -3,59 +3,65 @@
 <html xmlns="http://www.w3.org/1999/xhtml" metal:define-macro="main">
   <head>
     <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+    <meta name="generator"
+          tal:attributes="content generator_string" />
 
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+    <tal:comment condition="nothing">
+      <script type="text/javascript"
+              src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>
+    </tal:comment>
+    <script type="text/javascript">
+      var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
+      var collapsed_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeCollapsed.png')+'\''" />;
+      var expanded_icon_path = <tal:block content="python:'\''+branch.static_url('/static/images/treeExpanded.png')+'\''" />;
+    </script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-core.js')"></script>
+            tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
     <script type="text/javascript"
-            tal:attributes="src python:branch.static_url('/static/javascript/mootools-1.2-more.js')"></script>
+            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-      <script language="javascript">
-          var global_path = <tal:block content="python:'\''+branch.url('/')+'\''" />;
-      </script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 
 <body>
     <!-- Loggerhead Content Area -->
-    <ul id="menuTabs">
-        <form tal:attributes="action python:branch.url('/changes', start_revid=getattr(navigation, 'start_revid', None), 
-                                                                   file_id=getattr(navigation, 'file_id', None))">
-      	  <div id="finderBox">
-            <label>search:</label> <input type="search" name="q" id="q" autocomplete="off" onblur="hide_search();" /> 
-            <div><a tal:attributes="href python:url(['/atom']);
-                                    title string:RSS feed for ${branch/friendly_name}"> 
-                 <img tal:attributes="src python:branch.static_url('/static/images/ico_rss.gif')" alt="RSS" class="rssfeed"/></a>
-            </div>
-          </div>
-        </form>
+      <div id="finderBox">
+         <tal:search-box define="navigation navigation"
+                        replace="structure python:search_box(branch,
+                                 navigation)" />
+        <div>
+          <tal:feed-link replace="structure python:feed_link(branch, url)" />
+        </div>
+      </div>
 
-        <tal:block tal:condition="not:fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes;
-                               id string:on">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files">Files</a></li>
-        </tal:block>
-        <tal:block tal:condition="fileview_active">
-        <li><a tal:attributes="href python:url('/changes', clear=1);
-                               title string:Changes">Changes</a></li>
-        <li><a tal:attributes="href python:url('/files', clear=1);
-                               title string:Files;
-                               id string:on">Files</a></li>
-        </tal:block>
-      </ul>
+      <tal:menu define="fileview_active fileview_active"
+                replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 
-         <div id="search_terms"></div>
+        <div id="search_terms"></div>
 
         <h1 metal:define-slot="heading"></h1>
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Loggerhead runs on <a href="http://bazaar-vcs.org/" class="link">Bazaar</a> branches</p>
-    </div>
+        <p class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
+      </div>
   </body>
 </html>

@@ -4,3 +4,6 @@
 ./loggerhead.pid
 ./logs
 build
+*.log
+_trial_temp
+loggerhead-memprofile

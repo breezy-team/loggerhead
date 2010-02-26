@@ -17,34 +17,44 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+try:
+    import simplejson
+except ImportError:
+    import json as simplejson
+import urllib
+
 from paste.httpexceptions import HTTPServerError
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
+from loggerhead.controllers.filediff_ui import diff_chunks_for_file
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
+
+def dq(p):
+    return urllib.quote(urllib.quote(p, safe=''))
 
 
 class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
 
-    def get_values(self, h, args, kw, headers):
+    def get_values(self, path, kwargs, headers):
+        h = self._history
+        revid = self.get_revid()
 
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = None
-
-        filter_file_id = kw.get('filter_file_id', None)
-        start_revid = h.fix_revid(kw.get('start_revid', None))
-        query = kw.get('q', None)
-        remember = h.fix_revid(kw.get('remember', None))
-        compare_revid = h.fix_revid(kw.get('compare_revid', None))
+        filter_file_id = kwargs.get('filter_file_id', None)
+        start_revid = h.fix_revid(kwargs.get('start_revid', None))
+        query = kwargs.get('q', None)
+        remember = h.fix_revid(kwargs.get('remember', None))
+        compare_revid = h.fix_revid(kwargs.get('compare_revid', None))
 
         try:
-            revid, start_revid, revid_list = h.get_view(revid, start_revid, filter_file_id, query)
+            revid, start_revid, revid_list = h.get_view(revid,
+                                                        start_revid,
+                                                        filter_file_id,
+                                                        query)
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
@@ -57,20 +67,45 @@ class RevisionUI(TemplatedBranchView):
             navigation.query = query
         util.fill_in_navigation(navigation)
 
-        change = h.get_change_with_diff(revid, compare_revid)
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
+        change = h.get_changes([revid])[0]
 
-        line_count_limit = DEFAULT_LINE_COUNT_LIMIT
-        line_count = 0
-        for file in change.changes.modified:
-            for chunk in file.chunks:
-                line_count += len(chunk.diff)
+        if compare_revid is None:
+            file_changes = h.get_file_changes(change)
+        else:
+            file_changes = h.file_changes_for_revision_ids(
+                compare_revid, change.revid)
 
-        # let's make side-by-side diff be the default
-        side_by_side = not kw.get('unified', False)
-        if side_by_side:
-            h.add_side_by_side([ change ])
+        if path in ('', '/'):
+            path = None
+
+        link_data = {}
+        path_to_id = {}
+        if path:
+            item = [x for x in file_changes.text_changes if x.filename == path][0]
+            diff_chunks = diff_chunks_for_file(
+                self._history._branch.repository, item.file_id,
+                item.old_revision, item.new_revision)
+        else:
+            diff_chunks = None
+            for i, item in enumerate(file_changes.text_changes):
+                item.index = i
+                link_data['diff-' + str(i)] = '%s/%s/%s' % (
+                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
+                path_to_id[item.filename] = 'diff-' + str(i)
+
+        h.add_branch_nicks(change)
+
+        if '.' in change.revno:
+            # Walk "up" though the merge-sorted graph until we find a
+            # revision with merge depth 0: this is the revision that merged
+            # this one to mainline.
+            ri = self._history._rev_info
+            i = self._history._rev_indices[change.revid]
+            while ri[i][0][2] > 0:
+                i -= 1
+            merged_in = ri[i][0][3]
+        else:
+            merged_in = None
 
         # Directory Breadcrumbs
         directory_breadcrumbs = (
@@ -83,18 +118,21 @@ class RevisionUI(TemplatedBranchView):
             'branch': self._branch,
             'revid': revid,
             'change': change,
+            'file_changes': file_changes,
+            'diff_chunks': diff_chunks,
+            'link_data': simplejson.dumps(link_data),
+            'specific_path': path,
+            'json_specific_path': simplejson.dumps(path),
+            'path_to_id': simplejson.dumps(path_to_id),
             'start_revid': start_revid,
             'filter_file_id': filter_file_id,
             'util': util,
             'history': h,
+            'merged_in': merged_in,
             'navigation': navigation,
             'query': query,
             'remember': remember,
             'compare_revid': compare_revid,
-            'side_by_side': side_by_side,
             'url': self._branch.context_url,
-            'line_count': line_count,
-            'line_count_limit': line_count_limit,
-            'show_plain_diffs': line_count > line_count_limit,
             'directory_breadcrumbs': directory_breadcrumbs,
         }

@@ -13,17 +13,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""A script for starting the loggerhead process."""
+"""
+WARNING! This script has been deprecated and will go away soon!
+A script for starting the loggerhead process.
+"""
 
 
 import logging
-import logging.handlers
 from optparse import OptionParser
 import os
 import sys
 import urlparse
 
-from configobj import ConfigObj
+from bzrlib.plugin import load_plugins
+from bzrlib.util.configobj.configobj import ConfigObj
 
 from paste import httpserver
 from paste.httpexceptions import make_middleware
@@ -31,64 +34,38 @@ from paste.translogger import make_filter
 
 from loggerhead import daemon
 from loggerhead.apps.config import Root
-
-
-def make_handler(config, filename):
-    roll = config.get('log.roll', 'never')
-    if roll == 'daily':
-        h = logging.handlers.TimedRotatingFileHandler(filename, 'midnight', 0, 100)
-    elif roll == 'weekly':
-        h = logging.handlers.TimedRotatingFileHandler(filename, 'W0', 0, 100)
-    else:
-        h = logging.FileHandler(filename)
-    return h
-
-
-def setup_logging(log_folder, config, foreground):
-    # i hate that stupid logging config format, so just set up logging here.
-
-    if not os.path.exists(log_folder):
-        os.mkdir(log_folder)
-
-    f = logging.Formatter('%(levelname)-.3s [%(asctime)s.%(msecs)03d] %(name)s: %(message)s',
-                          '%Y%m%d-%H:%M:%S')
-    debug_log = make_handler(config, os.path.join(log_folder, 'debug.log'))
-    debug_log.setLevel(logging.DEBUG)
-    debug_log.setFormatter(f)
-    if foreground:
-        stdout_log = logging.StreamHandler(sys.stdout)
-        stdout_log.setLevel(logging.DEBUG)
-        stdout_log.setFormatter(f)
-    f = logging.Formatter('[%(asctime)s.%(msecs)03d] %(message)s',
-                          '%Y%m%d-%H:%M:%S')
-    access_log = make_handler(config, os.path.join(log_folder, 'access.log'))
-    access_log.setLevel(logging.INFO)
-    access_log.setFormatter(f)
-
-    logging.getLogger('').setLevel(logging.DEBUG)
-    logging.getLogger('').addHandler(debug_log)
-    logging.getLogger('wsgi').addHandler(access_log)
-
-    if foreground:
-        logging.getLogger('').addHandler(stdout_log)
-
+from loggerhead.trace import setup_logging
+from loggerhead.apps.error import ErrorHandlerApp
 
 
 def main():
+    sys.stderr.write('\n\n')
+    sys.stderr.write('WARNING!!! This script has been deprecated by '
+                     'serve-branches, and will be removed in the next '
+                     'release. Please migrate to serve-branches and report '
+                     'any missing features.\n')
+    sys.stderr.write('\n\n')
+
     home = os.path.realpath(os.path.dirname(__file__))
     default_pidfile = os.path.join(home, 'loggerhead.pid')
     default_configfile = os.path.join(home, 'loggerhead.conf')
     default_log_folder = os.path.join(home, 'logs')
     parser = OptionParser(usage='usage: %prog [options]', version='%prog')
-    parser.add_option('-f', '--foreground', action='store_true', dest='foreground', default=False,
+    parser.add_option('-f', '--foreground',
+                      action='store_true', dest='foreground', default=False,
                       help="run in the foreground; don't daemonize")
-    parser.add_option('-C', '--check', action='store_true', dest='check', default=False,
-                      help="only start if not already running (useful for cron jobs)")
-    parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
+    parser.add_option('-C', '--check', action='store_true',
+                      dest='check', default=False,
+                      help=("only start if not already running (useful for "
+                            "cron jobs)"))
+    parser.add_option('-p', '--pidfile', dest="pidfile",
+                      default=default_pidfile,
                       type=str, help="override pidfile location")
-    parser.add_option('-c', '--config-file', dest="configfile", default=default_configfile,
-					  type=str, help="override configuration file location")
-    parser.add_option('-L', '--log-folder', dest="log_folder", default=default_log_folder,
+    parser.add_option('-c', '--config-file', dest="configfile",
+                      default=default_configfile,
+                      type=str, help="override configuration file location")
+    parser.add_option('-L', '--log-folder', dest="log_folder",
+                      default=default_log_folder,
                       type=str, help="override log file directory")
     options, args = parser.parse_args()
     if len(args) > 0:
@@ -97,7 +74,9 @@ def main():
     if options.check:
         if daemon.is_running(options.pidfile):
             sys.exit(0)
-        sys.stderr.write('Did not find loggerhead running in %r; restarting...\n' % (options.pidfile,))
+        sys.stderr.write('Did not find loggerhead running in %r;' % (
+                         options.pidfile))
+        sys.stderr.write(' restarting...\n')
 
     # read loggerhead config
 
@@ -106,10 +85,10 @@ def main():
     if extra_path:
         sys.path.insert(0, extra_path)
 
-    potential_overrides = [ ('server.socket_port', int),
-                            ('server.webpath', str),
-                            ('server.thread_pool', int),
-                            ('server.socket_host' ,str) ]
+    potential_overrides = [('server.socket_port', int),
+                           ('server.webpath', str),
+                           ('server.thread_pool', int),
+                           ('server.socket_host', str)]
     server_port = int(config.get('server.socket_port', 8080))
     nworkers = int(config.get('server.thread_pool', 10))
     server_host = config.get('server.socket_host', '0.0.0.0')
@@ -137,14 +116,19 @@ def main():
 
     app = app
     app = make_middleware(app)
-    app = make_filter(app, None)
+    app = make_filter(app, None, logger_name=log.name+'.access')
+    app = ErrorHandlerApp(app)
 
     if webpath:
         scheme, netloc, path, blah, blah, blah = urlparse.urlparse(webpath)
+
         def app(environ, start_response, orig=app):
             environ['SCRIPT_NAME'] = path
             environ['HTTP_HOST'] = netloc
+            environ['wsgi.url_scheme'] = scheme
             return orig(environ, start_response)
+
+    load_plugins()
 
     try:
         httpserver.serve(

@@ -18,8 +18,8 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-
 from distutils.core import setup
+
 import loggerhead
 
 
@@ -31,17 +31,42 @@ setup(
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
     scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
-    packages = ["loggerhead", 
-                "loggerhead/apps", 
-                "loggerhead/controllers", 
-                "loggerhead/templates"],
-    package_data = {"loggerhead":["templates/*.pt", 
-                                  "static/css/*.css", 
-                                  "static/javascript/*", 
-                                  "static/images/*"]},
+    packages = ["loggerhead",
+                "loggerhead/apps",
+                "loggerhead/controllers",
+                "loggerhead/templates",
+                "bzrlib.plugins.loggerhead"],
+    package_dir={'bzrlib.plugins.loggerhead':'.'},
+    package_data = {"loggerhead": ["templates/*.pt",
+                                   "static/css/*.css",
+                                   "static/javascript/*.js",
+                                   "static/javascript/yui/build/anim/*",
+                                   "static/javascript/yui/build/base/*",
+                                   "static/javascript/yui/build/cssbase/*",
+                                   "static/javascript/yui/build/cssgrids/*",
+                                   "static/javascript/yui/build/dd/*",
+                                   "static/javascript/yui/build/dump/*",
+                                   "static/javascript/yui/build/get/*",
+                                   "static/javascript/yui/build/json/*",
+                                   "static/javascript/yui/build/node/*",
+                                   "static/javascript/yui/build/queue/*",
+                                   "static/javascript/yui/build/yui/*",
+                                   "static/javascript/yui/build/attribute/*",
+                                   "static/javascript/yui/build/cookie/*",
+                                   "static/javascript/yui/build/cssfonts/*",
+                                   "static/javascript/yui/build/cssreset/*",
+                                   "static/javascript/yui/build/dom/*",
+                                   "static/javascript/yui/build/event/*",
+                                   "static/javascript/yui/build/io/*",
+                                   "static/javascript/yui/build/loader/*",
+                                   "static/javascript/yui/build/oop/*",
+                                   "static/javascript/yui/build/substitute/*",
+                                   "static/javascript/yui/build/yui-base/*",
+                                   "static/images/*"]},
     data_files = [
-        ('share/man/man1',['start-loggerhead.1', 'stop-loggerhead.1', 
-                           'serve-branches.1']),
+        ('share/man/man1', ['start-loggerhead.1',
+                            'stop-loggerhead.1',
+                            'serve-branches.1']),
         ('share/doc/loggerhead', ['loggerhead.conf.example']),
         ],
     )

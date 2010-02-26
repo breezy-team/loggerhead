@@ -1,3 +1,6 @@
+#
+# Copyright (C) 2008, 2009 Canonical Ltd.
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
@@ -12,6 +15,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-"""Just a simple container to turn this into a python package."""
-__version__ = '1.6'
-required_bzrlib = (1, 6)
+"""A simple container to turn this into a python package.
+
+We also check the versions of some dependencies.
+"""
+
+import pkg_resources
+
+__version__ = '1.17'
+required_bzrlib = (1, 17)
+
+pkg_resources.get_distribution('Paste>=1.6')
+try:
+    pkg_resources.get_distribution('PasteDeploy>=1.3')
+except pkg_resources.DistributionNotFound:
+    # No paste.deploy is OK, but an old paste.deploy is bad.
+    pass

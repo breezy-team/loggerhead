@@ -17,25 +17,31 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
-import sets
-import os
-try:
-    from bzrlib.plugins.search import errors
-    from bzrlib.plugins.search import index as _mod_index
-    from bzrlib.plugins.search.index import FileTextHit, RevisionHit
-except ImportError:
-    _mod_index = None
+
+_mod_index = None
+def import_search():
+    global errors, _mod_index, FileTextHit, RevisionHit
+    if _mod_index is not None:
+        return
+    try:
+        from bzrlib.plugins.search import errors
+        from bzrlib.plugins.search import index as _mod_index
+        from bzrlib.plugins.search.index import FileTextHit, RevisionHit
+    except ImportError:
+        _mod_index = None
+
 
 def search_revisions(branch, query_list, suggest=False):
     """
     Search using bzr-search plugin to find revisions matching the query.
     This can either suggest query terms, or revision ids.
-    
+
     param branch: branch object to search in
     param query_list: string to search
     param suggest: Optional flag to request suggestions instead of results
     return: A list for results, either revision ids or terms
     """
+    import_search()
     if _mod_index is None:
         return None # None indicates could-not-search
     try:
@@ -59,6 +65,6 @@ def search_revisions(branch, query_list, suggest=False):
                     revid_list.append(result.text_key[1])
                 elif isinstance(result, RevisionHit):
                     revid_list.append(result.revision_key[0])
-            return list(sets.Set(revid_list))
+            return list(set(revid_list))
     finally:
         index._branch.unlock()

@@ -1,4 +1,5 @@
 #
+# Copyright (C) 2008  Canonical Ltd.
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
 #
@@ -19,8 +20,12 @@
 
 import logging
 import posixpath
+import urllib
 
-from paste.httpexceptions import HTTPServerError
+from paste.httpexceptions import HTTPNotFound
+
+from bzrlib import errors
+from bzrlib.revision import is_null as is_null_rev
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -28,10 +33,11 @@ from loggerhead.controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 
+
 def dirname(path):
-    while path.endswith('/'):
-        path = path[:-1]
-    path = posixpath.dirname(path)
+    if path is not None:
+        path = path.rstrip('/')
+        path = urllib.quote(posixpath.dirname(path))
     return path
 
 
@@ -39,41 +45,92 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_values(self, h, args, kw, headers):
-        if len(args) > 0:
-            revid = h.fix_revid(args[0])
-        else:
-            revid = h.last_revid
+    def get_filelist(self, inv, path, sort_type):
+        """
+        return the list of all files (and their attributes) within a given
+        path subtree.
 
+        @param inv: The inventory.
+        @param path: The path of a directory within the inventory.
+        @param sort_type: How to sort the results... XXX.
+        """
+        file_id = inv.path2id(path)
+        dir_ie = inv[file_id]
+        file_list = []
+
+        revid_set = set()
+
+        for filename, entry in dir_ie.children.iteritems():
+            revid_set.add(entry.revision)
+
+        change_dict = {}
+        for change in self._history.get_changes(list(revid_set)):
+            change_dict[change.revid] = change
+
+        for filename, entry in dir_ie.children.iteritems():
+            pathname = filename
+            if entry.kind == 'directory':
+                pathname += '/'
+            if path == '':
+                absolutepath = pathname
+            else:
+                absolutepath = path + '/' + pathname
+            revid = entry.revision
+
+            file = util.Container(
+                filename=filename, executable=entry.executable,
+                kind=entry.kind, absolutepath=absolutepath,
+                file_id=entry.file_id, size=entry.text_size, revid=revid,
+                change=change_dict[revid])
+            file_list.append(file)
+
+        if sort_type == 'filename':
+            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
+        elif sort_type == 'size':
+            file_list.sort(key=lambda x: x.size)
+        elif sort_type == 'date':
+            file_list.sort(key=lambda x: x.change.date)
+
+        # Always sort directories first.
+        file_list.sort(key=lambda x: x.kind != 'directory')
+
+        return file_list
+
+    def get_values(self, path, kwargs, headers):
+        history = self._history
+        branch = history._branch
         try:
-            inv = h.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
+            revid = self.get_revid()
+            rev_tree = branch.repository.revision_tree(revid)
+        except errors.NoSuchRevision:
+            raise HTTPNotFound()
 
-        file_id = kw.get('file_id', inv.root.file_id)
-        start_revid = kw.get('start_revid', None)
-        sort_type = kw.get('sort', None)
+        file_id = kwargs.get('file_id', None)
+        start_revid = kwargs.get('start_revid', None)
+        sort_type = kwargs.get('sort', 'filename')
 
         # no navbar for revisions
         navigation = util.Container()
 
-        change = h.get_changes([ revid ])[0]
-        # add parent & merge-point branch-nick info, in case it's useful
-        h.get_branch_nicks([ change ])
-
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
-            path = '/' + path
-        idpath = inv.get_idpath(file_id)
-        if len(idpath) > 1:
-            updir = dirname(path)
-            updir_file_id = idpath[-2]
+        if path is not None:
+            path = path.rstrip('/')
+            file_id = rev_tree.path2id(path)
+            if file_id is None:
+                raise HTTPNotFound()
         else:
+            if file_id is None:
+                path = ''
+            else:
+                try:
+                    path = rev_tree.id2path(file_id)
+                except errors.NoSuchId:
+                    raise HTTPNotFound()
+
+        # Are we at the top of the tree
+        if path in ['/', '']:
             updir = None
-            updir_file_id = None
-        if updir == '/':
-            updir_file_id = None
+        else:
+            updir = dirname(path)
 
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
@@ -81,21 +138,37 @@ class InventoryUI(TemplatedBranchView):
                 self._branch.is_root,
                 'files')
 
-        # Create breadcrumb trail for the path within the branch
-        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
-        
+        if not is_null_rev(revid):
+
+            change = history.get_changes([ revid ])[0]
+            # If we're looking at the tip, use head: in the URL instead
+            if revid == branch.last_revision():
+                revno_url = 'head:'
+            else:
+                revno_url = history.get_revno(revid)
+            history.add_branch_nicks(change)
+
+            # Create breadcrumb trail for the path within the branch
+            branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
+            filelist = self.get_filelist(rev_tree.inventory, path, sort_type)
+        else:
+            start_revid = None
+            change = None
+            path = "/"
+            updir = None
+            revno_url = 'head:'
+            branch_breadcrumbs = []
+            filelist = []
+
         return {
             'branch': self._branch,
             'util': util,
             'revid': revid,
+            'revno_url': revno_url,
             'change': change,
-            'file_id': file_id,
             'path': path,
             'updir': updir,
-            'updir_file_id': updir_file_id,
-            'filelist': h.get_filelist(inv, file_id, sort_type),
-            'history': h,
-            'posixpath': posixpath,
+            'filelist': filelist,
             'navigation': navigation,
             'url': self._branch.context_url,
             'start_revid': start_revid,

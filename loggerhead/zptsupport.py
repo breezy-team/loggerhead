@@ -18,6 +18,7 @@
 import logging
 import os
 import pkg_resources
+import re
 import StringIO
 
 from simpletal import simpleTAL, simpleTALES
@@ -27,12 +28,17 @@ logging.getLogger("simpleTALES").setLevel(logging.INFO)
 
 
 _zpt_cache = {}
+
+
 def zpt(tfile):
     tinstance = _zpt_cache.get(tfile)
     stat = os.stat(tfile)
     if tinstance is None or tinstance.stat != stat:
+        text = open(tfile).read()
+        text = re.sub(r'\s*\n\s*', '\n', text)
+        text = re.sub(r'[ \t]+', ' ', text)
         tinstance = _zpt_cache[tfile] = TemplateWrapper(
-            simpleTAL.compileXMLTemplate(open(tfile)), tfile, stat)
+            simpleTAL.compileXMLTemplate(text), tfile, stat)
     return tinstance
 
 
@@ -74,7 +80,7 @@ def load_template(classname):
         package = classname[0:divider]
         basename = classname[divider+1:]
     else:
-        raise ValueError, "All templates must be in a package"
+        raise ValueError("All templates must be in a package")
 
     tfile = pkg_resources.resource_filename(
         package, "%s.%s" % (basename, "pt"))

@@ -1,13 +1,5 @@
 /*Info Box*/
-#infoContainer {
-	width:900px;
-	padding:10px 10px 0px 10px;
-	margin:0px 0px 10px 0px;
-	color:#666;
-	background:#fcfcfc;
-	border:1px solid #b7b7b7;
-}
-.information, .comiter, .timer, .mfrom, .mto, .revid {
+.information, .committer, .timer, .mfrom, .mto, .revid, .bug, .tags {
 	float:left;
 	margin:0px 10px 5px 0px;
 	padding:0px 0px 2px 18px;
@@ -19,6 +11,12 @@
     float:left;
     padding:1px 0px 0px 18px;
     margin:0px 10px 5px 0px;
+}
+.tags {
+    float:left;
+    padding:1px 0px 0px 18px;
+    margin:0px 10px 5px 0px;
+    background:url(../images/ico_tag.gif) no-repeat top left;
 }
 .comiter, .mfrom, .mto {
 	color:#000;
@@ -46,4 +44,7 @@
     clear:both;
     width:100%;
     position:relative;
+}
+.bug {
+	background:url(../images/ico_bug.png) no-repeat top left;
 }
