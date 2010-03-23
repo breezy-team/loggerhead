@@ -108,7 +108,13 @@ Using Loggerhead as a Bazaar Plugin
 
 This branch contains experimental support for using Loggerhead as a Bazaar
 plugin.  To use it, place the top-level Loggerhead directory (the one
-containing this file) at ``~/.bazaar/plugins/loggerhead``.
+containing this file) at ``~/.bazaar/plugins/loggerhead``.  E.g.:
+
+.. code-block:: sh
+
+   $ bzr branch lp:loggerhead ~/.bazaar/plugins/loggerhead
+   $ cd ~/myproject
+   $ bzr serve --http
 
 
 Using a Config File
@@ -155,7 +161,8 @@ at: https://launchpad.net/bzr-search ).
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
 
-Contents:
+Script Reference
+----------------
 
 .. toctree::
    :maxdepth: 2
@@ -168,9 +175,12 @@ Contents:
 Support
 -------
 
-Loggerhead is loosely based on bazaar-webserve, which was loosely
-based on hgweb.  Discussion should take place on the bazaar-dev
-mailing list at bazaar@lists.canonical.com.  You can join the list at
+Loggerhead is loosely based on `bazaar-webserve
+<https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
+based on `hgweb <http://mercurial.selenic.com/wiki/HgWebDirStepByStep>`_.
+
+Discussion should take place on the bazaar-dev mailing list at
+mailto:bazaar@lists.canonical.com.  You can join the list at
 <https://lists.ubuntu.com/mailman/listinfo/bazaar>.  You don't need to
 subscribe to post, but your first post will be held briefly for manual
 moderation.
