@@ -3,8 +3,10 @@ loggerhead:  A web viewer for ``bzr`` branches
 
 Loggerhead is a web viewer for projects in bazaar. It can be used to navigate 
 a branch history, annotate files, view patches, perform searches, etc.
-It is heavily based on ``bazaar-webserve``, which is itself based on ``hgweb``
-for Mercurial.
+oggerhead is heavily based on `bazaar-webserve
+<https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
+based on `hgweb <http://mercurial.selenic.com/wiki/HgWebDirStepByStep>`_.
+
 
 Getting Started
 ---------------
@@ -175,10 +177,6 @@ Script Reference
 Support
 -------
 
-Loggerhead is loosely based on `bazaar-webserve
-<https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
-based on `hgweb <http://mercurial.selenic.com/wiki/HgWebDirStepByStep>`_.
-
 Discussion should take place on the bazaar-dev mailing list at
 mailto:bazaar@lists.canonical.com.  You can join the list at
 <https://lists.ubuntu.com/mailman/listinfo/bazaar>.  You don't need to
@@ -211,10 +209,7 @@ See Also
 
 https://launchpad.net/loggerhead
 
-Indices and tables
-==================
+Index
+=====
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
+- :ref:`genindex`
