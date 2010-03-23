@@ -9,63 +9,102 @@ for Mercurial.
 Getting Started
 ---------------
 
-Loggerhead depends on:
+Loggerhead depends on the following Python libraries.:
 
-1) SimpleTAL for templating.
-   On Ubuntu, ``sudo apt-get install python-simpletal``
-   or download from http://www.owlfish.com/software/simpleTAL/download.html
+- SimpleTAL for templating.
 
-2) simplejson for producing JSON data.
-   On Ubuntu, ``sudo apt-get install python-simplejson``
-   or use `easy_install simplejson`.
+- simplejson for producing JSON data.
 
-3) Paste for the server. (You need version 1.2 or newer of Paste.)
-   On Ubuntu, ``sudo apt-get install python-paste``
-   or use `easy_install Paste`
+- Paste for the server. (You need version 1.2 or newer of Paste.)
 
-4) Paste Deploy  (optional, needed when proxying through Apache)
-   On Ubuntu, ``sudo apt-get install python-pastedeploy``
-   or use `easy_install PasteDeploy`
+- Paste Deploy  (optional, needed when proxying through Apache)
 
-5) flup (optional, needed to use FastCGI, SCGI or AJP)
-   On Ubuntu, ``sudo apt-get install python-flup``
-   or use `easy_install flup`
+- flup (optional, needed to use FastCGI, SCGI or AJP)
 
-Then simply run the 'serve-branches' with the branch you want to
-serve on the command line:
+
+Installing Dependencies Using Ubuntu Packages
+#############################################
+
+.. code-block:: sh
+
+   $ sudo apt-get install python-simpletal
+   $ sudo apt-get install python-simplejson
+   $ sudo apt-get install python-paste
+   $ sudo apt-get install python-pastedeploy
+   $ sudo apt-get install python-flup
+
+Installing Dependencies Using :command:`easy_install`
+#####################################################
+
+.. code-block:: sh
+
+   $ easy_install \
+     -f http://www.owlfish.com/software/simpleTAL/py2compatible/download.html \
+     SimpleTAL
+   $ easy_install simplejson
+   $ easy_install Paste
+   $ easy_install PasteDeploy
+   $ easy_install flup
+
+
+Running the Standalone Loggerhead Server
+----------------------------------------
+
+After installing all the dependencies, you should be able to run
+:command:`serve-branches` with the branch you want to serve on the
+command line:
 
 .. code-block:: sh
 
     ./serve-branches ~/path/to/branch
 
-The script listens on port 8080 so head to http://localhost:8080/ in
-your browser to see the branch.  You can also pass a directory that
-contains branches to the script, and it will serve a very simple
-directory listing at other pages.
+By default, the script listens on port 8080, so head to
+http://localhost:8080/ in your browser to see the branch.
+
+You can also pass a directory that contains branches to the script,
+and it will serve a very simple directory listing at other pages.
 
 You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
+See :doc:`serve-branches` for all command line options.
+
+Running Loggerhead as a Daemon
+------------------------------
+
 To run loggerhead as a linux daemon:
 
-1) Copy loggerheadd to ``/etc/init.d``
+1) Copy the ``loggerheadd`` scipt to ``/etc/init.d``
+
+.. code-block:: sh
+
+   $ sudo cp ./loggerheadd /etc/init.d
 
 2) Edit the file to configure where your loggerhead is installed, and which
    serve-branches options you would like.
 
+.. code-block:: sh
+
+   $ sudo vim /etc/init.d/loggerheadd
+
 3) Register the service
-   ``cd /etc/init.d``
 
-   a) on upstart based systems like Ubuntu run: 
-      ``update-rc.d loggerheadd defaults``
+a) on upstart based systems like Ubuntu run: 
 
-   b) on Sysvinit based systems like Centos or SuSE run:
-      ``chkconfig --add loggerheadd``
+.. code-block:: sh
+
+   $ sudo update-rc.d loggerheadd defaults
+
+b) on Sysvinit based systems like Centos or SuSE run:
+
+.. code-block:: sh
+
+   $ sudo chkconfig --add loggerheadd
 
 
-Loggerhead as a Bazaar Plugin
------------------------------
+Using Loggerhead as a Bazaar Plugin
+------------------------------------
 
 This branch contains experimental support for using Loggerhead as a Bazaar
 plugin.  To use it, place the top-level Loggerhead directory (the one
@@ -82,7 +121,6 @@ under the branch's section:
 
     [/path/to/branch]
     http_serve = False
-
 
 More configuration options to come soon.
 
@@ -112,9 +150,19 @@ Search
 ------
 
 Search is currently supported by using the bzr-search plugin (available
-at: ``https://launchpad.net/bzr-search``
+at: https://launchpad.net/bzr-search ).
+
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   serve-branches
+   start-loggerhead
+   stop-loggerhead
 
 
 Support
@@ -135,12 +183,13 @@ Bugs are tracked on Launchpad; start at:
 Hacking
 -------
 
-To run loggerhead tests, you will need the package python-nose,
-and run in the loggerhead directory:
+To run loggerhead tests, you will need to install the package ``python-nose``,
+and run its :command:`nosetests` script in the loggerhead directory:
 
 .. code-block:: sh
 
     nosetests
+
 
 License
 -------
@@ -151,15 +200,6 @@ See Also
 --------
 
 https://launchpad.net/loggerhead
-
-Contents:
-
-.. toctree::
-   :maxdepth: 2
-
-   serve-branches
-   start-loggerhead
-   stop-loggerhead
 
 Indices and tables
 ==================

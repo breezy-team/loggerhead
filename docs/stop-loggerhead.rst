@@ -1,8 +1,8 @@
-:command:`stop-loggerhead`:  Stop a [XXX daemonized] loggerhead server 
+:command:`stop-loggerhead`
 ======================================================================
 
 The :command:`stop-loggerhead` command stops the currently running loggerhead
-server.
+daemon.
 
 .. program:: stop-loggerhead
 

@@ -1,8 +1,8 @@
-:command:`start-loggerhead`:  Start a loggerhead server [XXX as a daemon]
-=========================================================================
+:command:`start-loggerhead`
+===========================
 
 The :command:`start-loggerhead` command starts a new standalone loggerhead
-server [XXX in the background (daemonized) by default]
+server.  By default, the server runs in the background (daemonized).
 
 .. program:: start-loggerhead
 
@@ -12,6 +12,9 @@ Usage
 .. code-block:: sh
 
    start-loggerhead [OPTIONS]
+
+Options
+-------
 
 .. cmdoption:: --version
 
