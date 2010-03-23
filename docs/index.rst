@@ -133,8 +133,8 @@ under the branch's section:
 More configuration options to come soon.
 
 
-Serving Loggerhead from Behind Apache
--------------------------------------
+Serving Loggerhead behind Apache
+--------------------------------
 
 If you want to view Bazaar branches from your existing Apache
 installation, you'll need to configure Apache to proxy certain
