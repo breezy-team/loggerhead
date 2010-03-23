@@ -163,8 +163,8 @@ at: https://launchpad.net/bzr-search ).
 You need to have the plugin installed and each branch indexed to allow
 searching on branches.
 
-Script Reference
-----------------
+Command-Line Reference
+----------------------
 
 .. toctree::
    :maxdepth: 2
