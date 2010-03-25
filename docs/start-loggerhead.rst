@@ -11,7 +11,7 @@ Usage
 
 .. code-block:: sh
 
-   start-loggerhead [OPTIONS]
+    start-loggerhead [OPTIONS]
 
 Options
 -------
@@ -22,7 +22,7 @@ Options
 
 .. cmdoption:: -h, --help
 
-    Show this help message and exit
+    Show this help message and exit.
 
 .. cmdoption:: --foreground
 
@@ -30,17 +30,17 @@ Options
 
 .. cmdoption:: -C, --check
 
-    Only start if not already running (useful for cron jobs)
+    Only start if not already running (useful for cron jobs).
 
 .. cmdoption:: -p, --pidfile=PIDFILE
 
-    override pid file location
+    Override pid file location.
 
 .. cmdoption:: -c, --config-file=CONFIGFILE
 
-   Override configuration file location [XXX default is
-   :file:`/etc/loggerhead.conf`]
+    Override configuration file location (the default is
+    :file:`/etc/loggerhead.conf`).
 
 .. cmdoption:: --log-folder=LOG_FOLDER
 
-    The directory [XXX in which] to place log files
+    The directory in which to place log files.
