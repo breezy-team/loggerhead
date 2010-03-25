@@ -17,11 +17,11 @@ Loggerhead depends on the following Python libraries.:
 
 - simplejson for producing JSON data.
 
-- Paste for the server. (You need version 1.2 or newer of Paste.)
+- Paste for the server. (You need version 1.2 or newer of Paste).
 
-- Paste Deploy  (optional, needed when proxying through Apache)
+- Paste Deploy  (optional, needed when proxying through Apache).
 
-- flup (optional, needed to use FastCGI, SCGI or AJP)
+- flup (optional, needed to use FastCGI, SCGI or AJP).
 
 
 Installing Dependencies Using Ubuntu Packages
