@@ -79,8 +79,9 @@ Options
     Allow writing to the Bazaar server.
     
     Setting this option keeps Loggerhead from adding a 'readonly+' prefix
-    to the base URL of is to make visible the display of instructions for
-    checking out the 'public_branch' URL for the branch being browsed.
+    to the base URL of the branch.  The only effect of suppressing this prefix
+    is to make visible the display of instructions for checking out the
+    'public_branch' URL for the branch being browsed.
 
 .. cmdoption:: -h, --help
 
