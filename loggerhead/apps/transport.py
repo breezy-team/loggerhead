@@ -28,6 +28,7 @@ from paste.request import path_info_pop
 from paste import httpexceptions
 from paste import urlparser
 
+from loggerhead import util
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
@@ -93,11 +94,8 @@ class BranchesFromTransportServer(object):
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
             base = self.transport.base
-            readonly_prefix = 'readonly+'
-            if base.startswith(readonly_prefix):
-                base = base[len(readonly_prefix):]
             try:
-                path = urlutils.local_path_from_url(base)
+                path = util.local_path_from_url(base)
             except errors.InvalidURL:
                 raise httpexceptions.HTTPNotFound()
             else:
