@@ -1,7 +1,7 @@
 :command:`stop-loggerhead`
 ======================================================================
 
-The :command:`stop-loggerhead` command stops the currently running loggerhead
+The :command:`stop-loggerhead` command stops the currently running Loggerhead
 daemon.
 
 .. program:: stop-loggerhead

@@ -1,9 +1,9 @@
-loggerhead:  A web viewer for ``bzr`` branches
+Loggerhead:  A web viewer for ``bzr`` branches
 ==============================================
 
 Loggerhead is a web viewer for projects in bazaar. It can be used to navigate 
 a branch history, annotate files, view patches, perform searches, etc.
-oggerhead is heavily based on `bazaar-webserve
+Loggerhead is heavily based on `bazaar-webserve
 <https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
 based on `hgweb <http://mercurial.selenic.com/wiki/HgWebDirStepByStep>`_.
 
@@ -75,7 +75,7 @@ See :doc:`serve-branches` for all command line options.
 Running Loggerhead as a Daemon
 ------------------------------
 
-To run loggerhead as a linux daemon:
+To run Loggerhead as a linux daemon:
 
 1) Copy the ``loggerheadd`` scipt to ``/etc/init.d``
 
@@ -83,7 +83,7 @@ To run loggerhead as a linux daemon:
 
    $ sudo cp ./loggerheadd /etc/init.d
 
-2) Edit the file to configure where your loggerhead is installed, and which
+2) Edit the file to configure where your Loggerhead is installed, and which
    serve-branches options you would like.
 
 .. code-block:: sh
@@ -92,16 +92,12 @@ To run loggerhead as a linux daemon:
 
 3) Register the service
 
-a) on upstart based systems like Ubuntu run: 
-
 .. code-block:: sh
 
+   # on upstart based systems like Ubuntu run: 
    $ sudo update-rc.d loggerheadd defaults
 
-b) on Sysvinit based systems like Centos or SuSE run:
-
-.. code-block:: sh
-
+   # on Sysvinit based systems like Centos or SuSE run:
    $ sudo chkconfig --add loggerheadd
 
 
@@ -191,8 +187,8 @@ Bugs are tracked on Launchpad; start at:
 Hacking
 -------
 
-To run loggerhead tests, you will need to install the package ``python-nose``,
-and run its :command:`nosetests` script in the loggerhead directory:
+To run Loggerhead tests, you will need to install the package ``python-nose``,
+and run its :command:`nosetests` script in the Loggerhead directory:
 
 .. code-block:: sh
 

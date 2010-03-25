@@ -1,7 +1,7 @@
 :command:`serve-branches`
 =========================
 
-The :command:`serve-branches` script runs a standalone loggerhead server in
+The :command:`serve-branches` script runs a standalone Loggerhead server in
 the foreground.
 
 .. program:: serve-branches
@@ -60,7 +60,7 @@ Options
 
 .. cmdoption:: --log-folder=LOG_FOLDER
 
-    The directory in which to place loggerhead's log files.
+    The directory in which to place Loggerhead's log files.
     
     Defaults to the current directory.
 
@@ -78,7 +78,7 @@ Options
    
     Allow writing to the Bazaar server.
     
-    Setting this option keeps loggerhead from adding a 'readonly+' prefix
+    Setting this option keeps Loggerhead from adding a 'readonly+' prefix
     to the base URL of is to make visible the display of instructions for
     checking out the 'public_branch' URL for the branch being browsed.
 

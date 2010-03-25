@@ -1,7 +1,7 @@
 :command:`start-loggerhead`
 ===========================
 
-The :command:`start-loggerhead` command starts a new standalone loggerhead
+The :command:`start-loggerhead` command starts a new standalone Loggerhead
 server.  By default, the server runs in the background (daemonized).
 
 .. program:: start-loggerhead

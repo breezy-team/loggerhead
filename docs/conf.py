@@ -37,7 +37,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'loggerhead'
+project = u'Loggerhead'
 copyright = u'2010, Loggerhead team (https://launchpad.net/~loggerhead-team)'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -172,7 +172,7 @@ htmlhelp_basename = 'loggerheaddoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'loggerhead.tex', u'loggerhead Documentation',
+  ('index', 'loggerhead.tex', u'Loggerhead Documentation',
    u'Loggerhead team (https://launchpad.net/\\textasciitilde{}loggerhead-team)', 'manual'),
 ]
 
