@@ -21,6 +21,7 @@ import urllib
 import sys
 
 import bzrlib.branch
+import bzrlib.errors
 import bzrlib.lru_cache
 
 from paste import request
@@ -145,9 +146,10 @@ class BranchWSGIApp(object):
             else:
                 # Loggerhead only supports serving .bzr/ on local branches, so
                 # we shouldn't suggest something that won't work.
-                if self.branch.base.startswith('file://'):
+                try:
+                    util.local_path_from_url(self.branch.base)
                     self.served_url = self.url([])
-                else:
+                except bzrlib.errors.InvalidURL:
                     self.served_url = None
         path = request.path_info_pop(environ)
         if not path:

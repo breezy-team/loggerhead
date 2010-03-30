@@ -36,6 +36,8 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
+from bzrlib import urlutils
+
 from simpletal.simpleTALUtils import HTMLStructureCleaner
 
 log = logging.getLogger("loggerhead.controllers")
@@ -322,6 +324,14 @@ def human_size(size, min_divisor=0):
     elif divisor == GIG:
         out += 'G'
     return out
+
+
+def local_path_from_url(url):
+    """Convert Bazaar URL to local path, ignoring readonly+ prefix"""
+    readonly_prefix = 'readonly+'
+    if url.startswith(readonly_prefix):
+        url = url[len(readonly_prefix):]
+    return urlutils.local_path_from_url(url)
 
 
 def fill_in_navigation(navigation):

@@ -15,6 +15,9 @@ dev [future]
     - Repository.get_revision_inventory() was removed in bzr 2.2; use
       Repository.get_inventory() instead. (Matt Nordhoff, #528194)
 
+    - Ignore readonly+ prefix when checking if Loggerhead is serving a
+      local location. (Reported by Tres Seaver.) (Matt Nordhoff)
+
 1.17 [20Aug2009]
 ---------------
 
