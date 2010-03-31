@@ -1,0 +1,212 @@
+======================================
+Storing Partially Denormalized History
+======================================
+
+Storing graph data in a way that can be efficiently accessed can be difficult.
+On the one hand, it is common to store data-per-node. This can be space
+efficient. However, when performing queries you often have to walk
+one-node-at-a-time which is inefficient. At the other end, you can store the
+data fully denormalized (eg, for each revision X, you store X => all
+ancestors), however that has quadratic growth. Also, while you want to avoid
+worst-case behavior of looking one-at-a-time, you also want to avoid the
+worst-case all-at-once behavior.
+
+Finding a compromise between minimal data storage, and efficient queries seems
+worth investigating.
+
+
+Example: Dotted Revnos
+======================
+
+One example where this shows up clearly is in how we handle dotted revnos, and
+"``merge_sorted``" data in general. It is generally a nice way to look at the
+data (``bzr qlog``), but we'd like to avoid the O(all_history) aspect.
+
+For dotted revnos, one option is to store data per revision versus its
+mainline parent. This works well because the data is organised in such a
+fashion anyway [#]_. For this example, I'll use the SQLite syntax, because it
+is a concrete way of expressing the information.::
+
+  CREATE TABLE revision (
+    db_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    revision_id TEXT NOT NULL
+  );
+  CREATE INDEX revision_revision_id_index ON revision (revision_id);
+  CREATE TABLE parent (
+    child INTEGER REFERENCES revision NOT NULL,
+    parent INTEGER REFERENCES revision NOT NULL,
+    parent_idx INTEGER NOT NULL -- 0 == left-hand parent
+  );
+  CREATE INDEX parent_child_index ON parent (child);
+  CREATE TABLE dotted_revnos (
+    tip_revision INTEGER REFERENCES revision NOT NULL,
+    merged_revision INTEGER REFERENCES revision NOT NULL,
+    revno TEXT NOT NULL,
+    end_of_merge BOOL NOT NULL,
+    merge_depth INTEGER NOT NULL,
+    CONSTRAINT dotted_revnos_key UNIQUE (tip_revision, merged_revision)
+  );
+  CREATE INDEX dotted_revnos_index ON dotted_revnos(tip_revision);
+    
+
+At this point, you can store the revision graph and the dotted revno
+information. It should be fairly compact, since every record is only present
+one time. However, it can be difficult to find the dotted revno for an
+arbitrary branch tip. This is because you have to walk the parent table, in
+order to find possible tip keys, in order to look for ``(tip_revision,
+merged_revision)`` pairs.
+
+Example: Given this graph, find the dotted revno for C (newest rev at top)::
+  
+  F
+  |\
+  D E
+  |\|
+  B C
+  |/
+  A
+
+You start with F, and can query for (F, C), but that won't be present. So you
+walk back through the parent table to find D, and then check for (D, C) which
+can then be found. However, if there are a lot of mainline parent, this
+takes a lot of walking in the parent table and for each step you have a
+lookup into the ``dotted_revnos`` table.
+
+The join you want to do is something like::
+
+  SELECT revno FROM dotted_revnos
+   WHERE tip_revision IN ''MAINLINE_ANCESTRY(F)''
+     AND merged_revision = 'C';
+
+The trick is to find a reasonable way of defining ``MAINLINE_ANCESTRY(F)``
+that doesn't bloat into all-history for every revision, and doesn't require
+you to try every revision one-at-a-time. My idea is that you can do ranges of
+ancestry. You can observe that for related branches, most of the mainline
+ancestry overlaps. So even if you have a large graph, most of the mainline
+ancestors are the same. Here is are a couple more tables::
+
+  CREATE TABLE mainline_parent_range (
+    pkey INTEGER PRIMARY KEY AUTOINCREMENT,
+    head INTEGER REFERENCES revision NOT NULL,
+    tail INTEGER REFERENCES revision NOT NULL
+  );
+  CREATE INDEX mainline_parent_range_head_index
+    ON mainline_parent_range (head);
+  CREATE TABLE mainline_parents (
+    pkey INTEGER PRIMARY KEY AUTOINCREMENT,
+    range INTEGER REFERENCES mainline_parent_range NOT NULL,
+    revision INTEGER REFERENCES revision NOT NULL
+  );
+  CREATE INDEX mainline_parents_range_index
+    ON mainline_parents (range);
+
+The idea is that you can now do the query::
+
+  SELECT revno FROM dotted_revnos, mainline_parents
+   WHERE tip_revision = mainline_parents.revision
+     AND mainline_parents.range = ?
+     AND merged_revision = ?;
+
+And you can reasonably efficiently find the appropriate ranges. You do this by
+starting to walk the ``parents`` table, and queurying the
+``mainline_parent_range`` table to see if you can start grabbing big sections.
+at a time.::
+
+    def revision_id_to_db_num(cursor, revision_id):
+        return cursor.execute('SELECT db_id FROM revision'
+                              ' WHERE revision_id = ?',
+                              (revision_id,)).fetchone()[0]
+
+    def get_dotted_revno(cursor, tip_revision_id, merged_revision_id):
+        dotted_revno = None
+        cur_tip_db_id = revision_id_to_db_num(tip_revision_id)
+        merged_db_id = revision_id_to_db_num(merged_revision_id)
+        
+        while dotted_revno is None and cur_tip_db_id is not None:
+            # Check for a range
+            res = cursor.execute('''
+                SELECT pkey, tail FROM mainline_parent_range, revision
+                 WHERE head = revision.pkey
+                   AND revision.revision_id = ?
+                 LIMIT 1
+                 ''', (cur_tip_db_id,)).fetchall()
+            if len(res) == 0: # no such entry, step-by-one
+                next_par = cursor.execute('''
+                    SELECT parent.parent FROM parent
+                     WHERE child = ?
+                       AND parent_idx = 0
+                    ''', (cur_tip_db_id,)).fetchone()
+                if next_par is None:
+                    next_tip_db_id = None
+                else:
+                    next_tip_db_id = next_par[0]
+                res = cursor.execute('''
+                    SELECT revno from dotted_revnos
+                     WHERE tip_revision = ?
+                       AND merged_revision = ?
+                     LIMIT 1
+                    ''', (cur_tip_db_id, merged_db_id)).fetchone()
+            else: # entry, check against the range
+                range_key, next_tip_db_id = res[0]
+                res = cursor.execute('''
+                    SELECT revno from dotted_revnos, mainline_parents
+                     WHERE tip_revision = mainline_parents.revision
+                       AND mainline_parents.range = ?
+                       AND merged_revision = ?
+                     LIMIT 1
+                    ''', (range_key, merged_db_id)).fetchone()
+            if res is not None:
+                dotted_revno = res[0]
+            cur_tip_db_id = next_tip_db_id
+        return dotted_revno
+
+The trick is now about how the ``mainline_parents`` table gets filled in. I
+think doing some sort of batching, like every 100 revisions would be
+reasonble. The other thing is to try to get convergence. If you imagine adding
+a new branch, you can start walking back its mainline ancestry, and seeing if
+there is already a range whose head is the current revision. If so, you can
+just use that as your tail and stop.
+
+
+Mapping Dotted Revnos to Revisions
+==================================
+
+Doing the reverse mapping is also tricky, because it depends on the current
+tip definition. However, I think the same trick can be applied, by just
+changing the inner query to::
+
+  SELECT merged_revision FROM dotted_revnos, mainline_parents
+   WHERE tip_revision = mainline_parents.revision
+     AND mainline_parents.range = ?
+     AND dotted_revno = ?
+
+Note that this should be reasonably performant, even without adding another
+index. The trick seems to be just getting the join between the
+``mainline_parents`` table to be reasonable against the ``dotted_revnos``
+table. Looking at it from a ``JOIN`` syntax, it is something like::
+
+    SELECT * FROM dotted_revnos JOIN mainline_parents
+               ON tip_revision = mainline_parents.revision
+
+If I'm thinking correctly, that query should be fairly efficient at giving you
+a subset of the graph, while still allowing you to store the nodes of the
+graph in a fairly compact fashion. If there are revisions in branch A that are
+then merged into branches B and C, then you end up with 2 entries in the
+``dotted_revnos`` table. However, if B then gets merged into D, I'm pretty
+sure you don't get new entries. So I think ``dotted_revnos`` ends up being
+O(num_revisions*num_integration_branches), and the latter is usually a small
+constant (say less than 5, and probably often only 1 or 2?). We should also
+look at it with say the MySQL history, which because of there 'merge+push'
+style of working would probably lead to expansion in the number of entries. It
+still should be much better than a "ancestry of revision" table, that grows
+O(num_revisions*num_revisions).
+
+
+.. [#] Dotted revnos are numbered based on the current branch tip revision.
+   However, there is a stability guarantee that we can exploit. If a revision
+   X is in the ancestry of tip T, then the dotted revno for X will be the same
+   for all descendents of T.
+
+..
+  vim: ft=rst tw=78 ai
+
