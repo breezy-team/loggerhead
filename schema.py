@@ -88,20 +88,19 @@ CREATE TABLE mainline_parent (
 """
 _create_statements.append(mainline_parent_t)
 
-mainline_parents_range_index = """
-CREATE INDEX mainline_parents_range_index
-    ON mainline_parents (range);
+mainline_parent_range_index = """
+CREATE INDEX mainline_parent_range_index
+    ON mainline_parent (range);
 """
-_create_statements.append(mainline_parents_range_index)
+_create_statements.append(mainline_parent_range_index)
 
 
 def create_sqlite_db(conn):
     """Given a connection to an sqlite database, create the fields."""
     cursor = conn.cursor()
-    cursor.execute("BEGIN")
     for statement in _create_statements:
         cursor.execute(statement)
-    cursor.execute("COMMIT")
+    conn.commit()
 
 
 def create_pgsql_db(conn):
@@ -135,10 +134,53 @@ def ensure_revision(cursor, revision_id):
                        (revision_id,))
     val = x.fetchone()
     if val is None:
-        cursor.execute('INSERT INTO revision (revision_id) VALUES ?',
+        cursor.execute('INSERT INTO revision (revision_id) VALUES (?)',
                        (revision_id,))
-        return ensure_revision
+        return ensure_revision(cursor, revision_id)
     return val[0]
+
+
+_BATCH_SIZE = 100
+def ensure_revisions(cursor, revision_ids):
+    """Do a bulk check to make sure we have db ids for all revisions.
+    
+    :return: A dict mapping revision_id => db_id
+    """
+    # TODO: I wish I knew a more efficient way to do this
+    #   a) You could select all revisions that are in the db. But potentially
+    #      you have lots of unrelated projects, and this would give unwanted
+    #      overlap.
+    #   b) SQLITE defaults to limiting you to 999 parameters
+    #   c) IIRC the postgres code uses a tradeoff of 10%. If it thinks it needs
+    #      more than 10% of the data in the table, it is faster to do an I/O
+    #      friendly sequential scan, than to do a random order scan. So
+    #      assuming that the data layout isn't going to be that bad, we just
+    #      load everything, and parse out what we want
+    remaining = list(revision_ids)
+    cur = 0
+    missing = set(remaining)
+    result = {}
+    res = cursor.execute('SELECT revision_id, db_id FROM revision')
+    for rev_id, db_id in res.fetchall():
+        if rev_id in missing:
+            result[rev_id] = db_id
+            missing.discard(rev_id)
+    # while cur < len(remaining):
+    #     next = remaining[cur:cur+_BATCH_SIZE]
+    #     cur += _BATCH_SIZE
+    #     res = cursor.execute('SELECT revision_id, db_id FROM revision'
+    #                          ' WHERE revision_id in (%s)'
+    #                          % (', '.join('?'*len(next))),
+    #                          tuple(next))
+    #     for rev_id, db_id in res.fetchall():
+    #         result[rev_id] = db_id
+    #         missing.discard(rev_id)
+    if missing:
+        cursor.executemany('INSERT INTO revision (revision_id) VALUES (?)',
+                           [(m,) for m in missing])
+        missing_info = ensure_revisions(cursor, missing)
+        result.update(missing_info)
+    return result
 
 
 def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
@@ -153,7 +195,7 @@ def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
                               (tip_revision, merged_revision)).fetchone()
     if existing is not None:
         new_value = (revno, end_of_merge, merge_depth)
-        if existing != :
+        if existing != new_value:
             raise ValueError('Disagreement in the graph. Wanted to add'
                 ' node %s, but %s already exists'
                 % (new_value, existing))

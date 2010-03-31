@@ -21,18 +21,25 @@ from bzrlib import (
     option,
     )
 
+
 class cmd_create_history_db(commands.Command):
     """Create and populate the history database for this branch.
     """
 
-    takes_options = [option.Option('db', type=str,
-                        help='Use this as the database for storage')
+    takes_options = [option.Option('db', type=unicode,
+                        help='Use this as the database for storage'),
+                     option.Option('directory', type=unicode, short_name='d',
+                        help='Import this location instead of "."'),
                     ]
 
-    def run(self, db=None):
+    def run(self, directory='.', db=None):
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
-        b = branch.Branch.open('.')
-        history_db.import_from_branch(b, db=db)
+        b = branch.Branch.open(directory)
+        b.lock_read()
+        try:
+            history_db.import_from_branch(b, db=db)
+        finally:
+            b.unlock()
 
 commands.register_command(cmd_create_history_db)
