@@ -37,7 +37,8 @@ parent_t = """
 CREATE TABLE parent (
     child INTEGER REFERENCES revision NOT NULL,
     parent INTEGER REFERENCES revision NOT NULL,
-    parent_idx INTEGER NOT NULL -- 0 == left-hand parent
+    parent_idx INTEGER NOT NULL, -- 0 == left-hand parent
+    CONSTRAINT parent_is_unique UNIQUE (child, parent, parent_idx)
 );
 """
 _create_statements.append(parent_t)
@@ -51,7 +52,7 @@ _create_statements.append(parent_child_index)
 parent_parent_index = """
 CREATE INDEX parent_parent_index ON parent (parent);
 """
-_create_statements.append(parent_child_index)
+_create_statements.append(parent_parent_index)
 # So we can find the *children* of a given node
 
 dotted_revno_t = """
