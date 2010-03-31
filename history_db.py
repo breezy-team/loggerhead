@@ -32,9 +32,7 @@ from bzrlib.plugins.history_db import schema
 def _insert_nodes(cursor, tip_rev_id, nodes, rev_id_to_db_id):
     """Insert all of the nodes mentioned into the database."""
     # rev_ids we don't know the db id for
-    unknown_db_ids = set([n.key[0] for n in nodes
-                                    if n.key[0] not in rev_id_to_db_id])
-    rev_id_to_db_id.update(schema.ensure_revisions(cursor, unknown_db_ids))
+    schema.ensure_revisions(cursor, [n.key[0] for n in nodes], rev_id_to_db_id)
     res = cursor.execute("SELECT count(*) FROM dotted_revno JOIN revision"
                          "    ON dotted_revno.tip_revision = revision.db_id"
                          " WHERE revision_id = ?"
@@ -53,7 +51,25 @@ def _insert_nodes(cursor, tip_rev_id, nodes, rev_id_to_db_id):
             end_of_merge=node.end_of_merge,
             merge_depth=node.merge_depth)
     return True
-            
+
+
+def _update_parents(cursor, nodes, graph, rev_id_to_db_id):
+    """Update parent information for all these nodes."""
+    # Get the keys and their parents
+    parent_map = dict((n.key[0], [p[0] for p in graph.get_parent_keys(n.key)])
+                      for n in nodes)
+    rev_ids = set(parent_map)
+    map(rev_ids.update, parent_map.itervalues())
+    schema.ensure_revisions(cursor, rev_ids, rev_id_to_db_id)
+    data = []
+    r_to_d = rev_id_to_db_id
+    for rev_id, parent_ids in parent_map.iteritems():
+        for idx, parent_id in enumerate(parent_ids):
+            data.append((r_to_d[rev_id], r_to_d[parent_id], idx))
+    cursor.executemany("INSERT OR IGNORE INTO parent"
+                       "  (child, parent, parent_idx)"
+                       "VALUES (?, ?, ?)", data)
+
 
 def import_from_branch(a_branch, db=None):
     """Import the history data from a_branch into the database."""
@@ -86,11 +102,15 @@ def import_from_branch(a_branch, db=None):
                 # inserted this data into the db. If we have, then we can
                 # assume that all parents are *also* inserted into the database
                 # and stop
+                # This is only safe if we either import in 'forward' order, or
+                # we wait to commit until all the data is imported. However, if
+                # we import in 'reverse' order, it is obvious when we can
+                # stop...
 
-                # First, make sure we have identifiers for everything
+                _update_parents(cursor, new_nodes, kg, rev_id_to_db_id)
                 if not _insert_nodes(cursor, last_tip_rev_id, new_nodes,
                                      rev_id_to_db_id):
-                    # This data has already been imported
+                    # This data has already been imported.
                     new_nodes = []
                     break
                 imported_count += len(new_nodes)

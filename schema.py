@@ -46,6 +46,13 @@ parent_child_index = """
 CREATE INDEX parent_child_index ON parent (child);
 """
 _create_statements.append(parent_child_index)
+# So we can find a parent for a given node
+
+parent_parent_index = """
+CREATE INDEX parent_parent_index ON parent (parent);
+"""
+_create_statements.append(parent_child_index)
+# So we can find the *children* of a given node
 
 dotted_revno_t = """
 CREATE TABLE dotted_revno (
@@ -141,10 +148,10 @@ def ensure_revision(cursor, revision_id):
 
 
 _BATCH_SIZE = 100
-def ensure_revisions(cursor, revision_ids):
+def ensure_revisions(cursor, revision_ids, rev_id_to_db_id):
     """Do a bulk check to make sure we have db ids for all revisions.
     
-    :return: A dict mapping revision_id => db_id
+    Update the revision_id => db_id mapping
     """
     # TODO: I wish I knew a more efficient way to do this
     #   a) You could select all revisions that are in the db. But potentially
@@ -154,10 +161,9 @@ def ensure_revisions(cursor, revision_ids):
     #   c) IIRC the postgres code uses a tradeoff of 10%. If it thinks it needs
     #      more than 10% of the data in the table, it is faster to do an I/O
     #      friendly sequential scan, than to do a random order scan.
-    remaining = list(revision_ids)
+    remaining = [r for r in revision_ids if r not in rev_id_to_db_id]
     cur = 0
-    missing = set(remaining)
-    result = {}
+    missing = set()
     # res = cursor.execute('SELECT revision_id, db_id FROM revision')
     # for rev_id, db_id in res.fetchall():
     #     if rev_id in missing:
@@ -170,15 +176,15 @@ def ensure_revisions(cursor, revision_ids):
                              ' WHERE revision_id in (%s)'
                              % (', '.join('?'*len(next))),
                              tuple(next))
+        local_missing = set(next)
         for rev_id, db_id in res.fetchall():
-            result[rev_id] = db_id
-            missing.discard(rev_id)
+            rev_id_to_db_id[rev_id] = db_id
+            local_missing.discard(rev_id)
+        missing.update(local_missing)
     if missing:
         cursor.executemany('INSERT INTO revision (revision_id) VALUES (?)',
                            [(m,) for m in missing])
-        missing_info = ensure_revisions(cursor, missing)
-        result.update(missing_info)
-    return result
+        ensure_revisions(cursor, missing, rev_id_to_db_id)
 
 
 def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
