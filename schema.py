@@ -153,28 +153,26 @@ def ensure_revisions(cursor, revision_ids):
     #   b) SQLITE defaults to limiting you to 999 parameters
     #   c) IIRC the postgres code uses a tradeoff of 10%. If it thinks it needs
     #      more than 10% of the data in the table, it is faster to do an I/O
-    #      friendly sequential scan, than to do a random order scan. So
-    #      assuming that the data layout isn't going to be that bad, we just
-    #      load everything, and parse out what we want
+    #      friendly sequential scan, than to do a random order scan.
     remaining = list(revision_ids)
     cur = 0
     missing = set(remaining)
     result = {}
-    res = cursor.execute('SELECT revision_id, db_id FROM revision')
-    for rev_id, db_id in res.fetchall():
-        if rev_id in missing:
-            result[rev_id] = db_id
-            missing.discard(rev_id)
-    # while cur < len(remaining):
-    #     next = remaining[cur:cur+_BATCH_SIZE]
-    #     cur += _BATCH_SIZE
-    #     res = cursor.execute('SELECT revision_id, db_id FROM revision'
-    #                          ' WHERE revision_id in (%s)'
-    #                          % (', '.join('?'*len(next))),
-    #                          tuple(next))
-    #     for rev_id, db_id in res.fetchall():
+    # res = cursor.execute('SELECT revision_id, db_id FROM revision')
+    # for rev_id, db_id in res.fetchall():
+    #     if rev_id in missing:
     #         result[rev_id] = db_id
     #         missing.discard(rev_id)
+    while cur < len(remaining):
+        next = remaining[cur:cur+_BATCH_SIZE]
+        cur += _BATCH_SIZE
+        res = cursor.execute('SELECT revision_id, db_id FROM revision'
+                             ' WHERE revision_id in (%s)'
+                             % (', '.join('?'*len(next))),
+                             tuple(next))
+        for rev_id, db_id in res.fetchall():
+            result[rev_id] = db_id
+            missing.discard(rev_id)
     if missing:
         cursor.executemany('INSERT INTO revision (revision_id) VALUES (?)',
                            [(m,) for m in missing])

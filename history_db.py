@@ -29,6 +29,32 @@ from bzrlib import (
 from bzrlib.plugins.history_db import schema
 
 
+def _insert_nodes(cursor, tip_rev_id, nodes, rev_id_to_db_id):
+    """Insert all of the nodes mentioned into the database."""
+    # rev_ids we don't know the db id for
+    unknown_db_ids = set([n.key[0] for n in nodes
+                                    if n.key[0] not in rev_id_to_db_id])
+    rev_id_to_db_id.update(schema.ensure_revisions(cursor, unknown_db_ids))
+    res = cursor.execute("SELECT count(*) FROM dotted_revno JOIN revision"
+                         "    ON dotted_revno.tip_revision = revision.db_id"
+                         " WHERE revision_id = ?"
+                         "   AND tip_revision = merged_revision",
+                         (tip_rev_id,)).fetchone()
+    if res[0] > 0:
+        # Not importing anything because the data is already present
+        return False
+
+    tip_db_id = rev_id_to_db_id[tip_rev_id]
+    for node in nodes:
+        schema.create_dotted_revno(cursor,
+            tip_revision=tip_db_id,
+            merged_revision=rev_id_to_db_id[node.key[0]],
+            revno='.'.join(map(str, node.revno)),
+            end_of_merge=node.end_of_merge,
+            merge_depth=node.merge_depth)
+    return True
+            
+
 def import_from_branch(a_branch, db=None):
     """Import the history data from a_branch into the database."""
     db_conn = dbapi2.connect(db)
@@ -38,34 +64,45 @@ def import_from_branch(a_branch, db=None):
     tip_key = (a_branch.last_revision(),)
     kg = a_branch.repository.revisions.get_known_graph_ancestry([tip_key])
     merge_sorted = kg.merge_sort(tip_key)
-    cur_tip = None
     new_nodes = []
     cursor = db_conn.cursor()
-    # import pdb; pdb.set_trace()
     try:
         pb = ui.ui_factory.nested_progress_bar()
-        # preallocate all revision_ids
-        revision_ids = [n.key[0] for n in merge_sorted]
-        rev_id_to_db_id = schema.ensure_revisions(cursor, revision_ids)
-        #for idx, node in enumerate(reversed(merge_sorted)):
-        for x in range(0):
-            db_id = schema.ensure_revision(cursor, node.key[0])
+        last_tip_rev_id = None
+        new_nodes = []
+        rev_id_to_db_id = {}
+        imported_count = 0
+        for idx, node in enumerate(merge_sorted):
             pb.update('importing', idx, len(merge_sorted))
-            continue
-            new_nodes.append((db_id, node))
+            if last_tip_rev_id is None:
+                assert not new_nodes
+                assert node.merge_depth == 0, "We did not start at a mainline?"
+                last_tip_rev_id = node.key[0]
+                new_nodes.append(node)
+                continue
             if node.merge_depth == 0:
-                # We have a new tip revision, store the current merged nodes
-                for merged_node_id, new_node in new_nodes:
-                    schema.create_dotted_revno(cursor,
-                        tip_revision=db_id,
-                        merged_revision=merged_node_id,
-                        revno=''.join(map(str, node.revno)),
-                        end_of_merge=node.end_of_merge,
-                        merge_depth=node.merge_depth
-                        )
+                # We've seen all the nodes that were introduced by this
+                # revision into mainline, check to see if we've already
+                # inserted this data into the db. If we have, then we can
+                # assume that all parents are *also* inserted into the database
+                # and stop
+
+                # First, make sure we have identifiers for everything
+                if not _insert_nodes(cursor, last_tip_rev_id, new_nodes,
+                                     rev_id_to_db_id):
+                    # This data has already been imported
+                    new_nodes = []
+                    break
+                imported_count += len(new_nodes)
+                last_tip_rev_id = node.key[0]
                 new_nodes = []
+            new_nodes.append(node)
         if new_nodes:
-            raise ValueError('Somehow we didn\'t end up at a mainline revision.')
+            assert last_tip_rev_id is not None
+            _insert_nodes(cursor, last_tip_rev_id, new_nodes, rev_id_to_db_id)
+            imported_count += len(new_nodes)
+            new_nodes = []
+        print "Imported %d revisions" % (imported_count,)
     except:
         db_conn.rollback()
         raise
