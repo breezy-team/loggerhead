@@ -16,6 +16,8 @@
 
 """The current SQL schema definition."""
 
+# TODO: Consider using an ORM for all of this. For now, though, I like knowing
+#       what SQL exactly is being executed
 _create_statements = []
 
 revision_t = """
@@ -125,3 +127,39 @@ def is_initialized(conn, err_type):
     except err_type: # ???
         return False
     return True
+
+
+def ensure_revision(cursor, revision_id):
+    """Ensure a revision exists, and return its database id."""
+    x = cursor.execute('SELECT db_id FROM revision WHERE revision_id = ?',
+                       (revision_id,))
+    val = x.fetchone()
+    if val is None:
+        cursor.execute('INSERT INTO revision (revision_id) VALUES ?',
+                       (revision_id,))
+        return ensure_revision
+    return val[0]
+
+
+def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
+                        end_of_merge, merge_depth):
+    """Create a dotted revno entry for this info."""
+    # TODO: Consider changing this to a bulk SELECT a bunch which may be
+    #       missing, .executemany() the ones that aren't present
+    existing = cursor.execute('SELECT revno, end_of_merge, merge_depth'
+                              '  FROM dotted_revno'
+                              ' WHERE tip_revision = ?'
+                              '   AND merged_revision = ?',
+                              (tip_revision, merged_revision)).fetchone()
+    if existing is not None:
+        new_value = (revno, end_of_merge, merge_depth)
+        if existing != :
+            raise ValueError('Disagreement in the graph. Wanted to add'
+                ' node %s, but %s already exists'
+                % (new_value, existing))
+        return
+    cursor.execute(
+        'INSERT INTO dotted_revno (tip_revision, merged_revision,'
+        '                          revno, end_of_merge, merge_depth)'
+        ' VALUES (?, ?, ?, ?, ?)',
+        (tip_revision, merged_revision, revno, end_of_merge, merge_depth))
