@@ -53,9 +53,11 @@ class cmd_get_dotted_revno(commands.Command):
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
                      'revision',
+                     option.Option('use-db-ids',
+                        help='Do the queries using database ids'),
                     ]
 
-    def run(self, directory='.', db=None, revision=None):
+    def run(self, directory='.', db=None, revision=None, use_db_ids=False):
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch, trace
         b = branch.Branch.open(directory)
@@ -65,8 +67,12 @@ class cmd_get_dotted_revno(commands.Command):
         try:
             rev_ids = [rspec.as_revision_id(b) for rspec in revision]
             query = history_db.Querier(db, b)
-            revnos = [(query.get_dotted_revno(rev_id), rev_id)
-                      for rev_id in rev_ids]
+            if use_db_ids:
+                revnos = [(query.get_dotted_revno_db_ids(rev_id), rev_id)
+                          for rev_id in rev_ids]
+            else:
+                revnos = [(query.get_dotted_revno(rev_id), rev_id)
+                          for rev_id in rev_ids]
             revno_strs = []
             max_len = 0
             for revno, rev_id in revnos:
