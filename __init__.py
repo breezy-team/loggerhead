@@ -43,4 +43,46 @@ class cmd_create_history_db(commands.Command):
             b.unlock()
         trace.note('Imported %d revisions' % (imported_count,))
 
+
+class cmd_get_dotted_revno(commands.Command):
+    """Query the db for a dotted revno.
+    """
+
+    takes_options = [option.Option('db', type=unicode,
+                        help='Use this as the database for storage'),
+                     option.Option('directory', type=unicode, short_name='d',
+                        help='Import this location instead of "."'),
+                     'revision',
+                    ]
+
+    def run(self, directory='.', db=None, revision=None):
+        from bzrlib.plugins.history_db import history_db
+        from bzrlib import branch, trace
+        b = branch.Branch.open(directory)
+        if revision is None:
+            raise errors.BzrCommandError('You must supply --revision')
+        b.lock_read()
+        try:
+            rev_ids = [rspec.as_revision_id(b) for rspec in revision]
+            query = history_db.Querier(db, b)
+            revnos = [(query.get_dotted_revno(rev_id), rev_id)
+                      for rev_id in rev_ids]
+            revno_strs = []
+            max_len = 0
+            for revno, rev_id in revnos:
+                if revno is None:
+                    s = '?'
+                else:
+                    s = '.'.join(map(str, revno))
+                if len(s) > max_len:
+                    max_len = len(s)
+                revno_strs.append((s, rev_id))
+            self.outf.write(''.join(['%*s %s\n' % (max_len, s, r)
+                                     for s, r in revno_strs]))
+        finally:
+            b.unlock()
+        import pprint
+        trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+
 commands.register_command(cmd_create_history_db)
+commands.register_command(cmd_get_dotted_revno)

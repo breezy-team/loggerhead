@@ -21,6 +21,9 @@ try:
 except ImportError:
     from pysqlite2 import dbapi2
 
+from collections import defaultdict
+import time
+
 from bzrlib import (
     trace,
     ui,
@@ -148,3 +151,66 @@ class Importer(object):
         db_conn = dbapi2.connect(db)
         importer = Importer(db_conn, a_branch)
         return importer.do_import()
+
+
+class Querier(object):
+    """Perform queries on an existing history db."""
+
+    def __init__(self, db_path, a_branch):
+        db_conn = dbapi2.connect(db_path)
+        self._db_conn = db_conn
+        self._cursor = self._db_conn.cursor()
+        self._branch = a_branch
+        self._branch_tip_rev_id = a_branch.last_revision()
+        self._stats = defaultdict(lambda: 0)
+
+    def _get_lh_parent_rev_id(self, revision_id):
+        parent_res = self._cursor.execute("""
+            SELECT p.revision_id
+              FROM parent, revision as c, revision as p
+             WHERE parent.child = c.db_id
+               AND parent.parent = p.db_id
+               AND c.revision_id = ?
+               AND parent_idx = 0
+            """, (revision_id,)).fetchone()
+        self._stats['lh_parent_step'] += 1
+        if parent_res is None:
+            return None
+        return parent_res[0]
+
+    def _get_possible_dotted_revno(self, tip_revision_id, merged_revision_id):
+        """Given a possible tip revision, try to determine the dotted revno."""
+        revno = self._cursor.execute("""
+            SELECT revno FROM dotted_revno, revision t, revision m
+             WHERE t.revision_id = ?
+               AND t.db_id = dotted_revno.tip_revision
+               AND m.revision_id = ?
+               AND m.db_id = dotted_revno.merged_revision
+            LIMIT 1 -- should always <= 1, but hint to the db?
+            """, (tip_revision_id, merged_revision_id)).fetchone()
+        self._stats['dotted_revno_query'] += 1
+        if revno is None:
+            return None
+        return revno[0]
+
+    def get_dotted_revno(self, revision_id):
+        """Get the dotted revno for a specific revision id."""
+        t = time.time()
+        cur_tip_revision_id = self._branch_tip_rev_id
+        while cur_tip_revision_id is not None:
+            next_parent_rev_id = self._get_lh_parent_rev_id(cur_tip_revision_id)
+            # Note: It is probably fairly inefficient to repeatedly pass
+            #       merged_revision_id as a revision_id and require the db to
+            #       map that to a db_id
+            possible_revno = self._get_possible_dotted_revno(
+                cur_tip_revision_id, revision_id)
+            if possible_revno is not None:
+                self._stats['query_time'] += (time.time() - t)
+                return tuple(map(int, possible_revno.split('.')))
+            cur_tip_revision_id = next_parent_rev_id
+        # If we got here, we just don't have an answer
+        return None
+
+    def heads(self, revision_ids):
+        """Compute Graph.heads() on the given data."""
+        raise NotImplementedError(self.heads)
