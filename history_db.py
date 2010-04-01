@@ -253,6 +253,19 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return None
 
+    def walk_mainline(self):
+        """Walk the db, and grab all the mainline identifiers."""
+        t = time.time()
+        db_id = self._cursor.execute('SELECT db_id FROM revision'
+                                     ' WHERE revision_id = ?',
+                                     (self._branch_tip_rev_id,)).fetchone()[0]
+        all_ids = []
+        while db_id is not None:
+            all_ids.append(db_id)
+            db_id = self._get_lh_parent_db_id(db_id)
+        self._stats['query_time'] += (time.time() - t)
+        return
+
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""
         raise NotImplementedError(self.heads)

@@ -90,5 +90,29 @@ class cmd_get_dotted_revno(commands.Command):
         import pprint
         trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
 
+
+class cmd_walk_mainline(commands.Command):
+    """Walk the mainline of the branch."""
+
+    takes_options = [option.Option('db', type=unicode,
+                        help='Use this as the database for storage'),
+                     option.Option('directory', type=unicode, short_name='d',
+                        help='Import this location instead of "."'),
+                    ]
+
+    def run(self, directory='.', db=None):
+        from bzrlib.plugins.history_db import history_db
+        from bzrlib import branch, trace
+        b = branch.Branch.open(directory)
+        b.lock_read()
+        try:
+            query = history_db.Querier(db, b)
+            query.walk_mainline()
+        finally:
+            b.unlock()
+        import pprint
+        trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+
 commands.register_command(cmd_create_history_db)
 commands.register_command(cmd_get_dotted_revno)
+commands.register_command(cmd_walk_mainline)
