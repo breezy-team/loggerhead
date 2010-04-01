@@ -319,9 +319,7 @@ class Querier(object):
             def e1():
                 _exec("INSERT OR IGNORE INTO cur_parents"
                       " SELECT parent FROM parent, next"
-                      " WHERE child = next.db_id"
-                      "   AND (parent.parent) NOT IN"
-                      "       (SELECT db_id FROM all_ancestors)")
+                      " WHERE child = next.db_id")
             e1()
             # def e2():
             #     _exec("DELETE FROM cur_parents WHERE db_id IN all_ancestors")
@@ -329,13 +327,13 @@ class Querier(object):
             def e3():
                 _exec("DELETE FROM next")
             e3()
-            # def e4():
-            #     _exec("INSERT INTO next SELECT db_id FROM cur_parents"
-            #           " WHERE db_id NOT IN all_ancestors")
-            # e4()
             def e4():
-                _exec("INSERT INTO next SELECT db_id FROM cur_parents")
+                _exec("INSERT INTO next SELECT db_id FROM cur_parents"
+                      " WHERE db_id NOT IN all_ancestors")
             e4()
+            # def e4():
+            #     _exec("INSERT INTO next SELECT db_id FROM cur_parents")
+            # e4()
             def e5():
                 _exec("INSERT OR IGNORE INTO all_ancestors"
                       " SELECT db_id FROM cur_parents")
