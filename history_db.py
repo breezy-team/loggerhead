@@ -298,50 +298,21 @@ class Querier(object):
 
     def walk_ancestry_db_ids(self):
         _exec = self._cursor.execute
-        _exec("CREATE TEMP TABLE all_ancestors (db_id INTEGER PRIMARY KEY)")
-        # Index doesn't do anything, and really shouldn't since db_id is
-        # already the primary key.
-        # _exec("CREATE INDEX all_ancs_index ON all_ancestors (db_id)")
-        _exec("CREATE TEMP TABLE next (db_id INTEGER PRIMARY KEY)")
-        _exec("CREATE TEMP TABLE cur_parents (db_id INTEGER PRIMARY KEY)")
-        _exec("INSERT INTO next (db_id)"
-              " SELECT db_id FROM revision"
-              "  WHERE revision_id = ?",
-              (self._branch_tip_rev_id,))
-        _exec("INSERT INTO all_ancestors (db_id)"
-              " SELECT db_id FROM next")
-        while True:
+        all_ancestors = set()
+        db_id = _exec("SELECT db_id FROM revision WHERE revision_id = ?",
+                      (self._branch_tip_rev_id,)).fetchone()[0]
+        all_ancestors.add(db_id)
+        remaining = [db_id]
+        while remaining:
             self._stats['num_steps'] += 1
-            def e0():
-                return _exec('SELECT count(*) FROM next').fetchone()[0]
-            if e0() <= 0:
-                break
-            def e1():
-                _exec("INSERT OR IGNORE INTO cur_parents"
-                      " SELECT parent FROM parent, next"
-                      " WHERE child = next.db_id")
-            e1()
-            # def e2():
-            #     _exec("DELETE FROM cur_parents WHERE db_id IN all_ancestors")
-            # e2()
-            def e3():
-                _exec("DELETE FROM next")
-            e3()
-            def e4():
-                _exec("INSERT INTO next SELECT db_id FROM cur_parents"
-                      " WHERE db_id NOT IN all_ancestors")
-            e4()
-            # def e4():
-            #     _exec("INSERT INTO next SELECT db_id FROM cur_parents")
-            # e4()
-            def e5():
-                _exec("INSERT OR IGNORE INTO all_ancestors"
-                      " SELECT db_id FROM cur_parents")
-            e5()
-            def e6():
-                _exec("DELETE FROM cur_parents")
-            e6()
-        return _exec('SELECT count(*) FROM all_ancestors').fetchone()[0]
+            next = remaining[:100]
+            remaining = remaining[len(next):]
+            res = _exec("SELECT parent FROM parent WHERE child in (%s)"
+                        % (', '.join('?'*len(next))), tuple(next))
+            next_p = [p[0] for p in res if p[0] not in all_ancestors]
+            all_ancestors.update(next_p)
+            remaining.extend(next_p)
+        return len(all_ancestors)
 
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""
