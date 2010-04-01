@@ -21,7 +21,7 @@ try:
 except ImportError:
     from pysqlite2 import dbapi2
 
-from collections import defaultdict
+from collections import defaultdict, deque
 import time
 
 from bzrlib import (
@@ -276,6 +276,25 @@ class Querier(object):
             db_id = self._get_lh_parent_db_id(db_id)
         self._stats['query_time'] += (time.time() - t)
         return
+
+    def walk_ancestry(self):
+        """Walk all parents of the given revision."""
+        remaining = deque([self._branch_tip_rev_id])
+        all = set(remaining)
+        while remaining:
+            next = remaining.popleft()
+            parents = self._cursor.execute("""
+                SELECT p.revision_id
+                  FROM parent, revision p, revision c
+                 WHERE parent.child = c.db_id
+                   AND parent.parent = p.db_id
+                   AND c.revision_id = ?
+                   """, (next,)).fetchall()
+            self._stats['num_steps'] += 1
+            next_parents = [p[0] for p in parents if p[0] not in all]
+            all.update(next_parents)
+            remaining.extend(next_parents)
+        return len(all)
 
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""

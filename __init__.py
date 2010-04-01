@@ -19,7 +19,10 @@
 from bzrlib import (
     commands,
     option,
+    registry,
+    trace,
     )
+import time
 
 
 class cmd_create_history_db(commands.Command):
@@ -34,7 +37,7 @@ class cmd_create_history_db(commands.Command):
 
     def run(self, directory='.', db=None):
         from bzrlib.plugins.history_db import history_db
-        from bzrlib import branch, trace
+        from bzrlib import branch
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
@@ -59,7 +62,7 @@ class cmd_get_dotted_revno(commands.Command):
 
     def run(self, directory='.', db=None, revision=None, use_db_ids=False):
         from bzrlib.plugins.history_db import history_db
-        from bzrlib import branch, trace
+        from bzrlib import branch
         b = branch.Branch.open(directory)
         if revision is None:
             raise errors.BzrCommandError('You must supply --revision')
@@ -105,7 +108,7 @@ class cmd_walk_mainline(commands.Command):
 
     def run(self, directory='.', db=None, in_bzr=False, use_db_ids=False):
         from bzrlib.plugins.history_db import history_db
-        from bzrlib import branch, trace
+        from bzrlib import branch
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
@@ -124,7 +127,55 @@ class cmd_walk_mainline(commands.Command):
                 trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
         finally:
             b.unlock()
+        # Time to walk bzr mainline
+        #  bzr 31packs  683ms
+        #  bzr 1pack    320ms
+        #  db rev_ids   295ms
+        #  db db_ids    236ms
+
+
+_ancestry_walk_types = registry.Registry()
+_ancestry_walk_types.register('db-rev-id', None)
+_ancestry_walk_types.register('db-db-id', None)
+_ancestry_walk_types.register('bzr-iter-anc', None)
+_ancestry_walk_types.register('bzr-kg', None)
+
+class cmd_walk_ancestry(commands.Command):
+    """Walk the whole ancestry of a branch tip."""
+
+    takes_options = [option.Option('db', type=unicode,
+                        help='Use this as the database for storage'),
+                     option.Option('directory', type=unicode, short_name='d',
+                        help='Import this location instead of "."'),
+                     option.RegistryOption('method',
+                        help='How do you want to do the walking.',
+                        converter=str, registry=_ancestry_walk_types)
+                    ]
+
+    def run(self, directory='.', db=None, method=None):
+        from bzrlib.plugins.history_db import history_db
+        from bzrlib import branch
+        import pprint
+        b = branch.Branch.open(directory)
+        b.lock_read()
+        self.add_cleanup(b.unlock)
+        t = time.time()
+        if method.startswith('db'):
+            query = history_db.Querier(db, b)
+            if method == 'db-db-id':
+                query.walk_ancestry_db_ids()
+            elif method == 'db-rev-id':
+                query.walk_ancestry()
+            trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+        elif method == 'bzr-iter-anc':
+            g = b.repository.get_graph()
+            anc = list(g.iter_ancestry([b.last_revision()]))
+        elif method == 'bzr-kg':
+            kg = b.repository.revisions.get_known_graph_ancestry(
+                [(b.last_revision(),)])
+        trace.note('Time: %.3fs' % (time.time() - t,))
 
 commands.register_command(cmd_create_history_db)
 commands.register_command(cmd_get_dotted_revno)
 commands.register_command(cmd_walk_mainline)
+commands.register_command(cmd_walk_ancestry)
