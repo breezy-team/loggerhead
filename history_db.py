@@ -296,6 +296,30 @@ class Querier(object):
             remaining.extend(next_parents)
         return len(all)
 
+    def walk_ancestry_db_ids(self):
+        _exec = self._cursor.execute
+        _exec("CREATE TEMP TABLE all_ancestors (db_id INTEGER PRIMARY KEY)")
+        _exec("CREATE TEMP TABLE next (db_id INTEGER PRIMARY KEY)")
+        _exec("CREATE TEMP TABLE cur_parents (db_id INTEGER PRIMARY KEY)")
+        _exec("INSERT INTO next (db_id)"
+              " SELECT db_id FROM revision"
+              "  WHERE revision_id = ?",
+              (self._branch_tip_rev_id,))
+        _exec("INSERT INTO all_ancestors (db_id)"
+              " SELECT db_id FROM next")
+        while _exec('SELECT count(*) FROM next').fetchone()[0] > 0:
+            _exec("INSERT OR IGNORE INTO cur_parents"
+                  " SELECT parent FROM parent, next"
+                  " WHERE child = next.db_id")
+            _exec("DELETE FROM cur_parents WHERE db_id IN all_ancestors")
+            _exec("DELETE FROM next")
+            _exec("INSERT INTO next SELECT db_id FROM cur_parents"
+                  " WHERE db_id NOT IN all_ancestors")
+            _exec("INSERT OR IGNORE INTO all_ancestors"
+                  " SELECT db_id FROM cur_parents")
+            _exec("DELETE FROM cur_parents")
+        return _exec('SELECT count(*) FROM all_ancestors').fetchone()[0]
+
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""
         raise NotImplementedError(self.heads)
