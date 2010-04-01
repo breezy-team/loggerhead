@@ -256,6 +256,17 @@ class Querier(object):
     def walk_mainline(self):
         """Walk the db, and grab all the mainline identifiers."""
         t = time.time()
+        cur_id = self._branch_tip_rev_id
+        all_ids = []
+        while cur_id is not None:
+            all_ids.append(cur_id)
+            cur_id = self._get_lh_parent_rev_id(cur_id)
+        self._stats['query_time'] += (time.time() - t)
+        return
+
+    def walk_mainline_db_ids(self):
+        """Walk the db, and grab all the mainline identifiers."""
+        t = time.time()
         db_id = self._cursor.execute('SELECT db_id FROM revision'
                                      ' WHERE revision_id = ?',
                                      (self._branch_tip_rev_id,)).fetchone()[0]

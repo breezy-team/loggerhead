@@ -98,20 +98,32 @@ class cmd_walk_mainline(commands.Command):
                         help='Use this as the database for storage'),
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
+                     option.Option('use-db-ids',
+                        help='Do the queries using database ids'),
+                     option.Option('in-bzr', help="Use the bzr graph."),
                     ]
 
-    def run(self, directory='.', db=None):
+    def run(self, directory='.', db=None, in_bzr=False, use_db_ids=False):
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch, trace
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            query = history_db.Querier(db, b)
-            query.walk_mainline()
+            if in_bzr:
+                import time
+                t = time.time()
+                b.revision_history()
+                trace.note('Time: %.3fs' % (time.time() - t,))
+            else:
+                query = history_db.Querier(db, b)
+                if use_db_ids:
+                    query.walk_mainline_db_ids()
+                else:
+                    query.walk_mainline()
+                import pprint
+                trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
         finally:
             b.unlock()
-        import pprint
-        trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
 
 commands.register_command(cmd_create_history_db)
 commands.register_command(cmd_get_dotted_revno)
