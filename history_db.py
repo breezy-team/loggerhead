@@ -29,10 +29,11 @@ from bzrlib import (
 from bzrlib.plugins.history_db import schema
 
 
-def _insert_nodes(cursor, tip_rev_id, nodes, rev_id_to_db_id):
+def _insert_nodes(cursor, tip_rev_id, nodes, graph, rev_id_to_db_id):
     """Insert all of the nodes mentioned into the database."""
     # rev_ids we don't know the db id for
-    schema.ensure_revisions(cursor, [n.key[0] for n in nodes], rev_id_to_db_id)
+    schema.ensure_revisions(cursor, [n.key[0] for n in nodes], rev_id_to_db_id,
+                            graph=graph)
     res = cursor.execute("SELECT count(*) FROM dotted_revno JOIN revision"
                          "    ON dotted_revno.tip_revision = revision.db_id"
                          " WHERE revision_id = ?"
@@ -60,7 +61,7 @@ def _update_parents(cursor, nodes, graph, rev_id_to_db_id):
                       for n in nodes)
     rev_ids = set(parent_map)
     map(rev_ids.update, parent_map.itervalues())
-    schema.ensure_revisions(cursor, rev_ids, rev_id_to_db_id)
+    schema.ensure_revisions(cursor, rev_ids, rev_id_to_db_id, graph=graph)
     data = []
     r_to_d = rev_id_to_db_id
     for rev_id, parent_ids in parent_map.iteritems():
@@ -108,7 +109,7 @@ def import_from_branch(a_branch, db=None):
                 # stop...
 
                 _update_parents(cursor, new_nodes, kg, rev_id_to_db_id)
-                if not _insert_nodes(cursor, last_tip_rev_id, new_nodes,
+                if not _insert_nodes(cursor, last_tip_rev_id, new_nodes, kg,
                                      rev_id_to_db_id):
                     # This data has already been imported.
                     new_nodes = []
@@ -119,7 +120,7 @@ def import_from_branch(a_branch, db=None):
             new_nodes.append(node)
         if new_nodes:
             assert last_tip_rev_id is not None
-            _insert_nodes(cursor, last_tip_rev_id, new_nodes, rev_id_to_db_id)
+            _insert_nodes(cursor, last_tip_rev_id, new_nodes, kg, rev_id_to_db_id)
             imported_count += len(new_nodes)
             new_nodes = []
         print "Imported %d revisions" % (imported_count,)

@@ -23,7 +23,8 @@ _create_statements = []
 revision_t = """
 CREATE TABLE revision (
     db_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    revision_id TEXT NOT NULL
+    revision_id TEXT NOT NULL,
+    gdfo INTEGER NOT NULL
 );
 """
 _create_statements.append(revision_t)
@@ -149,7 +150,7 @@ def ensure_revision(cursor, revision_id):
 
 
 _BATCH_SIZE = 100
-def ensure_revisions(cursor, revision_ids, rev_id_to_db_id):
+def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, graph):
     """Do a bulk check to make sure we have db ids for all revisions.
     
     Update the revision_id => db_id mapping
@@ -183,9 +184,12 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id):
             local_missing.discard(rev_id)
         missing.update(local_missing)
     if missing:
-        cursor.executemany('INSERT INTO revision (revision_id) VALUES (?)',
-                           [(m,) for m in missing])
-        ensure_revisions(cursor, missing, rev_id_to_db_id)
+        def get_gdfo(rev_id):
+            return graph._nodes[(rev_id,)].gdfo
+        cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
+                           ' VALUES (?, ?)',
+                           [(m, get_gdfo(m)) for m in missing])
+        ensure_revisions(cursor, missing, rev_id_to_db_id, graph=graph)
 
 
 def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
