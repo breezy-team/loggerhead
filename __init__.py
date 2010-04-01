@@ -34,12 +34,13 @@ class cmd_create_history_db(commands.Command):
 
     def run(self, directory='.', db=None):
         from bzrlib.plugins.history_db import history_db
-        from bzrlib import branch
+        from bzrlib import branch, trace
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            history_db.import_from_branch(b, db=db)
+            imported_count = history_db.Importer.import_from_branch(b, db=db)
         finally:
             b.unlock()
+        trace.note('Imported %d revisions' % (imported_count,))
 
 commands.register_command(cmd_create_history_db)

@@ -135,16 +135,16 @@ class Importer(object):
                 self._insert_nodes(last_mainline_rev_id, new_nodes)
                 imported_count += len(new_nodes)
                 new_nodes = []
-            trace.note("Imported %d revisions" % (imported_count,))
         except:
             self._db_conn.rollback()
             raise
         else:
             self._db_conn.commit()
+        return imported_count
 
-
-def import_from_branch(a_branch, db=None):
-    """Import the history data from a_branch into the database."""
-    db_conn = dbapi2.connect(db)
-    importer = Importer(db_conn, a_branch)
-    importer.do_import()
+    @staticmethod
+    def import_from_branch(a_branch, db=None):
+        """Import the history data from a_branch into the database."""
+        db_conn = dbapi2.connect(db)
+        importer = Importer(db_conn, a_branch)
+        return importer.do_import()
