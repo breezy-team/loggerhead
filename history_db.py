@@ -299,6 +299,9 @@ class Querier(object):
     def walk_ancestry_db_ids(self):
         _exec = self._cursor.execute
         _exec("CREATE TEMP TABLE all_ancestors (db_id INTEGER PRIMARY KEY)")
+        # Index doesn't do anything, and really shouldn't since db_id is
+        # already the primary key.
+        # _exec("CREATE INDEX all_ancs_index ON all_ancestors (db_id)")
         _exec("CREATE TEMP TABLE next (db_id INTEGER PRIMARY KEY)")
         _exec("CREATE TEMP TABLE cur_parents (db_id INTEGER PRIMARY KEY)")
         _exec("INSERT INTO next (db_id)"
@@ -307,17 +310,39 @@ class Querier(object):
               (self._branch_tip_rev_id,))
         _exec("INSERT INTO all_ancestors (db_id)"
               " SELECT db_id FROM next")
-        while _exec('SELECT count(*) FROM next').fetchone()[0] > 0:
-            _exec("INSERT OR IGNORE INTO cur_parents"
-                  " SELECT parent FROM parent, next"
-                  " WHERE child = next.db_id")
-            _exec("DELETE FROM cur_parents WHERE db_id IN all_ancestors")
-            _exec("DELETE FROM next")
-            _exec("INSERT INTO next SELECT db_id FROM cur_parents"
-                  " WHERE db_id NOT IN all_ancestors")
-            _exec("INSERT OR IGNORE INTO all_ancestors"
-                  " SELECT db_id FROM cur_parents")
-            _exec("DELETE FROM cur_parents")
+        while True:
+            self._stats['num_steps'] += 1
+            def e0():
+                return _exec('SELECT count(*) FROM next').fetchone()[0]
+            if e0() <= 0:
+                break
+            def e1():
+                _exec("INSERT OR IGNORE INTO cur_parents"
+                      " SELECT parent FROM parent, next"
+                      " WHERE child = next.db_id"
+                      "   AND (parent.parent) NOT IN"
+                      "       (SELECT db_id FROM all_ancestors)")
+            e1()
+            # def e2():
+            #     _exec("DELETE FROM cur_parents WHERE db_id IN all_ancestors")
+            # e2()
+            def e3():
+                _exec("DELETE FROM next")
+            e3()
+            # def e4():
+            #     _exec("INSERT INTO next SELECT db_id FROM cur_parents"
+            #           " WHERE db_id NOT IN all_ancestors")
+            # e4()
+            def e4():
+                _exec("INSERT INTO next SELECT db_id FROM cur_parents")
+            e4()
+            def e5():
+                _exec("INSERT OR IGNORE INTO all_ancestors"
+                      " SELECT db_id FROM cur_parents")
+            e5()
+            def e6():
+                _exec("DELETE FROM cur_parents")
+            e6()
         return _exec('SELECT count(*) FROM all_ancestors').fetchone()[0]
 
     def heads(self, revision_ids):
