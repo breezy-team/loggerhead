@@ -305,7 +305,7 @@ class Querier(object):
         remaining = [db_id]
         while remaining:
             self._stats['num_steps'] += 1
-            next = remaining[:100]
+            next = remaining[:1000]
             remaining = remaining[len(next):]
             res = _exec("SELECT parent FROM parent WHERE child in (%s)"
                         % (', '.join('?'*len(next))), tuple(next))
