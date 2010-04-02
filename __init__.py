@@ -120,10 +120,10 @@ class cmd_walk_mainline(commands.Command):
         from bzrlib import branch
         import pprint
         import time
-        t = time.time()
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
+            t = time.time()
             if method.startswith('db'):
                 query = history_db.Querier(db, b)
                 if method == 'db-db-id':
@@ -133,14 +133,16 @@ class cmd_walk_mainline(commands.Command):
                 else:
                     assert method == 'db-range'
                     mainline = query.walk_mainline_using_ranges()
+                tdelta = time.time() - t
                 trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
             else:
                 assert method == 'bzr'
                 mainline = b.revision_history()
+                tdelta = time.time() - t
         finally:
             b.unlock()
         self.outf.write('Found %d revs\n' % (len(mainline),))
-        trace.note('Time: %.3fs' % (time.time() - t,))
+        trace.note('Time: %.3fs' % (tdelta,))
         # Time to walk bzr mainline
         # Outer includes the branch.open time, Query is just the time we spend
         # walking the database, etc.
