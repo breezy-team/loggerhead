@@ -202,6 +202,49 @@ still should be much better than a "ancestry of revision" table, that grows
 O(num_revisions*num_revisions).
 
 
+Ancestry vs Mainline
+====================
+
+We can probably do a similar 'cache groups' for whole-ancestry information,
+versus just mainline information. However, the convergence at a single
+``tail`` is not guaranteed, so more work would need to be investigated to
+figure out how to get good overlap between various branches.
+
+
+GDFO
+====
+
+Vincent makes a case for using ``(gdfo, revision_id)`` as a key. Which is that
+you can query the database for "give me all revision_ids which have gdfo close
+to my gdfo". The idea is that you can filter for say 100 parent revisions.
+Some good bits:
+
+ a) The data naturally clusters by ancestry, so direct parents are usually
+    close to their children (on a similar page).
+ b) You can request a range without having to walk for each one. (Though you
+    do eventually have to walk to ensure that all gdfos in that range are
+    actually part of the ancestry you are searching.)
+
+
+Some downsides:
+
+ a) Paths along the graph do not always follow particularly 'linearly'.
+    Consider
+     i) Branch 1 is a single patch against rev 1000.
+     ii) The mainline is developed for 3 months, with lots of changes landing.
+     iii) Branch 1 is updated with a second patch, and lands on mainline rev
+          1100.
+     iv) The parent here is going to have gdfo 1002, while the mainline has
+         gdfo 1100. Thus gdfo doesn't immediately shortcut you from having to
+         walk through all 100 revisions, and you lose a lot of assistance for
+         both (a) and (b) listed above.
+ b) You need to now know gdfo to get into the graph at all, rather than just
+    revision_id. (This can be solved with stuff like the branch/last_revision
+    file storing the gdfo.)
+ c) gdfo's change when ghosts are filled in. Albiet rare, it means that (b) is
+    potentially a more difficult problem. As 2 repos with the same revision
+    but different ghosts will have different gdfo values for that revision.
+
 .. [#] Dotted revnos are numbered based on the current branch tip revision.
    However, there is a stability guarantee that we can exploit. If a revision
    X is in the ancestry of tip T, then the dotted revno for X will be the same
