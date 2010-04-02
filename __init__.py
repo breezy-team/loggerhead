@@ -155,6 +155,7 @@ class cmd_walk_mainline(commands.Command):
 _ancestry_walk_types = registry.Registry()
 _ancestry_walk_types.register('db-rev-id', None)
 _ancestry_walk_types.register('db-db-id', None)
+_ancestry_walk_types.register('db-range', None)
 _ancestry_walk_types.register('bzr-iter-anc', None)
 _ancestry_walk_types.register('bzr-kg', None)
 
@@ -184,6 +185,9 @@ class cmd_walk_ancestry(commands.Command):
                 count = query.walk_ancestry_db_ids()
             elif method == 'db-rev-id':
                 count = query.walk_ancestry()
+            else:
+                assert method == 'db-range'
+                count = query.walk_ancestry_range()
             trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
         elif method == 'bzr-iter-anc':
             g = b.repository.get_graph()

@@ -355,34 +355,45 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return all_ids
 
+    def _get_mainline_range_starting_at(self, head_db_id):
+        """Try to find a range at this tip.
+
+        If a range cannot be found, just find the next parent.
+        :return: (range_or_None, next_db_id)
+        """
+        range_res = self._cursor.execute(
+            "SELECT pkey, tail"
+            "  FROM mainline_parent_range"
+            " WHERE head = ?"
+            " ORDER BY count DESC LIMIT 1",
+            (head_db_id,)).fetchone()
+        if range_res is None:
+            parent_db_id = self._get_lh_parent_db_id(head_db_id)
+            return None, parent_db_id
+        range_key, tail_db_id = range_res
+        # TODO: Is ORDER BY dist ASC expensive? We know a priori that the list
+        #       is probably already in sorted order, but does sqlite know that?
+        range_db_ids = self._cursor.execute(
+            "SELECT revision FROM mainline_parent"
+            " WHERE range = ? ORDER BY dist ASC",
+            (range_key,)).fetchall()
+        db_ids = [r[0] for r in range_db_ids]
+        return db_ids, tail_db_id
+
     def walk_mainline_using_ranges(self):
         t = time.time()
         db_id = self._get_db_id(self._branch_tip_rev_id)
         all_ids = []
         while db_id is not None:
             self._stats['num_steps'] += 1
-            range_res = self._cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (db_id,)).fetchone()
-            if range_res is None:
+            next_range, next_db_id = self._get_mainline_range_starting_at(db_id)
+            if next_range is None:
                 # No range, so switch to using by-parent search
                 all_ids.append(db_id)
-                db_id = self._get_lh_parent_db_id(db_id)
             else:
-                # We have a range, so read in the whole range, and append the
-                # info. Note that we already have db_id itself, so 
-                range_key, tail_db_id = range_res
-                range_db_ids = self._cursor.execute(
-                    "SELECT revision FROM mainline_parent"
-                    " WHERE range = ? ORDER BY dist ASC",
-                    (range_key,)).fetchall()
-                db_ids = [r[0] for r in range_db_ids]
-                assert db_ids[0] == db_id
-                all_ids.extend(db_ids)
-                db_id = tail_db_id
+                assert next_range[0] == db_id
+                all_ids.extend(next_range)
+            db_id = next_db_id
         self._stats['query_time'] += (time.time() - t)
         return all_ids
 
@@ -406,6 +417,27 @@ class Querier(object):
         return len(all)
 
     def walk_ancestry_db_ids(self):
+        _exec = self._cursor.execute
+        all_ancestors = set()
+        db_id = self._get_db_id(self._branch_tip_rev_id)
+        all_ancestors.add(db_id)
+        remaining = [db_id]
+        while remaining:
+            self._stats['num_steps'] += 1
+            next = remaining[:1000]
+            remaining = remaining[len(next):]
+            res = _exec("SELECT parent FROM parent WHERE child in (%s)"
+                        % (', '.join('?'*len(next))), tuple(next))
+            next_p = [p[0] for p in res if p[0] not in all_ancestors]
+            all_ancestors.update(next_p)
+            remaining.extend(next_p)
+        return len(all_ancestors)
+
+    def walk_ancestry_range(self):
+        """Walk the whole ancestry.
+        
+        Use the mainline_parent_range/mainline_parent table to speed things up.
+        """
         _exec = self._cursor.execute
         all_ancestors = set()
         db_id = self._get_db_id(self._branch_tip_rev_id)
