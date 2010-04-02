@@ -92,7 +92,10 @@ _create_statements.append(mainline_parent_range_head_index)
 mainline_parent_t = """
 CREATE TABLE mainline_parent (
     range INTEGER REFERENCES mainline_parent_range NOT NULL,
-    revision INTEGER REFERENCES revision NOT NULL
+    revision INTEGER REFERENCES revision NOT NULL,
+    dist INTEGER NOT NULL -- Offset from head, so we preserve the order
+    -- Not adding the constraint at this time, but it is logically there
+    -- CONSTRAINT mainline_parent_rev_unique UNIQUE (range, revision)
 );
 """
 _create_statements.append(mainline_parent_t)

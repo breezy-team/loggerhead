@@ -183,9 +183,17 @@ class Importer(object):
         # Note that inserting head and tail into mainline_parent is redundant,
         # since the data is available. But I'm sure it will make the *queries*
         # much easier.
+        # TODO: So far the queries actually seem worse being inclusive, because
+        #       you have to worry about the overlap. Needs a bit more time to
+        #       figure out whether making head or tail exclusive is better. ATM
+        #       I'm thinking tail, but I haven't figured out how to handle that
+        #       first revision. One option is to allow tail to be NULL,
+        #       indicating the end of the whole range. Or to give it something
+        #       like 'null:'...
         self._cursor.executemany(
-            "INSERT INTO mainline_parent (range, revision)"
-            " VALUES (?, ?)", [(range_key, d) for d in range_db_ids])
+            "INSERT INTO mainline_parent (range, revision, dist)"
+            " VALUES (?, ?, ?)",
+            [(range_key, d, idx) for idx, d in enumerate(range_db_ids)])
 
     def build_mainline_cache(self):
         """Given the current branch, cache mainline information."""
@@ -248,6 +256,11 @@ class Querier(object):
         self._branch = a_branch
         self._branch_tip_rev_id = a_branch.last_revision()
         self._stats = defaultdict(lambda: 0)
+
+    def _get_db_id(self, revision_id):
+        return self._cursor.execute('SELECT db_id FROM revision'
+                                    ' WHERE revision_id = ?',
+                                    (revision_id,)).fetchone()[0]
 
     def _get_lh_parent_rev_id(self, revision_id):
         parent_res = self._cursor.execute("""
@@ -347,20 +360,50 @@ class Querier(object):
             all_ids.append(cur_id)
             cur_id = self._get_lh_parent_rev_id(cur_id)
         self._stats['query_time'] += (time.time() - t)
-        return
+        return all_ids
 
     def walk_mainline_db_ids(self):
         """Walk the db, and grab all the mainline identifiers."""
         t = time.time()
-        db_id = self._cursor.execute('SELECT db_id FROM revision'
-                                     ' WHERE revision_id = ?',
-                                     (self._branch_tip_rev_id,)).fetchone()[0]
+        db_id = self._get_db_id(self._branch_tip_rev_id)
         all_ids = []
         while db_id is not None:
             all_ids.append(db_id)
             db_id = self._get_lh_parent_db_id(db_id)
         self._stats['query_time'] += (time.time() - t)
-        return
+        return all_ids
+
+    def walk_mainline_using_ranges(self):
+        t = time.time()
+        db_id = self._get_db_id(self._branch_tip_rev_id)
+        all_ids = []
+        while db_id is not None:
+            self._stats['num_steps'] += 1
+            all_ids.append(db_id)
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (db_id,)).fetchone()
+            if range_res is None:
+                # No range, so switch to using by-parent search
+                db_id = self._get_lh_parent_db_id(db_id)
+            else:
+                # We have a range, so read in the whole range, and append the
+                # info. Note that we already have db_id itself, so 
+                range_key, tail_db_id = range_res
+                range_db_ids = self._cursor.execute(
+                    "SELECT revision FROM mainline_parent"
+                    " WHERE range = ? ORDER BY dist ASC",
+                    (range_key,)).fetchall()
+                db_ids = [r[0] for r in range_db_ids]
+                assert db_ids[0] == db_id
+                assert db_ids[-1] == tail_db_id
+                all_ids.extend(db_ids[1:-1])
+                db_id = tail_db_id
+        self._stats['query_time'] += (time.time() - t)
+        return all_ids
 
     def walk_ancestry(self):
         """Walk all parents of the given revision."""
@@ -384,8 +427,7 @@ class Querier(object):
     def walk_ancestry_db_ids(self):
         _exec = self._cursor.execute
         all_ancestors = set()
-        db_id = _exec("SELECT db_id FROM revision WHERE revision_id = ?",
-                      (self._branch_tip_rev_id,)).fetchone()[0]
+        db_id = self._get_db_id(self._branch_tip_rev_id)
         all_ancestors.add(db_id)
         remaining = [db_id]
         while remaining:

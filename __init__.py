@@ -97,6 +97,12 @@ class cmd_get_dotted_revno(commands.Command):
         trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
 
 
+_mainline_walk_types = registry.Registry()
+_mainline_walk_types.register('db-rev-id', None)
+_mainline_walk_types.register('db-db-id', None)
+_mainline_walk_types.register('db-range', None)
+_mainline_walk_types.register('bzr', None)
+
 class cmd_walk_mainline(commands.Command):
     """Walk the mainline of the branch."""
 
@@ -104,37 +110,43 @@ class cmd_walk_mainline(commands.Command):
                         help='Use this as the database for storage'),
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
-                     option.Option('use-db-ids',
-                        help='Do the queries using database ids'),
-                     option.Option('in-bzr', help="Use the bzr graph."),
+                     option.RegistryOption('method',
+                        help='How do you want to do the walking.',
+                        converter=str, registry=_mainline_walk_types)
                     ]
 
-    def run(self, directory='.', db=None, in_bzr=False, use_db_ids=False):
+    def run(self, directory='.', db=None, method=None):
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
+        import pprint
+        import time
+        t = time.time()
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            if in_bzr:
-                import time
-                t = time.time()
-                b.revision_history()
-                trace.note('Time: %.3fs' % (time.time() - t,))
-            else:
+            if method.startswith('db'):
                 query = history_db.Querier(db, b)
-                if use_db_ids:
-                    query.walk_mainline_db_ids()
+                if method == 'db-db-id':
+                    mainline = query.walk_mainline_db_ids()
+                elif method == 'db-rev-id':
+                    mainline = query.walk_mainline()
                 else:
-                    query.walk_mainline()
-                import pprint
+                    assert method == 'db-range'
+                    mainline = query.walk_mainline_using_ranges()
                 trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+            else:
+                assert method == 'bzr'
+                mainline = b.revision_history()
         finally:
             b.unlock()
+        self.outf.write('Found %d revs\n' % (len(mainline),))
+        trace.note('Time: %.3fs' % (time.time() - t,))
         # Time to walk bzr mainline
-        #  bzr 31packs  683ms
-        #  bzr 1pack    320ms
-        #  db rev_ids   295ms
-        #  db db_ids    236ms
+        #  bzr 13packs  646ms
+        #  bzr 1pack    406ms
+        #  db rev_ids   381ms
+        #  db db_ids    331ms
+        #  db range     118ms
 
 
 _ancestry_walk_types = registry.Registry()

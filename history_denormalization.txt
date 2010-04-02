@@ -95,7 +95,8 @@ ancestors are the same. Here is are a couple more tables::
     ON mainline_parent_range (head);
   CREATE TABLE mainline_parent (
     range INTEGER REFERENCES mainline_parent_range NOT NULL,
-    revision INTEGER REFERENCES revision NOT NULL
+    revision INTEGER REFERENCES revision NOT NULL,
+    dist INTEGER NOT NULL -- Offset from head, so we know the order
     -- Not adding the constraint at this time, but it is logically there
     -- CONSTRAINT mainline_parent_rev_unique UNIQUE (range, revision)
   );
