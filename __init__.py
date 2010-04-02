@@ -156,6 +156,7 @@ _ancestry_walk_types = registry.Registry()
 _ancestry_walk_types.register('db-rev-id', None)
 _ancestry_walk_types.register('db-db-id', None)
 _ancestry_walk_types.register('db-range', None)
+_ancestry_walk_types.register('db-dotted', None)
 _ancestry_walk_types.register('bzr-iter-anc', None)
 _ancestry_walk_types.register('bzr-kg', None)
 
@@ -182,21 +183,23 @@ class cmd_walk_ancestry(commands.Command):
         if method.startswith('db'):
             query = history_db.Querier(db, b)
             if method == 'db-db-id':
-                count = query.walk_ancestry_db_ids()
+                ancestors = query.walk_ancestry_db_ids()
             elif method == 'db-rev-id':
-                count = query.walk_ancestry()
+                ancestors = query.walk_ancestry()
+            elif method == 'db-dotted':
+                ancestors = query.walk_ancestry_range_and_dotted()
             else:
                 assert method == 'db-range'
-                count = query.walk_ancestry_range()
+                ancestors = query.walk_ancestry_range()
             trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
         elif method == 'bzr-iter-anc':
             g = b.repository.get_graph()
-            count = len(list(g.iter_ancestry([b.last_revision()])))
+            ancestors = list(g.iter_ancestry([b.last_revision()]))
         elif method == 'bzr-kg':
             kg = b.repository.revisions.get_known_graph_ancestry(
                 [(b.last_revision(),)])
-            count = len(kg._nodes)
-        self.outf.write('Found %d ancestors\n' % (count,))
+            ancestors = len(kg._nodes)
+        self.outf.write('Found %d ancestors\n' % (len(ancestors),))
         trace.note('Time: %.3fs' % (time.time() - t,))
 
 commands.register_command(cmd_create_history_db)

@@ -414,7 +414,7 @@ class Querier(object):
             next_parents = [p[0] for p in parents if p[0] not in all]
             all.update(next_parents)
             remaining.extend(next_parents)
-        return len(all)
+        return all
 
     def walk_ancestry_db_ids(self):
         _exec = self._cursor.execute
@@ -424,14 +424,14 @@ class Querier(object):
         remaining = [db_id]
         while remaining:
             self._stats['num_steps'] += 1
-            next = remaining[:1000]
+            next = remaining[:100]
             remaining = remaining[len(next):]
             res = _exec("SELECT parent FROM parent WHERE child in (%s)"
                         % (', '.join('?'*len(next))), tuple(next))
             next_p = [p[0] for p in res if p[0] not in all_ancestors]
             all_ancestors.update(next_p)
             remaining.extend(next_p)
-        return len(all_ancestors)
+        return all_ancestors
 
     def walk_ancestry_range(self):
         """Walk the whole ancestry.
@@ -439,20 +439,68 @@ class Querier(object):
         Use the mainline_parent_range/mainline_parent table to speed things up.
         """
         _exec = self._cursor.execute
-        all_ancestors = set()
-        db_id = self._get_db_id(self._branch_tip_rev_id)
-        all_ancestors.add(db_id)
-        remaining = [db_id]
+        # All we are doing is pre-seeding the search with all the mainline
+        # revisions, we could probably do more with interleaving calls to
+        # mainline with calls to parents but this is easier to write :)
+        all_mainline = self.walk_mainline_using_ranges()
+        t = time.time()
+        all_ancestors = set(all_mainline)
+        remaining = list(all_mainline)
         while remaining:
             self._stats['num_steps'] += 1
-            next = remaining[:1000]
+            next = remaining[:100]
             remaining = remaining[len(next):]
             res = _exec("SELECT parent FROM parent WHERE child in (%s)"
                         % (', '.join('?'*len(next))), tuple(next))
             next_p = [p[0] for p in res if p[0] not in all_ancestors]
             all_ancestors.update(next_p)
             remaining.extend(next_p)
-        return len(all_ancestors)
+        self._stats['query_time'] += (time.time() - t)
+        # Using this shortcut to grab the mainline first helps, but not a lot.
+        # Probably because the limiting factor is the 'child in (...)' step,
+        # which is 100 entries or so. (note that setting the range to :1000
+        # shows a failure, which indicates the old code path was definitely
+        # capped at a maximum range.)
+        # 1.719s walk_ancestry       
+        # 0.198s walk_ancestry_db_ids
+        # 0.164s walk_mainline_using_ranges
+        return all_ancestors
+
+    def walk_ancestry_range_and_dotted(self):
+        """Walk the whole ancestry.
+
+        Use the information from the dotted_revno table and the mainline_parent
+        table to speed things up.
+        """
+        db_id = self._get_db_id(self._branch_tip_rev_id)
+        all_ancestors = set()
+        t = time.time()
+        while db_id is not None:
+            self._stats['num_steps'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (db_id,)).fetchone()
+            if range_res is None:
+                next_db_id = self._get_lh_parent_db_id(db_id)
+                merged_revs = self._cursor.execute(
+                    "SELECT merged_revision FROM dotted_revno"
+                    " WHERE tip_revision = ?",
+                    (db_id,)).fetchall()
+                all_ancestors.update([r[0] for r in merged_revs])
+            else:
+                pkey, next_db_id = range_res
+                merged_revs = self._cursor.execute(
+                    "SELECT merged_revision FROM dotted_revno, mainline_parent"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND mainline_parent.range = ?",
+                    (pkey,)).fetchall()
+                all_ancestors.update([r[0] for r in merged_revs])
+            db_id = next_db_id
+        self._stats['query_time'] += (time.time() - t)
+        return all_ancestors
 
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""
