@@ -193,6 +193,19 @@ class Importer(object):
         # through the mainline, and see if there is already a cached version,
         # or if I've stepped 100 revisions. If I've gone 100, I checkpoint, and
         # start again.
+        # TODO: To avoid getting trivial ranges after large ranges, we could
+        #       use another technique:
+        #  a) Walk up to X revisions
+        #  b) If we still haven't found a tip, then we stop, and split out a
+        #     Y-revision range. Starting a new range with the remaining X-Y
+        #     nodes.
+        #  c) If we do find a tip, see how many revisions it points to (Z). If
+        #     X + Z < threshold, then collapse the ranges (this could
+        #     potentially be done multiple times.)
+        # The specific thresholds are arbitrary, but it should mean you would
+        # average a larger 'minimum' size. And (c) helps avoid fragmentation.
+        # (Where multiple imports turn a 100-revision range into 20 5-revision
+        # ranges.)
         head_rev_id = self._branch_tip_rev_id
         self._ensure_revisions([head_rev_id])
         cur_db_id = self._rev_id_to_db_id[head_rev_id]
@@ -209,19 +222,13 @@ class Importer(object):
                     # We've stepped far enough, at 101 values, we cover 100
                     # revisions (rev 1000 to rev 1100, etc), because the range
                     # is inclusive
-                    self._insert_range(range_db_ids)
+                    self._insert_range(range_db_ids[:75])
                     # We want to start a new range, with
                     #   new_range.head == last_range.tail
-                    range_db_ids = []
+                    range_db_ids = range_db_ids[74:-1]
                     continue
                 parent_db_id = self._get_lh_parent_db_id(cur_db_id)
                 cur_db_id = parent_db_id
-            # TODO: We likely want to set a minimum size > 1 here.  As doing a
-            #       lookup here requires checking extra indices, etc, there is
-            #       probably a point (say 10 or more) where you're better off
-            #       just walking the mainline directly.  Then again, if we are
-            #       always checking this table anyway, to see if we *might* be
-            #       able to jump, maybe that isn't true.
             if len(range_db_ids) > 1:
                 self._insert_range(range_db_ids)
         except:
