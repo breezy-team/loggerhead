@@ -36,15 +36,18 @@ class cmd_create_history_db(commands.Command):
                     ]
 
     def run(self, directory='.', db=None):
+        import pprint
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            imported_count = history_db.Importer.import_from_branch(b, db=db)
+            importer = history_db.Importer(db, b)
+            importer.do_import()
+            importer.build_mainline_cache()
         finally:
             b.unlock()
-        trace.note('Imported %d revisions' % (imported_count,))
+        trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
 
 
 class cmd_get_dotted_revno(commands.Command):
@@ -61,6 +64,7 @@ class cmd_get_dotted_revno(commands.Command):
                     ]
 
     def run(self, directory='.', db=None, revision=None, use_db_ids=False):
+        import pprint
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         b = branch.Branch.open(directory)
@@ -90,7 +94,6 @@ class cmd_get_dotted_revno(commands.Command):
                                      for s, r in revno_strs]))
         finally:
             b.unlock()
-        import pprint
         trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
 
 

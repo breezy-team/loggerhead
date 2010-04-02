@@ -77,7 +77,8 @@ mainline_parent_range_t = """
 CREATE TABLE mainline_parent_range (
     pkey INTEGER PRIMARY KEY AUTOINCREMENT,
     head INTEGER REFERENCES revision NOT NULL,
-    tail INTEGER REFERENCES revision NOT NULL
+    tail INTEGER REFERENCES revision NOT NULL,
+    count INTEGER NOT NULL -- num in range, inclusive
 );
 """
 _create_statements.append(mainline_parent_range_t)
@@ -90,7 +91,6 @@ _create_statements.append(mainline_parent_range_head_index)
 
 mainline_parent_t = """
 CREATE TABLE mainline_parent (
-    pkey INTEGER PRIMARY KEY AUTOINCREMENT,
     range INTEGER REFERENCES mainline_parent_range NOT NULL,
     revision INTEGER REFERENCES revision NOT NULL
 );

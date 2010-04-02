@@ -88,23 +88,25 @@ ancestors are the same. Here is are a couple more tables::
   CREATE TABLE mainline_parent_range (
     pkey INTEGER PRIMARY KEY AUTOINCREMENT,
     head INTEGER REFERENCES revision NOT NULL,
-    tail INTEGER REFERENCES revision NOT NULL
+    tail INTEGER REFERENCES revision NOT NULL,
+    count INTEGER NOT NULL
   );
   CREATE INDEX mainline_parent_range_head_index
     ON mainline_parent_range (head);
-  CREATE TABLE mainline_parents (
-    pkey INTEGER PRIMARY KEY AUTOINCREMENT,
+  CREATE TABLE mainline_parent (
     range INTEGER REFERENCES mainline_parent_range NOT NULL,
     revision INTEGER REFERENCES revision NOT NULL
+    -- Not adding the constraint at this time, but it is logically there
+    -- CONSTRAINT mainline_parent_rev_unique UNIQUE (range, revision)
   );
   CREATE INDEX mainline_parents_range_index
-    ON mainline_parents (range);
+    ON mainline_parent (range);
 
 The idea is that you can now do the query::
 
-  SELECT revno FROM dotted_revnos, mainline_parents
-   WHERE tip_revision = mainline_parents.revision
-     AND mainline_parents.range = ?
+  SELECT revno FROM dotted_revnos, mainline_parent
+   WHERE tip_revision = mainline_parent.revision
+     AND mainline_parent.range = ?
      AND merged_revision = ?;
 
 And you can reasonably efficiently find the appropriate ranges. You do this by
@@ -149,9 +151,9 @@ at a time.::
             else: # entry, check against the range
                 range_key, next_tip_db_id = res[0]
                 res = cursor.execute('''
-                    SELECT revno from dotted_revnos, mainline_parents
-                     WHERE tip_revision = mainline_parents.revision
-                       AND mainline_parents.range = ?
+                    SELECT revno from dotted_revnos, mainline_parent
+                     WHERE tip_revision = mainline_parent.revision
+                       AND mainline_parent.range = ?
                        AND merged_revision = ?
                      LIMIT 1
                     ''', (range_key, merged_db_id)).fetchone()
@@ -160,7 +162,7 @@ at a time.::
             cur_tip_db_id = next_tip_db_id
         return dotted_revno
 
-The trick is now about how the ``mainline_parents`` table gets filled in. I
+The trick is now about how the ``mainline_parent`` table gets filled in. I
 think doing some sort of batching, like every 100 revisions would be
 reasonble. The other thing is to try to get convergence. If you imagine adding
 a new branch, you can start walking back its mainline ancestry, and seeing if
@@ -175,18 +177,18 @@ Doing the reverse mapping is also tricky, because it depends on the current
 tip definition. However, I think the same trick can be applied, by just
 changing the inner query to::
 
-  SELECT merged_revision FROM dotted_revnos, mainline_parents
-   WHERE tip_revision = mainline_parents.revision
-     AND mainline_parents.range = ?
+  SELECT merged_revision FROM dotted_revnos, mainline_parent
+   WHERE tip_revision = mainline_parent.revision
+     AND mainline_parent.range = ?
      AND dotted_revno = ?
 
 Note that this should be reasonably performant, even without adding another
 index. The trick seems to be just getting the join between the
-``mainline_parents`` table to be reasonable against the ``dotted_revnos``
+``mainline_parent`` table to be reasonable against the ``dotted_revnos``
 table. Looking at it from a ``JOIN`` syntax, it is something like::
 
-    SELECT * FROM dotted_revnos JOIN mainline_parents
-               ON tip_revision = mainline_parents.revision
+    SELECT * FROM dotted_revnos JOIN mainline_parent
+               ON tip_revision = mainline_parent.revision
 
 If I'm thinking correctly, that query should be fairly efficient at giving you
 a subset of the graph, while still allowing you to store the nodes of the
