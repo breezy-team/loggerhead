@@ -165,31 +165,16 @@ class Importer(object):
             return None
         return parent_res[0]
 
-    def _insert_range(self, range_db_ids):
+    def _insert_range(self, range_db_ids, tail_db_id):
         head_db_id = range_db_ids[0]
-        tail_db_id = range_db_ids[-1]
         self._cursor.execute("INSERT INTO mainline_parent_range"
                              " (head, tail, count) VALUES (?, ?, ?)",
                              (head_db_id, tail_db_id, len(range_db_ids)))
-        # Isn't there a dbapi to get back the row we just inserted?
-        range_key = self._cursor.execute(
-            "SELECT pkey FROM mainline_parent_range"
-            " WHERE head = ? AND tail = ?",
-            (head_db_id, tail_db_id)).fetchone()[0]
+        # Note: This works for sqlite, does it work for pgsql?
+        range_key = self._cursor.lastrowid
         self._stats['ranges_inserted'] += 1
-        # Note that head and tail will get double values. The start range will
-        # have head, then tail, the next range will have head == tail, etc.
+        # Note that 'tail' is explicitly not included in the range
         self._stats['revs_in_ranges'] += len(range_db_ids)
-        # Note that inserting head and tail into mainline_parent is redundant,
-        # since the data is available. But I'm sure it will make the *queries*
-        # much easier.
-        # TODO: So far the queries actually seem worse being inclusive, because
-        #       you have to worry about the overlap. Needs a bit more time to
-        #       figure out whether making head or tail exclusive is better. ATM
-        #       I'm thinking tail, but I haven't figured out how to handle that
-        #       first revision. One option is to allow tail to be NULL,
-        #       indicating the end of the whole range. Or to give it something
-        #       like 'null:'...
         self._cursor.executemany(
             "INSERT INTO mainline_parent (range, revision, dist)"
             " VALUES (?, ?, ?)",
@@ -220,25 +205,22 @@ class Importer(object):
         range_db_ids = []
         try:
             while cur_db_id is not None:
-                range_db_ids.append(cur_db_id)
                 if self._check_range_exists_for(cur_db_id):
                     # This already exists as a valid 'head' in the range cache,
                     # so we can assume that all parents are already covered in
                     # reasonable ranges.
                     break
-                if len(range_db_ids) > 100:
-                    # We've stepped far enough, at 101 values, we cover 100
-                    # revisions (rev 1000 to rev 1100, etc), because the range
-                    # is inclusive
-                    self._insert_range(range_db_ids[:75])
+                if len(range_db_ids) >= 100:
+                    # We have a 100 node range
+                    self._insert_range(range_db_ids, cur_db_id)
                     # We want to start a new range, with
                     #   new_range.head == last_range.tail
-                    range_db_ids = range_db_ids[74:-1]
-                    continue
+                    range_db_ids = []
+                range_db_ids.append(cur_db_id)
                 parent_db_id = self._get_lh_parent_db_id(cur_db_id)
                 cur_db_id = parent_db_id
             if len(range_db_ids) > 1:
-                self._insert_range(range_db_ids)
+                self._insert_range(range_db_ids, cur_db_id)
         except:
             self._db_conn.rollback()
             raise
@@ -379,7 +361,6 @@ class Querier(object):
         all_ids = []
         while db_id is not None:
             self._stats['num_steps'] += 1
-            all_ids.append(db_id)
             range_res = self._cursor.execute(
                 "SELECT pkey, tail"
                 "  FROM mainline_parent_range"
@@ -388,6 +369,7 @@ class Querier(object):
                 (db_id,)).fetchone()
             if range_res is None:
                 # No range, so switch to using by-parent search
+                all_ids.append(db_id)
                 db_id = self._get_lh_parent_db_id(db_id)
             else:
                 # We have a range, so read in the whole range, and append the
@@ -399,8 +381,7 @@ class Querier(object):
                     (range_key,)).fetchall()
                 db_ids = [r[0] for r in range_db_ids]
                 assert db_ids[0] == db_id
-                assert db_ids[-1] == tail_db_id
-                all_ids.extend(db_ids[1:-1])
+                all_ids.extend(db_ids)
                 db_id = tail_db_id
         self._stats['query_time'] += (time.time() - t)
         return all_ids

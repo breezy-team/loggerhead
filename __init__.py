@@ -142,11 +142,14 @@ class cmd_walk_mainline(commands.Command):
         self.outf.write('Found %d revs\n' % (len(mainline),))
         trace.note('Time: %.3fs' % (time.time() - t,))
         # Time to walk bzr mainline
+        # Outer includes the branch.open time, Query is just the time we spend
+        # walking the database, etc.
+        #               Outer Query
         #  bzr 13packs  646ms
         #  bzr 1pack    406ms
-        #  db rev_ids   381ms
-        #  db db_ids    331ms
-        #  db range     118ms
+        #  db rev_ids   381ms 296ms
+        #  db db_ids    331ms 243ms
+        #  db range     118ms  18ms
 
 
 _ancestry_walk_types = registry.Registry()

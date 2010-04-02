@@ -88,7 +88,7 @@ ancestors are the same. Here is are a couple more tables::
   CREATE TABLE mainline_parent_range (
     pkey INTEGER PRIMARY KEY AUTOINCREMENT,
     head INTEGER REFERENCES revision NOT NULL,
-    tail INTEGER REFERENCES revision NOT NULL,
+    tail INTEGER REFERENCES revision, -- NULL indicates start-of-history
     count INTEGER NOT NULL
   );
   CREATE INDEX mainline_parent_range_head_index

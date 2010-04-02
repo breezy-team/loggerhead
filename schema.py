@@ -77,7 +77,8 @@ mainline_parent_range_t = """
 CREATE TABLE mainline_parent_range (
     pkey INTEGER PRIMARY KEY AUTOINCREMENT,
     head INTEGER REFERENCES revision NOT NULL,
-    tail INTEGER REFERENCES revision NOT NULL,
+    tail INTEGER REFERENCES revision, -- NULL indicates start-of-history
+    -- tail is *not* included in the mainline_parent table
     count INTEGER NOT NULL -- num in range, inclusive
 );
 """
