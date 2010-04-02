@@ -122,25 +122,23 @@ class cmd_walk_mainline(commands.Command):
         import time
         b = branch.Branch.open(directory)
         b.lock_read()
-        try:
-            t = time.time()
-            if method.startswith('db'):
-                query = history_db.Querier(db, b)
-                if method == 'db-db-id':
-                    mainline = query.walk_mainline_db_ids()
-                elif method == 'db-rev-id':
-                    mainline = query.walk_mainline()
-                else:
-                    assert method == 'db-range'
-                    mainline = query.walk_mainline_using_ranges()
-                tdelta = time.time() - t
-                trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+        self.add_cleanup(b.unlock)
+        t = time.time()
+        if method.startswith('db'):
+            query = history_db.Querier(db, b)
+            if method == 'db-db-id':
+                mainline = query.walk_mainline_db_ids()
+            elif method == 'db-rev-id':
+                mainline = query.walk_mainline()
             else:
-                assert method == 'bzr'
-                mainline = b.revision_history()
-                tdelta = time.time() - t
-        finally:
-            b.unlock()
+                assert method == 'db-range'
+                mainline = query.walk_mainline_using_ranges()
+            tdelta = time.time() - t
+            trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+        else:
+            assert method == 'bzr'
+            mainline = b.revision_history()
+            tdelta = time.time() - t
         self.outf.write('Found %d revs\n' % (len(mainline),))
         trace.note('Time: %.3fs' % (tdelta,))
         # Time to walk bzr mainline
