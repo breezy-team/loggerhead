@@ -34,16 +34,18 @@ class cmd_create_history_db(commands.Command):
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
                      option.Option('expand-all', help='Expand all revnos'),
+                     option.Option('incremental', short_name='i',
+                        help='Consider this an incremental update.')
                     ]
 
-    def run(self, directory='.', db=None, expand_all=False):
+    def run(self, directory='.', db=None, expand_all=False, incremental=False):
         import pprint
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            importer = history_db.Importer(db, b)
+            importer = history_db.Importer(db, b, incremental=incremental)
             importer.do_import(expand_all=expand_all)
             importer.build_mainline_cache()
         finally:
