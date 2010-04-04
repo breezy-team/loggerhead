@@ -61,17 +61,20 @@ class Importer(object):
         self._graph = repo.revisions.get_known_graph_ancestry(
             [self._branch_tip_key])
 
-    def _insert_nodes(self, tip_rev_id, nodes):
-        """Insert all of the nodes mentioned into the database."""
-        self._stats['_insert_node_calls'] += 1
-        self._ensure_revisions([n.key[0] for n in nodes])
+    def _is_imported(self, tip_rev_id):
         res = self._cursor.execute(
             "SELECT count(*) FROM dotted_revno JOIN revision"
             "    ON dotted_revno.tip_revision = revision.db_id"
             " WHERE revision_id = ?"
             "   AND tip_revision = merged_revision",
             (tip_rev_id,)).fetchone()
-        if res[0] > 0:
+        return res[0] > 0
+
+    def _insert_nodes(self, tip_rev_id, nodes):
+        """Insert all of the nodes mentioned into the database."""
+        self._stats['_insert_node_calls'] += 1
+        self._ensure_revisions([n.key[0] for n in nodes])
+        if self._is_imported(tip_rev_id):
             # Not importing anything because the data is already present
             return False
         self._stats['total_nodes_inserted'] += len(nodes)
@@ -103,14 +106,45 @@ class Importer(object):
                                  "  (child, parent, parent_idx)"
                                  "VALUES (?, ?, ?)", data)
 
-    def do_import(self):
-        merge_sorted = self._graph.merge_sort(self._branch_tip_key)
+    def do_import(self, expand_all=False):
+        merge_sorted = self._import_tip(self._branch_tip_rev_id)
+        if not expand_all:
+            return
+        self._stats['nodes_expanded'] += 0 # create an entry
+        # We want to expand every possible mainline into a dotted_revno cache.
+        # We don't really want to have to compute all the ones we have already
+        # cached. And we want to compute as much as possible per pass. So we
+        # start again at the tip, and just skip all the ones that already have
+        # db entries.
+        pb = ui.ui_factory.nested_progress_bar()
+        for idx, node in enumerate(merge_sorted):
+            pb.update('expanding', idx, len(merge_sorted))
+            # this progress is very non-linear, it is expected the first few
+            # will be slow, and the last few very fast.
+            tip_rev_id = node.key[0]
+            if self._is_imported(tip_rev_id):
+                # This node its info is already imported
+                continue
+            self._stats['nodes_expanded'] += 1
+            # Note: Suppressing the commit until we are finished saves a fair
+            #       amount of time. expanding all of bzr.dev goes from 4m37s
+            #       down to 3m21s.
+            self._import_tip(tip_rev_id, suppress_progress_and_commit=True)
+        self._db_conn.commit()
+        pb.finished()
+
+    def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
+        merge_sorted = self._graph.merge_sort((tip_revision_id,))
         try:
-            pb = ui.ui_factory.nested_progress_bar()
+            if suppress_progress_and_commit:
+                pb = None
+            else:
+                pb = ui.ui_factory.nested_progress_bar()
             last_mainline_rev_id = None
             new_nodes = []
             for idx, node in enumerate(merge_sorted):
-                pb.update('importing', idx, len(merge_sorted))
+                if pb is not None:
+                    pb.update('importing', idx, len(merge_sorted))
                 if last_mainline_rev_id is None:
                     assert not new_nodes
                     assert node.merge_depth == 0, \
@@ -136,6 +170,8 @@ class Importer(object):
                     last_mainline_rev_id = node.key[0]
                     new_nodes = []
                 new_nodes.append(node)
+            if pb is not None:
+                pb.finished()
             if new_nodes:
                 assert last_mainline_rev_id is not None
                 self._insert_nodes(last_mainline_rev_id, new_nodes)
@@ -144,7 +180,9 @@ class Importer(object):
             self._db_conn.rollback()
             raise
         else:
-            self._db_conn.commit()
+            if not suppress_progress_and_commit:
+                self._db_conn.commit()
+        return merge_sorted
 
     def _check_range_exists_for(self, head_db_id):
         """Does the given head_db_id already have a range defined using it."""

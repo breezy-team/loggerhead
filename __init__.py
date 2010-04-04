@@ -33,9 +33,10 @@ class cmd_create_history_db(commands.Command):
                         help='Use this as the database for storage'),
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
+                     option.Option('expand-all', help='Expand all revnos'),
                     ]
 
-    def run(self, directory='.', db=None):
+    def run(self, directory='.', db=None, expand_all=False):
         import pprint
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
@@ -43,7 +44,7 @@ class cmd_create_history_db(commands.Command):
         b.lock_read()
         try:
             importer = history_db.Importer(db, b)
-            importer.do_import()
+            importer.do_import(expand_all=expand_all)
             importer.build_mainline_cache()
         finally:
             b.unlock()
