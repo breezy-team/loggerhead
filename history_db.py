@@ -333,6 +333,87 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return None
 
+    def get_dotted_revno_range(self, revision_id):
+        """Determine the dotted revno, using the range info, etc."""
+        t = time.time()
+        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        rev_db_id = self._get_db_id(revision_id)
+        revno = None
+        while tip_db_id is not None:
+            self._stats['num_steps'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (tip_db_id,)).fetchone()
+            if range_res is None:
+                revno_res = self._cursor.execute(
+                    "SELECT revno FROM dotted_revno"
+                    " WHERE tip_revision = ? AND merged_revision = ?",
+                    (tip_db_id, rev_db_id)).fetchone()
+                next_db_id = self._get_lh_parent_db_id(tip_db_id)
+            else:
+                pkey, next_db_id = range_res
+                revno_res = self._cursor.execute(
+                    "SELECT revno FROM dotted_revno, mainline_parent"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND mainline_parent.range = ?"
+                    "   AND merged_revision = ?",
+                    (pkey, rev_db_id)).fetchone()
+            tip_db_id = next_db_id
+            if revno_res is not None:
+                revno = tuple(map(int, revno_res[0].split('.')))
+                break
+        self._stats['query_time'] += (time.time() - t)
+        return revno
+
+    def get_dotted_revno_range_multi(self, revision_ids):
+        """Determine the dotted revno, using the range info, etc."""
+        t = time.time()
+        rev_id_to_db_id = {}
+        need_ids = [self._branch_tip_rev_id]
+        need_ids.extend(revision_ids)
+        schema.ensure_revisions(self._cursor, need_ids,
+                                rev_id_to_db_id, graph=None)
+        tip_db_id = rev_id_to_db_id[self._branch_tip_rev_id]
+        db_id_to_rev_id = dict((d, r) for r, d in rev_id_to_db_id.iteritems())
+        db_ids = set([rev_id_to_db_id[r] for r in revision_ids])
+        revnos = {}
+        while tip_db_id is not None and db_ids:
+            self._stats['num_steps'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (tip_db_id,)).fetchone()
+            if range_res is None:
+                revno_res = self._cursor.execute(
+                    "SELECT merged_revision, revno FROM dotted_revno"
+                    " WHERE tip_revision = ?"
+                    "   AND merged_revision IN (%s)"
+                    % (', '.join('?'*len(db_ids))),
+                    [tip_db_id] + list(db_ids)).fetchall()
+                next_db_id = self._get_lh_parent_db_id(tip_db_id)
+            else:
+                pkey, next_db_id = range_res
+                revno_res = self._cursor.execute(
+                    "SELECT merged_revision, revno"
+                    "  FROM dotted_revno, mainline_parent"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND mainline_parent.range = ?"
+                    "   AND merged_revision IN (%s)"
+                    % (', '.join('?'*len(db_ids))),
+                    [pkey] + list(db_ids)).fetchall()
+            tip_db_id = next_db_id
+            for db_id, revno in revno_res:
+                db_ids.discard(db_id)
+                revnos[db_id_to_rev_id[db_id]] = tuple(map(int,
+                    revno.split('.')))
+        self._stats['query_time'] += (time.time() - t)
+        return revnos
+
     def walk_mainline(self):
         """Walk the db, and grab all the mainline identifiers."""
         t = time.time()
@@ -463,7 +544,7 @@ class Querier(object):
         # capped at a maximum range.)
         # 1.719s walk_ancestry       
         # 0.198s walk_ancestry_db_ids
-        # 0.164s walk_mainline_using_ranges
+        # 0.164s walk_ancestry_range
         return all_ancestors
 
     def walk_ancestry_range_and_dotted(self):

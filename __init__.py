@@ -50,6 +50,13 @@ class cmd_create_history_db(commands.Command):
         trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
 
 
+_dotted_revno_walk_types = registry.Registry()
+_dotted_revno_walk_types.register('db-rev-id', None)
+_dotted_revno_walk_types.register('db-db-id', None)
+_dotted_revno_walk_types.register('db-range', None)
+_dotted_revno_walk_types.register('db-range-multi', None)
+_dotted_revno_walk_types.register('bzr', None)
+
 class cmd_get_dotted_revno(commands.Command):
     """Query the db for a dotted revno.
     """
@@ -59,11 +66,13 @@ class cmd_get_dotted_revno(commands.Command):
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
                      'revision',
-                     option.Option('use-db-ids',
-                        help='Do the queries using database ids'),
+                     option.RegistryOption('method',
+                        help='How do you want to do the walking.',
+                        converter=str, registry=_dotted_revno_walk_types)
                     ]
 
-    def run(self, directory='.', db=None, revision=None, use_db_ids=False):
+    def run(self, directory='.', db=None, revision=None,
+            method=None):
         import pprint
         from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
@@ -73,13 +82,35 @@ class cmd_get_dotted_revno(commands.Command):
         b.lock_read()
         try:
             rev_ids = [rspec.as_revision_id(b) for rspec in revision]
-            query = history_db.Querier(db, b)
-            if use_db_ids:
-                revnos = [(query.get_dotted_revno_db_ids(rev_id), rev_id)
-                          for rev_id in rev_ids]
+            t = time.time()
+            if method == 'bzr':
+                # Make sure to use a different branch, because the existing one
+                # has already cached the mainline, etc in decoding the supplied
+                # revision ids.
+                b2 = b.bzrdir.open_branch()
+                b2.lock_read()
+                try:
+                    revnos = [(b2.revision_id_to_dotted_revno(r), r)
+                              for r in rev_ids]
+                finally:
+                    b2.unlock()
             else:
-                revnos = [(query.get_dotted_revno(rev_id), rev_id)
-                          for rev_id in rev_ids]
+                query = history_db.Querier(db, b)
+                if method == 'db-db-id':
+                    revnos = [(query.get_dotted_revno_db_ids(rev_id), rev_id)
+                              for rev_id in rev_ids]
+                elif method == 'db-rev-id':
+                    revnos = [(query.get_dotted_revno(rev_id), rev_id)
+                              for rev_id in rev_ids]
+                elif method == 'db-range':
+                    revnos = [(query.get_dotted_revno_range(rev_id), rev_id)
+                              for rev_id in rev_ids]
+                else:
+                    assert method == 'db-range-multi'
+                    revno_map = query.get_dotted_revno_range_multi(rev_ids)
+                    revnos = [(revno_map[rev_id], rev_id) for rev_id in rev_ids]
+                trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+            tdelta = time.time() - t
             revno_strs = []
             max_len = 0
             for revno, rev_id in revnos:
@@ -94,7 +125,7 @@ class cmd_get_dotted_revno(commands.Command):
                                      for s, r in revno_strs]))
         finally:
             b.unlock()
-        trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+        trace.note('Time: %.3fs' % (tdelta,))
 
 
 _mainline_walk_types = registry.Registry()
@@ -198,7 +229,7 @@ class cmd_walk_ancestry(commands.Command):
         elif method == 'bzr-kg':
             kg = b.repository.revisions.get_known_graph_ancestry(
                 [(b.last_revision(),)])
-            ancestors = len(kg._nodes)
+            ancestors = kg._nodes
         self.outf.write('Found %d ancestors\n' % (len(ancestors),))
         trace.note('Time: %.3fs' % (time.time() - t,))
 
