@@ -129,6 +129,8 @@ class Importer(object):
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
+        # We know all the other imports are going to be incremental
+        self._incremental = True
         self._stats['nodes_expanded'] += 0 # create an entry
         # We want to expand every possible mainline into a dotted_revno cache.
         # We don't really want to have to compute all the ones we have already
