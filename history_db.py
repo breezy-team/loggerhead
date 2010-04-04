@@ -79,13 +79,16 @@ class Importer(object):
             return False
         self._stats['total_nodes_inserted'] += len(nodes)
         tip_db_id = self._rev_id_to_db_id[tip_rev_id]
+        revno_entries = []
         for node in nodes:
-            schema.create_dotted_revno(self._cursor,
-                tip_revision=tip_db_id,
-                merged_revision=self._rev_id_to_db_id[node.key[0]],
-                revno='.'.join(map(str, node.revno)),
-                end_of_merge=node.end_of_merge,
-                merge_depth=node.merge_depth)
+            # TODO: Do we need to track the 'end_of_merge' and 'merge_depth'
+            #       fields?
+            revno_entries.append((tip_db_id,
+                                  self._rev_id_to_db_id[node.key[0]],
+                                  '.'.join(map(str, node.revno)),
+                                  node.end_of_merge,
+                                  node.merge_depth))
+        schema.create_dotted_revnos(self._cursor, revno_entries)
         return True
 
     def _update_parents(self, nodes):
