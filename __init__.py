@@ -240,3 +240,11 @@ commands.register_command(cmd_create_history_db)
 commands.register_command(cmd_get_dotted_revno)
 commands.register_command(cmd_walk_mainline)
 commands.register_command(cmd_walk_ancestry)
+
+
+def load_tests(standard_tests, module, loader):
+    standard_tests.addTests(loader.loadTestsFromModuleNames([
+        (__name__ + '.' + x) for x in [
+            'test_importer',
+        ]]))
+    return standard_tests
