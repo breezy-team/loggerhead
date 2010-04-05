@@ -92,10 +92,16 @@ class TestImporter(tests.TestCaseWithTransport):
         # | C E     |   1.1.2   1.2.1
         # |/ /|     | /       / |
         # D F H     2   1.2.2   1.3.1
-        # |/ /      | /        /
-        # G /       3  .------'
-        # |/        | /
-        # I         4
+        # |/ X      | /      \ /
+        # G / J     3  .------' 1.2.3
+        # |/  |\    | /        /     \
+        # I   K L   4        1.2.4    1.4.1
+        # |   |/
+        # |   M
+        # |  /
+        # | /
+        # |/
+        # N
         ancestry = {'A': (),
                     'B': ('A',),
                     'C': ('B',),
@@ -105,15 +111,22 @@ class TestImporter(tests.TestCaseWithTransport):
                     'G': ('D', 'F'),
                     'H': ('E',),
                     'I': ('G', 'H'),
+                    'J': ('F',),
+                    'K': ('J',),
+                    'L': ('J',),
+                    'M': ('K', 'L'),
+                    'N': ('I', 'M'),
                     }
-        return MockBranch(ancestry, 'I')
+        return MockBranch(ancestry, 'N')
 
     def test_build(self):
         b = self.make_interesting_branch()
         revno_map = b.get_revision_id_to_revno_map()
         self.assertEqual({'A': (1,), 'B': (1,1,1), 'C': (1,1,2),
                           'D': (2,), 'E': (1,2,1), 'F': (1,2,2),
-                          'G': (3,), 'H': (1,3,1), 'I': (4,)},
+                          'G': (3,), 'H': (1,3,1), 'I': (4,),
+                          'J': (1,2,3,), 'K': (1,2,4), 'L': (1,4,1),
+                          'M': (1,2,5,), 'N': (5,)},
                          revno_map)
 
     def test_import_non_incremental(self):
@@ -129,7 +142,8 @@ class TestImporter(tests.TestCaseWithTransport):
         db_to_rev_id = dict((r[1], r[0]) for r in revs)
         rev_gdfo = dict((r[0], r[2]) for r in revs)
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
-                          'G': 5, 'H': 4, 'I': 6}, rev_gdfo)
+                          'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
+                          'M': 7, 'N': 8}, rev_gdfo)
         dotted_info = cur.execute(
             "SELECT tip_revision, merged_revision, revno"
             "  FROM dotted_revno").fetchall()
@@ -142,10 +156,18 @@ class TestImporter(tests.TestCaseWithTransport):
         G = rev_to_db_id['G']
         H = rev_to_db_id['H']
         I = rev_to_db_id['I']
+        J = rev_to_db_id['J']
+        K = rev_to_db_id['K']
+        L = rev_to_db_id['L']
+        M = rev_to_db_id['M']
+        N = rev_to_db_id['N']
         expected = {A: sorted([(A, '1')]),
                     D: sorted([(B, '1.1.1'), (C, '1.1.2'), (D, '2')]),
                     G: sorted([(E, '1.2.1'), (F, '1.2.2'), (G, '3')]),
-                    I: sorted([(H, '1.3.1'), (I, '4')])}
+                    I: sorted([(H, '1.3.1'), (I, '4')]),
+                    N: sorted([(J, '1.2.3'), (K, '1.2.4'), (L, '1.4.1'),
+                               (M, '1.2.5'), (N, '5')]),
+                   }
         actual = {}
         for tip_rev, merge_rev, revno in dotted_info:
             val = actual.setdefault(tip_rev, [])
@@ -156,14 +178,15 @@ class TestImporter(tests.TestCaseWithTransport):
     def test__update_ancestry_from_scratch(self):
         b = self.make_interesting_branch()
         importer = history_db.Importer(':memory:', b, incremental=False)
-        importer._update_ancestry('I')
+        importer._update_ancestry('N')
         cur = importer._db_conn.cursor()
         # revision and parent should be fully populated
         rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
                                     "  FROM revision").fetchall())
         # Track the db_ids that are assigned
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
-                          'G': 5, 'H': 4, 'I': 6}, rev_gdfo)
+                          'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
+                          'M': 7, 'N': 8}, rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
             cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
                         "  FROM parent, revision c, revision p"
@@ -172,7 +195,10 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
                           ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
                           ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
-                          ('I', 0): 'G', ('I', 1): 'H'}, parent_map)
+                          ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
+                          ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
+                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'M',
+                         }, parent_map)
 
     def test__update_ancestry_partial(self):
         b = self.make_interesting_branch()
@@ -183,14 +209,15 @@ class TestImporter(tests.TestCaseWithTransport):
         cur.executemany("INSERT INTO revision (revision_id, gdfo)"
                         " VALUES (?, ?)", [('A', 11)])
         importer._graph = None
-        importer._update_ancestry('I')
+        importer._update_ancestry('N')
         cur = importer._db_conn.cursor()
         # revision and parent should be fully populated
         rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
                                     "  FROM revision").fetchall())
         # Track the db_ids that are assigned
         self.assertEqual({'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 13,
-                          'F': 14, 'G': 15, 'H': 14, 'I': 16}, rev_gdfo)
+                          'F': 14, 'G': 15, 'H': 14, 'I': 16, 'J': 15,
+                          'K': 16, 'L': 16, 'M': 17, 'N': 18}, rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
             cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
                         "  FROM parent, revision c, revision p"
@@ -199,4 +226,7 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
                           ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
                           ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
-                          ('I', 0): 'G', ('I', 1): 'H'}, parent_map)
+                          ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
+                          ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
+                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'M',
+                         }, parent_map)
