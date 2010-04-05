@@ -99,14 +99,6 @@ class Importer(object):
             (tip_rev_id,)).fetchone()
         return res[0] > 0
 
-    def _is_imported_db_id(self, tip_db_id):
-        res = self._cursor.execute(
-            "SELECT count(*) FROM dotted_revno"
-            " WHERE tip_revision = ?"
-            "   AND tip_revision = merged_revision",
-            (tip_db_id,)).fetchone()
-        return res[0] > 0
-
     def _insert_nodes(self, tip_rev_id, nodes):
         """Insert all of the nodes mentioned into the database."""
         self._stats['_insert_node_calls'] += 1
@@ -156,13 +148,9 @@ class Importer(object):
 
     def do_import(self, expand_all=False):
         if self._incremental:
-            inc_importer = _IncrementalImporter(self, self._branch_tip_rev_id)
             self._update_ancestry(self._branch_tip_rev_id)
             tip_db_id = self._rev_id_to_db_id[self._branch_tip_rev_id]
-            (needed_mainline,
-             imported_mainline_db_id) = self._find_needed_mainline(tip_db_id)
-            # TODO: if imported_mainline_id is None, then we may as well just
-            #       switch to full import, rather than incremental
+            inc_importer = _IncrementalImporter(self, tip_db_id)
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -252,18 +240,6 @@ class Importer(object):
         self._compute_gdfo_and_insert(known, children, parent_map)
         self._insert_parent_map(parent_map)
         self._db_conn.commit()
-
-    def _find_needed_mainline(self, new_tip_db_id):
-        """Find mainline revisions that need to be filled out.
-        
-        :return: ([mainline_not_imported], most_recent_imported)
-        """
-        db_id = new_tip_db_id
-        needed = []
-        while db_id is not None and not self._is_imported_db_id(db_id):
-            needed.append(db_id)
-            db_id = self._get_lh_parent_db_id(db_id)
-        return needed, db_id
 
     def _find_known_ancestors(self, new_tip_rev_id):
         """Starting at tip, find ancestors we already have"""
@@ -449,19 +425,18 @@ class _IncrementalImporter(object):
     # Note: all of the ids in this object are database ids. the revision_ids
     #       should have already been imported before we get to this step.
 
-    def __init__(self, importer, mainline_db_ids, pre_mainline_id):
+    def __init__(self, importer, tip_db_id):
         self._importer = importer
-        self._mainline_db_ids = mainline_db_ids
-        # For now
-        assert pre_mainline_id is not None
-        self._imported_mainline_id = pre_mainline_id
+        self._tip_db_id = tip_db_id
+        self._mainline_db_ids = None
+        self._imported_mainline_id = None
         self._cursor = importer._cursor
 
         # db_id => gdfo
         self._known_gdfo = {}
         # db_ids that we know are ancestors of mainline_db_ids that are not
         # ancestors of pre_mainline_id
-        self._interesting_ancestor_ids = set(self._mainline_db_ids)
+        self._interesting_ancestor_ids = set()
 
         # Information from the dotted_revno table for revisions that are in the
         # already-imported mainline.
@@ -473,6 +448,20 @@ class _IncrementalImporter(object):
         # Revisions that we are walking, to see if they are interesting, or
         # already imported.
         self._search_tips = None
+
+    def _find_needed_mainline(self):
+        """Find mainline revisions that need to be filled out.
+        
+        :return: ([mainline_not_imported], most_recent_imported)
+        """
+        db_id = self._tip_db_id
+        needed = []
+        while db_id is not None and not self._is_imported_db_id(db_id):
+            needed.append(db_id)
+            db_id = self._importer._get_lh_parent_db_id(db_id)
+        self._mainline_db_ids = needed
+        self._interesting_ancestor_ids.update(self._mainline_db_ids)
+        self._imported_mainline_id = db_id
 
     def _get_initial_search_tips(self):
         """Grab the right-hand parents of all the interesting mainline.
@@ -497,6 +486,14 @@ class _IncrementalImporter(object):
         imported_gdfo = res[0]
         self._imported_gdfo = imported_gdfo
         known_gdfo[self._imported_mainline_id] = imported_gdfo
+
+    def _is_imported_db_id(self, tip_db_id):
+        res = self._cursor.execute(
+            "SELECT count(*) FROM dotted_revno"
+            " WHERE tip_revision = ?"
+            "   AND tip_revision = merged_revision",
+            (tip_db_id,)).fetchone()
+        return res[0] > 0
 
     def _split_search_tips_by_gdfo(self, unknown):
         """For these search tips, mark ones 'interesting' based on gdfo.
@@ -643,11 +640,12 @@ class _IncrementalImporter(object):
         self._known_gdfo.update(res)
 
     def _find_interesting_ancestry(self):
+        self._find_needed_mainline()
         self._get_initial_search_tips()
         while self._search_tips:
             # We don't know whether these search tips are known interesting, or
             # known uninteresting
-            unknown = self._search_tips
+            unknown = list(self._search_tips)
             while unknown:
                 unknown = self._split_search_tips_by_gdfo(unknown)
                 if unknown:

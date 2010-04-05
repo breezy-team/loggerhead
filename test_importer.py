@@ -119,6 +119,10 @@ class TestImporter(tests.TestCaseWithTransport):
                     }
         return MockBranch(ancestry, 'N')
 
+    def grab_interesting_ids(self, rev_id_to_db_id):
+        for rev_id in 'ABCDEFGHIJKLMN':
+            setattr(self, '%s_id' % (rev_id,), rev_id_to_db_id.get(rev_id))
+
     def test_build(self):
         b = self.make_interesting_branch()
         revno_map = b.get_revision_id_to_revno_map()
@@ -147,27 +151,18 @@ class TestImporter(tests.TestCaseWithTransport):
         dotted_info = cur.execute(
             "SELECT tip_revision, merged_revision, revno"
             "  FROM dotted_revno").fetchall()
-        A = rev_to_db_id['A']
-        B = rev_to_db_id['B']
-        C = rev_to_db_id['C']
-        D = rev_to_db_id['D']
-        E = rev_to_db_id['E']
-        F = rev_to_db_id['F']
-        G = rev_to_db_id['G']
-        H = rev_to_db_id['H']
-        I = rev_to_db_id['I']
-        J = rev_to_db_id['J']
-        K = rev_to_db_id['K']
-        L = rev_to_db_id['L']
-        M = rev_to_db_id['M']
-        N = rev_to_db_id['N']
-        expected = {A: sorted([(A, '1')]),
-                    D: sorted([(B, '1.1.1'), (C, '1.1.2'), (D, '2')]),
-                    G: sorted([(E, '1.2.1'), (F, '1.2.2'), (G, '3')]),
-                    I: sorted([(H, '1.3.1'), (I, '4')]),
-                    N: sorted([(J, '1.2.3'), (K, '1.2.4'), (L, '1.4.1'),
-                               (M, '1.2.5'), (N, '5')]),
-                   }
+        self.grab_interesting_ids(rev_to_db_id)
+        expected = {
+            self.A_id: sorted([(self.A_id, '1')]),
+            self.D_id: sorted([(self.B_id, '1.1.1'), (self.C_id, '1.1.2'),
+                                (self.D_id, '2')]),
+            self.G_id: sorted([(self.E_id, '1.2.1'), (self.F_id, '1.2.2'),
+                               (self.G_id, '3')]),
+            self.I_id: sorted([(self.H_id, '1.3.1'), (self.I_id, '4')]),
+            self.N_id: sorted([(self.J_id, '1.2.3'), (self.K_id, '1.2.4'),
+                               (self.L_id, '1.4.1'), (self.M_id, '1.2.5'),
+                               (self.N_id, '5')]),
+        }
         actual = {}
         for tip_rev, merge_rev, revno in dotted_info:
             val = actual.setdefault(tip_rev, [])
@@ -238,81 +233,96 @@ class TestImporter(tests.TestCaseWithTransport):
         importer.do_import()
         D_id = importer._rev_id_to_db_id['D']
         self.assertEqual(1, importer._cursor.execute(
-            "SELECT count(*) FROM dotted_revno"
+            "SELECT count(*) FROM dotted_revno, revision"
             " WHERE tip_revision = merged_revision"
-            "   AND tip_revision = ?", (D_id,)).fetchone()[0])
+            "   AND tip_revision = db_id"
+            "   AND revision_id = ?", ('D',)).fetchone()[0])
         # Now work on just importing G
         importer._update_ancestry('G')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
         G_id = importer._rev_id_to_db_id['G']
-        needed_mainline, imported_db_id = importer._find_needed_mainline(G_id)
-        self.assertEqual([G_id], needed_mainline)
-        self.assertEqual(D_id, imported_db_id)
-        inc_importer = history_db._IncrementalImporter(importer,
-            needed_mainline, imported_db_id)
-        self.assertEqual(set(needed_mainline),
-                         inc_importer._interesting_ancestor_ids)
+        inc_importer = history_db._IncrementalImporter(importer, self.G_id)
+        inc_importer._find_needed_mainline()
+        self.assertEqual([self.G_id], inc_importer._mainline_db_ids)
+        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
+        self.assertEqual(set([self.G_id]), inc_importer._interesting_ancestor_ids)
         # This should populate ._search_tips, as well as gdfo information
         inc_importer._get_initial_search_tips()
-        F_id = importer._rev_id_to_db_id['F']
-        self.assertEqual(set([F_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.F_id]), inc_importer._search_tips)
         self.assertEqual(4, inc_importer._imported_gdfo)
-        self.assertEqual(D_id, inc_importer._imported_mainline_id)
-        self.assertEqual({F_id: 4, D_id: 4}, inc_importer._known_gdfo)
+        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
+        self.assertEqual({self.F_id: 4, self.D_id: 4}, inc_importer._known_gdfo)
         # D_id has gdfo >= F_id, so we know it isn't merged. So
         # _split_search_tips_by_gdfo should return nothing, and update
         # _interesting_ancestor_ids
-        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([F_id]))
-        self.assertEqual(set([G_id, F_id]),
+        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([self.F_id]))
+        self.assertEqual(set([self.G_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
         # Since we know that all search tips are interesting, we walk them
         inc_importer._step_search_tips()
-        E_id = importer._rev_id_to_db_id['E']
-        self.assertEqual(set([E_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.E_id]), inc_importer._search_tips)
         # Now when we go to _split_search_tips_by_gdfo, we aren't positive that
         # E wasn't merged, it should tell us so.
-        self.assertEqual([E_id],
-                         inc_importer._split_search_tips_by_gdfo([E_id]))
+        self.assertEqual([self.E_id],
+                         inc_importer._split_search_tips_by_gdfo([self.E_id]))
         # And it should not have updatde search tips or ancestor_ids
-        self.assertEqual(set([G_id, F_id]),
+        self.assertEqual(set([self.G_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
-        self.assertEqual(set([E_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.E_id]), inc_importer._search_tips)
         # Checking children should notice that no children have gdfo < F, so E
         # is auto-marked as interesting.
         self.assertEqual([],
-                         inc_importer._split_interesting_using_children([E_id]))
-        self.assertEqual(set([E_id, G_id, F_id]),
+                         inc_importer._split_interesting_using_children([self.E_id]))
+        self.assertEqual(set([self.E_id, self.G_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
         # Since we know all search tips are interesting, step again.
         inc_importer._step_search_tips()
-        B_id = importer._rev_id_to_db_id['B']
-        self.assertEqual(set([B_id]), inc_importer._search_tips)
-        self.assertEqual(set([E_id, G_id, F_id]),
+        self.assertEqual(set([self.B_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.E_id, self.G_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
         # B is merged, so these two steps should not filter it out
-        self.assertEqual([B_id],
-                         inc_importer._split_search_tips_by_gdfo([B_id]))
-        self.assertEqual([B_id],
-                         inc_importer._split_interesting_using_children([B_id]))
+        self.assertEqual([self.B_id],
+                         inc_importer._split_search_tips_by_gdfo([self.B_id]))
+        self.assertEqual([self.B_id],
+                         inc_importer._split_interesting_using_children([self.B_id]))
         # At this point, we have to step the mainline, to find out if we can
         # filter out this search tip. After stepping, _imported_dotted_revno
         # should be filled with the next mainline step
         inc_importer._step_mainline()
-        A_id = importer._rev_id_to_db_id['A']
-        self.assertEqual(A_id, inc_importer._imported_mainline_id)
+        self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
         self.assertEqual(1, inc_importer._imported_gdfo)
-        C_id = importer._rev_id_to_db_id['C']
-        self.assertEqual({D_id: ('2', 0, 0), C_id: ('1.1.2', 0, 1),
-                          B_id: ('1.1.1', 1, 1),
+        self.C_id = importer._rev_id_to_db_id['C']
+        self.assertEqual({self.D_id: ('2', 0, 0), self.C_id: ('1.1.2', 0, 1),
+                          self.B_id: ('1.1.1', 1, 1),
                          }, inc_importer._imported_dotted_revno)
         # Search tips is not yet changed
-        self.assertEqual(set([B_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.B_id]), inc_importer._search_tips)
         # And now when we check gdfo again, it should remove B_id from the
         # search_tips, because it sees it in _imported_dotted_revno
-        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([B_id]))
+        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([self.B_id]))
         self.assertEqual(set([]), inc_importer._search_tips)
 
     def test__incremental_find_interesting_ancestry(self):
         b = self.make_interesting_branch()
-        b._tip_revision = 'D' # Start here
+        b._tip_revision = 'D' # Something older
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
+        importer._update_ancestry('N')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.N_id)
+        # This should step through the ancestry, and load in the necessary
+        # data. Check the final state
+        inc_importer._find_interesting_ancestry()
+        self.assertEqual([self.N_id, self.I_id, self.G_id],
+                         inc_importer._mainline_db_ids)
+        # self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
+        # self.assertEqual(1, inc_importer._imported_gdfo)
+        self.assertEqual(set([self.E_id, self.F_id, self.G_id, self.H_id,
+                              self.I_id, self.J_id, self.K_id, self.L_id,
+                              self.M_id, self.N_id]),
+                         inc_importer._interesting_ancestor_ids)
+        self.assertEqual(set([]), inc_importer._search_tips)
+        self.assertEqual({self.D_id: ('2', 0, 0), self.C_id: ('1.1.2', 0, 1),
+                          self.B_id: ('1.1.1', 1, 1),
+                          self.A_id: ('1', 1, 0),
+                         }, inc_importer._imported_dotted_revno)
