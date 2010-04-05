@@ -448,6 +448,10 @@ class _IncrementalImporter(object):
         # Revisions that we are walking, to see if they are interesting, or
         # already imported.
         self._search_tips = None
+        # mainline revno => number of child branches
+        self._revno_to_branch_count = {}
+        # (revno, branch_num) => oldest seen child
+        self._branch_to_child_count = {}
 
     def _find_needed_mainline(self):
         """Find mainline revisions that need to be filled out.
@@ -601,7 +605,9 @@ class _IncrementalImporter(object):
             "SELECT merged_revision, revno, end_of_merge, merge_depth"
             "  FROM dotted_revno WHERE tip_revision = ?",
             [self._imported_mainline_id]).fetchall()
-        self._imported_dotted_revno.update([(r[0], r[1:]) for r in res])
+        self._imported_dotted_revno.update(
+            [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
+             for r in res])
         # TODO: We could remove search tips that show up as newly merged
         #       though that can wait until the next
         #       _split_search_tips_by_gdfo
@@ -672,8 +678,23 @@ class _IncrementalImporter(object):
         # Also all of the new pending revisions should be in
         # self._interesting_ancestor_ids
 
+    def _update_info_from_dotted_revno(self):
+        """Update info like 'child_seen' from the dotted_revno info."""
+        iterator = self._imported_dotted_revno.iteritems()
+        for db_id, (revno, eom, depth) in iterator:
+            if len(revno) > 1: # dotted revno, make sure branch count is right
+                base_revno = revno[0]
+                if (base_revno not in self._revno_to_branch_count
+                    or revno[1] > self._revno_to_branch_count[base_revno]):
+                    self._revno_to_branch_count[base_revno] = revno[1]
+                branch_key = revno[:2]
+                if (branch_key not in self._branch_to_child_count
+                    or revno[2] > self._branch_to_child_count[branch_key]):
+                    self._branch_to_child_count[branch_key] = revno[2]
+
     def do_import(self):
         self._find_interesting_ancestry()
+
 
 class Querier(object):
     """Perform queries on an existing history db."""

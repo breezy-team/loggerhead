@@ -292,8 +292,8 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
         self.assertEqual(1, inc_importer._imported_gdfo)
         self.C_id = importer._rev_id_to_db_id['C']
-        self.assertEqual({self.D_id: ('2', 0, 0), self.C_id: ('1.1.2', 0, 1),
-                          self.B_id: ('1.1.1', 1, 1),
+        self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
+                          self.B_id: ((1,1,1), 1, 1),
                          }, inc_importer._imported_dotted_revno)
         # Search tips is not yet changed
         self.assertEqual(set([self.B_id]), inc_importer._search_tips)
@@ -301,6 +301,9 @@ class TestImporter(tests.TestCaseWithTransport):
         # search_tips, because it sees it in _imported_dotted_revno
         self.assertEqual([], inc_importer._split_search_tips_by_gdfo([self.B_id]))
         self.assertEqual(set([]), inc_importer._search_tips)
+        inc_importer._update_info_from_dotted_revno()
+        self.assertEqual({1: 1}, inc_importer._revno_to_branch_count)
+        self.assertEqual({(1, 1): 2}, inc_importer._branch_to_child_count)
 
     def test__incremental_find_interesting_ancestry(self):
         b = self.make_interesting_branch()
@@ -323,6 +326,6 @@ class TestImporter(tests.TestCaseWithTransport):
                               self.M_id, self.N_id]),
                          inc_importer._interesting_ancestor_ids)
         self.assertEqual(set([]), inc_importer._search_tips)
-        self.assertEqual({self.D_id: ('2', 0, 0), self.C_id: ('1.1.2', 0, 1),
-                          self.B_id: ('1.1.1', 1, 1),
+        self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
+                          self.B_id: ((1,1,1), 1, 1),
                          }, inc_importer._imported_dotted_revno)
