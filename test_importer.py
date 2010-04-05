@@ -315,8 +315,9 @@ class TestImporter(tests.TestCaseWithTransport):
         inc_importer._find_interesting_ancestry()
         self.assertEqual([self.N_id, self.I_id, self.G_id],
                          inc_importer._mainline_db_ids)
-        # self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
-        # self.assertEqual(1, inc_importer._imported_gdfo)
+        # We should stop loading A, I need to figure out why it gets loaded
+        self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
+        self.assertEqual(1, inc_importer._imported_gdfo)
         self.assertEqual(set([self.E_id, self.F_id, self.G_id, self.H_id,
                               self.I_id, self.J_id, self.K_id, self.L_id,
                               self.M_id, self.N_id]),
@@ -324,5 +325,4 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual(set([]), inc_importer._search_tips)
         self.assertEqual({self.D_id: ('2', 0, 0), self.C_id: ('1.1.2', 0, 1),
                           self.B_id: ('1.1.1', 1, 1),
-                          self.A_id: ('1', 1, 0),
                          }, inc_importer._imported_dotted_revno)

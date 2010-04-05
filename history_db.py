@@ -648,8 +648,11 @@ class _IncrementalImporter(object):
             unknown = list(self._search_tips)
             while unknown:
                 unknown = self._split_search_tips_by_gdfo(unknown)
-                if unknown:
-                    unknown = self._split_interesting_using_children(unknown)
+                if not unknown:
+                    break
+                unknown = self._split_interesting_using_children(unknown)
+                if not unknown:
+                    break
                 # The current search tips are the 'newest' possible tips right
                 # now. If we can't classify them as definitely being
                 # interesting, then we need to step the mainline until we can.
