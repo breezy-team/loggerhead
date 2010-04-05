@@ -152,3 +152,33 @@ class TestImporter(tests.TestCaseWithTransport):
             val.append((merge_rev, revno))
             val.sort()
         self.assertEqual(expected, actual)
+
+    def test__update_ancestry_from_scratch(self):
+        b = self.make_interesting_branch()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer._update_ancestry('I')
+        cur = importer._db_conn.cursor()
+        # revision and parent should be fully populated
+        rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
+                                    "  FROM revision").fetchall())
+        # Track the db_ids that are assigned
+        self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
+                          'G': 5, 'H': 4, 'I': 6}, rev_gdfo)
+
+    def test__update_ancestry_partial(self):
+        b = self.make_interesting_branch()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        # We intentionally seed the data with some wrong values, to see if the
+        # result uses them.
+        cur = importer._db_conn.cursor()
+        cur.executemany("INSERT INTO revision (revision_id, gdfo)"
+                        " VALUES (?, ?)", [('A', 11)])
+        importer._graph = None
+        importer._update_ancestry('I')
+        cur = importer._db_conn.cursor()
+        # revision and parent should be fully populated
+        rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
+                                    "  FROM revision").fetchall())
+        # Track the db_ids that are assigned
+        self.assertEqual({'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 13,
+                          'F': 14, 'G': 15, 'H': 14, 'I': 16}, rev_gdfo)
