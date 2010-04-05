@@ -164,6 +164,15 @@ class TestImporter(tests.TestCaseWithTransport):
         # Track the db_ids that are assigned
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
                           'G': 5, 'H': 4, 'I': 6}, rev_gdfo)
+        parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
+            cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
+                        "  FROM parent, revision c, revision p"
+                        " WHERE parent.parent = p.db_id"
+                        "   AND parent.child = c.db_id").fetchall())
+        self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
+                          ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
+                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
+                          ('I', 0): 'G', ('I', 1): 'H'}, parent_map)
 
     def test__update_ancestry_partial(self):
         b = self.make_interesting_branch()
@@ -182,3 +191,12 @@ class TestImporter(tests.TestCaseWithTransport):
         # Track the db_ids that are assigned
         self.assertEqual({'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 13,
                           'F': 14, 'G': 15, 'H': 14, 'I': 16}, rev_gdfo)
+        parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
+            cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
+                        "  FROM parent, revision c, revision p"
+                        " WHERE parent.parent = p.db_id"
+                        "   AND parent.child = c.db_id").fetchall())
+        self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
+                          ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
+                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
+                          ('I', 0): 'G', ('I', 1): 'H'}, parent_map)
