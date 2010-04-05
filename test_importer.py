@@ -116,3 +116,39 @@ class TestImporter(tests.TestCaseWithTransport):
                           'G': (3,), 'H': (1,3,1), 'I': (4,)},
                          revno_map)
 
+    def test_import_non_incremental(self):
+        b = self.make_interesting_branch()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        db_conn = importer._db_conn
+        cur = db_conn.cursor()
+        revs = cur.execute("SELECT revision_id, db_id, gdfo"
+                           "  FROM revision").fetchall()
+        # Track the db_ids that are assigned
+        rev_to_db_id = dict((r[0], r[1]) for r in revs)
+        db_to_rev_id = dict((r[1], r[0]) for r in revs)
+        rev_gdfo = dict((r[0], r[2]) for r in revs)
+        self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
+                          'G': 5, 'H': 4, 'I': 6}, rev_gdfo)
+        dotted_info = cur.execute(
+            "SELECT tip_revision, merged_revision, revno"
+            "  FROM dotted_revno").fetchall()
+        A = rev_to_db_id['A']
+        B = rev_to_db_id['B']
+        C = rev_to_db_id['C']
+        D = rev_to_db_id['D']
+        E = rev_to_db_id['E']
+        F = rev_to_db_id['F']
+        G = rev_to_db_id['G']
+        H = rev_to_db_id['H']
+        I = rev_to_db_id['I']
+        expected = {A: sorted([(A, '1')]),
+                    D: sorted([(B, '1.1.1'), (C, '1.1.2'), (D, '2')]),
+                    G: sorted([(E, '1.2.1'), (F, '1.2.2'), (G, '3')]),
+                    I: sorted([(H, '1.3.1'), (I, '4')])}
+        actual = {}
+        for tip_rev, merge_rev, revno in dotted_info:
+            val = actual.setdefault(tip_rev, [])
+            val.append((merge_rev, revno))
+            val.sort()
+        self.assertEqual(expected, actual)
