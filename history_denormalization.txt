@@ -233,6 +233,7 @@ Some downsides:
 
  a) Paths along the graph do not always follow particularly 'linearly'.
     Consider
+
      i) Branch 1 is a single patch against rev 1000.
      ii) The mainline is developed for 3 months, with lots of changes landing.
      iii) Branch 1 is updated with a second patch, and lands on mainline rev
@@ -252,6 +253,236 @@ Some downsides:
    However, there is a stability guarantee that we can exploit. If a revision
    X is in the ancestry of tip T, then the dotted revno for X will be the same
    for all descendents of T.
+
+
+Partial ``merge_sort`` Computation
+==================================
+
+This section tries to discuss the issues and design of how to compute dotted
+revnos and the overal merge-sorted graph, given a desire to avoid walking all
+history.
+
+The current merge-sorted design is achieved by walking the ancestry graph. A
+'pending' stack is created. Parents are put on the stack, with the left-most
+parent at the top of the stack. Once all parents have been put into pending,
+the top node can is ready to be numbered and can be removed. For example::
+
+  A
+  |\
+  B C
+  |/|
+  D E
+  | |
+  | F
+  |/
+  G
+
+G is first pushed onto the stack. We then push F and D onto the stack (GFD).
+We then go to D, and push C and B (GFDCB). And then go to B and push A. When
+we get to A (GFDCBA), there are no more parents, so A is ready to be numbered
+(0, 0, 1), and it is popped off and marked completed. After that we get to B,
+which is also complete (0, 0, 2). C is also ready. When we pushed it, we noted
+that it was a right-hand parent, so its ``merge_depth`` gets incremented by 1
+vs the original depth of 0. Thus it needs a dotted revno, and gets (1, 1, 1).
+D is then ready to be marked (0, 0, 3). When we get to F, we have to push its
+parent E onto the stack (GFE), when we switch to E, we see its parents are
+already numbered, and it gets (1, 1, 2). F is then ready and gets (1, 1, 3). G
+is then the last entry and gets (0, 0, 4). As a simplification, all numbers
+starting with (0, 0, ?) get truncated down to just (?,).
+
+Difficulties
+------------
+
+The main difficulties I see are determining:
+  1) First child
+  2) ``_revno_to_branch_count``
+
+The former is used to determine whether we do a simple last-digit update
+(1,1,1) => (1,1,2), or whether we have to allocate a new branch number. Both
+values are restricted to the current ancestry (so it cannot be simply cached),
+also, complex ancestries make it difficult to track. Consider::
+
+  A
+  |\
+  | \
+  |  \
+  |   B
+  |  /|
+  | C E
+  |/ X
+  D / G
+  |/ /|
+  F H I
+  | |/
+  | J
+  |/
+  K
+
+In this case, the numbers are::
+
+    A 1
+    B 1.1.1
+    C 1.1.2
+    D 2
+    E 1.2.1
+    F 3
+    G 1.1.3
+    H 1.1.4
+    I 1.3.1
+    J 1.1.5
+    K 4
+
+The tricks are that G is still the first child with C as a left-hand parent,
+so it continues the simple sequence. E lands into mainline before I, so I gets
+bumped to the next available branch number, which ends up being 3 (not a
+simple increment from its parent G).
+
+It should be possible to generate a 'bounds' for the ancestry we need to look
+at, though. Specifically, we know that C landed in D and I landed in K. Thus
+we only need to look at revisions that landed in D, F, K. If it landed before
+D, then C's number would be higher. If it lands after K, then it doesn't
+matter for I. We do need to consider all the revs in D, though, because of
+stuff like::
+
+  A
+  |\
+  | \
+  |  \
+  |   B
+  |  /|
+  | C D
+  | |X
+  | E G
+  |/ /|
+  F H I
+  | |/
+  | J
+  |/
+  K
+
+In the above, D causes a bump to the branch number that I needs to be aware
+of.
+      
+Avoiding All Ancestry
+---------------------
+
+The other trick is that when we see a new merge, how *much* of the ancestry do
+we need to bring in. It should be possible to use a couple tricks to limit the
+range.
+
+ 1) gdfo. In the graph directly above, the gdfo numberings are::
+
+      1   A
+      2   B
+      3   C D
+      4   E G
+      5   F H I
+      6   J
+      7   K
+
+    This doesn't help a huge amount, because I think we still need to walk the
+    mainline back to A. Because while walking the left-hand ancestry of K, we
+    get back to G with gdfo of 4. Because gdfo(G) < gdfo(F) it could have been
+    merged there. We don't have to read the ancestry of A, though.
+
+ 2) 'known children'. There is another complication when you have a new 'root'
+    ancestry.  Consider::
+
+      :
+      A
+      |
+      B C
+      | |
+      | D
+      |/
+      E
+
+    C is a new line of development (or a ghost), which ends up with a
+    gdfo(C)=1.  As such, we would potentially have to walk the whole ancestry
+    priory to A, until we get back to the root revision. Because C *could
+    have* been merged into any of them.
+
+    One possibility is to notice that the only known child of C is D, which is a
+    revision we are already including in our ancestry search. Note that this
+    probably should also cover slightly more complex cases like::
+
+      :
+      A
+      |
+      B C
+      | |\
+      | D E
+      | |/
+      | F
+      |/
+      G
+
+    Where the descendants of C are not trivial, but they are 'contained'. Note
+    that probing for known children should be a simple index lookup (``SELECT
+    child FROM parent WHERE parent=?``). However, that can give answers
+    outside of the scope of the ancestry we currently care about. eg, in the
+    above example, if E did not merge into F, but instead merged into a
+    descendant (H) of G. It would not affect the numbering of C,D,F. Then
+    again, if we walked the children of E and saw that the gdfo of H was >
+    gdfo(G) then we could also prune that as uninteresting. Actually, as long
+    as gdfo(H) > the mainline ancestry we have searched so far, we should be
+    done.
+
+    One possible way to implement the search would be to start at G. In step
+    1, we can find B and F. We should know that B is on the mainline, so we
+    focus on F. Our current bounds for 'interesting' children is < gdfo(B). We
+    lookup known children of F, and find only G, so the bounds set by B is
+    sufficient.  We then walk back to D & E. The bounds set by B is still
+    sufficient, since there are no interesting outbound links for either
+    revision. (gdfo(F) < gdfo(B), however F is already marked as not having an
+    children with gdfo(child) < gdfo(B).) As such, both D and E should get
+    marked that their children ancestry is satisfied, similarly walking to C
+    finishes the result.
+
+ 3) Combining the two, lets look again at::
+
+      A
+      |\
+      | \
+      |  \
+      |   B
+      |  /|
+      | C D
+      | |X
+      | E G
+      |/ /|\
+      F H I :
+      | |/
+      | J
+      |/
+      K
+
+    Starting at K, we grab F & J. gdfo(F) = 5. gdfo(K) = 7, gdfo(J) = 6. Since
+    gdfo(J) = 6, we know that it cannot be merged into F (nor can any of its
+    descendents). So J gets marked as "interesting" (it is an ancestor of K),
+    but "complete" (it could not have been merged into a mainline revision
+    that we have not fetched).
+    
+    Next we step to H & I, both with gdfo = 5.  These also get marked
+    "interesting & complete". We then walk to G gdfo=4.  We check the known
+    children of G, and see that they are all marked either complete, or have
+    gdfo >= 5 (the hypothetical children off of ':' all have to have gdfo >=
+    5.) The only other possible answer here would be that F was an immediate
+    descendent of G. G then gets marked "interesting & complete".  We then
+    walk to C gdfo=3. We then see that C has a child E that is not interesting
+    & complete, and has a gdfo < 5. We could probably take a couple different
+    tacks.
+
+      a) Walk children of E until we see that it either reaches gdfo >= 5, or
+         is, in fact, and ancestor of F (as is the case here). Or
+      b) Step F's dotted_revno information, loading all of its ancestors, and
+         setting the new gdfo threshold to A (1). At the same time, we can
+         mark all of the ancestors as 'not interesting' because we know they
+         are ancestors of F.
+
+    I don't have a great feeling for (a) vs (b). On the one hand, we will need
+    to page in the dotted_revno info anyway, because we'll use it to generate
+    the revnos for G, etc.
 
 ..
   vim: ft=rst tw=78 ai
