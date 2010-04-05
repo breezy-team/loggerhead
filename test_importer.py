@@ -230,3 +230,59 @@ class TestImporter(tests.TestCaseWithTransport):
                           ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
                           ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'M',
                          }, parent_map)
+
+    def test__incremental_importer_step_by_step(self):
+        b = self.make_interesting_branch()
+        b._tip_revision = 'D' # Something older
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        D_id = importer._rev_id_to_db_id['D']
+        self.assertEqual(1, importer._cursor.execute(
+            "SELECT count(*) FROM dotted_revno"
+            " WHERE tip_revision = merged_revision"
+            "   AND tip_revision = ?", (D_id,)).fetchone()[0])
+        # Now work on just importing G
+        importer._update_ancestry('G')
+        G_id = importer._rev_id_to_db_id['G']
+        needed_mainline, imported_db_id = importer._find_needed_mainline(G_id)
+        self.assertEqual([G_id], needed_mainline)
+        self.assertEqual(D_id, imported_db_id)
+        inc_importer = history_db._IncrementalImporter(importer,
+            needed_mainline, imported_db_id)
+        self.assertEqual(set(needed_mainline),
+                         inc_importer._interesting_ancestor_ids)
+        # This should populate ._search_tips, as well as gdfo information
+        inc_importer._get_initial_search_tips()
+        F_id = importer._rev_id_to_db_id['F']
+        self.assertEqual(set([F_id]), inc_importer._search_tips)
+        self.assertEqual(4, inc_importer._imported_gdfo)
+        self.assertEqual(D_id, inc_importer._imported_mainline_id)
+        self.assertEqual({F_id: 4, D_id: 4}, inc_importer._known_gdfo)
+        # D_id has gdfo >= F_id, so we know it isn't merged. So
+        # _split_search_tips_by_gdfo should return nothing, and update
+        # _interesting_ancestor_ids
+        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([F_id]))
+        self.assertEqual(set([G_id, F_id]),
+                         inc_importer._interesting_ancestor_ids)
+        # Since we know that all search tips are interesting, we walk them
+        inc_importer._step_search_tips()
+        E_id = importer._rev_id_to_db_id['E']
+        self.assertEqual(set([E_id]), inc_importer._search_tips)
+        # Now when we go to _split_search_tips_by_gdfo, we aren't positive that
+        # E wasn't merged, it should tell us so.
+        self.assertEqual([E_id],
+                         inc_importer._split_search_tips_by_gdfo([E_id]))
+        # And it should not have updatde search tips or ancestor_ids
+        self.assertEqual(set([G_id, F_id]),
+                         inc_importer._interesting_ancestor_ids)
+        self.assertEqual(set([E_id]), inc_importer._search_tips)
+        # Checking children should notice that no children have gdfo < F, so E
+        # is auto-marked as interesting.
+        self.assertEqual([],
+                         inc_importer._split_interesting_using_children([E_id]))
+        self.assertEqual(set([E_id, G_id, F_id]),
+                         inc_importer._interesting_ancestor_ids)
+        # Since we know all search tips are interesting, step again.
+        inc_importer._step_search_tips()
+        B_id = importer._rev_id_to_db_id['B']
+        self.assertEqual(set([B_id]), inc_importer._search_tips)

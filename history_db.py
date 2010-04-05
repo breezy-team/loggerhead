@@ -35,6 +35,25 @@ from bzrlib.plugins.history_db import schema
 
 NULL_PARENTS = (revision.NULL_REVISION,)
 
+
+def _n_params(n):
+    """Create a query string representing N parameters.
+
+    n=1 => ?
+    n=2 => ?, ?
+    etc.
+    """
+    return ', '.join('?'*n)
+
+
+def _add_n_params(query, n):
+    """Add n parameters to the query string.
+
+    the query should have a single '%s' in it to be expanded.
+    """
+    return query % (_n_params(n),)
+
+
 class Importer(object):
     """Import data from bzr into the history_db."""
 
@@ -80,6 +99,14 @@ class Importer(object):
             (tip_rev_id,)).fetchone()
         return res[0] > 0
 
+    def _is_imported_db_id(self, tip_db_id):
+        res = self._cursor.execute(
+            "SELECT count(*) FROM dotted_revno"
+            " WHERE tip_revision = ?"
+            "   AND tip_revision = merged_revision",
+            (tip_db_id,)).fetchone()
+        return res[0] > 0
+
     def _insert_nodes(self, tip_rev_id, nodes):
         """Insert all of the nodes mentioned into the database."""
         self._stats['_insert_node_calls'] += 1
@@ -104,6 +131,10 @@ class Importer(object):
     def _update_parents(self, nodes):
         """Update parent information for all these nodes."""
         # Get the keys and their parents
+        # TODO: handle ghosts somehow, the current table structure won't
+        #       distinguish between valid roots and roots that are ghosts.
+        #       Note, though, that merge_sort also prunes ghosts, so you have
+        #       to find them some other way.
         parent_map = dict(
             (n.key[0], [p[0] for p in self._graph.get_parent_keys(n.key)])
             for n in nodes)
@@ -126,6 +157,12 @@ class Importer(object):
     def do_import(self, expand_all=False):
         if self._incremental:
             self._update_ancestry(self._branch_tip_rev_id)
+            tip_db_id = self._rev_id_to_db_id[self._branch_tip_rev_id]
+            (needed_mainline,
+             imported_mainline_db_id) = self._find_needed_mainline(tip_db_id)
+            # TODO: if imported_mainline_id is None, then we may as well just
+            #       switch to full import, rather than incremental
+            self._import_mainline(needed_mainline, imported_mainline_db_id)
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -205,6 +242,15 @@ class Importer(object):
                 self._db_conn.commit()
         return merge_sorted
 
+    def _import_mainline(self, mainline_db_ids, pre_mainline_id):
+        """Fill out the dotted_revno table for these mainline_db_ids.
+
+        :param mainline_db_ids: A list of mainline database ids, starting with
+            the most recent revision.
+        :param pre_mainline_id: The mainline db_id that *has* been imported
+            (may be None). Should just be parent(mainline_db_ids[-1])
+        """
+
     def _update_ancestry(self, new_tip_rev_id):
         """Walk the parents of this tip, updating 'revision' and 'parent'
 
@@ -215,6 +261,18 @@ class Importer(object):
         self._compute_gdfo_and_insert(known, children, parent_map)
         self._insert_parent_map(parent_map)
         self._db_conn.commit()
+
+    def _find_needed_mainline(self, new_tip_db_id):
+        """Find mainline revisions that need to be filled out.
+        
+        :return: ([mainline_not_imported], most_recent_imported)
+        """
+        db_id = new_tip_db_id
+        needed = []
+        while db_id is not None and not self._is_imported_db_id(db_id):
+            needed.append(db_id)
+            db_id = self._get_lh_parent_db_id(db_id)
+        return needed, db_id
 
     def _find_known_ancestors(self, new_tip_rev_id):
         """Starting at tip, find ancestors we already have"""
@@ -241,6 +299,9 @@ class Importer(object):
             parent_map.update(pmap)
             parent_ids = pmap.get(rev_id, ())
             if not parent_ids or parent_ids == NULL_PARENTS:
+                # XXX: We should handle 'not parent_ids' differently, because
+                #      that means they are a ghost. Currently the table cannot
+                #      distinguish between a ghost and a root revision.
                 # We can insert this rev directly, because we know its gdfo,
                 # as it has no parents.
                 parent_map[rev_id] = ()
@@ -390,6 +451,211 @@ class Importer(object):
             raise
         else:
             self._db_conn.commit()
+
+
+class _IncrementalImporter(object):
+    """Context for importing partial history."""
+    # Note: all of the ids in this object are database ids. the revision_ids
+    #       should have already been imported before we get to this step.
+
+    def __init__(self, importer, mainline_db_ids, pre_mainline_id):
+        self._importer = importer
+        self._mainline_db_ids = mainline_db_ids
+        # For now
+        assert pre_mainline_id is not None
+        self._imported_mainline_id = pre_mainline_id
+        self._cursor = importer._cursor
+
+        # db_id => gdfo
+        self._known_gdfo = {}
+        # db_ids that we know are ancestors of mainline_db_ids that are not
+        # ancestors of pre_mainline_id
+        self._interesting_ancestor_ids = set(self._mainline_db_ids)
+
+        # Information from the dotted_revno table for revisions that are in the
+        # already-imported mainline.
+        self._imported_dotted_revno_info = {}
+        # This is the gdfo of the current mainline revision search tip. This is
+        # the threshold such that 
+        self._imported_gdfo = None
+
+        # Revisions that we are walking, to see if they are interesting, or
+        # already imported.
+        self._search_tips = None
+
+    def _get_initial_search_tips(self):
+        """Grab the right-hand parents of all the interesting mainline.
+
+        We know we already searched all of the left-hand parents, so just grab
+        the right-hand parents.
+        """
+        # TODO: Split this into a loop, since sqlite has a maximum number of
+        #       parameters.
+        res = self._cursor.execute(_add_n_params(
+            "SELECT parent, gdfo FROM parent, revision"
+            " WHERE parent.parent = revision.db_id"
+            "   AND parent_idx != 0"
+            "   AND child IN (%s)", len(self._mainline_db_ids)),
+            self._mainline_db_ids).fetchall()
+        self._search_tips = set([r[0] for r in res])
+        known_gdfo = self._known_gdfo
+        known_gdfo.update(res)
+        res = self._cursor.execute(
+            "SELECT gdfo FROM revision WHERE db_id = ?",
+            [self._imported_mainline_id]).fetchone()
+        imported_gdfo = res[0]
+        self._imported_gdfo = imported_gdfo
+        known_gdfo[self._imported_mainline_id] = imported_gdfo
+
+    def _split_search_tips_by_gdfo(self, unknown):
+        """For these search tips, mark ones 'interesting' based on gdfo.
+        
+        All search tips are ancestors of _mainline_db_ids. So if their gdfo
+        indicates that they could not be merged into already imported
+        revisions, then we know automatically that they are
+        new-and-interesting. Further, if they are present in
+        _imported_dotted_revno_info, then we know they are not interesting, and
+        we will stop searching them.
+
+        Otherwise, we don't know for sure which category they fall into, so
+        we return them for further processing.
+
+        :return: still_unknown - search tips that aren't known to be
+            interesting, and aren't known to be in the ancestry of already
+            imported revisions.
+        """
+        still_unknown = []
+        min_gdfo = None
+        for db_id in unknown:
+            gdfo = self._known_gdfo[db_id]
+            if gdfo >= self._imported_gdfo:
+                self._interesting_ancestor_ids.add(db_id)
+            else:
+                # TODO: This is probably a reasonable location to check
+                #       self._imported_dotted_revno_info to see if this search
+                #       tip is known to already exist in the ancestry.
+                if db_id in self._imported_dotted_revno_info:
+                    # This should be removed as a search tip, we know it isn't
+                    # interesting, it is an ancestor of an imported revision
+                    self._search_tips.remove(db_id)
+                else:
+                    still_unknown.append(db_id)
+        return still_unknown
+
+    def _split_interesting_using_children(self, unknown_search_tips):
+        """Find children of these search tips.
+
+        For each search tip, we find all of its known children. We then filter
+        the children by:
+            a) child is ignored if child in _interesting_ancestor_ids
+            b) child is ignored if gdfo(child) > _imported_gdfo
+                or (gdfo(child) == _imported_gdfo and child !=
+                _imported_mainline_id)
+               The reason for the extra check is because for the ancestry
+               left-to-be-searched, with tip at _imported_mainline_id, *only*
+               _imported_mainline_id is allowed to have gdfo = _imported_gdfo.
+        for each search tip, if there are no interesting children, then this
+        search tip is definitely interesting (there is no path for it to be
+        merged into a previous mainline entry.)
+
+        :return: still_unknown
+            still_unknown are the search tips that are still have children that
+            could be possibly merged.
+        """
+        interesting = self._interesting_ancestor_ids
+        parent_child_res = self._cursor.execute(_add_n_params(
+            "SELECT parent, child FROM parent"
+            " WHERE parent IN (%s)",
+            len(unknown_search_tips)), unknown_search_tips).fetchall()
+        parent_to_children = {}
+        already_imported = set()
+        for parent, child in parent_child_res:
+            if (child in self._imported_dotted_revno_info
+                or child == self._imported_mainline_id):
+                # This child is already imported, so obviously the parent is,
+                # too.
+                already_imported.add(parent)
+                already_imported.add(child)
+            parent_to_children.setdefault(parent, []).append(child)
+        self._search_tips.difference_update(already_imported)
+        possibly_merged_children = set(
+            [c for p, c in parent_child_res
+                if c not in interesting and p not in already_imported])
+        known_gdfo = self._known_gdfo
+        unknown_gdfos = [c for c in possibly_merged_children
+                            if c not in known_gdfo]
+        # TODO: Is it more wasteful to join this table early, or is it better
+        #       because we avoid having to pass N parameters back in?
+        # TODO: Would sorting the db ids help? They are the primary key for the
+        #       table, so we could potentially fetch in a better order.
+        if unknown_gdfos:
+            res = self._cursor.execute(_add_n_params(
+                "SELECT db_id, gdfo FROM revision WHERE db_id IN (%s)",
+                len(unknown_gdfos)), unknown_gdfos)
+            known_gdfo.update(res)
+        min_gdfo = self._imported_gdfo
+        # Remove all of the children who have gdfo >= min. We already handled
+        # the == min case in the first loop.
+        possibly_merged_children.difference_update(
+            [c for c in possibly_merged_children if known_gdfo[c] >= min_gdfo])
+        still_unknown = []
+        for parent in unknown_search_tips:
+            if parent in already_imported:
+                continue
+            for c in parent_to_children[parent]:
+                if c in possibly_merged_children:
+                    still_unknown.append(parent)
+                    break
+            else: # All children could not be possibly merged
+                interesting.add(parent)
+        return still_unknown
+
+    def _step_mainline(self):
+        """Move the mainline pointer by one, updating the data."""
+        bork
+
+    def _step_search_tips(self):
+        """Move the search tips to their parents."""
+        res = self._cursor.execute(_add_n_params(
+            "SELECT parent, gdfo FROM parent, revision"
+            " WHERE parent=db_id AND child IN (%s)",
+            len(self._search_tips)), list(self._search_tips)).fetchall()
+        # XXX:  Filter out search tips that we've already searched via a
+        #       different path, either entries already in the old _search_tips,
+        #       or something in _interesting_ancestor_ids, etc. Note that by
+        #       construction, everything in _search_tips should be in
+        #       _interesting_ancestor_ids...
+        self._search_tips = set([r[0] for r in res])
+        # TODO: For search tips we will be removing, we don't need to join
+        #       against revision since we should already have them. There may
+        #       be other ways that we already know gdfo. It may be cheaper to
+        #       check first.
+        self._known_gdfo.update(res)
+
+    def do_import(self):
+        self._get_initial_search_tips()
+        while self._search_tips:
+            # We don't know whether these search tips are known interesting, or
+            # known uninteresting
+            unknown = self._search_tips
+            while unknown:
+                unknown = self._split_search_tips_by_gdfo(unknown)
+                if unknown:
+                    unknown = self._split_interesting_using_children(unknown)
+                # The current search tips are the 'newest' possible tips right
+                # now. If we can't classify them as definitely being
+                # interesting, then we need to step the mainline until we can.
+                # This means that the current search tips have children that
+                # could be merged into an earlier mainline, walk the mainline
+                # to see if we can resolve that.
+                # Note that relying strictly on gdfo is a bit of a waste here,
+                # because you may have a rev with 10 children before it lands
+                # in mainline, but all 11 revs will be in the dotted_revno
+                # cache for that mainline.
+                self._step_mainline()
+            # All search_tips are known to either be interesting or
+            # uninteresting. Walk any search tips that remain.
+            self._step_search_tips()
 
 
 class Querier(object):
@@ -553,22 +819,22 @@ class Querier(object):
                 " ORDER BY count DESC LIMIT 1",
                 (tip_db_id,)).fetchone()
             if range_res is None:
-                revno_res = self._cursor.execute(
+                revno_res = self._cursor.execute(_add_n_params(
                     "SELECT merged_revision, revno FROM dotted_revno"
                     " WHERE tip_revision = ?"
-                    "   AND merged_revision IN (%s)"
-                    % (', '.join('?'*len(db_ids))),
+                    "   AND merged_revision IN (%s)",
+                    len(db_ids)), 
                     [tip_db_id] + list(db_ids)).fetchall()
                 next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
                 pkey, next_db_id = range_res
-                revno_res = self._cursor.execute(
+                revno_res = self._cursor.execute(_add_n_params(
                     "SELECT merged_revision, revno"
                     "  FROM dotted_revno, mainline_parent"
                     " WHERE tip_revision = mainline_parent.revision"
                     "   AND mainline_parent.range = ?"
-                    "   AND merged_revision IN (%s)"
-                    % (', '.join('?'*len(db_ids))),
+                    "   AND merged_revision IN (%s)",
+                    len(db_ids)), 
                     [pkey] + list(db_ids)).fetchall()
             tip_db_id = next_db_id
             for db_id, revno in revno_res:
@@ -671,8 +937,9 @@ class Querier(object):
             self._stats['num_steps'] += 1
             next = remaining[:100]
             remaining = remaining[len(next):]
-            res = _exec("SELECT parent FROM parent WHERE child in (%s)"
-                        % (', '.join('?'*len(next))), tuple(next))
+            res = _exec(_add_n_params(
+                "SELECT parent FROM parent WHERE child in (%s)",
+                len(db_ids)), next)
             next_p = [p[0] for p in res if p[0] not in all_ancestors]
             all_ancestors.update(next_p)
             remaining.extend(next_p)
@@ -695,8 +962,9 @@ class Querier(object):
             self._stats['num_steps'] += 1
             next = remaining[:100]
             remaining = remaining[len(next):]
-            res = _exec("SELECT parent FROM parent WHERE child in (%s)"
-                        % (', '.join('?'*len(next))), tuple(next))
+            res = _exec(_add_n_params(
+                "SELECT parent FROM parent WHERE child in (%s)",
+                len(next)), next)
             next_p = [p[0] for p in res if p[0] not in all_ancestors]
             all_ancestors.update(next_p)
             remaining.extend(next_p)

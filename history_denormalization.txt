@@ -252,7 +252,7 @@ Some downsides:
 .. [#] Dotted revnos are numbered based on the current branch tip revision.
    However, there is a stability guarantee that we can exploit. If a revision
    X is in the ancestry of tip T, then the dotted revno for X will be the same
-   for all descendents of T.
+   for all descendants of T.
 
 
 Partial ``merge_sort`` Computation
@@ -459,15 +459,14 @@ range.
 
     Starting at K, we grab F & J. gdfo(F) = 5. gdfo(K) = 7, gdfo(J) = 6. Since
     gdfo(J) = 6, we know that it cannot be merged into F (nor can any of its
-    descendents). So J gets marked as "interesting" (it is an ancestor of K),
-    but "complete" (it could not have been merged into a mainline revision
-    that we have not fetched).
+    descendants). So J gets marked as "interesting" (it is an ancestor of K
+    that cannot be an ancestor of F).
     
     Next we step to H & I, both with gdfo = 5.  These also get marked
-    "interesting & complete". We then walk to G gdfo=4.  We check the known
+    "interesting". We then walk to G gdfo=4.  We check the known
     children of G, and see that they are all marked either complete, or have
     gdfo >= 5 (the hypothetical children off of ':' all have to have gdfo >=
-    5.) The only other possible answer here would be that F was an immediate
+    5.[#]) The only other possible answer here would be that F was an immediate
     descendent of G. G then gets marked "interesting & complete".  We then
     walk to C gdfo=3. We then see that C has a child E that is not interesting
     & complete, and has a gdfo < 5. We could probably take a couple different
@@ -483,6 +482,14 @@ range.
     I don't have a great feeling for (a) vs (b). On the one hand, we will need
     to page in the dotted_revno info anyway, because we'll use it to generate
     the revnos for G, etc.
+
+.. [#] There is a case where things aren't as clear cut. If G were a little
+       bit older (say GDFO = 3), and G were merged into a different branch
+       that was also small (X <= [A, G]), then we would see that G is merged
+       into something new enough to cause confusion. The only way I can see to
+       handle that is to finally observe that X is not part of this branch.
+       However, I think the only way to observe that is to walk far enough
+       back, which is what we would do anyway.
 
 ..
   vim: ft=rst tw=78 ai
