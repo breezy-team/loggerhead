@@ -156,13 +156,13 @@ class Importer(object):
 
     def do_import(self, expand_all=False):
         if self._incremental:
+            inc_importer = _IncrementalImporter(self, self._branch_tip_rev_id)
             self._update_ancestry(self._branch_tip_rev_id)
             tip_db_id = self._rev_id_to_db_id[self._branch_tip_rev_id]
             (needed_mainline,
              imported_mainline_db_id) = self._find_needed_mainline(tip_db_id)
             # TODO: if imported_mainline_id is None, then we may as well just
             #       switch to full import, rather than incremental
-            self._import_mainline(needed_mainline, imported_mainline_db_id)
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -241,15 +241,6 @@ class Importer(object):
             if not suppress_progress_and_commit:
                 self._db_conn.commit()
         return merge_sorted
-
-    def _import_mainline(self, mainline_db_ids, pre_mainline_id):
-        """Fill out the dotted_revno table for these mainline_db_ids.
-
-        :param mainline_db_ids: A list of mainline database ids, starting with
-            the most recent revision.
-        :param pre_mainline_id: The mainline db_id that *has* been imported
-            (may be None). Should just be parent(mainline_db_ids[-1])
-        """
 
     def _update_ancestry(self, new_tip_rev_id):
         """Walk the parents of this tip, updating 'revision' and 'parent'
@@ -474,7 +465,7 @@ class _IncrementalImporter(object):
 
         # Information from the dotted_revno table for revisions that are in the
         # already-imported mainline.
-        self._imported_dotted_revno_info = {}
+        self._imported_dotted_revno = {}
         # This is the gdfo of the current mainline revision search tip. This is
         # the threshold such that 
         self._imported_gdfo = None
@@ -514,7 +505,7 @@ class _IncrementalImporter(object):
         indicates that they could not be merged into already imported
         revisions, then we know automatically that they are
         new-and-interesting. Further, if they are present in
-        _imported_dotted_revno_info, then we know they are not interesting, and
+        _imported_dotted_revno, then we know they are not interesting, and
         we will stop searching them.
 
         Otherwise, we don't know for sure which category they fall into, so
@@ -527,19 +518,16 @@ class _IncrementalImporter(object):
         still_unknown = []
         min_gdfo = None
         for db_id in unknown:
+            if db_id in self._imported_dotted_revno:
+                # This should be removed as a search tip, we know it isn't
+                # interesting, it is an ancestor of an imported revision
+                self._search_tips.remove(db_id)
+                continue
             gdfo = self._known_gdfo[db_id]
             if gdfo >= self._imported_gdfo:
                 self._interesting_ancestor_ids.add(db_id)
             else:
-                # TODO: This is probably a reasonable location to check
-                #       self._imported_dotted_revno_info to see if this search
-                #       tip is known to already exist in the ancestry.
-                if db_id in self._imported_dotted_revno_info:
-                    # This should be removed as a search tip, we know it isn't
-                    # interesting, it is an ancestor of an imported revision
-                    self._search_tips.remove(db_id)
-                else:
-                    still_unknown.append(db_id)
+                still_unknown.append(db_id)
         return still_unknown
 
     def _split_interesting_using_children(self, unknown_search_tips):
@@ -570,7 +558,7 @@ class _IncrementalImporter(object):
         parent_to_children = {}
         already_imported = set()
         for parent, child in parent_child_res:
-            if (child in self._imported_dotted_revno_info
+            if (child in self._imported_dotted_revno
                 or child == self._imported_mainline_id):
                 # This child is already imported, so obviously the parent is,
                 # too.
@@ -612,7 +600,29 @@ class _IncrementalImporter(object):
 
     def _step_mainline(self):
         """Move the mainline pointer by one, updating the data."""
-        bork
+        res = self._cursor.execute(
+            "SELECT merged_revision, revno, end_of_merge, merge_depth"
+            "  FROM dotted_revno WHERE tip_revision = ?",
+            [self._imported_mainline_id]).fetchall()
+        self._imported_dotted_revno.update([(r[0], r[1:]) for r in res])
+        # TODO: We could remove search tips that show up as newly merged
+        #       though that can wait until the next
+        #       _split_search_tips_by_gdfo
+        # new_merged_ids = [r[0] for r in res]
+        res = self._cursor.execute("SELECT parent, gdfo"
+                                   "  FROM parent, revision"
+                                   " WHERE parent = db_id"
+                                   "   AND parent_idx = 0"
+                                   "   AND child = ?",
+                                   [self._imported_mainline_id]).fetchone()
+        if res is None:
+            # Walked off the mainline...
+            # TODO: Make sure this stuff is tested
+            self._imported_mainline_id = None
+            self._imported_gdfo = 0
+        else:
+            self._imported_mainline_id, self._imported_gdfo = res
+            self._known_gdfo[self._imported_mainline_id] = self._imported_gdfo
 
     def _step_search_tips(self):
         """Move the search tips to their parents."""
@@ -632,7 +642,7 @@ class _IncrementalImporter(object):
         #       check first.
         self._known_gdfo.update(res)
 
-    def do_import(self):
+    def _find_interesting_ancestry(self):
         self._get_initial_search_tips()
         while self._search_tips:
             # We don't know whether these search tips are known interesting, or
@@ -656,7 +666,13 @@ class _IncrementalImporter(object):
             # All search_tips are known to either be interesting or
             # uninteresting. Walk any search tips that remain.
             self._step_search_tips()
+        # Once we get to here, we should have loaded enough of
+        # _imported_dotted_revno to be able to create the merge_sort graph.
+        # Also all of the new pending revisions should be in
+        # self._interesting_ancestor_ids
 
+    def do_import(self):
+        self._find_interesting_ancestry()
 
 class Querier(object):
     """Perform queries on an existing history db."""

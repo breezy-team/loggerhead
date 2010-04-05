@@ -286,3 +286,33 @@ class TestImporter(tests.TestCaseWithTransport):
         inc_importer._step_search_tips()
         B_id = importer._rev_id_to_db_id['B']
         self.assertEqual(set([B_id]), inc_importer._search_tips)
+        self.assertEqual(set([E_id, G_id, F_id]),
+                         inc_importer._interesting_ancestor_ids)
+        # B is merged, so these two steps should not filter it out
+        self.assertEqual([B_id],
+                         inc_importer._split_search_tips_by_gdfo([B_id]))
+        self.assertEqual([B_id],
+                         inc_importer._split_interesting_using_children([B_id]))
+        # At this point, we have to step the mainline, to find out if we can
+        # filter out this search tip. After stepping, _imported_dotted_revno
+        # should be filled with the next mainline step
+        inc_importer._step_mainline()
+        A_id = importer._rev_id_to_db_id['A']
+        self.assertEqual(A_id, inc_importer._imported_mainline_id)
+        self.assertEqual(1, inc_importer._imported_gdfo)
+        C_id = importer._rev_id_to_db_id['C']
+        self.assertEqual({D_id: ('2', 0, 0), C_id: ('1.1.2', 0, 1),
+                          B_id: ('1.1.1', 1, 1),
+                         }, inc_importer._imported_dotted_revno)
+        # Search tips is not yet changed
+        self.assertEqual(set([B_id]), inc_importer._search_tips)
+        # And now when we check gdfo again, it should remove B_id from the
+        # search_tips, because it sees it in _imported_dotted_revno
+        self.assertEqual([], inc_importer._split_search_tips_by_gdfo([B_id]))
+        self.assertEqual(set([]), inc_importer._search_tips)
+
+    def test__incremental_find_interesting_ancestry(self):
+        b = self.make_interesting_branch()
+        b._tip_revision = 'D' # Start here
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
