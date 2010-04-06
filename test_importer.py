@@ -94,14 +94,14 @@ class TestImporter(tests.TestCaseWithTransport):
         # D F H     2   1.2.2   1.3.1
         # |/ X      | /      \ /
         # G / J     3  .------' 1.2.3
-        # |/  |\    | /        /     \
-        # I   K L   4        1.2.4    1.4.1
-        # |   |/
-        # |   M
+        # |/ /|\    | /        /     \
+        # I / K L   4        1.2.4    1.4.1
+        # |/  |/    |         |
+        # N   M     5        1.2.5
         # |  /
         # | /
         # |/
-        # N
+        # O
         ancestry = {'A': (),
                     'B': ('A',),
                     'C': ('B',),
@@ -115,12 +115,13 @@ class TestImporter(tests.TestCaseWithTransport):
                     'K': ('J',),
                     'L': ('J',),
                     'M': ('K', 'L'),
-                    'N': ('I', 'M'),
+                    'N': ('I', 'J'),
+                    'O': ('N', 'M'),
                     }
-        return MockBranch(ancestry, 'N')
+        return MockBranch(ancestry, 'O')
 
     def grab_interesting_ids(self, rev_id_to_db_id):
-        for rev_id in 'ABCDEFGHIJKLMN':
+        for rev_id in 'ABCDEFGHIJKLMNO':
             setattr(self, '%s_id' % (rev_id,), rev_id_to_db_id.get(rev_id))
 
     def test_build(self):
@@ -130,7 +131,7 @@ class TestImporter(tests.TestCaseWithTransport):
                           'D': (2,), 'E': (1,2,1), 'F': (1,2,2),
                           'G': (3,), 'H': (1,3,1), 'I': (4,),
                           'J': (1,2,3,), 'K': (1,2,4), 'L': (1,4,1),
-                          'M': (1,2,5,), 'N': (5,)},
+                          'M': (1,2,5,), 'N': (5,), 'O': (6,)},
                          revno_map)
 
     def test_import_non_incremental(self):
@@ -147,7 +148,7 @@ class TestImporter(tests.TestCaseWithTransport):
         rev_gdfo = dict((r[0], r[2]) for r in revs)
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
                           'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
-                          'M': 7, 'N': 8}, rev_gdfo)
+                          'M': 7, 'N': 7, 'O': 8}, rev_gdfo)
         dotted_info = cur.execute(
             "SELECT tip_revision, merged_revision, revno"
             "  FROM dotted_revno").fetchall()
@@ -159,9 +160,9 @@ class TestImporter(tests.TestCaseWithTransport):
             self.G_id: sorted([(self.E_id, '1.2.1'), (self.F_id, '1.2.2'),
                                (self.G_id, '3')]),
             self.I_id: sorted([(self.H_id, '1.3.1'), (self.I_id, '4')]),
-            self.N_id: sorted([(self.J_id, '1.2.3'), (self.K_id, '1.2.4'),
-                               (self.L_id, '1.4.1'), (self.M_id, '1.2.5'),
-                               (self.N_id, '5')]),
+            self.N_id: sorted([(self.J_id, '1.2.3'), (self.N_id, '5')]),
+            self.O_id: sorted([(self.K_id, '1.2.4'), (self.L_id, '1.4.1'),
+                               (self.M_id, '1.2.5'), (self.O_id, '6')]),
         }
         actual = {}
         for tip_rev, merge_rev, revno in dotted_info:
@@ -173,7 +174,7 @@ class TestImporter(tests.TestCaseWithTransport):
     def test__update_ancestry_from_scratch(self):
         b = self.make_interesting_branch()
         importer = history_db.Importer(':memory:', b, incremental=False)
-        importer._update_ancestry('N')
+        importer._update_ancestry('O')
         cur = importer._db_conn.cursor()
         # revision and parent should be fully populated
         rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
@@ -181,7 +182,7 @@ class TestImporter(tests.TestCaseWithTransport):
         # Track the db_ids that are assigned
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
                           'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
-                          'M': 7, 'N': 8}, rev_gdfo)
+                          'M': 7, 'N': 7, 'O': 8}, rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
             cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
                         "  FROM parent, revision c, revision p"
@@ -192,7 +193,8 @@ class TestImporter(tests.TestCaseWithTransport):
                           ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
                           ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
                           ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
-                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'M',
+                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'J',
+                          ('O', 0): 'N', ('O', 1): 'M',
                          }, parent_map)
 
     def test__update_ancestry_partial(self):
@@ -204,7 +206,7 @@ class TestImporter(tests.TestCaseWithTransport):
         cur.executemany("INSERT INTO revision (revision_id, gdfo)"
                         " VALUES (?, ?)", [('A', 11)])
         importer._graph = None
-        importer._update_ancestry('N')
+        importer._update_ancestry('O')
         cur = importer._db_conn.cursor()
         # revision and parent should be fully populated
         rev_gdfo = dict(cur.execute("SELECT revision_id, gdfo"
@@ -212,7 +214,8 @@ class TestImporter(tests.TestCaseWithTransport):
         # Track the db_ids that are assigned
         self.assertEqual({'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 13,
                           'F': 14, 'G': 15, 'H': 14, 'I': 16, 'J': 15,
-                          'K': 16, 'L': 16, 'M': 17, 'N': 18}, rev_gdfo)
+                          'K': 16, 'L': 16, 'M': 17, 'N': 17, 'O': 18},
+                         rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
             cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
                         "  FROM parent, revision c, revision p"
@@ -223,7 +226,8 @@ class TestImporter(tests.TestCaseWithTransport):
                           ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
                           ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
                           ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
-                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'M',
+                          ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'J',
+                          ('O', 0): 'N', ('O', 1): 'M',
                          }, parent_map)
 
     def test__incremental_importer_step_by_step(self):
@@ -310,20 +314,20 @@ class TestImporter(tests.TestCaseWithTransport):
         b._tip_revision = 'D' # Something older
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
-        importer._update_ancestry('N')
+        importer._update_ancestry('O')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.N_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.O_id)
         # This should step through the ancestry, and load in the necessary
         # data. Check the final state
         inc_importer._find_interesting_ancestry()
-        self.assertEqual([self.N_id, self.I_id, self.G_id],
+        self.assertEqual([self.O_id, self.N_id, self.I_id, self.G_id],
                          inc_importer._mainline_db_ids)
         # We should stop loading A, I need to figure out why it gets loaded
         self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
         self.assertEqual(1, inc_importer._imported_gdfo)
         self.assertEqual(set([self.E_id, self.F_id, self.G_id, self.H_id,
                               self.I_id, self.J_id, self.K_id, self.L_id,
-                              self.M_id, self.N_id]),
+                              self.M_id, self.N_id, self.O_id]),
                          inc_importer._interesting_ancestor_ids)
         self.assertEqual(set([]), inc_importer._search_tips)
         self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
