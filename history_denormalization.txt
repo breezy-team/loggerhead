@@ -466,7 +466,7 @@ range.
     "interesting". We then walk to G gdfo=4.  We check the known
     children of G, and see that they are all marked either complete, or have
     gdfo >= 5 (the hypothetical children off of ':' all have to have gdfo >=
-    5.[#]) The only other possible answer here would be that F was an immediate
+    5.[#]_) The only other possible answer here would be that F was an immediate
     descendent of G. G then gets marked "interesting & complete".  We then
     walk to C gdfo=3. We then see that C has a child E that is not interesting
     & complete, and has a gdfo < 5. We could probably take a couple different
@@ -490,6 +490,168 @@ range.
        handle that is to finally observe that X is not part of this branch.
        However, I think the only way to observe that is to walk far enough
        back, which is what we would do anyway.
+
+
+Possible Problem
+----------------
+
+When avoiding all ancestry, there still seems to be a problem. Specifically,
+when you are numbering from rev X, you really need to know about all branches
+merged so far from X. (Because of the numbering scheme.) I first thought of
+this when handling the 0 case. Because it was clearly defined such that::
+
+  A R
+  |/
+  B S
+  |/
+  C
+
+In the above, the avoiding ancestry code cleanly defines a cut such that we
+don't need to look at R to determine that S is uniquely merged into C.
+However, S needs number 0.2.1, which we cannot determine without knowing that
+R was also merged in. This can actually be reproduced in non-root merges. The
+test case I came across was::
+
+  A         1
+  |\        |\
+  | \       | \
+  |  \      |  \
+  |   B     |   1.1.1
+  |  /|     |   |     \
+  | C E     |   1.1.2   1.2.1
+  |/ /|     | /       / |
+  D F H     2   1.2.2   1.3.1
+  |/ X      | /      \ /
+  G / J     3  .------' 1.2.3
+  |/ /|\    | /        /    \
+  I / K L   4        1.2.4    1.4.1
+  |/  |/    |         |     /
+  N   M     5        1.2.5
+  |  /
+  | /
+  |/
+  O
+
+
+In this case, F has gotten the distinction of being the second branch merged.
+And H has managed to be the third. J is then a child of F, and gets merged.
+Which does *not* bump its branch number. As such, when we get to L (another
+new branch), we need to know about H. However in the 'minimal ancestry' path
+would have determined that we only need to look at JKLMNO. Resolving this
+would probably require breaking the 'repeated merges maintain branch number'.
+One option is Vincent's "number from merge point" proposal.
+
+My first thought is that we needed to load everything since A. However we
+might be able to do better. Load everything since 1.1.1. Or even 'load
+everything since the point that your original branch point landed'. In this
+case that would be needing to load 1.2.2 since L is based on the 1.2 series.
+
+Another test case::
+
+  A         1
+  |\        |\
+  | \       | \
+  |  \      |  \
+  |   B     |   1.1.1
+  |  /|     |   |     \
+  | C E     |   1.1.2   1.2.1
+  |/ X      | /       X 
+  D F H     2   1.2.2   1.3.1
+  |/ X      | /      \ /
+  G / J     3  .------' 1.2.3
+  |/ /|\    | /        /    \
+  I / K L   4        1.2.4    1.4.1
+  |/  |/    |         |     /
+  N   M     5        1.2.5
+  |  /
+  | /
+  |/
+  O
+
+The diff is that H descends from a 1.1.? rev, rather than a 1.2.? rev.
+However, it doesn't change the numbering. And all you need to know is that
+there was a 1.? which is greater than 2, and as such, it has to have landed
+after 1.2.1 was landed. So it probably isn't enough to grab 1.2.2, but should
+be enough to load the mainline revision that merged 1.2.1, and everything
+after it. (For a child that is branching off of a 1.2.? revision.)
+
+The other results are:
+
+ 1) For now, you don't need to know about 1.3.1 to number K M. You *do* need
+    to know that there isn't another child-of-J merged before K, so that you
+    know that K is, indeed, the first known child of J that is merged.
+    However, you can do that check using a 'known-children' search.
+
+    However, the minimal search already has asserted that you need to load J
+    (and everything after it) to get its number as a starting point anyway.
+
+    The tricky part was that to number a sub-branch, you need to know about
+    branches that may not do anything with J. But I think we've clearly
+    defined that they must be merged after 1.2.1.
+
+    I think this creates a clear steps that should scale decently, especially
+    in the common case.
+        a) Find the minimal ancestry that is being merged that has not been
+           merged. With known-children, we should be able to find KLM without
+           walking the mainline at all. And when we hit J, we'll load N+ to
+           eliminate J as a not-yet-merged ancestor.
+        b) Start numbering in merge_sort order. (walk O, then M K, then L)
+        c) When you get to K (& J), you'll know that you already loaded all
+           children of J that have been merged (because you've loaded J, and
+           we always load all merged descendants).
+        d) When we get to L, we can see that we bifurcated, and need a new
+           branch number. At that point we can request to load 1.2.1.
+           (walk-ancestry has showed that grabbing *everything* can still be
+           in <100ms range, but it still scales O(ancestry) rather than
+           something significantly smaller).
+
+    With those steps, simple feature branches that get merged twice won't have
+    to load back to the first rev of the feature branch (only to the first
+    merge point).
+
+Now let's try the ideal 'simple' case, to see what must be loaded::
+
+  A-.       1-.
+  |\ \      |\ \
+  : : B     : : 1.N.1
+  |/ /      |/ /
+  D /       8 /
+  |/        |/
+  E         9
+
+In the current system, this simple feature branch (from a long time ago) will
+cause us to load everything from 1-8, because that is how we resolve that A is
+not only in the ancestry, but is a mainline revision. At which point we've
+loaded all of the history in-between, and we can clearly define N. I would
+hope that we could do better. One option would be to walk only the mainline
+back to gdfo(Mainline) <= cur search tip. So you know whether the rev you are
+on *is* a mainline rev, but you don't know whether it was merged or not. For
+branches that are merged multiple times, this is probably worse than the
+current design, though potentially not by much. Note that in another graph::
+
+  A-.   :
+  |\ \ /
+  : : B
+  |/ /
+  D /
+  |/
+  E
+
+While walking the lh ancestors of B and E in gdfo order will give you the
+mainline rev B descended from. It hasn't yet given you information about the
+revs B merged (which may be descended from A, maybe from something else).[#]_
+
+.. [#] Rev 4081.2.5 in bzr.dev may be an interesting test case. It is a very
+       daggy fix, originating all the way back at 4081, but not landing until
+       5127. It also merges bzr.dev a couple of times on its way. If we know
+       that the only child of 4081 was this branch, then we could actually
+       number after only walking the two mainlines. However it is clearly not
+       the only branch, since there is a 4081.1.? branch.
+
+       Numbering from merge point still has to walk back to 4081, gdfo doesn't
+       help because gdfo of a daggy fix is quite low.
+       
+       Known-children + numbering from merge point would help in this case.
 
 ..
   vim: ft=rst tw=78 ai
