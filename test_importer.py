@@ -299,6 +299,8 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
                           self.B_id: ((1,1,1), 1, 1),
                          }, inc_importer._imported_dotted_revno)
+        self.assertEqual({(2,): self.D_id, (1,1,2): self.C_id,
+                          (1,1,1): self.B_id}, inc_importer._dotted_to_db_id)
         # Search tips is not yet changed
         self.assertEqual(set([self.B_id]), inc_importer._search_tips)
         # And now when we check gdfo again, it should remove B_id from the
@@ -307,7 +309,12 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual(set([]), inc_importer._search_tips)
         inc_importer._update_info_from_dotted_revno()
         self.assertEqual({1: 1}, inc_importer._revno_to_branch_count)
-        self.assertEqual({(1, 1): 2}, inc_importer._branch_to_child_count)
+        self.assertEqual({0: 2, (1, 1): 2}, inc_importer._branch_to_child_count)
+        inc_importer._compute_merge_sort()
+        self.assertEqual([(self.E_id, (1, 2, 1), True, 1),
+                          (self.F_id, (1, 2, 2), False, 1),
+                          (self.G_id, (3,), False, 0),
+                         ], inc_importer._scheduled_stack)
 
     def test__incremental_find_interesting_ancestry(self):
         b = self.make_interesting_branch()
@@ -333,3 +340,5 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
                           self.B_id: ((1,1,1), 1, 1),
                          }, inc_importer._imported_dotted_revno)
+        self.assertEqual({(2,): self.D_id, (1,1,2): self.C_id,
+                          (1,1,1): self.B_id}, inc_importer._dotted_to_db_id)

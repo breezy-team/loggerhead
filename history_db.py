@@ -441,6 +441,8 @@ class _IncrementalImporter(object):
         # Information from the dotted_revno table for revisions that are in the
         # already-imported mainline.
         self._imported_dotted_revno = {}
+        # Map from (dotted,revno,) => db_id
+        self._dotted_to_db_id = {}
         # This is the gdfo of the current mainline revision search tip. This is
         # the threshold such that 
         self._imported_gdfo = None
@@ -452,6 +454,12 @@ class _IncrementalImporter(object):
         self._revno_to_branch_count = {}
         # (revno, branch_num) => oldest seen child
         self._branch_to_child_count = {}
+
+        self._depth_first_stack = None
+        self._scheduled_stack = None
+        self._seen_parents = None
+        # Map from db_id => parent_ids
+        self._parent_map = {}
 
     def _find_needed_mainline(self):
         """Find mainline revisions that need to be filled out.
@@ -605,9 +613,10 @@ class _IncrementalImporter(object):
             "SELECT merged_revision, revno, end_of_merge, merge_depth"
             "  FROM dotted_revno WHERE tip_revision = ?",
             [self._imported_mainline_id]).fetchall()
-        self._imported_dotted_revno.update(
-            [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
-             for r in res])
+        dotted_info = [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
+                       for r in res]
+        self._imported_dotted_revno.update(dotted_info)
+        self._dotted_to_db_id.update([(i[1][0], i[0]) for i in dotted_info])
         # TODO: We could remove search tips that show up as newly merged
         #       though that can wait until the next
         #       _split_search_tips_by_gdfo
@@ -680,6 +689,8 @@ class _IncrementalImporter(object):
 
     def _update_info_from_dotted_revno(self):
         """Update info like 'child_seen' from the dotted_revno info."""
+        # TODO: We can move this iterator into a parameter, and have it
+        #       continuously updated from _step_mainline()
         iterator = self._imported_dotted_revno.iteritems()
         for db_id, (revno, eom, depth) in iterator:
             if len(revno) > 1: # dotted revno, make sure branch count is right
@@ -688,9 +699,159 @@ class _IncrementalImporter(object):
                     or revno[1] > self._revno_to_branch_count[base_revno]):
                     self._revno_to_branch_count[base_revno] = revno[1]
                 branch_key = revno[:2]
-                if (branch_key not in self._branch_to_child_count
-                    or revno[2] > self._branch_to_child_count[branch_key]):
-                    self._branch_to_child_count[branch_key] = revno[2]
+                mini_revno = revno[2]
+            else:
+                # *mainline* branch
+                branch_key = 0
+                mini_revno = revno[0]
+            if (branch_key not in self._branch_to_child_count
+                or mini_revno > self._branch_to_child_count[branch_key]):
+                self._branch_to_child_count[branch_key] = mini_revno
+
+    def _is_first_child(self, parent_id):
+        """Is this the first child seen for the given parent?"""
+        if parent_id in self._seen_parents:
+            return False
+        # We haven't seen this while walking, but perhaps the already merged
+        # stuff has.
+        self._seen_parents.add(parent_id)
+        if parent_id not in self._imported_dotted_revno:
+            # Haven't seen this parent merged before, so we can't have seen
+            # children of it
+            return True
+        revno = self._imported_dotted_revno[parent_id][0]
+        if len(revno) > 1:
+            branch_key = revno[:2]
+            mini_revno = revno[2]
+        else:
+            branch_key = 0
+            mini_revno = revno[0]
+        if self._branch_to_child_count.get(branch_key, 0) > mini_revno:
+            # This revision shows up in the graph, but another revision in this
+            # branch shows up later, so this revision must have already been
+            # seen
+            return False
+        # If we got this far, it doesn't appear to have been seen.
+        return True
+
+    # XXX: For now, we just re-implement some of the merge_sort logic locally
+    def _push_node(self, db_id, merge_depth):
+        # TODO: Check if db_id is a ghost (not allowed on the stack)
+        parent_res = self._cursor.execute(
+                    "SELECT parent FROM parent WHERE child = ?"
+                    " ORDER BY parent_idx", (db_id,)).fetchall()
+        parent_ids = tuple([r[0] for r in parent_res])
+        self._parent_map[db_id] = parent_ids
+        if len(parent_ids) <= 0:
+            left_parent = None
+            # We are dealing with a 'new root' possibly because of a ghost,
+            # possibly because of merging a new ancestry.
+            # KnownGraph.merge_sort just always says True here, so stick with
+            # that
+            is_first = True
+        else:
+            left_parent = parent_ids[0]
+            is_first = self._is_first_child(left_parent)
+        pending_parents = parent_ids[1:]
+        # v- logically probably better as a tuple or object. We currently
+        # modify it in place, so we use a list
+        self._depth_first_stack.append([db_id, merge_depth, left_parent,
+                                        left_parent, pending_parents,
+                                        is_first])
+
+    def _pop_node(self):
+        """Move the last node from the _depth_first_stack to _scheduled_stack.
+
+        This is the most left-hand node that we are able to find.
+        """
+        (db_id, merge_depth, left_parent_id, _, _,
+         is_first) = self._depth_first_stack.pop()
+        if left_parent_id is not None:
+            parent_revno = self._imported_dotted_revno[left_parent_id][0]
+            if is_first: # We simply number as parent + 1
+                if len(parent_revno) == 1:
+                    mini_revno = parent_revno[0] + 1
+                    revno = (mini_revno,)
+                    # TODO: Do we need to increment
+                    #       self._branch_to_child_count[0]
+                    #       I think we do, but it is currently only used by
+                    #       _is_first_child, which should already be setting
+                    #       the 'seen' counters...
+                    # self._branch_to_child_count[0] = revno / max(revno, ...)
+                else:
+                    revno = parent_revno[:2] + (parent_revno[2] + 1,)
+            else:
+                # we need a new branch number. To get this correct, we have to
+                # make sure that the beginning of this branch has been loaded
+                ## branch_root = parent_revno[:2] + (1,)
+                ## while branch_root not in self._dotted_to_db_id:
+                ##     self._step_mainline()
+                base_revno = parent_revno[0]
+                branch_count = (
+                    self._revno_to_branch_count.get(base_revno, 0) + 1)
+                self._revno_to_branch_count[base_revno] = branch_count
+                revno = (base_revno, branch_count, 1)
+        else:
+            # New Root. To get the numbering correct, we have to walk the
+            # mainline back to the beginning... :(
+            ## while self._imported_mainline_id is not None:
+            ##     self._step_mainline()
+            branch_count = self._revno_to_branch_count.get(0, -1) + 1
+            self._revno_to_branch_count[0] = branch_count
+            if branch_count == 0: # This is the mainline
+                revno = (1,)
+            else:
+                revno = (0, branch_count, 1)
+        # XXX: This isn't correct any more, we need to look at the parent,
+        #      what *would* have been scheduled if we weren't doing partial
+        #      scheduling. Then again, maybe it is correct for all but the
+        #      mainline (first entry on the stack). Because we always break
+        #      apart the dotted_revno cache based on what has gotten merged...
+        if not self._scheduled_stack:
+            end_of_merge = True
+        else:
+            prev_db_id, prev_revno, _, prev_depth = self._scheduled_stack[-1]
+            if prev_depth < merge_depth:
+                end_of_merge = True
+            elif (prev_depth == merge_depth
+                  and prev_db_id not in self._parent_map[db_id]):
+                # Next node is not a direct parent
+                end_of_merge = True
+            else:
+                end_of_merge = False
+        self._imported_dotted_revno[db_id] = (revno, end_of_merge, merge_depth)
+        self._scheduled_stack.append((db_id, revno, end_of_merge, merge_depth))
+
+    def _compute_merge_sort(self):
+        self._depth_first_stack = []
+        self._scheduled_stack = []
+        self._seen_parents = set()
+        self._push_node(self._mainline_db_ids[0], 0)
+
+        while self._depth_first_stack:
+            last = self._depth_first_stack[-1]
+            if last[3] is None and not last[4]:
+                # The parents have been processed, pop the node
+                self._pop_node()
+                continue
+            while last[3] is not None or last[4]:
+                if last[3] is not None:
+                    # Push on the left-hand-parent
+                    next_db_id = last[3]
+                    last[3] = None
+                else:
+                    pending_parents = last[4]
+                    next_db_id = pending_parents[-1]
+                    last[4] = pending_parents[:-1]
+                if next_db_id in self._imported_dotted_revno:
+                    continue
+                if next_db_id == last[2]: #Is the left-parent?
+                    next_merge_depth = last[1]
+                else:
+                    next_merge_depth = last[1] + 1
+                self._push_node(next_db_id, next_merge_depth)
+                # And switch to the outer loop
+                break
 
     def do_import(self):
         self._find_interesting_ancestry()
