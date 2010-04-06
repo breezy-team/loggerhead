@@ -563,10 +563,10 @@ Another test case::
   I / K L   4        1.2.4    1.4.1
   |/  |/    |         |     /
   N   M     5        1.2.5
-  |  /
-  | /
-  |/
-  O
+  |  /      |      /
+  | /       |   /
+  |/        | /
+  O         6
 
 The diff is that H descends from a 1.1.? rev, rather than a 1.2.? rev.
 However, it doesn't change the numbering. And all you need to know is that
