@@ -94,9 +94,9 @@ class TestImporter(tests.TestCaseWithTransport):
         # D F H     2   1.2.2   1.3.1
         # |/ X      | /      \ /
         # G / J     3  .------' 1.2.3
-        # |/ /|\    | /        /     \
+        # |/ /|\    | /        /    \
         # I / K L   4        1.2.4    1.4.1
-        # |/  |/    |         |
+        # |/  |/    |         |     /
         # N   M     5        1.2.5
         # |  /
         # | /
