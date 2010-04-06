@@ -87,10 +87,10 @@ class TestImporter(tests.TestCaseWithTransport):
         # |\        |\
         # | \       | \
         # |  \      |  \
-        # |   B     |   1.1.1
-        # |  /|     |   |     \
-        # | C E     |   1.1.2   1.2.1
-        # |/ /|     | /       / |
+        # |   B     |   1.1.1 ------.
+        # |  /|\    |   |     \      \
+        # | C E |   |   1.1.2   1.2.1 |
+        # |/ / /    | /       /      /
         # D F H     2   1.2.2   1.3.1
         # |/ X      | /      \ /
         # G / J     3  .------' 1.2.3
@@ -109,7 +109,7 @@ class TestImporter(tests.TestCaseWithTransport):
                     'E': ('B',),
                     'F': ('E',),
                     'G': ('D', 'F'),
-                    'H': ('E',),
+                    'H': ('B',),
                     'I': ('G', 'H'),
                     'J': ('F',),
                     'K': ('J',),
@@ -147,7 +147,7 @@ class TestImporter(tests.TestCaseWithTransport):
         db_to_rev_id = dict((r[1], r[0]) for r in revs)
         rev_gdfo = dict((r[0], r[2]) for r in revs)
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
-                          'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
+                          'G': 5, 'H': 3, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
                           'M': 7, 'N': 7, 'O': 8}, rev_gdfo)
         dotted_info = cur.execute(
             "SELECT tip_revision, merged_revision, revno"
@@ -181,7 +181,7 @@ class TestImporter(tests.TestCaseWithTransport):
                                     "  FROM revision").fetchall())
         # Track the db_ids that are assigned
         self.assertEqual({'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 3, 'F': 4,
-                          'G': 5, 'H': 4, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
+                          'G': 5, 'H': 3, 'I': 6, 'J': 5, 'K': 6, 'L': 6,
                           'M': 7, 'N': 7, 'O': 8}, rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
             cur.execute("SELECT c.revision_id, p.revision_id, parent_idx"
@@ -190,7 +190,7 @@ class TestImporter(tests.TestCaseWithTransport):
                         "   AND parent.child = c.db_id").fetchall())
         self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
                           ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
-                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
+                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'B',
                           ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
                           ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
                           ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'J',
@@ -213,7 +213,7 @@ class TestImporter(tests.TestCaseWithTransport):
                                     "  FROM revision").fetchall())
         # Track the db_ids that are assigned
         self.assertEqual({'A': 11, 'B': 12, 'C': 13, 'D': 14, 'E': 13,
-                          'F': 14, 'G': 15, 'H': 14, 'I': 16, 'J': 15,
+                          'F': 14, 'G': 15, 'H': 13, 'I': 16, 'J': 15,
                           'K': 16, 'L': 16, 'M': 17, 'N': 17, 'O': 18},
                          rev_gdfo)
         parent_map = dict(((c_id, p_idx), p_id) for c_id, p_id, p_idx in
@@ -223,7 +223,7 @@ class TestImporter(tests.TestCaseWithTransport):
                         "   AND parent.child = c.db_id").fetchall())
         self.assertEqual({('B', 0): 'A', ('C', 0): 'B', ('D', 0): 'A',
                           ('D', 1): 'C', ('E', 0): 'B', ('F', 0): 'E',
-                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'E',
+                          ('G', 0): 'D', ('G', 1): 'F', ('H', 0): 'B',
                           ('I', 0): 'G', ('I', 1): 'H', ('J', 0): 'F',
                           ('K', 0): 'J', ('L', 0): 'J', ('M', 0): 'K',
                           ('M', 1): 'L', ('N', 0): 'I', ('N', 1): 'J',
