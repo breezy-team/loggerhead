@@ -150,7 +150,7 @@ class Importer(object):
         if self._incremental:
             self._update_ancestry(self._branch_tip_rev_id)
             tip_db_id = self._rev_id_to_db_id[self._branch_tip_rev_id]
-            inc_importer = _IncrementalImporter(self, tip_db_id)
+            inc_importer = _IncrementalMergeSort(self, tip_db_id)
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -423,7 +423,7 @@ class Importer(object):
             self._db_conn.commit()
 
 
-class _IncrementalImporter(object):
+class _IncrementalMergeSort(object):
     """Context for importing partial history."""
     # Note: all of the ids in this object are database ids. the revision_ids
     #       should have already been imported before we get to this step.

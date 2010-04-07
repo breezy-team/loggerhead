@@ -78,8 +78,7 @@ class MockBranch(object):
         return dict((node.key[0], node.revno) for node in merge_sorted)
 
 
-class TestImporter(tests.TestCaseWithTransport):
-    """Test aspects of importing."""
+class TestCaseWithGraphs(tests.TestCase):
 
     def make_interesting_branch(self):
         # Graph looks like:
@@ -142,6 +141,9 @@ class TestImporter(tests.TestCaseWithTransport):
     def grab_interesting_ids(self, rev_id_to_db_id):
         for rev_id in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
             setattr(self, '%s_id' % (rev_id,), rev_id_to_db_id.get(rev_id))
+
+
+class TestImporter(TestCaseWithGraphs):
 
     def test_build(self):
         b = self.make_interesting_branch()
@@ -266,7 +268,10 @@ class TestImporter(tests.TestCaseWithTransport):
                           ('O', 0): 'N', ('O', 1): 'M',
                          }, parent_map)
 
-    def test__incremental_importer_step_by_step(self):
+
+class Test_IncrementalMergeSort(TestCaseWithGraphs):
+
+    def test_step_by_step(self):
         b = self.make_interesting_branch()
         b._tip_revision = 'G' # Something older
         importer = history_db.Importer(':memory:', b, incremental=False)
@@ -279,7 +284,7 @@ class TestImporter(tests.TestCaseWithTransport):
         # Now work on just importing G
         importer._update_ancestry('N')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.N_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.N_id)
         inc_importer._find_needed_mainline()
         self.assertEqual([self.N_id, self.I_id], inc_importer._mainline_db_ids)
         self.assertEqual(self.G_id, inc_importer._imported_mainline_id)
@@ -355,14 +360,14 @@ class TestImporter(tests.TestCaseWithTransport):
                           (self.N_id, (5,), False, 0),
                          ], inc_importer._scheduled_stack)
 
-    def test__incremental_find_interesting_ancestry(self):
+    def test__find_interesting_ancestry(self):
         b = self.make_interesting_branch()
         b._tip_revision = 'G' # Something older
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
         importer._update_ancestry('O')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.O_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.O_id)
         # This should step through the ancestry, and load in the necessary
         # data. Check the final state
         inc_importer._find_interesting_ancestry()
@@ -387,7 +392,7 @@ class TestImporter(tests.TestCaseWithTransport):
                           (1,2,2): self.F_id, (3,): self.G_id,
                          }, inc_importer._dotted_to_db_id)
 
-    def test__incremental_step_skips_already_seen(self):
+    def test__step_search_tips_skips_already_seen(self):
         # Simpler graph:
         # A
         # |
@@ -417,7 +422,7 @@ class TestImporter(tests.TestCaseWithTransport):
         importer.do_import()
         importer._update_ancestry('H')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.H_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.H_id)
         inc_importer._find_needed_mainline()
         self.assertEqual([self.H_id, self.F_id], inc_importer._mainline_db_ids)
         self.assertEqual(self.B_id, inc_importer._imported_mainline_id)
@@ -431,7 +436,7 @@ class TestImporter(tests.TestCaseWithTransport):
         # been there
         self.assertEqual(set([self.C_id, self.E_id]), inc_importer._search_tips)
 
-    def test__incremental_branch_counter_correct(self):
+    def test_maintain_branch_counter_correct(self):
         # The trick is that if we have already imported to N, then we will be
         # hiding the correct branch counter for revno 1. We will see it as 2
         # from the revisions we've loaded, but really it is 3 because of the H
@@ -442,7 +447,7 @@ class TestImporter(tests.TestCaseWithTransport):
         importer.do_import()
         importer._update_ancestry('O')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.O_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.O_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.K_id, (1, 2, 4), True, 1),
@@ -450,21 +455,24 @@ class TestImporter(tests.TestCaseWithTransport):
                           (self.M_id, (1, 2, 5), False, 1),
                           (self.O_id, (6,), False, 0),
                          ], inc_importer._scheduled_stack)
+        # We have to load G to get E, but we shouldn't have to load D_id, so
+        # that should be where we stop.
+        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
 
-    def test__incremental_merge_sort_handles_simple_child(self):
+    def test_handles_simple_child(self):
         ancestry = {'A': (), 'B': ('A',)}
         b = MockBranch(ancestry, 'A')
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
         importer._update_ancestry('B')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.B_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.B_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.B_id, (2,), False, 0),
                          ], inc_importer._scheduled_stack)
 
-    def test__incremental_merge_sort_handles_multi_roots(self):
+    def test_handles_multi_roots(self):
         # Graph:
         #  A B
         #  |/
@@ -483,7 +491,7 @@ class TestImporter(tests.TestCaseWithTransport):
         importer.do_import()
         importer._update_ancestry('F')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.F_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.F_id)
         inc_importer._find_interesting_ancestry()
         self.assertEqual(self.C_id, inc_importer._imported_mainline_id)
         self.assertEqual(set([self.E_id, self.F_id]),
@@ -493,7 +501,7 @@ class TestImporter(tests.TestCaseWithTransport):
                           (self.F_id, (4,), False, 0),
                          ], inc_importer._scheduled_stack)
 
-    def test__incremental_merge_sort_handles_partial_complex_multi_roots(self):
+    def test_handles_partial_complex_multi_roots(self):
         # Graph:
         #  A B
         #  |/ \
@@ -521,7 +529,7 @@ class TestImporter(tests.TestCaseWithTransport):
         importer.do_import()
         importer._update_ancestry('K')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.K_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.K_id)
         inc_importer._find_interesting_ancestry()
         self.assertEqual(self.G_id, inc_importer._imported_mainline_id)
         self.assertEqual(set([self.K_id, self.J_id]),
@@ -534,7 +542,7 @@ class TestImporter(tests.TestCaseWithTransport):
         # which must be the latest branch.
         self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
 
-    def test__incremental_merge_sort_first_rev(self):
+    def test_one_rev(self):
         # Trivial ancestry:
         #  A
         ancestry = {'A': ()}
@@ -542,18 +550,18 @@ class TestImporter(tests.TestCaseWithTransport):
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer._update_ancestry('A')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.A_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.A_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.A_id, (1,), True, 0),
                          ], inc_importer._scheduled_stack)
 
-    def test__incremental_merge_sort_skips_ghosts(self):
+    def test_skips_ghosts(self):
         b = self.make_branch_with_ghosts()
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer._update_ancestry('E')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalImporter(importer, self.E_id)
+        inc_importer = history_db._IncrementalMergeSort(importer, self.E_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
         # G is not mentioned in merge_sorted, neither as a left-hand parent,
