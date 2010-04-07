@@ -271,10 +271,10 @@ class TestImporter(TestCaseWithGraphs):
 
 class Test_IncrementalMergeSort(TestCaseWithGraphs):
 
-    def assertScheduledStack(self, inc_importer, expected):
+    def assertScheduledStack(self, inc_merger, expected):
         """Check that the merge_sort result is as expected."""
         actual = [(node.key, node.revno, node.end_of_merge, node.merge_depth)
-                  for node in inc_importer._scheduled_stack]
+                  for node in inc_merger._scheduled_stack]
         self.assertEqual(expected, actual)
 
     def test_step_by_step(self):
@@ -290,37 +290,37 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         # Now work on just importing G
         importer._update_ancestry('N')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.N_id)
-        inc_importer._find_needed_mainline()
-        self.assertEqual([self.N_id, self.I_id], inc_importer._mainline_db_ids)
-        self.assertEqual(self.G_id, inc_importer._imported_mainline_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.N_id)
+        inc_merger._find_needed_mainline()
+        self.assertEqual([self.N_id, self.I_id], inc_merger._mainline_db_ids)
+        self.assertEqual(self.G_id, inc_merger._imported_mainline_id)
         self.assertEqual(set([self.N_id, self.I_id]),
-                         inc_importer._interesting_ancestor_ids)
+                         inc_merger._interesting_ancestor_ids)
         # This should populate ._search_tips, as well as gdfo information
-        inc_importer._get_initial_search_tips()
-        self.assertEqual(set([self.J_id, self.H_id]), inc_importer._search_tips)
+        inc_merger._get_initial_search_tips()
+        self.assertEqual(set([self.J_id, self.H_id]), inc_merger._search_tips)
         # We should have taken a single step on the mainline
-        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
-        self.assertEqual(4, inc_importer._imported_gdfo)
+        self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
+        self.assertEqual(4, inc_merger._imported_gdfo)
         self.assertEqual({self.D_id: 4, self.J_id: 5, self.H_id: 3},
-                         inc_importer._known_gdfo)
+                         inc_merger._known_gdfo)
         # Both J has gdfo > D so it is quickly removed. H does not, so it is
         # left behind.
         self.assertEqual([self.H_id],
-             inc_importer._split_search_tips_by_gdfo([self.J_id, self.H_id]))
+             inc_merger._split_search_tips_by_gdfo([self.J_id, self.H_id]))
         self.assertEqual(set([self.N_id, self.I_id, self.J_id]),
-                         inc_importer._interesting_ancestor_ids)
+                         inc_merger._interesting_ancestor_ids)
         # Checking children should notice that all known children are fine, so
         # H now gets marked interesting
         self.assertEqual([],
-                 inc_importer._split_interesting_using_children([self.H_id]))
+                 inc_merger._split_interesting_using_children([self.H_id]))
         self.assertEqual(set([self.N_id, self.I_id, self.J_id, self.H_id]),
-                         inc_importer._interesting_ancestor_ids)
+                         inc_merger._interesting_ancestor_ids)
         # Since we know all search tips are interesting, step again.
-        inc_importer._step_search_tips()
-        self.assertEqual(set([self.B_id, self.F_id]), inc_importer._search_tips)
+        inc_merger._step_search_tips()
+        self.assertEqual(set([self.B_id, self.F_id]), inc_merger._search_tips)
         self.assertEqual(set([self.N_id, self.I_id, self.J_id, self.H_id]),
-                         inc_importer._interesting_ancestor_ids)
+                         inc_merger._interesting_ancestor_ids)
         # F is known-merged, so the first step should filter it from unknowns,
         # and remove it from the search tips
         # However B is not known yet, and has GDFO < D (since it was merged
@@ -328,39 +328,39 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         # However E is a child of B, and that is already known to be merged. So
         # B gets filtered out in the child step, and removed as a search tip
         self.assertEqual([self.B_id],
-             inc_importer._split_search_tips_by_gdfo([self.B_id, self.F_id]))
-        self.assertEqual(set([self.B_id]), inc_importer._search_tips)
+             inc_merger._split_search_tips_by_gdfo([self.B_id, self.F_id]))
+        self.assertEqual(set([self.B_id]), inc_merger._search_tips)
         self.assertEqual([],
-                     inc_importer._split_interesting_using_children([self.B_id]))
-        self.assertEqual(set([]), inc_importer._search_tips)
+                     inc_merger._split_interesting_using_children([self.B_id]))
+        self.assertEqual(set([]), inc_merger._search_tips)
         # At this point, we will stop searching. XXX: B's info has not been
         # loaded yet...
-        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
-        self.assertEqual(4, inc_importer._imported_gdfo)
+        self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
+        self.assertEqual(4, inc_merger._imported_gdfo)
         self.assertEqual({self.E_id: ((1,2,1), 1, 1),
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
-                         }, inc_importer._imported_dotted_revno)
+                         }, inc_merger._imported_dotted_revno)
         self.assertEqual({(1,2,1): self.E_id, (1,2,2): self.F_id,
                           (3,): self.G_id,
-                         }, inc_importer._dotted_to_db_id)
+                         }, inc_merger._dotted_to_db_id)
         # At this point, B_id isn't in _imported_dotted_revno, so we loop to
         # ensure we have enough dotted_revno data
-        inc_importer._ensure_lh_parent_info()
-        self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
-        self.assertEqual(1, inc_importer._imported_gdfo)
+        inc_merger._ensure_lh_parent_info()
+        self.assertEqual(self.A_id, inc_merger._imported_mainline_id)
+        self.assertEqual(1, inc_merger._imported_gdfo)
         self.assertEqual({self.B_id: ((1,1,1), 1, 1),
                           self.C_id: ((1,1,2), 0, 1),
                           self.D_id: ((2,), 0, 0),
                           self.E_id: ((1,2,1), 1, 1),
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
-                         }, inc_importer._imported_dotted_revno)
-        self.assertEqual({1: 2}, inc_importer._revno_to_branch_count)
+                         }, inc_merger._imported_dotted_revno)
+        self.assertEqual({0: 0, 1: 2}, inc_merger._revno_to_branch_count)
         self.assertEqual({0: 3, (1, 1): 2, (1, 2): 2},
-                         inc_importer._branch_to_child_count)
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer,
+                         inc_merger._branch_to_child_count)
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger,
                          [(self.H_id, (1, 3, 1), True, 1),
                           (self.I_id, (4,), False, 0),
                           (self.J_id, (1, 2, 3), True, 1),
@@ -374,30 +374,30 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('O')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.O_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.O_id)
         # This should step through the ancestry, and load in the necessary
         # data. Check the final state
-        inc_importer._find_interesting_ancestry()
+        inc_merger._find_interesting_ancestry()
         self.assertEqual([self.O_id, self.N_id, self.I_id],
-                         inc_importer._mainline_db_ids)
+                         inc_merger._mainline_db_ids)
         # We should stop loading A, I need to figure out why it gets loaded
-        self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
-        self.assertEqual(1, inc_importer._imported_gdfo)
+        self.assertEqual(self.A_id, inc_merger._imported_mainline_id)
+        self.assertEqual(1, inc_merger._imported_gdfo)
         self.assertEqual(set([self.H_id, self.I_id, self.J_id, self.K_id,
                               self.L_id, self.M_id, self.N_id, self.O_id]),
-                         inc_importer._interesting_ancestor_ids)
-        self.assertEqual(set([]), inc_importer._search_tips)
+                         inc_merger._interesting_ancestor_ids)
+        self.assertEqual(set([]), inc_merger._search_tips)
         self.assertEqual({self.B_id: ((1,1,1), 1, 1),
                           self.C_id: ((1,1,2), 0, 1),
                           self.D_id: ((2,), 0, 0),
                           self.E_id: ((1,2,1), 1, 1),
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
-                         }, inc_importer._imported_dotted_revno)
+                         }, inc_merger._imported_dotted_revno)
         self.assertEqual({(1,1,1): self.B_id, (1,1,2): self.C_id,
                           (2,): self.D_id, (1,2,1): self.E_id,
                           (1,2,2): self.F_id, (3,): self.G_id,
-                         }, inc_importer._dotted_to_db_id)
+                         }, inc_merger._dotted_to_db_id)
 
     def test__step_search_tips_skips_already_seen(self):
         # Simpler graph:
@@ -429,19 +429,19 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('H')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.H_id)
-        inc_importer._find_needed_mainline()
-        self.assertEqual([self.H_id, self.F_id], inc_importer._mainline_db_ids)
-        self.assertEqual(self.B_id, inc_importer._imported_mainline_id)
-        inc_importer._get_initial_search_tips()
-        self.assertEqual(set([self.D_id, self.G_id]), inc_importer._search_tips)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.H_id)
+        inc_merger._find_needed_mainline()
+        self.assertEqual([self.H_id, self.F_id], inc_merger._mainline_db_ids)
+        self.assertEqual(self.B_id, inc_merger._imported_mainline_id)
+        inc_merger._get_initial_search_tips()
+        self.assertEqual(set([self.D_id, self.G_id]), inc_merger._search_tips)
         # Both have higher-than-mainline gdfos
         self.assertEqual([],
-                 inc_importer._split_search_tips_by_gdfo([self.D_id, self.G_id]))
-        inc_importer._step_search_tips()
+                 inc_merger._split_search_tips_by_gdfo([self.D_id, self.G_id]))
+        inc_merger._step_search_tips()
         # It should want to include D_id, but it should know that we've already
         # been there
-        self.assertEqual(set([self.C_id, self.E_id]), inc_importer._search_tips)
+        self.assertEqual(set([self.C_id, self.E_id]), inc_merger._search_tips)
 
     def test_maintain_branch_counter_correct(self):
         # The trick is that if we have already imported to N, then we will be
@@ -454,10 +454,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('O')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.O_id)
-        inc_importer._find_interesting_ancestry()
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer,
+        inc_merger = history_db._IncrementalMergeSort(importer, self.O_id)
+        inc_merger._find_interesting_ancestry()
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger,
                          [(self.K_id, (1, 2, 4), True, 1),
                           (self.L_id, (1, 4, 1), True, 2),
                           (self.M_id, (1, 2, 5), False, 1),
@@ -465,7 +465,7 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                          ])
         # We have to load G to get E, but we shouldn't have to load D_id, so
         # that should be where we stop.
-        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
+        self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
 
     def test_handles_simple_child(self):
         ancestry = {'A': (), 'B': ('A',)}
@@ -474,10 +474,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('B')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.B_id)
-        inc_importer._find_interesting_ancestry()
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer, [(self.B_id, (2,), False, 0)])
+        inc_merger = history_db._IncrementalMergeSort(importer, self.B_id)
+        inc_merger._find_interesting_ancestry()
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger, [(self.B_id, (2,), False, 0)])
 
     def test_handles_multi_roots(self):
         # Graph:
@@ -498,13 +498,13 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('F')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.F_id)
-        inc_importer._find_interesting_ancestry()
-        self.assertEqual(self.C_id, inc_importer._imported_mainline_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.F_id)
+        inc_merger._find_interesting_ancestry()
+        self.assertEqual(self.C_id, inc_merger._imported_mainline_id)
         self.assertEqual(set([self.E_id, self.F_id]),
-                         inc_importer._interesting_ancestor_ids)
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer,
+                         inc_merger._interesting_ancestor_ids)
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger,
                          [(self.E_id, (0, 2, 1), True, 1),
                           (self.F_id, (4,), False, 0),
                          ])
@@ -537,19 +537,19 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer.do_import()
         importer._update_ancestry('K')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.K_id)
-        inc_importer._find_interesting_ancestry()
-        self.assertEqual(self.G_id, inc_importer._imported_mainline_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.K_id)
+        inc_merger._find_interesting_ancestry()
+        self.assertEqual(self.G_id, inc_merger._imported_mainline_id)
         self.assertEqual(set([self.K_id, self.J_id]),
-                         inc_importer._interesting_ancestor_ids)
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer,
+                         inc_merger._interesting_ancestor_ids)
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger,
                          [(self.J_id, (0, 3, 1), True, 1),
                           (self.K_id, (6,), False, 0),
                          ])
         # We only have to walk back and stop at D because we have found (0,2,1)
         # which must be the latest branch.
-        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
+        self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
 
     def test_one_rev(self):
         # Trivial ancestry:
@@ -559,10 +559,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer._update_ancestry('A')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.A_id)
-        inc_importer._find_interesting_ancestry()
-        inc_importer._compute_merge_sort()
-        self.assertScheduledStack(inc_importer,
+        inc_merger = history_db._IncrementalMergeSort(importer, self.A_id)
+        inc_merger._find_interesting_ancestry()
+        inc_merger._compute_merge_sort()
+        self.assertScheduledStack(inc_merger,
                          [(self.A_id, (1,), True, 0),
                          ])
 
@@ -571,15 +571,31 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer._update_ancestry('E')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_importer = history_db._IncrementalMergeSort(importer, self.E_id)
-        inc_importer._find_interesting_ancestry()
-        inc_importer._compute_merge_sort()
+        inc_merger = history_db._IncrementalMergeSort(importer, self.E_id)
+        inc_merger._find_interesting_ancestry()
+        inc_merger._compute_merge_sort()
         # G is not mentioned in merge_sorted, neither as a left-hand parent,
         # nor as a right-hand parent
-        self.assertScheduledStack(inc_importer,
+        self.assertScheduledStack(inc_merger,
                          [(self.A_id, (1,), True, 0),
                           (self.B_id, (2,), False, 0),
                           (self.C_id, (3,), False, 0),
                           (self.D_id, (0, 1, 1), True, 1),
+                          (self.E_id, (4,), False, 0),
+                         ])
+
+    def test_handle_partial_ghosts(self):
+        b = self.make_branch_with_ghosts()
+        b._tip_revision = 'C'
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        importer._update_ancestry('E')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.E_id)
+        inc_merger.topo_order()
+        # G is not mentioned in merge_sorted, neither as a left-hand parent,
+        # nor as a right-hand parent
+        self.assertScheduledStack(inc_merger,
+                         [(self.D_id, (0, 1, 1), True, 1),
                           (self.E_id, (4,), False, 0),
                          ])

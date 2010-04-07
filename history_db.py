@@ -147,10 +147,6 @@ class Importer(object):
                                  "VALUES (?, ?, ?)", data)
 
     def do_import(self, expand_all=False):
-        if self._incremental:
-            self._update_ancestry(self._branch_tip_rev_id)
-            tip_db_id = self._rev_id_to_db_id[self._branch_tip_rev_id]
-            inc_importer = _IncrementalMergeSort(self, tip_db_id)
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -180,7 +176,28 @@ class Importer(object):
         pb.finished()
 
     def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
-        merge_sorted = self._graph.merge_sort((tip_revision_id,))
+        if self._incremental:
+            self._update_ancestry(tip_revision_id)
+            self._ensure_revisions([tip_revision_id])
+            tip_db_id = self._rev_id_to_db_id[tip_revision_id]
+            inc_merger = _IncrementalMergeSort(self, tip_db_id)
+            merge_sorted = inc_merger.topo_order()
+            # Map db_ids back to the keys that self._graph would generate
+            db_id_to_rev_id = dict((d, r)
+                               for r, d in self._rev_id_to_db_id.iteritems())
+            # Assert that the result is valid
+            actual_ms = self._graph.merge_sort((tip_revision_id,))
+            actual_ms_iter = iter(actual_ms)
+            for node in merge_sorted:
+                
+                node.key = (db_id_to_rev_id[node.key],)
+                actual_node = actual_ms_iter.next()
+                assert node.key == actual_node.key
+                assert node.revno == actual_node.revno
+                assert node.merge_depth == actual_node.merge_depth
+                assert node.end_of_merge == actual_node.end_of_merge
+        else:
+            merge_sorted = self._graph.merge_sort((tip_revision_id,))
         try:
             if suppress_progress_and_commit:
                 pb = None
@@ -441,6 +458,13 @@ class _MergeSortNode(object):
         self._left_pending_parent = left_parent
         self._pending_parents = pending_parents
         self._is_first = is_first
+
+    def __repr__(self):
+        return '%s(%s, %s, %s, %s [%s %s %s %s])' % (
+            self.__class__.__name__,
+            self.key, self.revno, self.end_of_merge, self.merge_depth,
+            self._left_parent, self._left_pending_parent,
+            self._pending_parents, self._is_first)
 
 
 class _IncrementalMergeSort(object):
@@ -706,6 +730,7 @@ class _IncrementalMergeSort(object):
             if lh_parent in self._imported_dotted_revno:
                 continue
             missing_parent_ids.add(lh_parent)
+        missing_parent_ids.difference_update(self._ghosts)
         while missing_parent_ids:
             self._step_mainline()
             missing_parent_ids = missing_parent_ids.difference(
@@ -762,6 +787,8 @@ class _IncrementalMergeSort(object):
                 # *mainline* branch
                 branch_key = 0
                 mini_revno = revno[0]
+                # We found a mainline branch, make sure it is marked as such
+                self._revno_to_branch_count.setdefault(0, 0)
             if (branch_key not in self._branch_to_child_count
                 or mini_revno > self._branch_to_child_count[branch_key]):
                 self._branch_to_child_count[branch_key] = mini_revno
@@ -950,9 +977,10 @@ class _IncrementalMergeSort(object):
                 # And switch to the outer loop
                 break
 
-    def do_import(self):
+    def topo_order(self):
         self._find_interesting_ancestry()
         self._compute_merge_sort()
+        return list(reversed(self._scheduled_stack))
 
 
 class Querier(object):
