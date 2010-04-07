@@ -309,7 +309,6 @@ class TestImporter(tests.TestCaseWithTransport):
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
                          }, inc_importer._imported_dotted_revno)
-        inc_importer._update_info_from_dotted_revno()
         self.assertEqual({1: 2}, inc_importer._revno_to_branch_count)
         self.assertEqual({0: 3, (1, 1): 2, (1, 2): 2},
                          inc_importer._branch_to_child_count)
@@ -409,7 +408,6 @@ class TestImporter(tests.TestCaseWithTransport):
         self.grab_interesting_ids(importer._rev_id_to_db_id)
         inc_importer = history_db._IncrementalImporter(importer, self.O_id)
         inc_importer._find_interesting_ancestry()
-        inc_importer._update_info_from_dotted_revno()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.K_id, (1, 2, 4), True, 1),
                           (self.L_id, (1, 4, 1), True, 2),
@@ -426,7 +424,6 @@ class TestImporter(tests.TestCaseWithTransport):
         self.grab_interesting_ids(importer._rev_id_to_db_id)
         inc_importer = history_db._IncrementalImporter(importer, self.B_id)
         inc_importer._find_interesting_ancestry()
-        inc_importer._update_info_from_dotted_revno()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.B_id, (2,), False, 0),
                          ], inc_importer._scheduled_stack)
@@ -455,7 +452,6 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual(self.C_id, inc_importer._imported_mainline_id)
         self.assertEqual(set([self.E_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
-        inc_importer._update_info_from_dotted_revno()
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.E_id, (0, 2, 1), True, 1),
                           (self.F_id, (4,), False, 0),

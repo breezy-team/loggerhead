@@ -612,8 +612,7 @@ class _IncrementalImporter(object):
             [self._imported_mainline_id]).fetchall()
         dotted_info = [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
                        for r in res]
-        self._imported_dotted_revno.update(dotted_info)
-        self._dotted_to_db_id.update([(i[1][0], i[0]) for i in dotted_info])
+        self._update_info_from_dotted_revno(dotted_info)
         # TODO: We could remove search tips that show up as newly merged
         #       though that can wait until the next
         #       _split_search_tips_by_gdfo
@@ -714,12 +713,13 @@ class _IncrementalImporter(object):
         # _imported_dotted_revno
         self._ensure_lh_parent_info()
 
-    def _update_info_from_dotted_revno(self):
+    def _update_info_from_dotted_revno(self, dotted_info):
         """Update info like 'child_seen' from the dotted_revno info."""
         # TODO: We can move this iterator into a parameter, and have it
         #       continuously updated from _step_mainline()
-        iterator = self._imported_dotted_revno.iteritems()
-        for db_id, (revno, eom, depth) in iterator:
+        self._imported_dotted_revno.update(dotted_info)
+        self._dotted_to_db_id.update([(i[1][0], i[0]) for i in dotted_info])
+        for db_id, (revno, eom, depth) in dotted_info:
             if len(revno) > 1: # dotted revno, make sure branch count is right
                 base_revno = revno[0]
                 if (base_revno not in self._revno_to_branch_count
@@ -890,7 +890,6 @@ class _IncrementalImporter(object):
 
     def do_import(self):
         self._find_interesting_ancestry()
-        self._update_info_from_dotted_revno()
         self._compute_merge_sort()
 
 
