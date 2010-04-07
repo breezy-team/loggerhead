@@ -416,3 +416,17 @@ class TestImporter(tests.TestCaseWithTransport):
                           (self.M_id, (1, 2, 5), False, 1),
                           (self.O_id, (6,), False, 0),
                          ], inc_importer._scheduled_stack)
+
+    def test__incremental_merge_sort_handles_simple_child(self):
+        ancestry = {'A': (), 'B': ('A',)}
+        b = MockBranch(ancestry, 'A')
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        importer._update_ancestry('B')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.B_id)
+        inc_importer._find_interesting_ancestry()
+        inc_importer._update_info_from_dotted_revno()
+        inc_importer._compute_merge_sort()
+        self.assertEqual([(self.B_id, (2,), False, 0),
+                         ], inc_importer._scheduled_stack)

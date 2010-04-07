@@ -838,13 +838,13 @@ class _IncrementalImporter(object):
                 revno = (1,)
             else:
                 revno = (0, branch_count, 1)
-        # XXX: This isn't correct any more, we need to look at the parent,
-        #      what *would* have been scheduled if we weren't doing partial
-        #      scheduling. Then again, maybe it is correct for all but the
-        #      mainline (first entry on the stack). Because we always break
-        #      apart the dotted_revno cache based on what has gotten merged...
         if not self._scheduled_stack:
+            # For all but mainline revisions, we break on the end-of-merge. So
+            # when we start new numbering, end_of_merge is True. For mainline
+            # revisions, this is only true when we don't have a parent.
             end_of_merge = True
+            if left_parent_id is not None and merge_depth == 0:
+                end_of_merge = False
         else:
             prev_db_id, prev_revno, _, prev_depth = self._scheduled_stack[-1]
             if prev_depth < merge_depth:
@@ -891,6 +891,8 @@ class _IncrementalImporter(object):
 
     def do_import(self):
         self._find_interesting_ancestry()
+        self._update_info_from_dotted_revno()
+        self._compute_merge_sort()
 
 
 class Querier(object):
