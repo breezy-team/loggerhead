@@ -430,3 +430,33 @@ class TestImporter(tests.TestCaseWithTransport):
         inc_importer._compute_merge_sort()
         self.assertEqual([(self.B_id, (2,), False, 0),
                          ], inc_importer._scheduled_stack)
+
+    def test__incremental_merge_sort_handles_multi_roots(self):
+        # Graph:
+        #  A B
+        #  |/
+        #  C 
+        #  |
+        #  D E
+        #  |/
+        #  F
+        # Since D is already imported, the incremental importer will only see
+        # E. However, we have to load everything, so that we can get the
+        # numbering for a 0-based rev correct.
+        ancestry = {'A': (), 'B': (), 'C': ('A', 'B'), 'D': ('C',), 'E': (),
+                    'F': ('D', 'E')}
+        b = MockBranch(ancestry, 'D')
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        importer._update_ancestry('F')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.F_id)
+        inc_importer._find_interesting_ancestry()
+        self.assertEqual(self.C_id, inc_importer._imported_mainline_id)
+        self.assertEqual(set([self.E_id, self.F_id]),
+                         inc_importer._interesting_ancestor_ids)
+        inc_importer._update_info_from_dotted_revno()
+        inc_importer._compute_merge_sort()
+        self.assertEqual([(self.E_id, (0, 2, 1), True, 1),
+                          (self.F_id, (4,), False, 0),
+                         ], inc_importer._scheduled_stack)

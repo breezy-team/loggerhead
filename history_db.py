@@ -684,7 +684,6 @@ class _IncrementalImporter(object):
     def _find_interesting_ancestry(self):
         self._find_needed_mainline()
         self._get_initial_search_tips()
-        self._step_mainline()
         while self._search_tips:
             # We don't know whether these search tips are known interesting, or
             # known uninteresting
