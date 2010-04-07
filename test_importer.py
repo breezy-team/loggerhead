@@ -271,6 +271,12 @@ class TestImporter(TestCaseWithGraphs):
 
 class Test_IncrementalMergeSort(TestCaseWithGraphs):
 
+    def assertScheduledStack(self, inc_importer, expected):
+        """Check that the merge_sort result is as expected."""
+        actual = [(node.key, node.revno, node.end_of_merge, node.merge_depth)
+                  for node in inc_importer._scheduled_stack]
+        self.assertEqual(expected, actual)
+
     def test_step_by_step(self):
         b = self.make_interesting_branch()
         b._tip_revision = 'G' # Something older
@@ -354,11 +360,12 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         self.assertEqual({0: 3, (1, 1): 2, (1, 2): 2},
                          inc_importer._branch_to_child_count)
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.H_id, (1, 3, 1), True, 1),
+        self.assertScheduledStack(inc_importer,
+                         [(self.H_id, (1, 3, 1), True, 1),
                           (self.I_id, (4,), False, 0),
                           (self.J_id, (1, 2, 3), True, 1),
                           (self.N_id, (5,), False, 0),
-                         ], inc_importer._scheduled_stack)
+                         ])
 
     def test__find_interesting_ancestry(self):
         b = self.make_interesting_branch()
@@ -450,11 +457,12 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         inc_importer = history_db._IncrementalMergeSort(importer, self.O_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.K_id, (1, 2, 4), True, 1),
+        self.assertScheduledStack(inc_importer,
+                         [(self.K_id, (1, 2, 4), True, 1),
                           (self.L_id, (1, 4, 1), True, 2),
                           (self.M_id, (1, 2, 5), False, 1),
                           (self.O_id, (6,), False, 0),
-                         ], inc_importer._scheduled_stack)
+                         ])
         # We have to load G to get E, but we shouldn't have to load D_id, so
         # that should be where we stop.
         self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
@@ -469,8 +477,7 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         inc_importer = history_db._IncrementalMergeSort(importer, self.B_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.B_id, (2,), False, 0),
-                         ], inc_importer._scheduled_stack)
+        self.assertScheduledStack(inc_importer, [(self.B_id, (2,), False, 0)])
 
     def test_handles_multi_roots(self):
         # Graph:
@@ -497,9 +504,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         self.assertEqual(set([self.E_id, self.F_id]),
                          inc_importer._interesting_ancestor_ids)
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.E_id, (0, 2, 1), True, 1),
+        self.assertScheduledStack(inc_importer,
+                         [(self.E_id, (0, 2, 1), True, 1),
                           (self.F_id, (4,), False, 0),
-                         ], inc_importer._scheduled_stack)
+                         ])
 
     def test_handles_partial_complex_multi_roots(self):
         # Graph:
@@ -535,9 +543,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         self.assertEqual(set([self.K_id, self.J_id]),
                          inc_importer._interesting_ancestor_ids)
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.J_id, (0, 3, 1), True, 1),
+        self.assertScheduledStack(inc_importer,
+                         [(self.J_id, (0, 3, 1), True, 1),
                           (self.K_id, (6,), False, 0),
-                         ], inc_importer._scheduled_stack)
+                         ])
         # We only have to walk back and stop at D because we have found (0,2,1)
         # which must be the latest branch.
         self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
@@ -553,8 +562,9 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         inc_importer = history_db._IncrementalMergeSort(importer, self.A_id)
         inc_importer._find_interesting_ancestry()
         inc_importer._compute_merge_sort()
-        self.assertEqual([(self.A_id, (1,), True, 0),
-                         ], inc_importer._scheduled_stack)
+        self.assertScheduledStack(inc_importer,
+                         [(self.A_id, (1,), True, 0),
+                         ])
 
     def test_skips_ghosts(self):
         b = self.make_branch_with_ghosts()
@@ -566,9 +576,10 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         inc_importer._compute_merge_sort()
         # G is not mentioned in merge_sorted, neither as a left-hand parent,
         # nor as a right-hand parent
-        self.assertEqual([(self.A_id, (1,), True, 0),
+        self.assertScheduledStack(inc_importer,
+                         [(self.A_id, (1,), True, 0),
                           (self.B_id, (2,), False, 0),
                           (self.C_id, (3,), False, 0),
                           (self.D_id, (0, 1, 1), True, 1),
                           (self.E_id, (4,), False, 0),
-                         ], inc_importer._scheduled_stack)
+                         ])

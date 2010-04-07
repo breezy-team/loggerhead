@@ -423,6 +423,26 @@ class Importer(object):
             self._db_conn.commit()
 
 
+class _MergeSortNode(object):
+    """A simple object that represents one entry in the merge sorted graph."""
+
+    __slots__ = ('key', 'merge_depth', 'revno', 'end_of_merge',
+                 '_left_parent', '_left_pending_parent',
+                 '_pending_parents', '_is_first',
+                 )
+
+    def __init__(self, key, merge_depth, left_parent, pending_parents,
+                 is_first):
+        self.key = key
+        self.merge_depth = merge_depth
+        self.revno = None
+        self.end_of_merge = None
+        self._left_parent = left_parent
+        self._left_pending_parent = left_parent
+        self._pending_parents = pending_parents
+        self._is_first = is_first
+
+
 class _IncrementalMergeSort(object):
     """Context for importing partial history."""
     # Note: all of the ids in this object are database ids. the revision_ids
@@ -804,20 +824,19 @@ class _IncrementalMergeSort(object):
                                     if p not in self._ghosts])
         # v- logically probably better as a tuple or object. We currently
         # modify it in place, so we use a list
-        self._depth_first_stack.append([db_id, merge_depth, left_parent,
-                                        left_parent, pending_parents,
-                                        is_first])
+        self._depth_first_stack.append(
+            _MergeSortNode(db_id, merge_depth, left_parent, pending_parents,
+                           is_first))
 
     def _pop_node(self):
         """Move the last node from the _depth_first_stack to _scheduled_stack.
 
         This is the most left-hand node that we are able to find.
         """
-        (db_id, merge_depth, left_parent_id, _, _,
-         is_first) = self._depth_first_stack.pop()
-        if left_parent_id is not None:
-            parent_revno = self._imported_dotted_revno[left_parent_id][0]
-            if is_first: # We simply number as parent + 1
+        node = self._depth_first_stack.pop()
+        if node._left_parent is not None:
+            parent_revno = self._imported_dotted_revno[node._left_parent][0]
+            if node._is_first: # We simply number as parent + 1
                 if len(parent_revno) == 1:
                     mini_revno = parent_revno[0] + 1
                     revno = (mini_revno,)
@@ -880,20 +899,24 @@ class _IncrementalMergeSort(object):
             # when we start new numbering, end_of_merge is True. For mainline
             # revisions, this is only true when we don't have a parent.
             end_of_merge = True
-            if left_parent_id is not None and merge_depth == 0:
+            if node._left_parent is not None and node.merge_depth == 0:
                 end_of_merge = False
         else:
-            prev_db_id, prev_revno, _, prev_depth = self._scheduled_stack[-1]
-            if prev_depth < merge_depth:
+            prev_node = self._scheduled_stack[-1]
+            if prev_node.merge_depth < node.merge_depth:
                 end_of_merge = True
-            elif (prev_depth == merge_depth
-                  and prev_db_id not in self._parent_map[db_id]):
+            elif (prev_node.merge_depth == node.merge_depth
+                  and prev_node.key not in self._parent_map[node.key]):
                 # Next node is not a direct parent
                 end_of_merge = True
             else:
                 end_of_merge = False
-        self._imported_dotted_revno[db_id] = (revno, end_of_merge, merge_depth)
-        self._scheduled_stack.append((db_id, revno, end_of_merge, merge_depth))
+        node.revno = revno
+        node.end_of_merge = end_of_merge
+        self._imported_dotted_revno[node.key] = (revno, end_of_merge,
+                                                 node.merge_depth)
+        node._pending_parents = None
+        self._scheduled_stack.append(node)
 
     def _compute_merge_sort(self):
         self._depth_first_stack = []
@@ -903,25 +926,26 @@ class _IncrementalMergeSort(object):
 
         while self._depth_first_stack:
             last = self._depth_first_stack[-1]
-            if last[3] is None and not last[4]:
+            if last._left_pending_parent is None and not last._pending_parents:
                 # The parents have been processed, pop the node
                 self._pop_node()
                 continue
-            while last[3] is not None or last[4]:
-                if last[3] is not None:
+            while (last._left_pending_parent is not None
+                   or last._pending_parents):
+                if last._left_pending_parent is not None:
                     # Push on the left-hand-parent
-                    next_db_id = last[3]
-                    last[3] = None
+                    next_db_id = last._left_pending_parent
+                    last._left_pending_parent = None
                 else:
-                    pending_parents = last[4]
+                    pending_parents = last._pending_parents
                     next_db_id = pending_parents[-1]
-                    last[4] = pending_parents[:-1]
+                    last._pending_parents = pending_parents[:-1]
                 if next_db_id in self._imported_dotted_revno:
                     continue
-                if next_db_id == last[2]: #Is the left-parent?
-                    next_merge_depth = last[1]
+                if next_db_id == last._left_parent: #Is the left-parent?
+                    next_merge_depth = last.merge_depth
                 else:
-                    next_merge_depth = last[1] + 1
+                    next_merge_depth = last.merge_depth + 1
                 self._push_node(next_db_id, next_merge_depth)
                 # And switch to the outer loop
                 break
