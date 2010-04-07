@@ -876,9 +876,10 @@ class _IncrementalMergeSort(object):
             else:
                 # we need a new branch number. To get this correct, we have to
                 # make sure that the beginning of this branch has been loaded
-                branch_root = parent_revno[:2] + (1,)
-                while branch_root not in self._dotted_to_db_id:
-                    self._step_mainline()
+                if len(parent_revno) > 1:
+                    branch_root = parent_revno[:2] + (1,)
+                    while branch_root not in self._dotted_to_db_id:
+                        self._step_mainline()
                 base_revno = parent_revno[0]
                 branch_count = (
                     self._revno_to_branch_count.get(base_revno, 0) + 1)

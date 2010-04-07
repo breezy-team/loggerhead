@@ -468,16 +468,16 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
 
     def test_handles_simple_child(self):
-        ancestry = {'A': (), 'B': ('A',)}
-        b = MockBranch(ancestry, 'A')
+        ancestry = {'A': (), 'B': ('A',), 'C': ('B',), 'D': ('C',)}
+        b = MockBranch(ancestry, 'C')
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
-        importer._update_ancestry('B')
+        importer._update_ancestry('D')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        inc_merger = history_db._IncrementalMergeSort(importer, self.B_id)
+        inc_merger = history_db._IncrementalMergeSort(importer, self.D_id)
         inc_merger._find_interesting_ancestry()
         inc_merger._compute_merge_sort()
-        self.assertScheduledStack(inc_merger, [(self.B_id, (2,), False, 0)])
+        self.assertScheduledStack(inc_merger, [(self.D_id, (4,), False, 0)])
 
     def test_handles_multi_roots(self):
         # Graph:
