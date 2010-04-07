@@ -264,11 +264,8 @@ class Importer(object):
             # search
             pmap = self._branch.repository.get_parent_map([rev_id])
             parent_map.update(pmap)
-            parent_ids = pmap.get(rev_id, ())
-            if not parent_ids or parent_ids == NULL_PARENTS:
-                # XXX: We should handle 'not parent_ids' differently, because
-                #      that means they are a ghost. Currently the table cannot
-                #      distinguish between a ghost and a root revision.
+            parent_ids = pmap.get(rev_id, None)
+            if parent_ids is None or parent_ids == NULL_PARENTS:
                 # We can insert this rev directly, because we know its gdfo,
                 # as it has no parents.
                 parent_map[rev_id] = ()
@@ -276,6 +273,12 @@ class Importer(object):
                                      " VALUES (?, ?)", (rev_id, 1))
                 # Wrap around to populate known quickly
                 needed.append(rev_id)
+                if parent_ids is None:
+                    # This is a ghost, add it to the table
+                    self._cursor.execute("INSERT INTO ghost (db_id)"
+                                         " SELECT db_id FROM revision"
+                                         "  WHERE revision_id = ?",
+                                         (rev_id,))
                 continue
             for parent_id in pmap[rev_id]:
                 if parent_id not in known:

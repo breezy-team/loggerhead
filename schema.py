@@ -56,6 +56,15 @@ CREATE INDEX parent_parent_index ON parent (parent);
 _create_statements.append(parent_parent_index)
 # So we can find the *children* of a given node
 
+
+ghost_t = """
+CREATE TABLE ghost (
+    db_id INTEGER PRIMARY KEY REFERENCES revision
+);
+"""
+_create_statements.append(ghost_t)
+
+
 dotted_revno_t = """
 CREATE TABLE dotted_revno (
     tip_revision INTEGER REFERENCES revision NOT NULL,
@@ -188,12 +197,24 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, graph):
             local_missing.discard(rev_id)
         missing.update(local_missing)
     if missing:
+        ghosts = set()
         def get_gdfo(rev_id):
-            return graph._nodes[(rev_id,)].gdfo
+            node = graph._nodes[(rev_id,)]
+            if node.gdfo == 1:
+                # First rev, see if this is actually a ghost
+                if node.parent_keys is None:
+                    ghosts.add(rev_id)
+            return node.gdfo
         cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
                            ' VALUES (?, ?)',
                            [(m, get_gdfo(m)) for m in missing])
         ensure_revisions(cursor, missing, rev_id_to_db_id, graph=graph)
+        if ghosts:
+            # TODO: We could turn this into a "revision_id IN ()", instead...
+            cursor.executemany("INSERT INTO ghost (db_id)"
+                               " SELECT db_id FROM revision"
+                               "  WHERE revision_id = ?",
+                               [(g,) for g in ghosts])
 
 
 def create_dotted_revno(cursor, tip_revision, merged_revision, revno,

@@ -120,8 +120,27 @@ class TestImporter(tests.TestCaseWithTransport):
                     }
         return MockBranch(ancestry, 'O')
 
+    def make_branch_with_ghosts(self):
+        # Simple ancestry:
+        # A
+        # |
+        # B G?
+        # |/|
+        # C D
+        # |/
+        # E
+        #
+        # Both C and D refer to 'G' but that revision isn't actually present
+        ancestry = {'A': (),
+                    'B': ('A',),
+                    'C': ('B', 'G'),
+                    'D': ('G',),
+                    'E': ('C', 'D'),
+                   }
+        return MockBranch(ancestry, 'E')
+
     def grab_interesting_ids(self, rev_id_to_db_id):
-        for rev_id in 'ABCDEFGHIJKLMNO':
+        for rev_id in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
             setattr(self, '%s_id' % (rev_id,), rev_id_to_db_id.get(rev_id))
 
     def test_build(self):
@@ -138,8 +157,7 @@ class TestImporter(tests.TestCaseWithTransport):
         b = self.make_interesting_branch()
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
-        db_conn = importer._db_conn
-        cur = db_conn.cursor()
+        cur = importer._db_conn.cursor()
         revs = cur.execute("SELECT revision_id, db_id, gdfo"
                            "  FROM revision").fetchall()
         # Track the db_ids that are assigned
@@ -170,6 +188,24 @@ class TestImporter(tests.TestCaseWithTransport):
             val.append((merge_rev, revno))
             val.sort()
         self.assertEqual(expected, actual)
+
+    def test_import_records_ghosts(self):
+        b = self.make_branch_with_ghosts()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        cur = importer._db_conn.cursor()
+        res = cur.execute("SELECT revision_id"
+                          "  FROM ghost NATURAL JOIN revision")
+        self.assertEqual(['G'], [r[0] for r in res])
+
+    def test__update_ancestry_records_ghosts(self):
+        b = self.make_branch_with_ghosts()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer._update_ancestry('G')
+        cur = importer._db_conn.cursor()
+        res = cur.execute("SELECT revision_id"
+                          "  FROM ghost NATURAL JOIN revision")
+        self.assertEqual(['G'], [r[0] for r in res])
 
     def test__update_ancestry_from_scratch(self):
         b = self.make_interesting_branch()
