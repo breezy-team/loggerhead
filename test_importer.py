@@ -456,3 +456,60 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual([(self.E_id, (0, 2, 1), True, 1),
                           (self.F_id, (4,), False, 0),
                          ], inc_importer._scheduled_stack)
+
+    def test__incremental_merge_sort_handles_partial_complex_multi_roots(self):
+        # Graph:
+        #  A B
+        #  |/ \
+        #  C E |
+        #  | | |
+        #  D F |
+        #  |/ /
+        #  G H
+        #  |/
+        #  I J
+        #  |/
+        #  K
+        
+        # Ideas:
+        # 1) (0,1,2) gets merged after (0,2,2). Which means we certainly have
+        #    to find (0,2,2) to get (0, 3, 1) correct. Even though we've found
+        #    a possible extra root.
+        # 2) We don't have to go all the way back to find (0,1,1) as soon as we
+        #    find (0,2,1).
+        ancestry = {'A': (), 'B': (), 'C': ('A', 'B'), 'D': ('C',), 'E': (),
+                    'F': ('E',), 'G': ('D', 'F'), 'H': ('B',), 'I': ('G', 'H'),
+                    'J': (), 'K': ('I', 'J')}
+        b = MockBranch(ancestry, 'I')
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        importer._update_ancestry('K')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.K_id)
+        inc_importer._find_interesting_ancestry()
+        self.assertEqual(self.G_id, inc_importer._imported_mainline_id)
+        self.assertEqual(set([self.K_id, self.J_id]),
+                         inc_importer._interesting_ancestor_ids)
+        inc_importer._compute_merge_sort()
+        self.assertEqual([(self.J_id, (0, 3, 1), True, 1),
+                          (self.K_id, (6,), False, 0),
+                         ], inc_importer._scheduled_stack)
+        # We only have to walk back and stop at D because we have found (0,2,1)
+        # which must be the latest branch.
+        self.assertEqual(self.D_id, inc_importer._imported_mainline_id)
+
+    def test__incremental_merge_sort_first_rev(self):
+        # Trivial ancestry:
+        #  A
+        ancestry = {'A': ()}
+        b = MockBranch(ancestry, 'A')
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer._update_ancestry('A')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.A_id)
+        inc_importer._find_interesting_ancestry()
+        inc_importer._compute_merge_sort()
+        self.assertEqual([(self.A_id, (1,), True, 0),
+                         ], inc_importer._scheduled_stack)
+
+    # TODO: Test for ghost handling

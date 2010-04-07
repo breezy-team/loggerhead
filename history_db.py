@@ -805,12 +805,10 @@ class _IncrementalImporter(object):
                 if len(parent_revno) == 1:
                     mini_revno = parent_revno[0] + 1
                     revno = (mini_revno,)
-                    # TODO: Do we need to increment
-                    #       self._branch_to_child_count[0]
-                    #       I think we do, but it is currently only used by
-                    #       _is_first_child, which should already be setting
-                    #       the 'seen' counters...
-                    # self._branch_to_child_count[0] = revno / max(revno, ...)
+                    # Not sure if we *have* to maintain it, but it does keep
+                    # our data-structures consistent
+                    if mini_revno > self._branch_to_child_count[0]:
+                        self._branch_to_child_count[0] = mini_revno
                 else:
                     revno = parent_revno[:2] + (parent_revno[2] + 1,)
             else:
@@ -825,11 +823,35 @@ class _IncrementalImporter(object):
                 self._revno_to_branch_count[base_revno] = branch_count
                 revno = (base_revno, branch_count, 1)
         else:
-            # New Root. To get the numbering correct, we have to walk the
-            # mainline back to the beginning... :(
-            ## XXX:
-            ## while self._imported_mainline_id is not None:
-            ##     self._step_mainline()
+            # We found a new root. There are 2 cases:
+            #   a) This is the very first revision in the branch. In which case
+            #      self._revno_to_branch_count won't have any counts for
+            #      'revno' 0.
+            #   b) This is a ghost / the first revision in a branch that was
+            #      merged. We need to allocate a new branch number.
+            #   This distinction is pretty much the same as the 'is_first'
+            #   check for revs with a parent if you consider the NULL revision
+            #   to be revno 0.
+            #   We have to walk back far enough to be sure that we have the
+            #   most-recent merged new-root. This can be detected by finding
+            #   any new root's first revision. And, of course, we should find
+            #   the last one first while walking backwards.
+            #   Theory:
+            #       When you see (0,X,1) you've reached the point where the X
+            #       number was chosen. A hypothetical (0,X+1,1) revision would
+            #       only be numbered X+1 if it was merged after (0,X,1). Thus
+            #       the *first* (0,?,1) revision you find merged must be the
+            #       last.
+
+            # As long as we haven't yet walked off the mainline...
+            while self._imported_mainline_id is not None:
+                # This is the oldest root that we have found so far
+                last_new_root = self._revno_to_branch_count.get(0, 0)
+                # See if we have found its 1 revision
+                first_rev_revno = (0, last_new_root, 1)
+                if first_rev_revno in self._dotted_to_db_id:
+                    break
+                self._step_mainline()
             branch_count = self._revno_to_branch_count.get(0, -1) + 1
             self._revno_to_branch_count[0] = branch_count
             if branch_count == 0: # This is the mainline
