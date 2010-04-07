@@ -490,14 +490,11 @@ class _IncrementalImporter(object):
             "   AND child IN (%s)", len(self._mainline_db_ids)),
             self._mainline_db_ids).fetchall()
         self._search_tips = set([r[0] for r in res])
-        known_gdfo = self._known_gdfo
-        known_gdfo.update(res)
-        res = self._cursor.execute(
-            "SELECT gdfo FROM revision WHERE db_id = ?",
-            [self._imported_mainline_id]).fetchone()
-        imported_gdfo = res[0]
-        self._imported_gdfo = imported_gdfo
-        known_gdfo[self._imported_mainline_id] = imported_gdfo
+        self._known_gdfo.update(res)
+        # We know that we will eventually need at least 1 step of the mainline
+        # (it gives us the basis for numbering everything). We do it now,
+        # because it increases the 'cheap' filtering we can do right away.
+        self._step_mainline()
 
     def _is_imported_db_id(self, tip_db_id):
         res = self._cursor.execute(
@@ -642,6 +639,10 @@ class _IncrementalImporter(object):
             "SELECT parent, gdfo FROM parent, revision"
             " WHERE parent=db_id AND child IN (%s)",
             len(self._search_tips)), list(self._search_tips)).fetchall()
+        # TODO: We could use this time to fill out _parent_map, rather than
+        #       waiting until _push_node and duplicating a request to the
+        #       parent table. It may be reasonable to wait on gdfo also...
+
         # Filter out search tips that we've already searched via a different
         # path. By construction, if we are stepping the search tips, we know
         # that all previous search tips are either in
@@ -657,9 +658,33 @@ class _IncrementalImporter(object):
         #       check first.
         self._known_gdfo.update(res)
 
+    def _ensure_lh_parent_info(self):
+        """LH parents of interesting_ancestor_ids is either present or pending.
+
+        Either the data should be in _imported_dotted_revno, or the lh parent
+        should be in interesting_ancestor_ids (meaning we will number it).
+        """
+        pmap = self._parent_map
+        missing_parent_ids = set()
+        for db_id in self._interesting_ancestor_ids:
+            parent_ids = self._get_parents(db_id)
+            if not parent_ids: # no parents, nothing to add
+                continue
+            lh_parent = parent_ids[0]
+            if lh_parent in self._interesting_ancestor_ids:
+                continue
+            if lh_parent in self._imported_dotted_revno:
+                continue
+            missing_parent_ids.add(lh_parent)
+        while missing_parent_ids:
+            self._step_mainline()
+            missing_parent_ids = missing_parent_ids.difference(
+                                    self._imported_dotted_revno)
+
     def _find_interesting_ancestry(self):
         self._find_needed_mainline()
         self._get_initial_search_tips()
+        self._step_mainline()
         while self._search_tips:
             # We don't know whether these search tips are known interesting, or
             # known uninteresting
@@ -685,10 +710,10 @@ class _IncrementalImporter(object):
             # All search_tips are known to either be interesting or
             # uninteresting. Walk any search tips that remain.
             self._step_search_tips()
-        # Once we get to here, we should have loaded enough of
-        # _imported_dotted_revno to be able to create the merge_sort graph.
-        # Also all of the new pending revisions should be in
-        # self._interesting_ancestor_ids
+        # We're now sure we have all of the now-interesting revisions. To
+        # number them, we need their left-hand parents to be in
+        # _imported_dotted_revno
+        self._ensure_lh_parent_info()
 
     def _update_info_from_dotted_revno(self):
         """Update info like 'child_seen' from the dotted_revno info."""
@@ -737,14 +762,20 @@ class _IncrementalImporter(object):
         # If we got this far, it doesn't appear to have been seen.
         return True
 
-    # XXX: For now, we just re-implement some of the merge_sort logic locally
+    def _get_parents(self, db_id):
+        if db_id in self._parent_map:
+            parent_ids = self._parent_map[db_id]
+        else:
+            parent_res = self._cursor.execute(
+                        "SELECT parent FROM parent WHERE child = ?"
+                        " ORDER BY parent_idx", (db_id,)).fetchall()
+            parent_ids = tuple([r[0] for r in parent_res])
+            self._parent_map[db_id] = parent_ids
+        return parent_ids
+
     def _push_node(self, db_id, merge_depth):
         # TODO: Check if db_id is a ghost (not allowed on the stack)
-        parent_res = self._cursor.execute(
-                    "SELECT parent FROM parent WHERE child = ?"
-                    " ORDER BY parent_idx", (db_id,)).fetchall()
-        parent_ids = tuple([r[0] for r in parent_res])
-        self._parent_map[db_id] = parent_ids
+        parent_ids = self._get_parents(db_id)
         if len(parent_ids) <= 0:
             left_parent = None
             # We are dealing with a 'new root' possibly because of a ghost,
@@ -755,7 +786,7 @@ class _IncrementalImporter(object):
         else:
             left_parent = parent_ids[0]
             is_first = self._is_first_child(left_parent)
-        pending_parents = parent_ids[1:]
+        pending_parents = tuple(parent_ids[1:])
         # v- logically probably better as a tuple or object. We currently
         # modify it in place, so we use a list
         self._depth_first_stack.append([db_id, merge_depth, left_parent,
@@ -786,6 +817,7 @@ class _IncrementalImporter(object):
             else:
                 # we need a new branch number. To get this correct, we have to
                 # make sure that the beginning of this branch has been loaded
+                ## XXX:
                 ## branch_root = parent_revno[:2] + (1,)
                 ## while branch_root not in self._dotted_to_db_id:
                 ##     self._step_mainline()
@@ -797,6 +829,7 @@ class _IncrementalImporter(object):
         else:
             # New Root. To get the numbering correct, we have to walk the
             # mainline back to the beginning... :(
+            ## XXX:
             ## while self._imported_mainline_id is not None:
             ##     self._step_mainline()
             branch_count = self._revno_to_branch_count.get(0, -1) + 1
