@@ -235,7 +235,6 @@ class TestImporter(tests.TestCaseWithTransport):
         b._tip_revision = 'D' # Something older
         importer = history_db.Importer(':memory:', b, incremental=False)
         importer.do_import()
-        D_id = importer._rev_id_to_db_id['D']
         self.assertEqual(1, importer._cursor.execute(
             "SELECT count(*) FROM dotted_revno, revision"
             " WHERE tip_revision = merged_revision"
@@ -244,7 +243,6 @@ class TestImporter(tests.TestCaseWithTransport):
         # Now work on just importing G
         importer._update_ancestry('G')
         self.grab_interesting_ids(importer._rev_id_to_db_id)
-        G_id = importer._rev_id_to_db_id['G']
         inc_importer = history_db._IncrementalImporter(importer, self.G_id)
         inc_importer._find_needed_mainline()
         self.assertEqual([self.G_id], inc_importer._mainline_db_ids)
@@ -295,7 +293,6 @@ class TestImporter(tests.TestCaseWithTransport):
         inc_importer._step_mainline()
         self.assertEqual(self.A_id, inc_importer._imported_mainline_id)
         self.assertEqual(1, inc_importer._imported_gdfo)
-        self.C_id = importer._rev_id_to_db_id['C']
         self.assertEqual({self.D_id: ((2,), 0, 0), self.C_id: ((1,1,2), 0, 1),
                           self.B_id: ((1,1,1), 1, 1),
                          }, inc_importer._imported_dotted_revno)
@@ -342,3 +339,47 @@ class TestImporter(tests.TestCaseWithTransport):
                          }, inc_importer._imported_dotted_revno)
         self.assertEqual({(2,): self.D_id, (1,1,2): self.C_id,
                           (1,1,1): self.B_id}, inc_importer._dotted_to_db_id)
+
+    def test__incremental_step_skips_already_seen(self):
+        # Simpler graph:
+        # A
+        # |
+        # B
+        # |\
+        # | C
+        # | |\
+        # | D E
+        # |/|/
+        # F G
+        # |/
+        # H
+        # In this case, first step should go to G & D, when stepping from
+        # there, G => D should not continue on D, since it has already been
+        # seen, but we should include E.
+        ancestry = {'A': (),
+                    'B': ('A',),
+                    'C': ('B',),
+                    'D': ('C',),
+                    'E': ('C',),
+                    'F': ('B', 'D'),
+                    'G': ('D', 'E'),
+                    'H': ('F', 'G'),
+                    }
+        b = MockBranch(ancestry, 'B')
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer.do_import()
+        importer._update_ancestry('H')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.H_id)
+        inc_importer._find_needed_mainline()
+        self.assertEqual([self.H_id, self.F_id], inc_importer._mainline_db_ids)
+        self.assertEqual(self.B_id, inc_importer._imported_mainline_id)
+        inc_importer._get_initial_search_tips()
+        self.assertEqual(set([self.D_id, self.G_id]), inc_importer._search_tips)
+        # Both have higher-than-mainline gdfos
+        self.assertEqual([],
+                 inc_importer._split_search_tips_by_gdfo([self.D_id, self.G_id]))
+        inc_importer._step_search_tips()
+        # It should want to include D_id, but it should know that we've already
+        # been there
+        self.assertEqual(set([self.C_id, self.E_id]), inc_importer._search_tips)

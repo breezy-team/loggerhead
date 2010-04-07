@@ -642,12 +642,15 @@ class _IncrementalImporter(object):
             "SELECT parent, gdfo FROM parent, revision"
             " WHERE parent=db_id AND child IN (%s)",
             len(self._search_tips)), list(self._search_tips)).fetchall()
-        # XXX:  Filter out search tips that we've already searched via a
-        #       different path, either entries already in the old _search_tips,
-        #       or something in _interesting_ancestor_ids, etc. Note that by
-        #       construction, everything in _search_tips should be in
-        #       _interesting_ancestor_ids...
-        self._search_tips = set([r[0] for r in res])
+        # Filter out search tips that we've already searched via a different
+        # path. By construction, if we are stepping the search tips, we know
+        # that all previous search tips are either in
+        # self._imported_dotted_revno or in self._interesting_ancestor_ids.
+        # _imported_dotted_revno will be filtered in the first
+        # _split_search_tips_by_gdfo call, so we just filter out already
+        # interesting ones.
+        interesting = self._interesting_ancestor_ids
+        self._search_tips = set([r[0] for r in res if r[0] not in interesting])
         # TODO: For search tips we will be removing, we don't need to join
         #       against revision since we should already have them. There may
         #       be other ways that we already know gdfo. It may be cheaper to
