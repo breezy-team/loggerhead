@@ -464,6 +464,12 @@ class _IncrementalImporter(object):
         # Map from db_id => parent_ids
         self._parent_map = {}
 
+        # We just populate all known ghosts here.
+        # TODO: Ghosts are expected to be rare. If we find a case where probing
+        #       for them at runtime is better than grabbing them all at once,
+        #       re-evaluate this decision.
+        self._ghosts = None
+
     def _find_needed_mainline(self):
         """Find mainline revisions that need to be filled out.
         
@@ -498,6 +504,8 @@ class _IncrementalImporter(object):
         # (it gives us the basis for numbering everything). We do it now,
         # because it increases the 'cheap' filtering we can do right away.
         self._step_mainline()
+        ghost_res = self._cursor.execute("SELECT db_id FROM ghost").fetchall()
+        self._ghosts = set([g[0] for g in ghost_res])
 
     def _is_imported_db_id(self, tip_db_id):
         res = self._cursor.execute(
@@ -787,8 +795,13 @@ class _IncrementalImporter(object):
             is_first = True
         else:
             left_parent = parent_ids[0]
-            is_first = self._is_first_child(left_parent)
-        pending_parents = tuple(parent_ids[1:])
+            if left_parent in self._ghosts:
+                left_parent = None
+                is_first = True
+            else:
+                is_first = self._is_first_child(left_parent)
+        pending_parents = tuple([p for p in parent_ids[1:]
+                                    if p not in self._ghosts])
         # v- logically probably better as a tuple or object. We currently
         # modify it in place, so we use a list
         self._depth_first_stack.append([db_id, merge_depth, left_parent,
@@ -859,6 +872,7 @@ class _IncrementalImporter(object):
             self._revno_to_branch_count[0] = branch_count
             if branch_count == 0: # This is the mainline
                 revno = (1,)
+                self._branch_to_child_count[0] = 1
             else:
                 revno = (0, branch_count, 1)
         if not self._scheduled_stack:

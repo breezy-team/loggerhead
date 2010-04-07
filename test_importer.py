@@ -548,4 +548,19 @@ class TestImporter(tests.TestCaseWithTransport):
         self.assertEqual([(self.A_id, (1,), True, 0),
                          ], inc_importer._scheduled_stack)
 
-    # TODO: Test for ghost handling
+    def test__incremental_merge_sort_skips_ghosts(self):
+        b = self.make_branch_with_ghosts()
+        importer = history_db.Importer(':memory:', b, incremental=False)
+        importer._update_ancestry('E')
+        self.grab_interesting_ids(importer._rev_id_to_db_id)
+        inc_importer = history_db._IncrementalImporter(importer, self.E_id)
+        inc_importer._find_interesting_ancestry()
+        inc_importer._compute_merge_sort()
+        # G is not mentioned in merge_sorted, neither as a left-hand parent,
+        # nor as a right-hand parent
+        self.assertEqual([(self.A_id, (1,), True, 0),
+                          (self.B_id, (2,), False, 0),
+                          (self.C_id, (3,), False, 0),
+                          (self.D_id, (0, 1, 1), True, 1),
+                          (self.E_id, (4,), False, 0),
+                         ], inc_importer._scheduled_stack)
