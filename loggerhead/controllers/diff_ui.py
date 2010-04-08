@@ -72,7 +72,7 @@ class DiffUI(TemplatedBranchView):
         filename = '%s_%s.diff' % (revno1, revno2)
         headers = [
             ('Content-Type', 'application/octet-stream'),
-            ('Content-Length', len(content)),
+            ('Content-Length', str(len(content))),
             ('Content-Disposition', 'attachment; filename=%s' % (filename,)),
             ]
         start_response('200 OK', headers)
