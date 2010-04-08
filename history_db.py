@@ -189,7 +189,6 @@ class Importer(object):
             actual_ms = self._graph.merge_sort((tip_revision_id,))
             actual_ms_iter = iter(actual_ms)
             for node in merge_sorted:
-                
                 node.key = (db_id_to_rev_id[node.key],)
                 actual_node = actual_ms_iter.next()
                 assert node.key == actual_node.key
