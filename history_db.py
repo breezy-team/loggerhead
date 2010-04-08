@@ -579,7 +579,8 @@ class _IncrementalMergeSort(object):
         still_unknown = []
         min_gdfo = None
         for db_id in unknown:
-            if db_id in self._imported_dotted_revno:
+            if (db_id in self._imported_dotted_revno
+                or db_id == self._imported_mainline_id):
                 # This should be removed as a search tip, we know it isn't
                 # interesting, it is an ancestor of an imported revision
                 self._search_tips.remove(db_id)
@@ -878,7 +879,8 @@ class _IncrementalMergeSort(object):
                 # make sure that the beginning of this branch has been loaded
                 if len(parent_revno) > 1:
                     branch_root = parent_revno[:2] + (1,)
-                    while branch_root not in self._dotted_to_db_id:
+                    while (self._imported_mainline_id is not None
+                           and branch_root not in self._dotted_to_db_id):
                         self._step_mainline()
                 base_revno = parent_revno[0]
                 branch_count = (
