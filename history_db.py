@@ -54,6 +54,28 @@ def _add_n_params(query, n):
     return query % (_n_params(n),)
 
 
+def _get_result_for_many(cursor, query, params):
+    """Get the results for a query with a lot of parameters.
+
+    SQLite has a limit on how many parameters can be passed (often for a good
+    reason). However, we don't want to have to think about it right now. So
+    this just loops over params based on a maximum allowed per query. Then
+    return the whole result in one list.
+
+    :param query: An SQL query that should contain something like:
+        "WHERE foo IN (%s)"
+    :param params: A list of parameters to supply to the function.
+    """
+    res = []
+    MAX_COUNT = 200
+    for start in xrange(0, len(params), MAX_COUNT):
+        next_params = params[start:start+MAX_COUNT]
+        res.extend(
+            cursor.execute(_add_n_params(query, len(next_params)),
+                           next_params).fetchall())
+    return res
+
+
 class Importer(object):
     """Import data from bzr into the history_db."""
 
@@ -535,12 +557,12 @@ class _IncrementalMergeSort(object):
         """
         # TODO: Split this into a loop, since sqlite has a maximum number of
         #       parameters.
-        res = self._cursor.execute(_add_n_params(
+        res = _get_result_for_many(self._cursor,
             "SELECT parent, gdfo FROM parent, revision"
             " WHERE parent.parent = revision.db_id"
             "   AND parent_idx != 0"
-            "   AND child IN (%s)", len(self._mainline_db_ids)),
-            self._mainline_db_ids).fetchall()
+            "   AND child IN (%s)",
+            self._mainline_db_ids)
         self._search_tips = set([r[0] for r in res])
         self._known_gdfo.update(res)
         # We know that we will eventually need at least 1 step of the mainline
@@ -689,10 +711,10 @@ class _IncrementalMergeSort(object):
 
     def _step_search_tips(self):
         """Move the search tips to their parents."""
-        res = self._cursor.execute(_add_n_params(
+        res = _get_result_for_many(self._cursor,
             "SELECT parent, gdfo FROM parent, revision"
             " WHERE parent=db_id AND child IN (%s)",
-            len(self._search_tips)), list(self._search_tips)).fetchall()
+            list(self._search_tips))
         # TODO: We could use this time to fill out _parent_map, rather than
         #       waiting until _push_node and duplicating a request to the
         #       parent table. It may be reasonable to wait on gdfo also...
