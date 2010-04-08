@@ -163,7 +163,8 @@ def ensure_revision(cursor, revision_id):
 
 
 _BATCH_SIZE = 100
-def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, graph):
+def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
+                     graph):
     """Do a bulk check to make sure we have db ids for all revisions.
     
     Update the revision_id => db_id mapping
@@ -194,6 +195,7 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, graph):
         local_missing = set(next)
         for rev_id, db_id in res.fetchall():
             rev_id_to_db_id[rev_id] = db_id
+            db_id_to_rev_id[db_id] = rev_id
             local_missing.discard(rev_id)
         missing.update(local_missing)
     if missing:
@@ -208,7 +210,8 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, graph):
         cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
                            ' VALUES (?, ?)',
                            [(m, get_gdfo(m)) for m in missing])
-        ensure_revisions(cursor, missing, rev_id_to_db_id, graph=graph)
+        ensure_revisions(cursor, missing, rev_id_to_db_id,
+                         db_id_to_rev_id, graph=graph)
         if ghosts:
             # TODO: We could turn this into a "revision_id IN ()", instead...
             cursor.executemany("INSERT INTO ghost (db_id)"

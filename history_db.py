@@ -91,6 +91,7 @@ class Importer(object):
         self._graph = None
         self._ensure_graph()
         self._rev_id_to_db_id = {}
+        self._db_id_to_rev_id = {}
         self._stats = defaultdict(lambda: 0)
 
     def _ensure_schema(self):
@@ -103,7 +104,8 @@ class Importer(object):
 
     def _ensure_revisions(self, revision_ids):
         schema.ensure_revisions(self._cursor, revision_ids,
-                                self._rev_id_to_db_id, self._graph)
+                                self._rev_id_to_db_id,
+                                self._db_id_to_rev_id, self._graph)
 
     def _ensure_graph(self):
         if self._graph is not None:
@@ -145,10 +147,6 @@ class Importer(object):
     def _update_parents(self, nodes):
         """Update parent information for all these nodes."""
         # Get the keys and their parents
-        # TODO: handle ghosts somehow, the current table structure won't
-        #       distinguish between valid roots and roots that are ghosts.
-        #       Note, though, that merge_sort also prunes ghosts, so you have
-        #       to find them some other way.
         parent_map = dict(
             (n.key[0], [p[0] for p in self._graph.get_parent_keys(n.key)])
             for n in nodes)
@@ -205,26 +203,25 @@ class Importer(object):
             inc_merger = _IncrementalMergeSort(self, tip_db_id)
             merge_sorted = inc_merger.topo_order()
             # Map db_ids back to the keys that self._graph would generate
-            db_id_to_rev_id = dict((d, r)
-                               for r, d in self._rev_id_to_db_id.iteritems())
             # Assert that the result is valid
-            actual_ms = self._graph.merge_sort((tip_revision_id,))
-            actual_ms_iter = iter(actual_ms)
+            # actual_ms = self._graph.merge_sort((tip_revision_id,))
+            # actual_ms_iter = iter(actual_ms)
 
             def assert_is_equal(x, y):
                 if x != y:
                     import pdb; pdb.set_trace()
             for node in merge_sorted:
                 try:
-                    node.key = (db_id_to_rev_id[node.key],)
+                    node.key = (self._db_id_to_rev_id[node.key],)
                 except KeyError: # Look this one up in the db
                     rev_res = self._cursor.execute(
                         "SELECT revision_id FROM revision WHERE db_id = ?",
                         (node.key,)).fetchone()
                     rev_id = rev_res[0]
-                    db_id_to_rev_id[node.key] = rev_id
+                    self._db_id_to_rev_id[node.key] = rev_id
                     self._rev_id_to_db_id[rev_id] = node.key
                     node.key = (rev_id,)
+                continue
                 actual_node = actual_ms_iter.next()
                 assert_is_equal(node.key, actual_node.key)
                 assert_is_equal(node.revno, actual_node.revno)
@@ -259,7 +256,11 @@ class Importer(object):
                     # data is imported. However, if we import in 'reverse'
                     # order, it is obvious when we can stop...
 
-                    self._update_parents(new_nodes)
+                    if not self._incremental:
+                        # Fairly small perf improvement. But if we are doing
+                        # _incremental, we've already called _update_ancestry,
+                        # so we know the parents are already updated.
+                        self._update_parents(new_nodes)
                     if not self._insert_nodes(last_mainline_rev_id, new_nodes):
                         # This data has already been imported.
                         new_nodes = []
@@ -290,7 +291,10 @@ class Importer(object):
          children) = self._find_known_ancestors(new_tip_rev_id)
         self._compute_gdfo_and_insert(known, children, parent_map)
         self._insert_parent_map(parent_map)
-        self._db_conn.commit()
+        # This seems to slow things down a fair amount. On bzrtools, we end up
+        # calling it 75 times, and it ends up taking 800ms. vs a total rutime
+        # of 1200ms otherwise.
+        # self._db_conn.commit()
 
     def _find_known_ancestors(self, new_tip_rev_id):
         """Starting at tip, find ancestors we already have"""
@@ -512,6 +516,7 @@ class _IncrementalMergeSort(object):
         self._mainline_db_ids = None
         self._imported_mainline_id = None
         self._cursor = importer._cursor
+        self._stats = importer._stats
 
         # db_id => gdfo
         self._known_gdfo = {}
@@ -577,10 +582,12 @@ class _IncrementalMergeSort(object):
             "   AND child IN (%s)",
             self._mainline_db_ids)
         self._search_tips = set([r[0] for r in res])
+        self._stats['num_search_tips'] += len(self._search_tips)
         self._known_gdfo.update(res)
         # We know that we will eventually need at least 1 step of the mainline
         # (it gives us the basis for numbering everything). We do it now,
         # because it increases the 'cheap' filtering we can do right away.
+        self._stats['step mainline initial'] += 1
         self._step_mainline()
         ghost_res = self._cursor.execute("SELECT db_id FROM ghost").fetchall()
         self._ghosts = set([g[0] for g in ghost_res])
@@ -617,10 +624,12 @@ class _IncrementalMergeSort(object):
                 or db_id == self._imported_mainline_id):
                 # This should be removed as a search tip, we know it isn't
                 # interesting, it is an ancestor of an imported revision
+                self._stats['split already imported'] += 1
                 self._search_tips.remove(db_id)
                 continue
             gdfo = self._known_gdfo[db_id]
             if gdfo >= self._imported_gdfo:
+                self._stats['split gdfo'] += 1
                 self._interesting_ancestor_ids.add(db_id)
             else:
                 still_unknown.append(db_id)
@@ -658,6 +667,7 @@ class _IncrementalMergeSort(object):
                 or child == self._imported_mainline_id):
                 # This child is already imported, so obviously the parent is,
                 # too.
+                self._stats['split child imported'] += 1
                 already_imported.add(parent)
                 already_imported.add(child)
             parent_to_children.setdefault(parent, []).append(child)
@@ -685,23 +695,27 @@ class _IncrementalMergeSort(object):
         still_unknown = []
         for parent in unknown_search_tips:
             if parent in already_imported:
+                self._stats['split parent imported'] += 1
                 continue
             for c in parent_to_children[parent]:
                 if c in possibly_merged_children:
                     still_unknown.append(parent)
                     break
             else: # All children could not be possibly merged
+                self._stats['split children interesting'] += 1
                 interesting.add(parent)
         return still_unknown
 
     def _step_mainline(self):
         """Move the mainline pointer by one, updating the data."""
+        self._stats['step mainline'] += 1
         res = self._cursor.execute(
             "SELECT merged_revision, revno, end_of_merge, merge_depth"
             "  FROM dotted_revno WHERE tip_revision = ?",
             [self._imported_mainline_id]).fetchall()
         dotted_info = [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
                        for r in res]
+        self._stats['step mainline added'] += len(dotted_info)
         self._update_info_from_dotted_revno(dotted_info)
         # TODO: We could remove search tips that show up as newly merged
         #       though that can wait until the next
@@ -724,6 +738,7 @@ class _IncrementalMergeSort(object):
 
     def _step_search_tips(self):
         """Move the search tips to their parents."""
+        self._stats['step search tips'] += 1
         res = _get_result_for_many(self._cursor,
             "SELECT parent, gdfo FROM parent, revision"
             " WHERE parent=db_id AND child IN (%s)",
@@ -745,6 +760,7 @@ class _IncrementalMergeSort(object):
         #       against revision since we should already have them. There may
         #       be other ways that we already know gdfo. It may be cheaper to
         #       check first.
+        self._stats['num_search_tips'] += len(self._search_tips)
         self._known_gdfo.update(res)
 
     def _ensure_lh_parent_info(self):
@@ -767,6 +783,7 @@ class _IncrementalMergeSort(object):
             missing_parent_ids.add(lh_parent)
         missing_parent_ids.difference_update(self._ghosts)
         while missing_parent_ids:
+            self._stats['step mainline ensure LH'] += 1
             self._step_mainline()
             missing_parent_ids = missing_parent_ids.difference(
                                     self._imported_dotted_revno)
@@ -795,6 +812,7 @@ class _IncrementalMergeSort(object):
                 # because you may have a rev with 10 children before it lands
                 # in mainline, but all 11 revs will be in the dotted_revno
                 # cache for that mainline.
+                self._stats['step mainline unknown'] += 1
                 self._step_mainline()
             # All search_tips are known to either be interesting or
             # uninteresting. Walk any search tips that remain.
@@ -867,8 +885,10 @@ class _IncrementalMergeSort(object):
 
     def _push_node(self, db_id, merge_depth):
         # TODO: Check if db_id is a ghost (not allowed on the stack)
+        self._stats['pushed'] += 1
         if db_id not in self._interesting_ancestor_ids:
             # This is a parent that we really don't need to number
+            self._stats['pushed uninteresting'] += 1
             return
         parent_ids = self._get_parents(db_id)
         if len(parent_ids) <= 0:
@@ -915,9 +935,13 @@ class _IncrementalMergeSort(object):
                 # we need a new branch number. To get this correct, we have to
                 # make sure that the beginning of this branch has been loaded
                 if len(parent_revno) > 1:
+                    # TODO: We don't actually need parent_revno, we need
+                    #       (rev, self._revno_to_branch_count[rev], 1), which
+                    #       may be closer.
                     branch_root = parent_revno[:2] + (1,)
                     while (self._imported_mainline_id is not None
                            and branch_root not in self._dotted_to_db_id):
+                        self._stats['step mainline sub-branch'] += 1
                         self._step_mainline()
                 base_revno = parent_revno[0]
                 branch_count = (
@@ -953,6 +977,7 @@ class _IncrementalMergeSort(object):
                 first_rev_revno = (0, last_new_root, 1)
                 if first_rev_revno in self._dotted_to_db_id:
                     break
+                self._stats['step mainline null-branch'] += 1
                 self._step_mainline()
             branch_count = self._revno_to_branch_count.get(0, -1) + 1
             self._revno_to_branch_count[0] = branch_count
