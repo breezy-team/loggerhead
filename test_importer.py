@@ -643,3 +643,33 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                          [(self.D_id, (0, 1, 1), True, 1),
                           (self.E_id, (4,), False, 0),
                          ])
+
+    def test_ignore_uninteresting_ancestors(self):
+        # Graph:
+        # A
+        # |\
+        # B C
+        # |X|
+        # D E
+        # |\| 
+        # | F
+        # |/
+        # G
+        #
+        # Some did work C, while trunk evolved to B. C was landed, while
+        # concurrently someone tried to update C for the trunk changes.
+        # After trying to cleanup, they had to do it again.
+        # If D is imported, we should only number E and F, we shouldn't try to
+        # include B or C
+        # Note: This ancestry was taken from bzr.dev@5114.1.1, which
+        # demonstrated the race condition.
+        ancestry = {'A': (), 'B': ('A',), 'C': ('A',), 'D': ('B', 'C'),
+                    'E': ('C', 'B'), 'F': ('E', 'D'), 'G': ('D', 'F')}
+        b = MockBranch(ancestry, 'G')
+        inc_merger = self.make_inc_merger(b, 'D', 'G')
+        inc_merger.topo_order()
+        self.assertScheduledStack(inc_merger,
+                         [(self.E_id, (1, 1, 2), True, 1),
+                          (self.F_id, (1, 1, 3), False, 1),
+                          (self.G_id, (4,), False, 0),
+                         ])

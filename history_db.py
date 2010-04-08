@@ -210,13 +210,26 @@ class Importer(object):
             # Assert that the result is valid
             actual_ms = self._graph.merge_sort((tip_revision_id,))
             actual_ms_iter = iter(actual_ms)
+
+            def assert_is_equal(x, y):
+                if x != y:
+                    import pdb; pdb.set_trace()
             for node in merge_sorted:
-                node.key = (db_id_to_rev_id[node.key],)
+                try:
+                    node.key = (db_id_to_rev_id[node.key],)
+                except KeyError: # Look this one up in the db
+                    rev_res = self._cursor.execute(
+                        "SELECT revision_id FROM revision WHERE db_id = ?",
+                        (node.key,)).fetchone()
+                    rev_id = rev_res[0]
+                    db_id_to_rev_id[node.key] = rev_id
+                    self._rev_id_to_db_id[rev_id] = node.key
+                    node.key = (rev_id,)
                 actual_node = actual_ms_iter.next()
-                assert node.key == actual_node.key
-                assert node.revno == actual_node.revno
-                assert node.merge_depth == actual_node.merge_depth
-                assert node.end_of_merge == actual_node.end_of_merge
+                assert_is_equal(node.key, actual_node.key)
+                assert_is_equal(node.revno, actual_node.revno)
+                assert_is_equal(node.merge_depth, actual_node.merge_depth)
+                assert_is_equal(node.end_of_merge, actual_node.end_of_merge)
         else:
             merge_sorted = self._graph.merge_sort((tip_revision_id,))
         try:
@@ -740,7 +753,7 @@ class _IncrementalMergeSort(object):
         Either the data should be in _imported_dotted_revno, or the lh parent
         should be in interesting_ancestor_ids (meaning we will number it).
         """
-        pmap = self._parent_map
+        #XXX REMOVE: pmap = self._parent_map
         missing_parent_ids = set()
         for db_id in self._interesting_ancestor_ids:
             parent_ids = self._get_parents(db_id)
@@ -854,6 +867,9 @@ class _IncrementalMergeSort(object):
 
     def _push_node(self, db_id, merge_depth):
         # TODO: Check if db_id is a ghost (not allowed on the stack)
+        if db_id not in self._interesting_ancestor_ids:
+            # This is a parent that we really don't need to number
+            return
         parent_ids = self._get_parents(db_id)
         if len(parent_ids) <= 0:
             left_parent = None
@@ -973,6 +989,9 @@ class _IncrementalMergeSort(object):
         self._depth_first_stack = []
         self._scheduled_stack = []
         self._seen_parents = set()
+        ## if not self._mainline_db_ids:
+        ##     # Nothing to number
+        ##     return
         self._push_node(self._mainline_db_ids[0], 0)
 
         while self._depth_first_stack:
