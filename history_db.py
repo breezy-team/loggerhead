@@ -80,9 +80,10 @@ def _get_result_for_many(cursor, query, params):
 class Importer(object):
     """Import data from bzr into the history_db."""
 
-    def __init__(self, db_path, a_branch, incremental=False):
+    def __init__(self, db_path, a_branch, incremental=False, validate=False):
         db_conn = dbapi2.connect(db_path)
         self._incremental = incremental
+        self._validate = validate
         self._db_conn = db_conn
         self._ensure_schema()
         self._cursor = self._db_conn.cursor()
@@ -216,15 +217,19 @@ class Importer(object):
             merge_sorted = inc_merger.topo_order()
             # Map db_ids back to the keys that self._graph would generate
             # Assert that the result is valid
-            # actual_ms = self._graph.merge_sort((tip_revision_id,))
-            # actual_ms_iter = iter(actual_ms)
+            if self._validate:
+                actual_ms = self._graph.merge_sort((tip_revision_id,))
+                actual_ms_iter = iter(actual_ms)
+            else:
+                actual_ms_iter = None
 
             def assert_is_equal(x, y):
                 if x != y:
                     import pdb; pdb.set_trace()
+            db_to_rev = self._db_id_to_rev_id
             for node in merge_sorted:
                 try:
-                    node.key = (self._db_id_to_rev_id[node.key],)
+                    node.key = (db_to_rev[node.key],)
                 except KeyError: # Look this one up in the db
                     rev_res = self._cursor.execute(
                         "SELECT revision_id FROM revision WHERE db_id = ?",
@@ -233,12 +238,22 @@ class Importer(object):
                     self._db_id_to_rev_id[node.key] = rev_id
                     self._rev_id_to_db_id[rev_id] = node.key
                     node.key = (rev_id,)
-                continue
+                if actual_ms_iter is None:
+                    continue
                 actual_node = actual_ms_iter.next()
                 assert_is_equal(node.key, actual_node.key)
                 assert_is_equal(node.revno, actual_node.revno)
                 assert_is_equal(node.merge_depth, actual_node.merge_depth)
                 assert_is_equal(node.end_of_merge, actual_node.end_of_merge)
+            if actual_ms_iter is not None:
+                try:
+                    actual_node = actual_ms_iter.next()
+                except StopIteration:
+                    # no problem they both say they've finished
+                    pass
+                else:
+                    # The next revision must have already been imported
+                    assert self._is_imported(actual_node.key[0])
         else:
             merge_sorted = self._graph.merge_sort((tip_revision_id,))
         try:
@@ -725,7 +740,9 @@ class _IncrementalMergeSort(object):
             "SELECT merged_revision, revno, end_of_merge, merge_depth"
             "  FROM dotted_revno WHERE tip_revision = ?",
             [self._imported_mainline_id]).fetchall()
-        dotted_info = [(r[0], (tuple(map(int, r[1].split('.'))), r[2], r[3]))
+        stuple = static_tuple.StaticTuple.from_sequence
+        st = static_tuple.StaticTuple
+        dotted_info = [(r[0], st(stuple(map(int, r[1].split('.'))), r[2], r[3]))
                        for r in res]
         self._stats['step mainline added'] += len(dotted_info)
         self._update_info_from_dotted_revno(dotted_info)
@@ -918,8 +935,10 @@ class _IncrementalMergeSort(object):
                 is_first = True
             else:
                 is_first = self._is_first_child(left_parent)
-        pending_parents = tuple([p for p in parent_ids[1:]
-                                    if p not in self._ghosts])
+        # Note: we don't have to filter out self._ghosts here, as long as we do
+        #       it in _push_node
+        pending_parents = static_tuple.StaticTuple.from_sequence(
+            [p for p in parent_ids[1:] if p not in self._ghosts])
         # v- logically probably better as a tuple or object. We currently
         # modify it in place, so we use a list
         self._depth_first_stack.append(
@@ -1044,10 +1063,11 @@ class _IncrementalMergeSort(object):
                 end_of_merge = True
             else:
                 end_of_merge = False
+        revno = static_tuple.StaticTuple.from_sequence(revno)
         node.revno = revno
         node.end_of_merge = end_of_merge
-        self._imported_dotted_revno[node.key] = (revno, end_of_merge,
-                                                 node.merge_depth)
+        self._imported_dotted_revno[node.key] = static_tuple.StaticTuple(
+            revno, end_of_merge, node.merge_depth)
         node._pending_parents = None
         self._scheduled_stack.append(node)
 
