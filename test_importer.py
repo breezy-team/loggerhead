@@ -494,9 +494,9 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                           (self.M_id, (1, 2, 5), False, 1),
                           (self.O_id, (6,), False, 0),
                          ])
-        # We have to load G to get E, but we shouldn't have to load D_id, so
-        # that should be where we stop.
-        self.assertEqual(self.D_id, inc_merger._imported_mainline_id)
+        # We have to load I to get H, but at that point we've seen a (1,X,1)
+        # revision, so we know we've seen the newest merged branch.
+        self.assertEqual(self.G_id, inc_merger._imported_mainline_id)
 
     def test_handles_simple_child(self):
         ancestry = {'A': (), 'B': ('A',), 'C': ('B',), 'D': ('C',)}

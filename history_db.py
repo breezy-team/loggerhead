@@ -913,6 +913,46 @@ class _IncrementalMergeSort(object):
             _MergeSortNode(db_id, merge_depth, left_parent, pending_parents,
                            is_first))
 
+    def _step_to_latest_branch(self, base_revno):
+        """Step the mainline until we've loaded the latest sub-branch.
+
+        This is used when we need to create a new child branch. We need to
+        ensure that we've loaded the most-recently-merged branch, so that we
+        can generate the correct branch counter.
+
+        For example, if you have a revision whose left-hand parent is 1.2.3,
+        you need to load mainline revisions until you find some revision like
+        (1.?.1). This will ensure that you have the most recent branch merged
+        to mainline that was branched from the revno=1 revision in mainline.
+        
+        Note that if we find (1,3,1) before finding (1,2,1) that is ok. As long
+        as we have found the first revision of any sub-branch, we know that
+        we've found the most recent (since we walk backwards).
+
+        :param base_revno: The revision that this branch is based on. 0 means
+            that this is a new-root branch.
+        :return: None
+        """
+        self._stats['step to latest'] += 1
+        while self._imported_mainline_id is not None:
+            if (base_revno,) in self._dotted_to_db_id:
+                # We have walked far enough to load the original revision,
+                # which means we've loaded all children.
+                self._stats['step to latest found base'] += 1
+                break
+            # Estimate what is the most recent branch, and see if we have read
+            # its first revision
+            branch_count = self._revno_to_branch_count.get(base_revno, 0)
+            root_of_branch_revno = (base_revno, branch_count, 1)
+            # Note: if branch_count == 0, that means we haven't seen any
+            #       other branches for this revision.
+            if root_of_branch_revno in self._dotted_to_db_id:
+                break
+            self._stats['step mainline to-latest'] += 1
+            if base_revno == 0:
+                self._stats['step mainline to-latest NULL'] += 1
+            self._step_mainline()
+
     def _pop_node(self):
         """Move the last node from the _depth_first_stack to _scheduled_stack.
 
@@ -935,14 +975,11 @@ class _IncrementalMergeSort(object):
                 # we need a new branch number. To get this correct, we have to
                 # make sure that the beginning of this branch has been loaded
                 if len(parent_revno) > 1:
-                    # TODO: We don't actually need parent_revno, we need
-                    #       (rev, self._revno_to_branch_count[rev], 1), which
-                    #       may be closer.
-                    branch_root = parent_revno[:2] + (1,)
-                    while (self._imported_mainline_id is not None
-                           and branch_root not in self._dotted_to_db_id):
-                        self._stats['step mainline sub-branch'] += 1
-                        self._step_mainline()
+                    # if parent_revno is a mainline, then
+                    # _ensure_lh_parent_info should have already loaded enough
+                    # data. So we only do this when the parent is a merged
+                    # revision.
+                    self._step_to_latest_branch(parent_revno[0])
                 base_revno = parent_revno[0]
                 branch_count = (
                     self._revno_to_branch_count.get(base_revno, 0) + 1)
@@ -969,16 +1006,7 @@ class _IncrementalMergeSort(object):
             #       the *first* (0,?,1) revision you find merged must be the
             #       last.
 
-            # As long as we haven't yet walked off the mainline...
-            while self._imported_mainline_id is not None:
-                # This is the oldest root that we have found so far
-                last_new_root = self._revno_to_branch_count.get(0, 0)
-                # See if we have found its 1 revision
-                first_rev_revno = (0, last_new_root, 1)
-                if first_rev_revno in self._dotted_to_db_id:
-                    break
-                self._stats['step mainline null-branch'] += 1
-                self._step_mainline()
+            self._step_to_latest_branch(0)
             branch_count = self._revno_to_branch_count.get(0, -1) + 1
             self._revno_to_branch_count[0] = branch_count
             if branch_count == 0: # This is the mainline
