@@ -229,6 +229,7 @@ class Importer(object):
             # Map db_ids back to the keys that self._graph would generate
             # Assert that the result is valid
             if self._validate:
+                self._ensure_graph()
                 actual_ms = self._graph.merge_sort((tip_revision_id,))
                 actual_ms_iter = iter(actual_ms)
             else:
@@ -992,11 +993,13 @@ class _IncrementalMergeSort(object):
         self._stats['step to latest'] += 1
         step_count = 0
         start_point = self._imported_mainline_id
+        found = None
         while self._imported_mainline_id is not None:
             if (base_revno,) in self._known_dotted:
                 # We have walked far enough to load the original revision,
                 # which means we've loaded all children.
                 self._stats['step to latest found base'] += 1
+                found = (base_revno,)
                 break
             # Estimate what is the most recent branch, and see if we have read
             # its first revision
@@ -1005,15 +1008,21 @@ class _IncrementalMergeSort(object):
             # Note: if branch_count == 0, that means we haven't seen any
             #       other branches for this revision.
             if root_of_branch_revno in self._known_dotted:
+                found = root_of_branch_revno
                 break
             self._stats['step mainline to-latest'] += 1
             if base_revno == 0:
                 self._stats['step mainline to-latest NULL'] += 1
             self._step_mainline()
             step_count += 1
+        return
         if step_count > 10:
-            import pdb; pdb.set_trace()
-            trace.note('stepped %d for %d' % (step_count, base_revno))
+            end_info = ''
+            if start_point is not None:
+                end_info = '%s' % (tuple(self._imported_dotted_revno[start_point][0]),)
+            trace.note('stepped %d for %d, started at %s %s, ended at %s for %s'
+                       % (step_count, base_revno, start_point,
+                          end_info, self._imported_mainline_id, found))
 
     def _pop_node(self):
         """Move the last node from the _depth_first_stack to _scheduled_stack.
