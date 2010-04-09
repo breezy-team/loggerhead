@@ -26,6 +26,7 @@ import time
 
 from bzrlib import (
     revision,
+    static_tuple,
     trace,
     ui,
     )
@@ -93,6 +94,10 @@ class Importer(object):
         self._rev_id_to_db_id = {}
         self._db_id_to_rev_id = {}
         self._stats = defaultdict(lambda: 0)
+        # A cache of entries in the dotted_revno table
+        self._dotted_revno_cache = {}
+        # Map child_id => [parent_db_ids]
+        self._db_parent_map = {}
 
     def _ensure_schema(self):
         if not schema.is_initialized(self._db_conn, dbapi2.OperationalError):
@@ -159,9 +164,16 @@ class Importer(object):
         self._ensure_revisions(rev_ids)
         data = []
         r_to_d = self._rev_id_to_db_id
+        stuple = static_tuple.StaticTuple.from_sequence
         for rev_id, parent_ids in parent_map.iteritems():
-            for idx, parent_id in enumerate(parent_ids):
-                data.append((r_to_d[rev_id], r_to_d[parent_id], idx))
+            db_id = r_to_d[rev_id]
+            if db_id in self._db_parent_map:
+                # This has already been imported, skip it
+                continue
+            parent_db_ids = stuple([r_to_d[p_id] for p_id in parent_ids])
+            self._db_parent_map[db_id] = parent_db_ids
+            for idx, parent_db_id in enumerate(parent_db_ids):
+                data.append((db_id, parent_db_id, idx))
         self._cursor.executemany("INSERT OR IGNORE INTO parent"
                                  "  (child, parent, parent_idx)"
                                  "VALUES (?, ?, ?)", data)
@@ -545,7 +557,7 @@ class _IncrementalMergeSort(object):
         self._scheduled_stack = None
         self._seen_parents = None
         # Map from db_id => parent_ids
-        self._parent_map = {}
+        self._parent_map = self._importer._db_parent_map
 
         # We just populate all known ghosts here.
         # TODO: Ghosts are expected to be rare. If we find a case where probing
@@ -879,7 +891,8 @@ class _IncrementalMergeSort(object):
             parent_res = self._cursor.execute(
                         "SELECT parent FROM parent WHERE child = ?"
                         " ORDER BY parent_idx", (db_id,)).fetchall()
-            parent_ids = tuple([r[0] for r in parent_res])
+            parent_ids = static_tuple.StaticTuple.from_sequence(
+                [r[0] for r in parent_res])
             self._parent_map[db_id] = parent_ids
         return parent_ids
 
