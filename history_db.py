@@ -96,6 +96,7 @@ class Importer(object):
         self._db_id_to_rev_id = {}
         self._stats = defaultdict(lambda: 0)
         # A cache of entries in the dotted_revno table
+        # TODO: This would probably be better as an LRU cache
         self._dotted_revno_cache = {}
         # Map child_id => [parent_db_ids]
         self._db_parent_map = {}
@@ -137,17 +138,25 @@ class Importer(object):
             # Not importing anything because the data is already present
             return False
         self._stats['total_nodes_inserted'] += len(nodes)
-        tip_db_id = self._rev_id_to_db_id[tip_rev_id]
+        rev_to_db = self._rev_id_to_db_id
+        tip_db_id = rev_to_db[tip_rev_id]
         revno_entries = []
+        to_cache_entry = []
+        st = static_tuple.StaticTuple
         for node in nodes:
             # TODO: Do we need to track the 'end_of_merge' and 'merge_depth'
             #       fields?
+            db_id = rev_to_db[node.key[0]]
             revno_entries.append((tip_db_id,
-                                  self._rev_id_to_db_id[node.key[0]],
+                                  db_id,
                                   '.'.join(map(str, node.revno)),
                                   node.end_of_merge,
                                   node.merge_depth))
+            to_cache_entry.append(st(db_id, st(st.from_sequence(node.revno),
+                                               node.end_of_merge,
+                                               node.merge_depth)))
         schema.create_dotted_revnos(self._cursor, revno_entries)
+        self._dotted_revno_cache[tip_db_id] = to_cache_entry
         return True
 
     def _update_parents(self, nodes):
@@ -554,8 +563,8 @@ class _IncrementalMergeSort(object):
         # Information from the dotted_revno table for revisions that are in the
         # already-imported mainline.
         self._imported_dotted_revno = {}
-        # Map from (dotted,revno,) => db_id
-        self._dotted_to_db_id = {}
+        # What dotted revnos have been loaded
+        self._known_dotted = set()
         # This is the gdfo of the current mainline revision search tip. This is
         # the threshold such that 
         self._imported_gdfo = None
@@ -736,14 +745,23 @@ class _IncrementalMergeSort(object):
     def _step_mainline(self):
         """Move the mainline pointer by one, updating the data."""
         self._stats['step mainline'] += 1
-        res = self._cursor.execute(
-            "SELECT merged_revision, revno, end_of_merge, merge_depth"
-            "  FROM dotted_revno WHERE tip_revision = ?",
-            [self._imported_mainline_id]).fetchall()
-        stuple = static_tuple.StaticTuple.from_sequence
-        st = static_tuple.StaticTuple
-        dotted_info = [(r[0], st(stuple(map(int, r[1].split('.'))), r[2], r[3]))
-                       for r in res]
+        if self._imported_mainline_id in self._importer._dotted_revno_cache:
+            self._stats['step mainline cached'] += 1
+            dotted_info = self._importer._dotted_revno_cache[
+                                self._imported_mainline_id]
+        else:
+            res = self._cursor.execute(
+                "SELECT merged_revision, revno, end_of_merge, merge_depth"
+                "  FROM dotted_revno WHERE tip_revision = ?",
+                [self._imported_mainline_id]).fetchall()
+            stuple = static_tuple.StaticTuple.from_sequence
+            st = static_tuple.StaticTuple
+            dotted_info = [st(r[0], st(stuple(map(int, r[1].split('.'))),
+                                       r[2], r[3]))
+                           for r in res]
+            self._stats['step mainline cache missed'] += 1
+            self._importer._dotted_revno_cache[self._imported_mainline_id] = \
+                dotted_info
         self._stats['step mainline added'] += len(dotted_info)
         self._update_info_from_dotted_revno(dotted_info)
         # TODO: We could remove search tips that show up as newly merged
@@ -856,7 +874,7 @@ class _IncrementalMergeSort(object):
         # TODO: We can move this iterator into a parameter, and have it
         #       continuously updated from _step_mainline()
         self._imported_dotted_revno.update(dotted_info)
-        self._dotted_to_db_id.update([(i[1][0], i[0]) for i in dotted_info])
+        self._known_dotted.update([i[1][0] for i in dotted_info])
         for db_id, (revno, eom, depth) in dotted_info:
             if len(revno) > 1: # dotted revno, make sure branch count is right
                 base_revno = revno[0]
@@ -967,7 +985,7 @@ class _IncrementalMergeSort(object):
         """
         self._stats['step to latest'] += 1
         while self._imported_mainline_id is not None:
-            if (base_revno,) in self._dotted_to_db_id:
+            if (base_revno,) in self._known_dotted:
                 # We have walked far enough to load the original revision,
                 # which means we've loaded all children.
                 self._stats['step to latest found base'] += 1
@@ -978,7 +996,7 @@ class _IncrementalMergeSort(object):
             root_of_branch_revno = (base_revno, branch_count, 1)
             # Note: if branch_count == 0, that means we haven't seen any
             #       other branches for this revision.
-            if root_of_branch_revno in self._dotted_to_db_id:
+            if root_of_branch_revno in self._known_dotted:
                 break
             self._stats['step mainline to-latest'] += 1
             if base_revno == 0:
