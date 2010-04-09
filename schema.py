@@ -65,6 +65,8 @@ CREATE TABLE ghost (
 _create_statements.append(ghost_t)
 
 
+# TODO: Consider storing the data as 3-digit integer revnos, rather than a
+#       revno_str
 dotted_revno_t = """
 CREATE TABLE dotted_revno (
     tip_revision INTEGER REFERENCES revision NOT NULL,
