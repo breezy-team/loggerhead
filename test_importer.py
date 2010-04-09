@@ -353,9 +353,8 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
                          }, inc_merger._imported_dotted_revno)
-        self.assertEqual({(1,2,1): self.E_id, (1,2,2): self.F_id,
-                          (3,): self.G_id,
-                         }, inc_merger._dotted_to_db_id)
+        self.assertEqual(set([(1,2,1), (1,2,2), (3,)]),
+                         inc_merger._known_dotted)
         # At this point, B_id isn't in _imported_dotted_revno, so we loop to
         # ensure we have enough dotted_revno data
         inc_merger._ensure_lh_parent_info()
@@ -406,10 +405,8 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                           self.F_id: ((1,2,2), 0, 1),
                           self.G_id: ((3,), 0, 0),
                          }, inc_merger._imported_dotted_revno)
-        self.assertEqual({(1,1,1): self.B_id, (1,1,2): self.C_id,
-                          (2,): self.D_id, (1,2,1): self.E_id,
-                          (1,2,2): self.F_id, (3,): self.G_id,
-                         }, inc_merger._dotted_to_db_id)
+        self.assertEqual(set([(1,1,1), (1,1,2), (2,), (1,2,1), (1,2,2), (3,)]),
+                         inc_merger._known_dotted)
 
     def test__split_gdfo_handles_mainline_tip(self):
         b = self.make_branch_with_simple_history()

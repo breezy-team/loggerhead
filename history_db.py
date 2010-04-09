@@ -25,6 +25,7 @@ from collections import defaultdict, deque
 import time
 
 from bzrlib import (
+    lru_cache,
     revision,
     static_tuple,
     trace,
@@ -91,13 +92,14 @@ class Importer(object):
         self._branch_tip_rev_id = a_branch.last_revision()
         self._branch_tip_key = (self._branch_tip_rev_id,)
         self._graph = None
-        self._ensure_graph()
+        if not self._incremental:
+            self._ensure_graph()
         self._rev_id_to_db_id = {}
         self._db_id_to_rev_id = {}
         self._stats = defaultdict(lambda: 0)
         # A cache of entries in the dotted_revno table
         # TODO: This would probably be better as an LRU cache
-        self._dotted_revno_cache = {}
+        self._dotted_revno_cache = lru_cache.LRUCache(10000)
         # Map child_id => [parent_db_ids]
         self._db_parent_map = {}
 
@@ -217,7 +219,7 @@ class Importer(object):
         self._db_conn.commit()
         pb.finished()
 
-    def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
+    def _get_merge_sorted_tip(self, tip_revision_id):
         if self._incremental:
             self._update_ancestry(tip_revision_id)
             self._ensure_revisions([tip_revision_id])
@@ -265,6 +267,10 @@ class Importer(object):
                     assert self._is_imported(actual_node.key[0])
         else:
             merge_sorted = self._graph.merge_sort((tip_revision_id,))
+        return merge_sorted
+
+    def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
+        merge_sorted = self._get_merge_sorted_tip(tip_revision_id)
         try:
             if suppress_progress_and_commit:
                 pb = None
