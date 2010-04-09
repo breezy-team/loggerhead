@@ -990,6 +990,8 @@ class _IncrementalMergeSort(object):
         :return: None
         """
         self._stats['step to latest'] += 1
+        step_count = 0
+        start_point = self._imported_mainline_id
         while self._imported_mainline_id is not None:
             if (base_revno,) in self._known_dotted:
                 # We have walked far enough to load the original revision,
@@ -1008,6 +1010,10 @@ class _IncrementalMergeSort(object):
             if base_revno == 0:
                 self._stats['step mainline to-latest NULL'] += 1
             self._step_mainline()
+            step_count += 1
+        if step_count > 10:
+            import pdb; pdb.set_trace()
+            trace.note('stepped %d for %d' % (step_count, base_revno))
 
     def _pop_node(self):
         """Move the last node from the _depth_first_stack to _scheduled_stack.
@@ -1092,6 +1098,7 @@ class _IncrementalMergeSort(object):
         node.end_of_merge = end_of_merge
         self._imported_dotted_revno[node.key] = static_tuple.StaticTuple(
             revno, end_of_merge, node.merge_depth)
+        self._known_dotted.add(revno)
         node._pending_parents = None
         self._scheduled_stack.append(node)
 
@@ -1099,9 +1106,9 @@ class _IncrementalMergeSort(object):
         self._depth_first_stack = []
         self._scheduled_stack = []
         self._seen_parents = set()
-        ## if not self._mainline_db_ids:
-        ##     # Nothing to number
-        ##     return
+        if not self._mainline_db_ids:
+            # Nothing to number
+            return
         self._push_node(self._mainline_db_ids[0], 0)
 
         while self._depth_first_stack:

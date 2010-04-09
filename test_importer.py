@@ -670,3 +670,11 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
                           (self.F_id, (1, 1, 3), False, 1),
                           (self.G_id, (4,), False, 0),
                          ])
+        self.assertTrue(self.E_id in inc_merger._imported_dotted_revno)
+        self.assertTrue((1,1,2) in inc_merger._known_dotted)
+
+    def test_handles_already_imported(self):
+        b = self.make_interesting_branch()
+        inc_merger = self.make_inc_merger(b, 'O', 'O')
+        inc_merger.topo_order()
+        self.assertScheduledStack(inc_merger, [])
