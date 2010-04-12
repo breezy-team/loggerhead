@@ -1246,9 +1246,10 @@ class Querier(object):
         """Get the dotted revno, but in-memory use db ids."""
         t = time.time()
         rev_id_to_db_id = {}
+        db_id_to_rev_id = {}
         schema.ensure_revisions(self._cursor,
                                 [revision_id, self._branch_tip_rev_id],
-                                rev_id_to_db_id, graph=None)
+                                rev_id_to_db_id, db_id_to_rev_id, graph=None)
         tip_db_id = rev_id_to_db_id[self._branch_tip_rev_id]
         rev_db_id = rev_id_to_db_id[revision_id]
         while tip_db_id is not None:
@@ -1300,12 +1301,12 @@ class Querier(object):
         """Determine the dotted revno, using the range info, etc."""
         t = time.time()
         rev_id_to_db_id = {}
+        db_id_to_rev_id = {}
         need_ids = [self._branch_tip_rev_id]
         need_ids.extend(revision_ids)
         schema.ensure_revisions(self._cursor, need_ids,
-                                rev_id_to_db_id, graph=None)
+                                rev_id_to_db_id, db_id_to_rev_id, graph=None)
         tip_db_id = rev_id_to_db_id[self._branch_tip_rev_id]
-        db_id_to_rev_id = dict((d, r) for r, d in rev_id_to_db_id.iteritems())
         db_ids = set([rev_id_to_db_id[r] for r in revision_ids])
         revnos = {}
         while tip_db_id is not None and db_ids:

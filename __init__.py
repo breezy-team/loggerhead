@@ -319,6 +319,8 @@ commands.register_command(cmd_walk_ancestry)
 
 _orig_do_dotted_revno = getattr(branch.Branch,
     '_do_dotted_revno_to_revision_id', None)
+_orig_do_rev_id_to_dotted = getattr(branch.Branch,
+    '_do_revision_id_to_dotted_revno', None)
 _orig_iter_merge_sorted = getattr(branch.Branch,
     'iter_merge_sorted_revisions', None)
 
@@ -330,6 +332,9 @@ def _get_history_db_path(a_branch):
     #       For now, the user could just configure an absolute path on the
     #       Repository in locations.conf and have that inherited to the
     #       branches.
+    # TODO: Consider not making this a Branch configuration. For remote
+    #       branches, it adds at least 1 round-trip to read the remote
+    #       branch.conf. Which is a shame.
     path = a_branch.get_config().get_user_option('history_db_path')
     return path
 
@@ -351,6 +356,7 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
             start_revision_id=start_revision_id,
             stop_revision_id=stop_revision_id, stop_rule=stop_rule,
             direction=direction)
+    import pdb; pdb.set_trace()
     # TODO: Consider what to do if the branch has not been imported yet. My gut
     #       feeling is that we really want to do the import at this time. Since
     #       the user would want the data, and it is possible to update a cache
@@ -361,8 +367,36 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
         stop_rule=stop_rule, direction=direction)
 
 
+def _history_db_revision_id_to_dotted_revno(self, revision_id):
+    """See Branch._do_revision_id_to_dotted_revno"""
+    # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
+    t0 = time.clock()
+    history_db_path = _get_history_db_path(self)
+    if history_db_path is None:
+        trace.mutter('history_db falling back to original'
+                     'revision_id => dotted_revno, "history_db_path" not set')
+        return _orig_do_rev_id_to_dotted(self, revno)
+    try:
+        query = _mod_history_db.Querier(history_db_path, self)
+    except _mod_history_db.dbapi2.OperationalError,e:
+        trace.note('history_db failed: %s' % (e,))
+        return _orig_do_rev_id_to_dotted(self, revno)
+    t1 = time.clock()
+    revision_id_map = query.get_dotted_revno_range_multi([revision_id])
+    t2 = time.clock()
+    trace.note('history_db rev=>dotted took %.3fs, %.3fs to init,'
+               ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+               
+    if revision_id not in revision_id_map:
+        trace.mutter('history_db failed to find a mapping for {%s},'
+                     'falling back' % (revision_id,))
+        return _orig_do_rev_id_to_dotted(self, revno)
+    return revision_id_map[revision_id]
+
+
 def _history_db_dotted_revno_to_revision_id(self, revno):
     """See Branch._do_dotted_revno_to_revision_id."""
+    # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
     t0 = time.clock()
     history_db_path = _get_history_db_path(self)
@@ -374,7 +408,6 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
         query = _mod_history_db.Querier(history_db_path, self)
     except _mod_history_db.dbapi2.OperationalError,e:
         trace.note('history_db failed: %s' % (e,))
-        import pdb; pdb.set_trace()
         return _orig_do_dotted_revno(self, revno)
     t1 = time.clock()
     revno_map = query.get_revision_ids([revno])
@@ -423,6 +456,8 @@ def _register_history_db_hooks():
         return
     branch.Branch._do_dotted_revno_to_revision_id = \
         _history_db_dotted_revno_to_revision_id
+    branch.Branch._do_revision_id_to_dotted_revno = \
+        _history_db_revision_id_to_dotted_revno
     branch.Branch.iter_merge_sorted_revisions = \
         _history_db_iter_merge_sorted_revisions
     branch.Branch.hooks.install_named_hook('post_change_branch_tip',
