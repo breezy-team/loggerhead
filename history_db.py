@@ -1557,6 +1557,124 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return all_ancestors
 
+    def _find_tip_containing(self, tip_db_id, merged_db_id):
+        """Walk backwards until you find the tip that contains the given id."""
+        while tip_db_id is not None:
+            if tip_db_id == merged_db_id:
+                # A tip obviously contains itself
+                self._stats['step_find_tip_as_merged'] += 1
+                return tip_db_id
+            self._stats['num_steps'] += 1
+            self._stats['step_find_tip_containing'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (tip_db_id,)).fetchone()
+            if range_res is None:
+                present_res = self._cursor.execute(
+                    "SELECT 1 FROM dotted_revno"
+                    " WHERE tip_revision = ?"
+                    "   AND merged_revision = ?",
+                    [tip_db_id, merged_db_id]).fetchone()
+                next_db_id = self._get_lh_parent_db_id(tip_db_id)
+            else:
+                pkey, next_db_id = range_res
+                present_res = self._cursor.execute(
+                    "SELECT 1"
+                    "  FROM dotted_revno, mainline_parent"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND mainline_parent.range = ?"
+                    "   AND merged_revision = ?",
+                    [pkey, merged_db_id]).fetchone()
+            if present_res is not None:
+                # We found a tip that contains merged_db_id
+                return tip_db_id
+            tip_db_id = next_db_id
+        return None
+
+    def _get_merge_sorted_range(self, tip_db_id, start_db_id, stop_db_id):
+        """Starting at the given tip, read all merge_sorted data until stop."""
+        if start_db_id is None or start_db_id == tip_db_id:
+            found_start = True
+        else:
+            found_start = False
+        while tip_db_id is not None:
+            self._stats['num_steps'] += 1
+            self._stats['step_get_merge_sorted'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (tip_db_id,)).fetchone()
+            if range_res is None:
+                merged_res = self._cursor.execute(
+                    "SELECT db_id, revision_id, merge_depth, revno,"
+                    "       end_of_merge"
+                    "  FROM dotted_revno, revision"
+                    " WHERE tip_revision = ?"
+                    "   AND db_id = merged_revision"
+                    [tip_db_id]).fetchall()
+                next_db_id = self._get_lh_parent_db_id(tip_db_id)
+            else:
+                pkey, next_db_id = range_res
+                merged_res = self._cursor.execute(
+                    "SELECT db_id, revision_id, merge_depth, revno,"
+                    "       end_of_merge"
+                    "  FROM dotted_revno, revision, mainline_parent"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND mainline_parent.range = ?"
+                    "   AND db_id = merged_revision",
+                    [pkey]).fetchall()
+            if found_start:
+                for db_id, r_id, depth, revno_str, eom in merged_res:
+                    if stop_db_id is not None and db_id == stop_db_id:
+                        return
+                    revno = tuple(map(int, revno_str.split('.')))
+                    yield r_id, depth, revno, eom
+            else:
+                for info in merged_res:
+                    if not found_start and info[0] == start_db_id:
+                        found_start = True
+                    if found_start:
+                        if stop_db_id is not None and info[0] == stop_db_id:
+                            return
+                        db_id, r_id, depth, revno_str, eom = info
+                        revno = tuple(map(int, revno_str.split('.')))
+                        yield r_id, depth, revno, eom
+            tip_db_id = next_db_id
+
+    def iter_merge_sorted_revisions(self, start_revision_id=None,
+                                    stop_revision_id=None):
+        """See Branch.iter_merge_sorted_revisions()
+
+        Note that start and stop differ from the Branch implementation, because
+        stop is *always* exclusive. You can simulate the rest by careful
+        selection of stop.
+        """
+        t = time.time()
+        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        if start_revision_id is not None:
+            start_db_id = self._get_db_id(start_revision_id)
+        else:
+            start_db_id = tip_db_id
+        stop_db_id = None
+        if stop_revision_id is not None:
+            stop_db_id = self._get_db_id(stop_revision_id)
+        # Seek fast until we find start_db_id
+        merge_sorted = []
+        revnos = {}
+        tip_db_id = self._find_tip_containing(tip_db_id, start_db_id)
+        # Now that you have found the first tip containing the given start
+        # revision, pull in data until you walk off the history, or you find
+        # the stop revision
+        merge_sorted = list(
+            self._get_merge_sorted_range(tip_db_id, start_db_id, stop_db_id))
+        self._stats['query_time'] += (time.time() - t)
+        return merge_sorted
+
     def heads(self, revision_ids):
         """Compute Graph.heads() on the given data."""
         raise NotImplementedError(self.heads)

@@ -67,6 +67,9 @@ _create_statements.append(ghost_t)
 
 # TODO: Consider storing the data as 3-digit integer revnos, rather than a
 #       revno_str
+# TODO: I think we need to add an 'order' column, so that we guarantee the
+#       order we get back from the database is the same order that we put them
+#       into the database.
 dotted_revno_t = """
 CREATE TABLE dotted_revno (
     tip_revision INTEGER REFERENCES revision NOT NULL,

@@ -377,14 +377,35 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
             start_revision_id=start_revision_id,
             stop_revision_id=stop_revision_id, stop_rule=stop_rule,
             direction=direction)
-    # TODO: Consider what to do if the branch has not been imported yet. My gut
-    #       feeling is that we really want to do the import at this time. Since
-    #       the user would want the data, and it is possible to update a cache
-    #       with new values and return them *faster* than you could get them
-    #       out from scratch.
-    return _orig_iter_merge_sorted(self,
-        start_revision_id=start_revision_id, stop_revision_id=stop_revision_id,
-        stop_rule=stop_rule, direction=direction)
+    if stop_rule == 'exclude':
+        real_stop_revision_id = stop_revision_id
+    else:
+        # We have to get fancy about our stop revision, we'll use the existing
+        # filtering functions to trim things back out, for now, we just use the
+        # left-hand parent as the real stop revision
+        # TODO: Handle a ghost or a first-revision that doesn't have a lh
+        #       parent
+        real_stop_revision_id = self.repository.get_parent_map(
+            [stop_revision_id])[stop_revision_id][0]
+    merge_sorted = query.iter_merge_sorted_revisions(
+                    start_revision_id=start_revision_id,
+                    stop_revision_id=real_stop_revision_id)
+    if real_stop_revision_id != stop_revision_id:
+        # Ask the existing branch code to do the special filtering
+        merge_sorted = _filter_merge_sorted(self, merge_sorted,
+                        stop_revision_id, stop_rule)
+    merge_sorted = self._filter_non_ancestors(iter(merge_sorted))
+    if direction == 'reverse':
+        return merge_sorted
+    elif direction == 'forward':
+        return reversed(list(filtered))
+    else:
+        raise ValueError('invalid direction %r' % direction)
+
+
+def _filter_merge_sorted(self, merge_sorted, stop_revision_id, stop_rule):
+    """iter_merge_sorted_revisions has some crazy stop_rules, deal with it."""
+    return merge_sorted
 
 
 def _history_db_revision_id_to_dotted_revno(self, revision_id):
