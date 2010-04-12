@@ -1338,6 +1338,50 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return revnos
 
+    def get_revision_id(self, revno):
+        """Map from a dotted-revno back into a revision_id."""
+        t = time.time()
+        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        # TODO: If tip_db_id is None, maybe we want to raise an exception here?
+        #       To indicate that the branch has not been imported yet
+        revno_str = '.'.join(map(str, revno))
+        merged_revision_id = None
+        while tip_db_id is not None:
+            self._stats['num_steps'] += 1
+            range_res = self._cursor.execute(
+                "SELECT pkey, tail"
+                "  FROM mainline_parent_range"
+                " WHERE head = ?"
+                " ORDER BY count DESC LIMIT 1",
+                (tip_db_id,)).fetchone()
+            if range_res is None:
+                revision_res = self._cursor.execute(
+                    "SELECT revision_id, revno"
+                    "  FROM dotted_revno, revision"
+                    " WHERE merged_revision = revision.db_id"
+                    "   tip_revision = ?"
+                    "   AND revno = ?",
+                    (tip_db_id, revno_str)).fetchall()
+                next_db_id = self._get_lh_parent_db_id(tip_db_id)
+            else:
+                pkey, next_db_id = range_res
+                revision_res = self._cursor.execute(
+                    "SELECT revision_id, revno"
+                    "  FROM dotted_revno, mainline_parent, revision"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND merged_revision = revision.db_id"
+                    "   AND mainline_parent.range = ?"
+                    "   AND revno = ?",
+                    (pkey, revno_str)).fetchall()
+            tip_db_id = next_db_id
+            if revision_res:
+                assert len(revision_res) == 1
+                merged_revision_id, db_revno_str = revision_res[0]
+                assert db_revno_str == revno_str
+                break
+        self._stats['query_time'] += (time.time() - t)
+        return merged_revision_id
+
     def walk_mainline(self):
         """Walk the db, and grab all the mainline identifiers."""
         t = time.time()

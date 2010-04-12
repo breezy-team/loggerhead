@@ -16,13 +16,20 @@
 
 """Store history information in a database."""
 
+import time
+
 from bzrlib import (
+    branch,
     commands,
+    lazy_import,
     option,
     registry,
     trace,
     )
-import time
+
+lazy_import.lazy_import(globals(), """
+from bzrlib.plugins.history_db import history_db as _mod_history_db
+""")
 
 
 class cmd_create_history_db(commands.Command):
@@ -43,13 +50,12 @@ class cmd_create_history_db(commands.Command):
     def run(self, directory='.', db=None, expand_all=False, incremental=False,
             validate=False):
         import pprint
-        from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
-            importer = history_db.Importer(db, b, incremental=incremental,
-                                           validate=validate)
+            importer = _mod_history_db.Importer(db, b, incremental=incremental,
+                                                validate=validate)
             importer.do_import(expand_all=expand_all)
             importer.build_mainline_cache()
         finally:
@@ -81,7 +87,6 @@ class cmd_get_dotted_revno(commands.Command):
     def run(self, directory='.', db=None, revision=None,
             method=None):
         import pprint
-        from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         b = branch.Branch.open(directory)
         if revision is None:
@@ -102,7 +107,7 @@ class cmd_get_dotted_revno(commands.Command):
                 finally:
                     b2.unlock()
             else:
-                query = history_db.Querier(db, b)
+                query = _mod_history_db.Querier(db, b)
                 if method == 'db-db-id':
                     revnos = [(query.get_dotted_revno_db_ids(rev_id), rev_id)
                               for rev_id in rev_ids]
@@ -121,6 +126,72 @@ class cmd_get_dotted_revno(commands.Command):
             revno_strs = []
             max_len = 0
             for revno, rev_id in revnos:
+                if revno is None:
+                    s = '?'
+                else:
+                    s = '.'.join(map(str, revno))
+                if len(s) > max_len:
+                    max_len = len(s)
+                revno_strs.append((s, rev_id))
+            self.outf.write(''.join(['%*s %s\n' % (max_len, s, r)
+                                     for s, r in revno_strs]))
+        finally:
+            b.unlock()
+        trace.note('Time: %.3fs' % (tdelta,))
+
+
+_dotted_to_rev_walk_types = registry.Registry()
+_dotted_to_rev_walk_types.register('db-range', None)
+_dotted_to_rev_walk_types.register('bzr', None)
+
+class cmd_dotted_to_rev(commands.Command):
+    """Query the db for a dotted revno => revision_id
+    """
+
+    takes_args = ['revno+']
+    takes_options = [option.Option('db', type=unicode,
+                        help='Use this as the database for storage'),
+                     option.Option('directory', type=unicode, short_name='d',
+                        help='Import this location instead of "."'),
+                     'revision',
+                     option.RegistryOption('method',
+                        help='How do you want to do the walking.',
+                        converter=str, registry=_dotted_to_rev_walk_types)
+                    ]
+
+    def run(self, directory='.', db=None, revno_list=None,
+            method=None):
+        import pprint
+        from bzrlib import branch
+        b = branch.Branch.open(directory)
+        b.lock_read()
+        try:
+            # Map back into integer dotted revnos
+            revno_list = [tuple(map(int, r.split('.'))) for r in revno_list]
+            t = time.time()
+            if method == 'bzr':
+                b2 = b.bzrdir.open_branch()
+                b2.lock_read()
+                try:
+                    _orig_do_dotted_revno
+                    revision_ids = [(r, _orig_do_dotted_revno(b2, r))
+                                    for r in revno_list]
+                finally:
+                    b2.unlock()
+            else:
+                query = _mod_history_db.Querier(db, b)
+                if method == 'db-range':
+                    revision_ids = [(r, query.get_revision_id(r))
+                                     for r in revno_list]
+                else:
+                    assert method == 'db-range-multi'
+                    revno_map = query.get_dotted_revno_range_multi(rev_ids)
+                    revnos = [(revno_map[rev_id], rev_id) for rev_id in rev_ids]
+                trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+            tdelta = time.time() - t
+            revno_strs = []
+            max_len = 0
+            for revno, rev_id in revision_ids:
                 if revno is None:
                     s = '?'
                 else:
@@ -154,7 +225,6 @@ class cmd_walk_mainline(commands.Command):
                     ]
 
     def run(self, directory='.', db=None, method=None):
-        from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         import pprint
         import time
@@ -163,7 +233,7 @@ class cmd_walk_mainline(commands.Command):
         self.add_cleanup(b.unlock)
         t = time.time()
         if method.startswith('db'):
-            query = history_db.Querier(db, b)
+            query = _mod_history_db.Querier(db, b)
             if method == 'db-db-id':
                 mainline = query.walk_mainline_db_ids()
             elif method == 'db-rev-id':
@@ -211,7 +281,6 @@ class cmd_walk_ancestry(commands.Command):
                     ]
 
     def run(self, directory='.', db=None, method=None):
-        from bzrlib.plugins.history_db import history_db
         from bzrlib import branch
         import pprint
         b = branch.Branch.open(directory)
@@ -219,7 +288,7 @@ class cmd_walk_ancestry(commands.Command):
         self.add_cleanup(b.unlock)
         t = time.time()
         if method.startswith('db'):
-            query = history_db.Querier(db, b)
+            query = _mod_history_db.Querier(db, b)
             if method == 'db-db-id':
                 ancestors = query.walk_ancestry_db_ids()
             elif method == 'db-rev-id':
@@ -242,9 +311,99 @@ class cmd_walk_ancestry(commands.Command):
 
 commands.register_command(cmd_create_history_db)
 commands.register_command(cmd_get_dotted_revno)
+commands.register_command(cmd_dotted_to_rev)
 commands.register_command(cmd_walk_mainline)
 commands.register_command(cmd_walk_ancestry)
 
+
+_orig_do_dotted_revno = getattr(branch.Branch,
+    '_do_dotted_revno_to_revision_id', None)
+_orig_iter_merge_sorted = getattr(branch.Branch,
+    'iter_merge_sorted_revisions', None)
+
+
+def _get_history_db_path(a_branch):
+    """Return the path to the history DB cache or None."""
+    # TODO: Consider allowing a relative path to the branch root
+    #       Or to the repository, or ?
+    #       For now, the user could just configure an absolute path on the
+    #       Repository in locations.conf and have that inherited to the
+    #       branches.
+    path = a_branch.get_config().get_user_option('history_db_path')
+    return path
+
+
+def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
+    stop_revision_id=None, stop_rule='exclude', direction='reverse'):
+    """See Branch.iter_merge_sorted_revisions()
+
+    This is a monkeypatch that overrides the default behavior, extracting data
+    from the history db if it is enabled.
+    """
+    history_db_path = _get_history_db_path(self)
+    if history_db_path is None:
+        # TODO: Consider other cases where we may want to fall back, like
+        #       special arguments, etc that we don't handle well yet.
+        trace.mutter('history_db falling back to original'
+                     'iter_merge_sorted_revisions, "history_db_path" not set')
+        return _orig_iter_merge_sorted(start_revision_id=start_revision_id,
+            stop_revision_id=stop_revision_id, stop_rule=stop_rule,
+            direction=direction)
+    # TODO: Consider what to do if the branch has not been imported yet. My gut
+    #       feeling is that we really want to do the import at this time. Since
+    #       the user would want the data, and it is possible to update a cache
+    #       with new values and return them *faster* than you could get them
+    #       out from scratch.
+    return _orig_iter_merge_sorted(start_revision_id=start_revision_id,
+        stop_revision_id=stop_revision_id, stop_rule=stop_rule,
+        direction=direction)
+
+
+def _history_db_dotted_revno_to_revision_id(self, revno):
+    """See Branch._do_dotted_revno_to_revision_id."""
+    # revno should be a dotted revno, aka either 1-part or 3-part tuple
+    history_db_path = _get_history_db_path(self)
+    if history_db_path is None:
+        trace.mutter('history_db falling back to original'
+                     'dotted_revno => revision_id, "history_db_path" not set')
+        return _orig_do_dotted_revno(self, revno)
+    query = _mod_history_db.Querier(history_db_path, b)
+    return _orig_do_dotted_revno(self, revno)
+
+
+def _history_db_post_change_branch_tip_hook(params):
+    """Run when the tip of a branch changes revision_id."""
+    t0 = time.clock()
+    history_db_path = _get_history_db_path(self)
+    if history_db_path is None:
+        trace.mutter('Note updating history-db, "history_db_path"'
+                     ' not configured')
+        return
+    importer = _mod_history_db.Importer(db, params.branch, incremental=True)
+    t1 = time.clock()
+    importer.do_import()
+    t2 = time.clock()
+    importer.build_mainline_cache()
+    t3 = time.clock()
+    trace.note('History DB took %.3fs, %.3fs to init, %.3fs to import'
+               % (t3-t0, t1-t0, t2-t1))
+    trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
+
+
+
+def _register_history_db_hooks():
+    if _orig_do_dotted_revno is None:
+        trace.mutter('Unable to enable history-db, needs bzr 1.12 or later')
+        return
+    branch.Branch._do_dotted_revno_to_revision_id = \
+        _history_db_dotted_revno_to_revision_id
+    branch.Branch.iter_merge_sorted_revisions = \
+        _history_db_iter_merge_sorted_revisions
+    branch.Branch.hoosk.install_named_hook('post_change_branch_tip',
+        _history_db_post_change_branch_tip_hook, 'history_db')
+
+
+# _register_history_db_hooks()
 
 def load_tests(standard_tests, module, loader):
     standard_tests.addTests(loader.loadTestsFromModuleNames([
