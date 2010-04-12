@@ -181,8 +181,9 @@ class cmd_dotted_to_rev(commands.Command):
             else:
                 query = _mod_history_db.Querier(db, b)
                 if method == 'db-range':
-                    revision_ids = [(r, query.get_revision_id(r))
-                                     for r in revno_list]
+                    revno_map = query.get_revision_ids(revno_list)
+                    revision_ids = [(r, revno_map.get(r, None))
+                                    for r in revno_list]
                 else:
                     assert method == 'db-range-multi'
                     revno_map = query.get_dotted_revno_range_multi(rev_ids)
