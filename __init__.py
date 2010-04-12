@@ -399,6 +399,7 @@ def _history_db_post_change_branch_tip_hook(params):
                      ' not configured')
         return
     importer = _mod_history_db.Importer(history_db_path, params.branch,
+                                        tip_revision=params.new_revid,
                                         incremental=True)
     t1 = time.clock()
     importer.do_import()
