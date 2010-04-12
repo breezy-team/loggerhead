@@ -391,8 +391,8 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
 
 def _history_db_post_change_branch_tip_hook(params):
     """Run when the tip of a branch changes revision_id."""
-    import pprint
     t0 = time.clock()
+    import pprint
     history_db_path = _get_history_db_path(params.branch)
     if history_db_path is None:
         trace.mutter('Note updating history-db, "history_db_path"'
@@ -405,9 +405,10 @@ def _history_db_post_change_branch_tip_hook(params):
     t2 = time.clock()
     importer.build_mainline_cache()
     t3 = time.clock()
-    trace.note('History DB took %.3fs, %.3fs to init, %.3fs to import'
+    trace.note('history_db post-change-hook took %.3fs'
+               ' (%.3fs to init, %.3fs to import)'
                % (t3-t0, t1-t0, t2-t1))
-    trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
+    trace.mutter('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
 
 
 
