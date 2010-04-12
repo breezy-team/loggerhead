@@ -347,7 +347,8 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
         #       special arguments, etc that we don't handle well yet.
         trace.mutter('history_db falling back to original'
                      'iter_merge_sorted_revisions, "history_db_path" not set')
-        return _orig_iter_merge_sorted(start_revision_id=start_revision_id,
+        return _orig_iter_merge_sorted(self,
+            start_revision_id=start_revision_id,
             stop_revision_id=stop_revision_id, stop_rule=stop_rule,
             direction=direction)
     # TODO: Consider what to do if the branch has not been imported yet. My gut
@@ -355,21 +356,37 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     #       the user would want the data, and it is possible to update a cache
     #       with new values and return them *faster* than you could get them
     #       out from scratch.
-    return _orig_iter_merge_sorted(start_revision_id=start_revision_id,
-        stop_revision_id=stop_revision_id, stop_rule=stop_rule,
-        direction=direction)
+    return _orig_iter_merge_sorted(self,
+        start_revision_id=start_revision_id, stop_revision_id=stop_revision_id,
+        stop_rule=stop_rule, direction=direction)
 
 
 def _history_db_dotted_revno_to_revision_id(self, revno):
     """See Branch._do_dotted_revno_to_revision_id."""
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
+    t0 = time.clock()
     history_db_path = _get_history_db_path(self)
     if history_db_path is None:
         trace.mutter('history_db falling back to original'
                      'dotted_revno => revision_id, "history_db_path" not set')
         return _orig_do_dotted_revno(self, revno)
-    query = _mod_history_db.Querier(history_db_path, b)
-    return _orig_do_dotted_revno(self, revno)
+    try:
+        query = _mod_history_db.Querier(history_db_path, self)
+    except _mod_history_db.dbapi2.OperationalError,e:
+        trace.note('history_db failed: %s' % (e,))
+        import pdb; pdb.set_trace()
+        return _orig_do_dotted_revno(self, revno)
+    t1 = time.clock()
+    revno_map = query.get_revision_ids([revno])
+    t2 = time.clock()
+    trace.note('history_db dotted=>rev took %.3fs, %.3fs to init,'
+               ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+               
+    if revno not in revno_map:
+        trace.mutter('history_db failed to find a mapping for %s,'
+                     'falling back' % (revno,))
+        return _orig_do_dotted_revno(self, revno)
+    return revno_map[revno]
 
 
 def _history_db_post_change_branch_tip_hook(params):
@@ -400,11 +417,11 @@ def _register_history_db_hooks():
         _history_db_dotted_revno_to_revision_id
     branch.Branch.iter_merge_sorted_revisions = \
         _history_db_iter_merge_sorted_revisions
-    branch.Branch.hoosk.install_named_hook('post_change_branch_tip',
+    branch.Branch.hooks.install_named_hook('post_change_branch_tip',
         _history_db_post_change_branch_tip_hook, 'history_db')
 
 
-# _register_history_db_hooks()
+_register_history_db_hooks()
 
 def load_tests(standard_tests, module, loader):
     standard_tests.addTests(loader.loadTestsFromModuleNames([
