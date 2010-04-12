@@ -391,13 +391,15 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
 
 def _history_db_post_change_branch_tip_hook(params):
     """Run when the tip of a branch changes revision_id."""
+    import pprint
     t0 = time.clock()
-    history_db_path = _get_history_db_path(self)
+    history_db_path = _get_history_db_path(params.branch)
     if history_db_path is None:
         trace.mutter('Note updating history-db, "history_db_path"'
                      ' not configured')
         return
-    importer = _mod_history_db.Importer(db, params.branch, incremental=True)
+    importer = _mod_history_db.Importer(history_db_path, params.branch,
+                                        incremental=True)
     t1 = time.clock()
     importer.do_import()
     t2 = time.clock()
