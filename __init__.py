@@ -367,6 +367,7 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     This is a monkeypatch that overrides the default behavior, extracting data
     from the history db if it is enabled.
     """
+    t0 = time.clock()
     query = _get_querier(self)
     if query is None:
         # TODO: Consider other cases where we may want to fall back, like
@@ -390,11 +391,17 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     merge_sorted = query.iter_merge_sorted_revisions(
                     start_revision_id=start_revision_id,
                     stop_revision_id=real_stop_revision_id)
+    t1 = time.clock()
     if real_stop_revision_id != stop_revision_id:
         # Ask the existing branch code to do the special filtering
         merge_sorted = _filter_merge_sorted(self, merge_sorted,
                         stop_revision_id, stop_rule)
     merge_sorted = self._filter_non_ancestors(iter(merge_sorted))
+    t2 = time.clock()
+    trace.note('history_db iter_merge took %.3fs (%.3fs query, %.3fs filter)'
+               % (t2-t0, t1-t0, t2-t1))
+    import pprint
+    trace.mutter('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
     if direction == 'reverse':
         return merge_sorted
     elif direction == 'forward':
