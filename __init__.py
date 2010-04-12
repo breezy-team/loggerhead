@@ -393,17 +393,20 @@ def _history_db_post_change_branch_tip_hook(params):
     """Run when the tip of a branch changes revision_id."""
     t0 = time.clock()
     import pprint
+    # TODO: This requires a round-trip to the remote server to find out whether
+    #       or not something is configured (even if we have it set it
+    #       locations.conf), we should be able to do better...
     history_db_path = _get_history_db_path(params.branch)
+    t1 = time.clock()
     if history_db_path is None:
         trace.mutter('Note updating history-db, "history_db_path"'
                      ' not configured')
         return
     importer = _mod_history_db.Importer(history_db_path, params.branch,
-                                        tip_revision=params.new_revid,
+                                        tip_revision_id=params.new_revid,
                                         incremental=True)
-    t1 = time.clock()
-    importer.do_import()
     t2 = time.clock()
+    importer.do_import()
     importer.build_mainline_cache()
     t3 = time.clock()
     trace.note('history_db post-change-hook took %.3fs'

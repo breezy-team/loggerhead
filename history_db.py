@@ -81,7 +81,7 @@ def _get_result_for_many(cursor, query, params):
 class Importer(object):
     """Import data from bzr into the history_db."""
 
-    def __init__(self, db_path, a_branch, tip_revision=None,
+    def __init__(self, db_path, a_branch, tip_revision_id=None,
                  incremental=False, validate=False):
         db_conn = dbapi2.connect(db_path)
         self._incremental = incremental
@@ -90,10 +90,10 @@ class Importer(object):
         self._ensure_schema()
         self._cursor = self._db_conn.cursor()
         self._branch = a_branch
-        if tip_revision is None:
+        if tip_revision_id is None:
             self._branch_tip_rev_id = a_branch.last_revision()
         else:
-            self._branch_tip_rev_id = tip_revision
+            self._branch_tip_rev_id = tip_revision_id
         self._branch_tip_key = (self._branch_tip_rev_id,)
         self._graph = None
         if not self._incremental:
