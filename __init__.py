@@ -339,6 +339,27 @@ def _get_history_db_path(a_branch):
     return path
 
 
+_singleton = object()
+def _get_querier(a_branch):
+    """Get a Querier instance if history_db is enabled."""
+    query = getattr(a_branch, '_history_db_querier', _singleton)
+    if query is not _singleton:
+        # query may be None, all we know is that we've already set something
+        return query
+    history_db_path = _get_history_db_path(a_branch)
+    if history_db_path is None:
+        trace.mutter('"history_db_path" not set for %s' % (a_branch,))
+        query = None
+    else:
+        try:
+            query = _mod_history_db.Querier(history_db_path, a_branch)
+        except _mod_history_db.dbapi2.OperationalError,e:
+            trace.note('history_db failed: %s' % (e,))
+            query = None
+    a_branch._history_db_querier = query
+    return query
+
+
 def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     stop_revision_id=None, stop_rule='exclude', direction='reverse'):
     """See Branch.iter_merge_sorted_revisions()
@@ -346,17 +367,16 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     This is a monkeypatch that overrides the default behavior, extracting data
     from the history db if it is enabled.
     """
-    history_db_path = _get_history_db_path(self)
-    if history_db_path is None:
+    query = _get_querier(self)
+    if query is None:
         # TODO: Consider other cases where we may want to fall back, like
         #       special arguments, etc that we don't handle well yet.
         trace.mutter('history_db falling back to original'
-                     'iter_merge_sorted_revisions, "history_db_path" not set')
+                     'iter_merge_sorted_revisions')
         return _orig_iter_merge_sorted(self,
             start_revision_id=start_revision_id,
             stop_revision_id=stop_revision_id, stop_rule=stop_rule,
             direction=direction)
-    import pdb; pdb.set_trace()
     # TODO: Consider what to do if the branch has not been imported yet. My gut
     #       feeling is that we really want to do the import at this time. Since
     #       the user would want the data, and it is possible to update a cache
@@ -371,15 +391,10 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     """See Branch._do_revision_id_to_dotted_revno"""
     # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
     t0 = time.clock()
-    history_db_path = _get_history_db_path(self)
-    if history_db_path is None:
+    query = _get_querier(self)
+    if query is None:
         trace.mutter('history_db falling back to original'
-                     'revision_id => dotted_revno, "history_db_path" not set')
-        return _orig_do_rev_id_to_dotted(self, revno)
-    try:
-        query = _mod_history_db.Querier(history_db_path, self)
-    except _mod_history_db.dbapi2.OperationalError,e:
-        trace.note('history_db failed: %s' % (e,))
+                     'revision_id => dotted_revno')
         return _orig_do_rev_id_to_dotted(self, revno)
     t1 = time.clock()
     revision_id_map = query.get_dotted_revno_range_multi([revision_id])
@@ -399,15 +414,10 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
     # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
     t0 = time.clock()
-    history_db_path = _get_history_db_path(self)
-    if history_db_path is None:
+    query = _get_querier(self)
+    if query is None:
         trace.mutter('history_db falling back to original'
                      'dotted_revno => revision_id, "history_db_path" not set')
-        return _orig_do_dotted_revno(self, revno)
-    try:
-        query = _mod_history_db.Querier(history_db_path, self)
-    except _mod_history_db.dbapi2.OperationalError,e:
-        trace.note('history_db failed: %s' % (e,))
         return _orig_do_dotted_revno(self, revno)
     t1 = time.clock()
     revno_map = query.get_revision_ids([revno])
