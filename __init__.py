@@ -407,11 +407,12 @@ def _history_db_post_change_branch_tip_hook(params):
                                         incremental=True)
     t2 = time.clock()
     importer.do_import()
-    importer.build_mainline_cache()
     t3 = time.clock()
+    importer.build_mainline_cache()
+    t4 = time.clock()
     trace.note('history_db post-change-hook took %.3fs'
-               ' (%.3fs to init, %.3fs to import)'
-               % (t3-t0, t1-t0, t2-t1))
+               ' (%.3fs to get_config, %.3fs to init, %.3fs to import)'
+               % (t4-t0, t1-t0, t2-t1, t3-t2))
     trace.mutter('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
 
 
