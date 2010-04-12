@@ -32,6 +32,16 @@ from bzrlib.plugins.history_db import history_db as _mod_history_db
 """)
 
 
+def _ensure_db_for_command(db, b):
+    if db is not None:
+        return db
+    db = _get_history_db_path(b)
+    if db is None:
+        raise BzrCommandError('No --db supplied and no default'
+            ' db configured as "history_db_path"')
+    return db
+
+
 class cmd_create_history_db(commands.Command):
     """Create and populate the history database for this branch.
     """
@@ -54,6 +64,7 @@ class cmd_create_history_db(commands.Command):
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
+            db = _ensure_db_for_command(db, b)
             importer = _mod_history_db.Importer(db, b, incremental=incremental,
                                                 validate=validate)
             importer.do_import(expand_all=expand_all)
@@ -93,6 +104,7 @@ class cmd_get_dotted_revno(commands.Command):
             raise errors.BzrCommandError('You must supply --revision')
         b.lock_read()
         try:
+            db = _ensure_db_for_command(db, b)
             rev_ids = [rspec.as_revision_id(b) for rspec in revision]
             t = time.time()
             if method == 'bzr':
@@ -166,6 +178,7 @@ class cmd_dotted_to_rev(commands.Command):
         b = branch.Branch.open(directory)
         b.lock_read()
         try:
+            db = _ensure_db_for_command(db, b)
             # Map back into integer dotted revnos
             revno_list = [tuple(map(int, r.split('.'))) for r in revno_list]
             t = time.time()
@@ -232,6 +245,7 @@ class cmd_walk_mainline(commands.Command):
         b = branch.Branch.open(directory)
         b.lock_read()
         self.add_cleanup(b.unlock)
+        db = _ensure_db_for_command(db, b)
         t = time.time()
         if method.startswith('db'):
             query = _mod_history_db.Querier(db, b)
@@ -287,6 +301,7 @@ class cmd_walk_ancestry(commands.Command):
         b = branch.Branch.open(directory)
         b.lock_read()
         self.add_cleanup(b.unlock)
+        db = _ensure_db_for_command(db, b)
         t = time.time()
         if method.startswith('db'):
             query = _mod_history_db.Querier(db, b)
