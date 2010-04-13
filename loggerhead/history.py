@@ -289,6 +289,8 @@ class History(object):
         else:
             self._file_change_cache = None
         self._branch = branch
+        # XXX: _inventory_cache isn't even an LRU cache... seems like a clear
+        #      potential for memory bloat
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
@@ -296,10 +298,10 @@ class History(object):
         self.last_revid = branch.last_revision()
 
         # XXX: Remove the whole-history type operations
-        ## caches = [RevInfoMemoryCache(whole_history_data_cache)]
-        ## if revinfo_disk_cache:
-        ##     caches.append(revinfo_disk_cache)
-        ## self._load_whole_history_data(caches, cache_key)
+        caches = [RevInfoMemoryCache(whole_history_data_cache)]
+        if revinfo_disk_cache:
+            caches.append(revinfo_disk_cache)
+        self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):
@@ -309,6 +311,8 @@ class History(object):
         return self._branch.get_config()
 
     def get_revno(self, revid):
+        if revid is None:
+            return 'unknown'
         try:
             dotted_revno = self._branch.revision_id_to_dotted_revno(revid)
         except errors.NoSuchRevision:
@@ -317,9 +321,9 @@ class History(object):
 
     def _get_lh_parent(self, revid):
         """Get the left-hand parent of a given revision id."""
-        pmap = self._branch.repository.get_parent_map(tip_revid)
+        pmap = self._branch.repository.get_parent_map([revid])
         try:
-            parents = pmap[tip_revid]
+            parents = pmap[revid]
         except KeyError:
             return None
         if not parents or parents == _NULL_PARENTS:
@@ -334,15 +338,18 @@ class History(object):
         # TODO: This requires the parent=>child mapping, how do we do this
         #       cleanly??? If we have access to the raw history_db, we can walk
         #       the mainline and query if the rev was merged...
-        if revid_list is None:
-            # If revid_list is None, then this would cause us to just yield all
-            # mainline revisions. We should be able to determine this in a much
-            # cheaper fashion
-            xxx_bork_bork
-            revid_list = [r[0][1] for r in self._rev_info]
-        revid_set = set(revid_list)
-        revid = start_revid
         tip_revid = start_revid
+        if revid_list is None:
+            # I assume this just returns the mainline, as such, just walk the
+            # mainline and be done.
+            # TODO: I think we could just call
+            # self._branch.repository.iter_reverse_revision_history(start_revid)
+            # or something like that.
+            while tip_revid is not None:
+                yield tip_revid
+                tip_revid = self._get_lh_parent(tip_revid)
+            return
+        revid_set = set(revid_list)
 
         # Note: this assumes that start_revid is on the mainline of branch,
         #       which may not be accurate. we should investigate closer
@@ -359,7 +366,7 @@ class History(object):
                                    if i in revid_set])
             if introduced_revs:
                 revid_set.difference_update(introduced_revs)
-                yield revid
+                yield tip_revid
             tip_revid = parent_revid
 
     def get_short_revision_history_by_fileid(self, file_id, tip_revid):
@@ -481,7 +488,7 @@ iso style "yyyy-mm-dd")
             return self.last_revid
         try:
             if self.revno_re.match(revid):
-                dotted_revno = map(int, revid.split('.'))
+                dotted_revno = tuple(map(int, revid.split('.')))
                 revid = self._branch.dotted_revno_to_revision_id(dotted_revno)
         except KeyError:
             raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
@@ -544,10 +551,12 @@ iso style "yyyy-mm-dd")
             return revid, start_revid, revid_list
 
         # potentially limit the search
-        if file_id is not None:
-            revid_list = self.get_file_view(start_revid, file_id)
-        else:
-            revid_list = None
+        # This seems invalid because search.search_revisions replaces the list
+        # immediately....
+        ### if file_id is not None:
+        ###     revid_list = self.get_file_view(start_revid, file_id)
+        ### else:
+        ###     revid_list = None
         revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
