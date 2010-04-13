@@ -26,7 +26,7 @@
 
 """Loggerhead web viewer for Bazaar branches.
 
-This provides a new option "--http" to the "bzr serve" command, that 
+This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 

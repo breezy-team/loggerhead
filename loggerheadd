@@ -16,9 +16,9 @@
 
 LHUSER=loggerhead
 
-if [ `whoami` = "$LHUSER" ]; then                                                                                   
+if [ `whoami` = "$LHUSER" ]; then
     SUDO=""
-else                                                                                                                
+else
     SUDO="sudo -H -u $LHUSER"
 fi
 
