@@ -1388,7 +1388,7 @@ class Querier(object):
             tip_db_id = next_db_id
             for revision_id, revno_str in revision_res:
                 dotted = tuple(map(int, revno_str.split('.')))
-                revno_strs.discard(revno)
+                revno_strs.discard(dotted)
                 revno_map[dotted] = revision_id
         self._stats['query_time'] += (time.time() - t)
         return revno_map
