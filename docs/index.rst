@@ -1,7 +1,7 @@
 Loggerhead:  A web viewer for ``bzr`` branches
 ==============================================
 
-Loggerhead is a web viewer for projects in bazaar. It can be used to navigate 
+Loggerhead is a web viewer for projects in Bazaar. It can be used to navigate 
 a branch history, annotate files, view patches, perform searches, etc.
 Loggerhead is heavily based on `bazaar-webserve
 <https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
@@ -106,7 +106,7 @@ Using Loggerhead as a Bazaar Plugin
 
 This branch contains experimental support for using Loggerhead as a Bazaar
 plugin.  To use it, place the top-level Loggerhead directory (the one
-containing this file) at ``~/.bazaar/plugins/loggerhead``.  E.g.:
+containing COPYING.txt) at ``~/.bazaar/plugins/loggerhead``.  E.g.:
 
 .. code-block:: sh
 
@@ -134,7 +134,7 @@ Serving Loggerhead behind Apache
 
 If you want to view Bazaar branches from your existing Apache
 installation, you'll need to configure Apache to proxy certain
-requests to Loggerhead.  Adding lines like this to you Apache
+requests to Loggerhead.  Adding lines like this to your Apache
 configuration is one way to do this:
 
 .. code-block:: apache
@@ -146,7 +146,7 @@ configuration is one way to do this:
 
 If Paste Deploy is installed, the :command:`serve-branches` script can be
 run behind a proxy at the root of a site, but if you're running it at
-some path into the site, you'll need to specify is using
+some path into the site, you'll need to specify it using
 ``--prefix=/some_path``.
 
 
@@ -179,7 +179,7 @@ mailto:bazaar@lists.canonical.com.  You can join the list at
 subscribe to post, but your first post will be held briefly for manual
 moderation.
 
-Bugs are tracked on Launchpad; start at:
+Bugs, support questions and merge proposals are tracked on Launchpad, e.g:
 
     https://bugs.launchpad.net/loggerhead
 
