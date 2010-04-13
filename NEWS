@@ -4,6 +4,9 @@ What's changed in loggerhead?
 dev [future]
 ------------
 
+    - Documentation added in the docs directory. README simplified
+      accordingly. (Tres Seaver).
+
     - Show svn/git/hg revision ids in loggerhead revision view.
       (Jelmer Vernooij)
 
@@ -18,8 +21,9 @@ dev [future]
     - Ignore readonly+ prefix when checking if Loggerhead is serving a
       local location. (Reported by Tres Seaver.) (Matt Nordhoff)
 
+
 1.17 [20Aug2009]
----------------
+----------------
 
     - Add bug links in revision informations (Alexandre Garnier, #314052)
 
@@ -172,7 +176,7 @@ dev [future]
 
 
 1.10 [22Dec2008]
----------------
+----------------
 
     - Add startup deamon script for Linux (Marius Kruger)
 
