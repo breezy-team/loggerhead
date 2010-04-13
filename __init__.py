@@ -1,4 +1,4 @@
-# Copyright 2009 Canonical Ltd
+# Copyright 2009, 2010 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -65,7 +65,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
-            import loggerhead
+            import loggerhead.apps.transport
         except ImportError:
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
