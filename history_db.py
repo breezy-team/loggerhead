@@ -428,9 +428,12 @@ class Importer(object):
                 assert gdfo == self._graph._nodes[(rev_id,)].gdfo
 
     def _get_db_id(self, revision_id):
-        return self._cursor.execute('SELECT db_id FROM revision'
-                                    ' WHERE revision_id = ?',
-                                    (revision_id,)).fetchone()[0]
+        db_res = self._cursor.execute('SELECT db_id FROM revision'
+                                      ' WHERE revision_id = ?',
+                                      [revision_id]).fetchone()
+        if db_res is None:
+            return None
+        return db_res[0]
 
     def _update_dotted(self, new_tip_rev_id):
         """We have a new 'tip' revision, Update the dotted_revno table."""
@@ -1168,9 +1171,12 @@ class Querier(object):
         self._stats = defaultdict(lambda: 0)
 
     def _get_db_id(self, revision_id):
-        return self._cursor.execute('SELECT db_id FROM revision'
-                                    ' WHERE revision_id = ?',
-                                    (revision_id,)).fetchone()[0]
+        db_res = self._cursor.execute('SELECT db_id FROM revision'
+                                      ' WHERE revision_id = ?',
+                                      [revision_id]).fetchone()
+        if db_res is None:
+            return None
+        return db_res[0]
 
     def _get_lh_parent_rev_id(self, revision_id):
         parent_res = self._cursor.execute("""
@@ -1300,14 +1306,15 @@ class Querier(object):
     def get_dotted_revno_range_multi(self, revision_ids):
         """Determine the dotted revno, using the range info, etc."""
         t = time.time()
-        rev_id_to_db_id = {}
+        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        db_ids = set()
         db_id_to_rev_id = {}
-        need_ids = [self._branch_tip_rev_id]
-        need_ids.extend(revision_ids)
-        schema.ensure_revisions(self._cursor, need_ids,
-                                rev_id_to_db_id, db_id_to_rev_id, graph=None)
-        tip_db_id = rev_id_to_db_id[self._branch_tip_rev_id]
-        db_ids = set([rev_id_to_db_id[r] for r in revision_ids])
+        for rev_id in revision_ids:
+            db_id = self._get_db_id(rev_id)
+            if db_id is None:
+                import pdb; pdb.set_trace()
+            db_ids.add(db_id)
+            db_id_to_rev_id[db_id] = rev_id
         revnos = {}
         while tip_db_id is not None and db_ids:
             self._stats['num_steps'] += 1
