@@ -438,13 +438,13 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     if query is None:
         trace.mutter('history_db falling back to original'
                      'revision_id => dotted_revno')
-        return _orig_do_rev_id_to_dotted(self, revno)
+        return _orig_do_rev_id_to_dotted(self, revision_id)
     t1 = time.clock()
     revision_id_map = query.get_dotted_revno_range_multi([revision_id])
     t2 = time.clock()
     trace.note('history_db rev=>dotted took %.3fs, %.3fs to init,'
                ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
-               
+
     if revision_id not in revision_id_map:
         trace.mutter('history_db failed to find a mapping for {%s},'
                      'falling back' % (revision_id,))
