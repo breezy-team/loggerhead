@@ -432,7 +432,10 @@ def _filter_merge_sorted(self, merge_sorted, stop_revision_id, stop_rule):
 
 def _history_db_revision_id_to_dotted_revno(self, revision_id):
     """See Branch._do_revision_id_to_dotted_revno"""
-    # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
+    revno = self._partial_revision_id_to_revno_cache.get(revision_id, None)
+    if revno is not None:
+        trace.note('history_db rev_id=>dotted cached')
+        return revno
     t0 = time.clock()
     query = _get_querier(self)
     if query is None:
@@ -444,6 +447,7 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     t2 = time.clock()
     trace.note('history_db rev=>dotted took %.3fs, %.3fs to init,'
                ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+    self._partial_revision_id_to_revno_cache.update(revision_id_map)
 
     if revision_id not in revision_id_map:
         trace.mutter('history_db failed to find a mapping for {%s},'
@@ -454,7 +458,6 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
 
 def _history_db_dotted_revno_to_revision_id(self, revno):
     """See Branch._do_dotted_revno_to_revision_id."""
-    # TODO: Fill it self._partial_revision_id_to_revno_cache and use it
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
     t0 = time.clock()
     query = _get_querier(self)
@@ -467,6 +470,8 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
     t2 = time.clock()
     trace.note('history_db dotted=>rev took %.3fs, %.3fs to init,'
                ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+    self._partial_revision_id_to_revno_cache.update(
+        [(r_id, r_no) for r_no, r_id in revno_map.iteritems()])
                
     if revno not in revno_map:
         trace.mutter('history_db failed to find a mapping for %s,'
