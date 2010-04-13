@@ -4,6 +4,9 @@ What's changed in loggerhead?
 dev [future]
 ------------
 
+    - Documentation added in the docs directory. README simplified
+      accordingly. (Tres Seaver).
+
     - Show svn/git/hg revision ids in loggerhead revision view.
       (Jelmer Vernooij)
 
@@ -15,8 +18,9 @@ dev [future]
     - Repository.get_revision_inventory() was removed in bzr 2.2; use
       Repository.get_inventory() instead. (Matt Nordhoff, #528194)
 
+
 1.17 [20Aug2009]
----------------
+----------------
 
     - Add bug links in revision informations (Alexandre Garnier, #314052)
 
@@ -169,7 +173,7 @@ dev [future]
 
 
 1.10 [22Dec2008]
----------------
+----------------
 
     - Add startup deamon script for Linux (Marius Kruger)
 
