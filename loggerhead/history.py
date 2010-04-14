@@ -298,10 +298,10 @@ class History(object):
         self.last_revid = branch.last_revision()
 
         # XXX: Remove the whole-history type operations
-        caches = [RevInfoMemoryCache(whole_history_data_cache)]
-        if revinfo_disk_cache:
-            caches.append(revinfo_disk_cache)
-        self._load_whole_history_data(caches, cache_key)
+        ### caches = [RevInfoMemoryCache(whole_history_data_cache)]
+        ### if revinfo_disk_cache:
+        ###     caches.append(revinfo_disk_cache)
+        ### self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):
@@ -345,9 +345,16 @@ class History(object):
             # TODO: I think we could just call
             # self._branch.repository.iter_reverse_revision_history(start_revid)
             # or something like that.
-            while tip_revid is not None:
-                yield tip_revid
-                tip_revid = self._get_lh_parent(tip_revid)
+            # TODO: This operation appears at the top of profiling currently
+            #       when loading the 'changes' page. Especially unfortunate
+            #       given that we only show ~20 revs...
+            if start_revid == self.last_revid:
+                history = reversed(self._branch.revision_history())
+            else:
+                history = self._branch.repository.iter_reverse_revision_history(
+                                start_revid)
+            for rev_id in history:
+                yield rev_id
             return
         revid_set = set(revid_list)
 
@@ -668,15 +675,23 @@ iso style "yyyy-mm-dd")
 
         # some data needs to be recalculated each time, because it may
         # change as new revisions are added.
-        for change in changes:
+        def merge_revids_prop(change, attr):
+            # TODO: In testing, this doesn't seem to do what I expected anyway.
+            #       So for now, just skip the work
+            return []
             merge_revids = self.simplify_merge_point_list(
-                               self.get_merge_point_list(change.revid))
-            change.merge_points = [
-                util.Container(revid=r,
-                revno=self.get_revno(r)) for r in merge_revids]
+                self.get_merge_point_list(change.revid))
+            points = [util.Container(revid=r, revno=self.get_revno(r))
+                      for r in merge_revids]
+            self.log.warn('merge_revids_prop triggered for %s => %s'
+                          % (change.revid, points))
+            return points
+        for change in changes:
+            change._set_property('merge_points', merge_revids_prop)
             if len(change.parents) > 0:
-                change.parents = [util.Container(revid=r,
-                    revno=self.get_revno(r)) for r in change.parents]
+                change.parents = [
+                    util.Container(revid=r, revno=self.get_revno(r))
+                    for r in change.parents]
             change.revno = self.get_revno(change.revid)
 
         parity = 0

@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2008, 2009, 2010 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@
 import logging
 import urllib
 import sys
+import time
 
 import bzrlib.branch
 import bzrlib.errors
@@ -76,7 +77,7 @@ class BranchWSGIApp(object):
                                " continuing without using a cache")
             else:
                 file_cache = FileChangeCache(cache_path)
-                revinfo_disk_cache = RevInfoDiskCache(cache_path)
+                revinfo_disk_cache = None # RevInfoDiskCache(cache_path)
         return History(
             self.branch, self.graph_cache, file_cache=file_cache,
             revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
@@ -160,14 +161,22 @@ class BranchWSGIApp(object):
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
-        self.branch.lock_read()
-        try:
+        def do_stuff():
+            self.branch.lock_read()
             try:
-                c = cls(self, self.get_history)
-                return c(environ, start_response)
-            except:
-                environ['exc_info'] = sys.exc_info()
-                environ['branch'] = self
-                raise
-        finally:
-            self.branch.unlock()
+                try:
+                    c = cls(self, self.get_history)
+                    return c(environ, start_response)
+                except:
+                    environ['exc_info'] = sys.exc_info()
+                    environ['branch'] = self
+                    raise
+            finally:
+                self.branch.unlock()
+        from bzrlib.commands import apply_lsprofiled
+        t = time.time()
+        ## res = apply_lsprofiled(',,prof.txt', do_stuff)
+        res = do_stuff()
+        t = time.time() - t
+        self.log.warn('do_stuff() took %.3fs' % (t,))
+        return res
