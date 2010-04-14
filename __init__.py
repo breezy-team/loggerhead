@@ -434,7 +434,7 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     """See Branch._do_revision_id_to_dotted_revno"""
     revno = self._partial_revision_id_to_revno_cache.get(revision_id, None)
     if revno is not None:
-        trace.note('history_db rev_id=>dotted cached')
+        trace.note('history_db rev=>dotted cached')
         return revno
     t0 = time.clock()
     query = _get_querier(self)
