@@ -35,10 +35,6 @@ import re
 import textwrap
 import threading
 
-from bzrlib import (
-    errors,
-    revision,
-    )
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
@@ -200,8 +196,6 @@ class RevInfoMemoryCache(object):
 revision_graph_locks = {}
 revision_graph_check_lock = threading.Lock()
 
-_NULL_PARENTS = (revision.NULL_REVISION,)
-
 class History(object):
     """Decorate a branch to provide information for rendering.
 
@@ -289,19 +283,16 @@ class History(object):
         else:
             self._file_change_cache = None
         self._branch = branch
-        # XXX: _inventory_cache isn't even an LRU cache... seems like a clear
-        #      potential for memory bloat
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
-        # XXX: Remove the whole-history type operations
-        ### caches = [RevInfoMemoryCache(whole_history_data_cache)]
-        ### if revinfo_disk_cache:
-        ###     caches.append(revinfo_disk_cache)
-        ### self._load_whole_history_data(caches, cache_key)
+        caches = [RevInfoMemoryCache(whole_history_data_cache)]
+        if revinfo_disk_cache:
+            caches.append(revinfo_disk_cache)
+        self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):
@@ -311,108 +302,59 @@ class History(object):
         return self._branch.get_config()
 
     def get_revno(self, revid):
-        if revid is None:
+        if revid not in self._rev_indices:
+            # ghost parent?
             return 'unknown'
-        try:
-            dotted_revno = self._branch.revision_id_to_dotted_revno(revid)
-        except errors.NoSuchRevision:
-            return 'unknown'
-        return '.'.join(map(str, dotted_revno))
-
-    def _get_lh_parent(self, revid):
-        """Get the left-hand parent of a given revision id."""
-        pmap = self._branch.repository.get_parent_map([revid])
-        try:
-            parents = pmap[revid]
-        except KeyError:
-            return None
-        if not parents or parents == _NULL_PARENTS:
-            return None
-        return parents[0]
+        seq = self._rev_indices[revid]
+        revno = self._rev_info[seq][0][3]
+        return revno
 
     def get_revids_from(self, revid_list, start_revid):
         """
         Yield the mainline (wrt start_revid) revisions that merged each
         revid in revid_list.
         """
-        # TODO: This requires the parent=>child mapping, how do we do this
-        #       cleanly??? If we have access to the raw history_db, we can walk
-        #       the mainline and query if the rev was merged...
-        tip_revid = start_revid
         if revid_list is None:
-            # I assume this just returns the mainline, as such, just walk the
-            # mainline and be done.
-            # TODO: I think we could just call
-            # self._branch.repository.iter_reverse_revision_history(start_revid)
-            # or something like that.
-            # TODO: This operation appears at the top of profiling currently
-            #       when loading the 'changes' page. Especially unfortunate
-            #       given that we only show ~20 revs...
-            history = self._branch.repository.iter_reverse_revision_history(
-                            start_revid)
-            for ctr, rev_id in enumerate(history):
-                yield rev_id
-                if ctr > 100:
-                    break
-            return
+            revid_list = [r[0][1] for r in self._rev_info]
         revid_set = set(revid_list)
+        revid = start_revid
 
-        # Note: this assumes that start_revid is on the mainline of branch,
-        #       which may not be accurate. we should investigate closer
-        #       This feature may be used when showing a non-mainline rev
-        #       However, I think the old code used the _rev_info cache, which
-        #       was already sorted based on the current branch, so this should
-        #       give equivalent results.
-        while tip_revid is not None and revid_set:
-            parent_revid = self._get_lh_parent(tip_revid)
-            introduced = self.branch.iter_merge_sorted_revisions(
-                start_revision_id=tip_revid, stop_revision_id=parent_revid,
-                stop_rule='exclude')
-            introduced_revs = set([i[0] for i in introduced
-                                   if i in revid_set])
-            if introduced_revs:
-                revid_set.difference_update(introduced_revs)
-                yield tip_revid
-            tip_revid = parent_revid
+        def introduced_revisions(revid):
+            r = set([revid])
+            seq = self._rev_indices[revid]
+            md = self._rev_info[seq][0][2]
+            i = seq + 1
+            while i < len(self._rev_info) and self._rev_info[i][0][2] > md:
+                r.add(self._rev_info[i][0][1])
+                i += 1
+            return r
+        while True:
+            if bzrlib.revision.is_null(revid):
+                return
+            if introduced_revisions(revid) & revid_set:
+                yield revid
+            parents = self._rev_info[self._rev_indices[revid]][2]
+            if len(parents) == 0:
+                return
+            revid = parents[0]
 
-    def get_short_revision_history_by_fileid(self, file_id, tip_revid):
+    def get_short_revision_history_by_fileid(self, file_id):
         # FIXME: would be awesome if we could get, for a folder, the list of
-        #        revisions where items within that folder changed.
-        #        It is possible, but basically requires layering on
-        #        iter_changes() instead of just looking at the file-id graph
-        # Step 1: Walk backwards through the ancestry to find a revision that
-        #         actually contains the given file.
-        file_key = None
-        while file_key is None and tip_revid is not None:
-            rt = self._branch.repository.revision_tree(tip_revid)
-            if rt.has_id(file_id):
-                file_key = (file_id, rt.inventory[file_id].revision)
-            else:
-                tip_revid = self._get_lh_parent(tip_revid)
-        if file_key is None:
-            return []
-        # Now that we have a file_key, walk the per-file graph to find all
-        # interesting parents
-        get_kg = getattr(self._branch.repository.texts,
-                         'get_known_graph_ancestry', None)
-        if get_kg is not None:
-            trace.note('Using get_known_graph_ancestry shortcut for file_id')
-            kg = get_kg([file_key])
-            return [k[1] for k in kg._nodes]
-        # Walk the ancestry of this file_key, to find interesting revisions
-        search_keys = set([file_key])
-        all_keys = set(search_keys)
-        while search_keys:
-            pmap = self._branch.repository.texts.get_parent_map(search_keys)
-            new_parent_keys = set()
-            for parent_keys in pmap.itervalues():
-                new_parent_keys.update([p for p in parent_keys
-                                           if p not in all_keys])
-            all_keys.update(new_parent_keys)
-            search_keys = new_parent_keys
-        return [k[1] for k in all_keys]
+        # revisions where items within that folder changed.i
+        possible_keys = [(file_id, revid) for revid in self._rev_indices]
+        get_parent_map = self._branch.repository.texts.get_parent_map
+        # We chunk the requests as this works better with GraphIndex.
+        # See _filter_revisions_touching_file_id in bzrlib/log.py
+        # for more information.
+        revids = []
+        chunk_size = 1000
+        for start in xrange(0, len(possible_keys), chunk_size):
+            next_keys = possible_keys[start:start + chunk_size]
+            revids += [k[1] for k in get_parent_map(next_keys)]
+        del possible_keys, next_keys
+        return revids
 
-    def NOT_USED_get_revision_history_since(self, revid_list, date):
+    def get_revision_history_since(self, revid_list, date):
         # if a user asks for revisions starting at 01-sep, they mean inclusive,
         # so start at midnight on 02-sep.
         date = date + datetime.timedelta(days=1)
@@ -428,7 +370,7 @@ class History(object):
         index = -index
         return revid_list[index:]
 
-    def NOT_USED_get_search_revid_list(self, query, revid_list):
+    def get_search_revid_list(self, query, revid_list):
         """
         given a "quick-search" query, try a few obvious possible meanings:
 
@@ -494,8 +436,7 @@ iso style "yyyy-mm-dd")
             return self.last_revid
         try:
             if self.revno_re.match(revid):
-                dotted_revno = tuple(map(int, revid.split('.')))
-                revid = self._branch.dotted_revno_to_revision_id(dotted_revno)
+                revid = self._revno_revid[revid]
         except KeyError:
             raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
@@ -511,20 +452,15 @@ iso style "yyyy-mm-dd")
         if revid is None:
             revid = self.last_revid
         if file_id is not None:
-            revlist = list(
-                self.get_short_revision_history_by_fileid(file_id, revid))
-            revlist = self.get_revids_from(revlist, revid)
+            # since revid is 'start_revid', possibly should start the path
+            # tracing from revid... FIXME
+            revlist = list(self.get_short_revision_history_by_fileid(file_id))
+            revlist = list(self.get_revids_from(revlist, revid))
         else:
-            revlist = self.get_revids_from(None, revid)
+            revlist = list(self.get_revids_from(None, revid))
         return revlist
 
-    def _expand_iterable(self, iterable, count=None):
-        if count is None:
-            return list(iterable)
-        iterator = iter(iterable)
-        return [iterator.next() for i in xrange(count)]
-
-    def get_view(self, revid, start_revid, file_id, query=None, max_revs=None):
+    def get_view(self, revid, start_revid, file_id, query=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
         determine the revision list we're viewing (start_revid, file_id, query)
@@ -552,25 +488,21 @@ iso style "yyyy-mm-dd")
             start_revid = self.last_revid
 
         if query is None:
-            revid_list = self._expand_iterable(
-                self.get_file_view(start_revid, file_id), max_revs)
+            revid_list = self.get_file_view(start_revid, file_id)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list = self._expand_iterable(
-                    self.get_file_view(revid, file_id), max_revs)
+                revid_list = self.get_file_view(revid, file_id)
                 start_revid = revid
             return revid, start_revid, revid_list
 
         # potentially limit the search
-        # This seems invalid because search.search_revisions replaces the list
-        # immediately....
-        ### if file_id is not None:
-        ###     revid_list = self.get_file_view(start_revid, file_id)
-        ### else:
-        ###     revid_list = None
+        if file_id is not None:
+            revid_list = self.get_file_view(start_revid, file_id)
+        else:
+            revid_list = None
         revid_list = search.search_revisions(self._branch, query)
         if revid_list and len(revid_list) > 0:
             if revid not in revid_list:
@@ -682,23 +614,15 @@ iso style "yyyy-mm-dd")
 
         # some data needs to be recalculated each time, because it may
         # change as new revisions are added.
-        def merge_revids_prop(change, attr):
-            # TODO: In testing, this doesn't seem to do what I expected anyway.
-            #       So for now, just skip the work
-            return []
-            merge_revids = self.simplify_merge_point_list(
-                self.get_merge_point_list(change.revid))
-            points = [util.Container(revid=r, revno=self.get_revno(r))
-                      for r in merge_revids]
-            self.log.warn('merge_revids_prop triggered for %s => %s'
-                          % (change.revid, points))
-            return points
         for change in changes:
-            change._set_property('merge_points', merge_revids_prop)
+            merge_revids = self.simplify_merge_point_list(
+                               self.get_merge_point_list(change.revid))
+            change.merge_points = [
+                util.Container(revid=r,
+                revno=self.get_revno(r)) for r in merge_revids]
             if len(change.parents) > 0:
-                change.parents = [
-                    util.Container(revid=r, revno=self.get_revno(r))
-                    for r in change.parents]
+                change.parents = [util.Container(revid=r,
+                    revno=self.get_revno(r)) for r in change.parents]
             change.revno = self.get_revno(change.revid)
 
         parity = 0
