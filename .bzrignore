@@ -7,5 +7,4 @@ build
 *.log
 _trial_temp
 loggerhead-memprofile
-docs/_build/doctrees
-docs/_build/html
+./docs/_build/
