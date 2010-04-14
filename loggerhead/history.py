@@ -348,13 +348,12 @@ class History(object):
             # TODO: This operation appears at the top of profiling currently
             #       when loading the 'changes' page. Especially unfortunate
             #       given that we only show ~20 revs...
-            if start_revid == self.last_revid:
-                history = reversed(self._branch.revision_history())
-            else:
-                history = self._branch.repository.iter_reverse_revision_history(
-                                start_revid)
-            for rev_id in history:
+            history = self._branch.repository.iter_reverse_revision_history(
+                            start_revid)
+            for ctr, rev_id in enumerate(history):
                 yield rev_id
+                if ctr > 100:
+                    break
             return
         revid_set = set(revid_list)
 
@@ -514,12 +513,18 @@ iso style "yyyy-mm-dd")
         if file_id is not None:
             revlist = list(
                 self.get_short_revision_history_by_fileid(file_id, revid))
-            revlist = list(self.get_revids_from(revlist, revid))
+            revlist = self.get_revids_from(revlist, revid)
         else:
-            revlist = list(self.get_revids_from(None, revid))
+            revlist = self.get_revids_from(None, revid)
         return revlist
 
-    def get_view(self, revid, start_revid, file_id, query=None):
+    def _expand_iterable(self, iterable, count=None):
+        if count is None:
+            return list(iterable)
+        iterator = iter(iterable)
+        return [iterator.next() for i in xrange(count)]
+
+    def get_view(self, revid, start_revid, file_id, query=None, max_revs=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
         determine the revision list we're viewing (start_revid, file_id, query)
@@ -547,13 +552,15 @@ iso style "yyyy-mm-dd")
             start_revid = self.last_revid
 
         if query is None:
-            revid_list = self.get_file_view(start_revid, file_id)
+            revid_list = self._expand_iterable(
+                self.get_file_view(start_revid, file_id), max_revs)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list = self.get_file_view(revid, file_id)
+                revid_list = self._expand_iterable(
+                    self.get_file_view(revid, file_id), max_revs)
                 start_revid = revid
             return revid, start_revid, revid_list
 
