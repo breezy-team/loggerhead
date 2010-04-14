@@ -68,7 +68,7 @@ def date_day(value):
 
 def date_time(value):
     if value is not None:
-        return value.strftime('%Y-%m-%d %T')
+        return value.strftime('%Y-%m-%d %H:%M:%S')
     else:
         return 'N/A'
 
