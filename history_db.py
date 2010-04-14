@@ -1358,7 +1358,7 @@ class Querier(object):
         #       To indicate that the branch has not been imported yet
         revno_strs = set(['.'.join(map(str, revno)) for revno in revnos])
         revno_map = {}
-        while tip_db_id is not None:
+        while tip_db_id is not None and revno_strs:
             self._stats['num_steps'] += 1
             range_res = self._cursor.execute(
                 "SELECT pkey, tail"
@@ -1388,7 +1388,7 @@ class Querier(object):
             tip_db_id = next_db_id
             for revision_id, revno_str in revision_res:
                 dotted = tuple(map(int, revno_str.split('.')))
-                revno_strs.discard(dotted)
+                revno_strs.discard(revno_str)
                 revno_map[dotted] = revision_id
         self._stats['query_time'] += (time.time() - t)
         return revno_map
@@ -1623,7 +1623,7 @@ class Querier(object):
                     "  FROM dotted_revno, revision"
                     " WHERE tip_revision = ?"
                     "   AND db_id = merged_revision",
-                    [tip_db_id]).fetchall()
+                    (tip_db_id,)).fetchall()
                 next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
                 pkey, next_db_id = range_res
