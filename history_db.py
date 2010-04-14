@@ -1622,7 +1622,7 @@ class Querier(object):
                     "       end_of_merge"
                     "  FROM dotted_revno, revision"
                     " WHERE tip_revision = ?"
-                    "   AND db_id = merged_revision"
+                    "   AND db_id = merged_revision",
                     [tip_db_id]).fetchall()
                 next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
