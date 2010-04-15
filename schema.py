@@ -77,6 +77,7 @@ CREATE TABLE dotted_revno (
     revno TEXT NOT NULL,
     end_of_merge BOOL NOT NULL,
     merge_depth INTEGER NOT NULL,
+    dist INTEGER NOT NULL, -- Offset from tip, so we preserve the order
     CONSTRAINT dotted_revno_key UNIQUE (tip_revision, merged_revision)
 );
 """
@@ -225,30 +226,6 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
                                [(g,) for g in ghosts])
 
 
-def create_dotted_revno(cursor, tip_revision, merged_revision, revno,
-                        end_of_merge, merge_depth):
-    """Create a dotted revno entry for this info."""
-    # TODO: Consider changing this to a bulk SELECT a bunch which may be
-    #       missing, .executemany() the ones that aren't present
-    existing = cursor.execute('SELECT revno, end_of_merge, merge_depth'
-                              '  FROM dotted_revno'
-                              ' WHERE tip_revision = ?'
-                              '   AND merged_revision = ?',
-                              (tip_revision, merged_revision)).fetchone()
-    if existing is not None:
-        new_value = (revno, end_of_merge, merge_depth)
-        if existing != new_value:
-            raise ValueError('Disagreement in the graph. Wanted to add'
-                ' node %s, but %s already exists'
-                % (new_value, existing))
-        return
-    cursor.execute(
-        'INSERT INTO dotted_revno (tip_revision, merged_revision,'
-        '                          revno, end_of_merge, merge_depth)'
-        ' VALUES (?, ?, ?, ?, ?)',
-        (tip_revision, merged_revision, revno, end_of_merge, merge_depth))
-
-
 def create_dotted_revnos(cursor, revno_entries):
     """Create a dotted revno entry for this info."""
     # # TODO: Consider changing this to a bulk SELECT a bunch which may be
@@ -267,6 +244,6 @@ def create_dotted_revnos(cursor, revno_entries):
     #     return
     cursor.executemany(
         'INSERT INTO dotted_revno (tip_revision, merged_revision,'
-        '                          revno, end_of_merge, merge_depth)'
-        ' VALUES (?, ?, ?, ?, ?)',
+        '                          revno, end_of_merge, merge_depth, dist)'
+        ' VALUES (?, ?, ?, ?, ?, ?)',
         revno_entries)

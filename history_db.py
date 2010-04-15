@@ -149,7 +149,7 @@ class Importer(object):
         revno_entries = []
         to_cache_entry = []
         st = static_tuple.StaticTuple
-        for node in nodes:
+        for dist, node in enumerate(nodes):
             # TODO: Do we need to track the 'end_of_merge' and 'merge_depth'
             #       fields?
             db_id = rev_to_db[node.key[0]]
@@ -157,7 +157,8 @@ class Importer(object):
                                   db_id,
                                   '.'.join(map(str, node.revno)),
                                   node.end_of_merge,
-                                  node.merge_depth))
+                                  node.merge_depth,
+                                  dist))
             to_cache_entry.append(st(db_id, st(st.from_sequence(node.revno),
                                                node.end_of_merge,
                                                node.merge_depth)))
