@@ -434,7 +434,7 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     """See Branch._do_revision_id_to_dotted_revno"""
     revno = self._partial_revision_id_to_revno_cache.get(revision_id, None)
     if revno is not None:
-        trace.note('history_db rev=>dotted cached')
+        trace.note('history_db rev=>dotted cached %s' % (revno,))
         return revno
     t0 = time.clock()
     query = _get_querier(self)
@@ -445,8 +445,9 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     t1 = time.clock()
     revision_id_map = query.get_dotted_revno_range_multi([revision_id])
     t2 = time.clock()
-    trace.note('history_db rev=>dotted took %.3fs, %.3fs to init,'
-               ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+    trace.note('history_db rev=>dotted %s took %.3fs, %.3fs to init,'
+               ' %.3fs to query' % (revision_id_map.values(),
+                                    t2-t0, t1-t0, t2-t1))
     self._partial_revision_id_to_revno_cache.update(revision_id_map)
 
     if revision_id not in revision_id_map:
