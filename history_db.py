@@ -767,7 +767,7 @@ class _IncrementalMergeSort(object):
         else:
             res = self._cursor.execute(
                 "SELECT merged_revision, revno, end_of_merge, merge_depth"
-                "  FROM dotted_revno WHERE tip_revision = ?",
+                "  FROM dotted_revno WHERE tip_revision = ? ORDER BY dist",
                 [self._imported_mainline_id]).fetchall()
             stuple = static_tuple.StaticTuple.from_sequence
             st = static_tuple.StaticTuple
@@ -1295,7 +1295,8 @@ class Querier(object):
                     "SELECT revno FROM dotted_revno, mainline_parent"
                     " WHERE tip_revision = mainline_parent.revision"
                     "   AND mainline_parent.range = ?"
-                    "   AND merged_revision = ?",
+                    "   AND merged_revision = ?"
+                    " LIMIT 1 -- hint, should always be only 1",
                     (pkey, rev_db_id)).fetchone()
             tip_db_id = next_db_id
             if revno_res is not None:
@@ -1623,18 +1624,30 @@ class Querier(object):
                     "       end_of_merge"
                     "  FROM dotted_revno, revision"
                     " WHERE tip_revision = ?"
-                    "   AND db_id = merged_revision",
+                    "   AND db_id = merged_revision"
+                    " ORDER BY dist",
                     (tip_db_id,)).fetchall()
                 next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
                 pkey, next_db_id = range_res
+                # NOTE: Adding the ORDER BY costs us 981ms - 844ms = 137ms when
+                #       doing 'bzr log -n0 -r -10..-1' on bzr.dev.
+                #       That seems like a lot. Extracting them without sorting
+                #       on them costs about the same amount. So the guess is
+                #       that adding the extra columns requires more I/O.
+                # At the moment, SELECT order == INSERT order, so we don't
+                # strictly need it. I don't know that we can trust that,
+                # though.
                 merged_res = self._cursor.execute(
                     "SELECT db_id, revision_id, merge_depth, revno,"
                     "       end_of_merge"
+                    # "       , mainline_parent.dist as mp_dist"
+                    # "       , dotted_revno.dist as dr_dist"
                     "  FROM dotted_revno, revision, mainline_parent"
                     " WHERE tip_revision = mainline_parent.revision"
                     "   AND mainline_parent.range = ?"
                     "   AND db_id = merged_revision",
+                    # " ORDER BY mainline_parent.dist, dotted_revno.dist",
                     [pkey]).fetchall()
             if found_start:
                 for db_id, r_id, depth, revno_str, eom in merged_res:
