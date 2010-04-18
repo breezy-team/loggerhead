@@ -1,2 +1,2 @@
-include loggerhead.conf.example README.txt NEWS
+include loggerhead.conf.example README.txt NEWS apache-loggerhead.conf bazaar.conf
 recursive-include loggerhead/static *
