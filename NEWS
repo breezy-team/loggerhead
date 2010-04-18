@@ -21,6 +21,8 @@ dev [future]
     - Ignore readonly+ prefix when checking if Loggerhead is serving a
       local location. (Reported by Tres Seaver.) (Matt Nordhoff)
 
+    - Add a script and documentation for running under mod_wsgi.
+      (Toshio Kuratomi)
 
 1.17 [20Aug2009]
 ----------------
