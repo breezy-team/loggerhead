@@ -500,7 +500,6 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
 
 def _history_db_post_change_branch_tip_hook(params):
     """Run when the tip of a branch changes revision_id."""
-    import pdb; pdb.set_trace()
     t0 = time.clock()
     import pprint
     # TODO: This requires a round-trip to the remote server to find out whether
