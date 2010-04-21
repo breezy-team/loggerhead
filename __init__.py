@@ -343,6 +343,8 @@ _orig_do_rev_id_to_dotted = getattr(branch.Branch,
     '_do_revision_id_to_dotted_revno', None)
 _orig_iter_merge_sorted = getattr(branch.Branch,
     'iter_merge_sorted_revisions', None)
+_orig_clear_cached_state = getattr(branch.Branch,
+    '_clear_cached_state', None)
 
 
 def _get_history_db_path(a_branch):
@@ -378,6 +380,15 @@ def _get_querier(a_branch):
             query = None
     a_branch._history_db_querier = query
     return query
+
+
+def _history_db_clear_cached_state(a_branch):
+    query = getattr(a_branch, '_history_db_querier', _singleton)
+    if query is not _singleton:
+        if query is not None:
+            query._db_conn.close()
+        del a_branch._history_db_querier
+    return _orig_clear_cached_state(a_branch)
 
 
 def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
@@ -524,6 +535,8 @@ def _register_history_db_hooks():
         _history_db_revision_id_to_dotted_revno
     branch.Branch.iter_merge_sorted_revisions = \
         _history_db_iter_merge_sorted_revisions
+    branch.Branch._clear_cached_state = \
+        _history_db_clear_cached_state
     branch.Branch.hooks.install_named_hook('post_change_branch_tip',
         _history_db_post_change_branch_tip_hook, 'history_db')
 

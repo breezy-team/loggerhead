@@ -64,7 +64,6 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         # TODO: It should populate the cache before running, so check that the
         #       cache is filled
         self.assertIsNot(None, b._history_db_querier)
-        b._history_db_querier._db_conn.close()
 
     def test_iter_merge_sorted_cached(self):
         history_db_path = osutils.getcwd() + '/history.db'
@@ -77,4 +76,3 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         self.assertEqual(merge_sorted,
                 list(history_db._history_db_iter_merge_sorted_revisions(b)))
         self.assertIsNot(None, b._history_db_querier)
-        b._history_db_querier._db_conn.close()
