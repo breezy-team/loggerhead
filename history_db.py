@@ -1188,6 +1188,25 @@ class Querier(object):
         self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
         self._stats = defaultdict(lambda: 0)
 
+    def ensure_branch_tip(self):
+        """Ensure that the branch tip has been imported.
+
+        This will run Importer if it has not.
+        """
+        if self._branch_tip_db_id is not None:
+            # It has been imported
+            return
+        if self._cursor is not None:
+            self._db_conn.close()
+            self._cursor = None
+        importer = Importer(self._db_path, self._branch,
+                            tip_revision_id=self._branch_tip_rev_id,
+                            incremental=True)
+        importer.do_import()
+        self._db_conn = importer._db_conn
+        self._cursor = importer._cursor
+        self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+
     def _get_cursor(self):
         if self._cursor is not None:
             return self._cursor

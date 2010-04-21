@@ -70,11 +70,10 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         # Without filling out the cache, it should still give correct results
         self.assertEqual(merge_sorted,
                 list(history_db._history_db_iter_merge_sorted_revisions(b)))
-        # TODO: It should populate the cache before running, so check that the
-        #       cache is filled
         self.assertIsNot(None, b._history_db_querier)
-        # self.assertEqual({'B': (2,)},
-        #             b._history_db_querier.get_dotted_revno_range_multi(['B']))
+        self.assertIsNot(None, b._history_db_querier._branch_tip_db_id)
+        self.assertEqual({'B': (2,)},
+                    b._history_db_querier.get_dotted_revno_range_multi(['B']))
 
     def test_iter_merge_sorted_cached(self):
         history_db_path = self.get_history_db_path()
@@ -87,3 +86,10 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         self.assertEqual(merge_sorted,
                 list(history_db._history_db_iter_merge_sorted_revisions(b)))
         self.assertIsNot(None, b._history_db_querier)
+
+    def test_rev_to_dotted_not_imported(self):
+        history_db_path = self.get_history_db_path()
+        b, merge_sorted = self.make_simple_history_branch()
+        b.get_config().set_user_option('history_db_path', history_db_path)
+        self.assertEqual((2,),
+                history_db._history_db_revision_id_to_dotted_revno(b, 'B'))

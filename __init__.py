@@ -400,6 +400,8 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     """
     t0 = time.clock()
     query = _get_querier(self)
+    if query is not None:
+        query.ensure_branch_tip()
     if query is None or query._branch_tip_db_id is None:
         # TODO: Consider other cases where we may want to fall back, like
         #       special arguments, etc that we don't handle well yet.
@@ -454,7 +456,9 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
         return revno
     t0 = time.clock()
     query = _get_querier(self)
-    if query is None:
+    if query is not None:
+        query.ensure_branch_tip()
+    if query is None or query._branch_tip_db_id is None:
         trace.mutter('history_db falling back to original'
                      'revision_id => dotted_revno')
         return _orig_do_rev_id_to_dotted(self, revision_id)
