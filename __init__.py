@@ -533,6 +533,7 @@ _register_history_db_hooks()
 def load_tests(standard_tests, module, loader):
     standard_tests.addTests(loader.loadTestsFromModuleNames([
         (__name__ + '.' + x) for x in [
+            'test_hooks',
             'test_importer',
         ]]))
     return standard_tests
