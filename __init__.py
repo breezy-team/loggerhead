@@ -386,7 +386,7 @@ def _history_db_clear_cached_state(a_branch):
     query = getattr(a_branch, '_history_db_querier', _singleton)
     if query is not _singleton:
         if query is not None:
-            query._db_conn.close()
+            query.close()
         del a_branch._history_db_querier
     return _orig_clear_cached_state(a_branch)
 
@@ -400,9 +400,7 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     """
     t0 = time.clock()
     query = _get_querier(self)
-    if query is not None:
-        query.ensure_branch_tip()
-    if query is None or query._branch_tip_db_id is None:
+    if query is None:
         # TODO: Consider other cases where we may want to fall back, like
         #       special arguments, etc that we don't handle well yet.
         trace.mutter('history_db falling back to original'
@@ -456,9 +454,7 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
         return revno
     t0 = time.clock()
     query = _get_querier(self)
-    if query is not None:
-        query.ensure_branch_tip()
-    if query is None or query._branch_tip_db_id is None:
+    if query is None:
         trace.mutter('history_db falling back to original'
                      'revision_id => dotted_revno')
         return _orig_do_rev_id_to_dotted(self, revision_id)
@@ -473,13 +469,14 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     if revision_id not in revision_id_map:
         trace.mutter('history_db failed to find a mapping for {%s},'
                      'falling back' % (revision_id,))
-        return _orig_do_rev_id_to_dotted(self, revno)
+        return _orig_do_rev_id_to_dotted(self, revision_id)
     return revision_id_map[revision_id]
 
 
 def _history_db_dotted_revno_to_revision_id(self, revno):
     """See Branch._do_dotted_revno_to_revision_id."""
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
+    import pdb; pdb.set_trace()
     t0 = time.clock()
     query = _get_querier(self)
     if query is None:
@@ -503,6 +500,7 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
 
 def _history_db_post_change_branch_tip_hook(params):
     """Run when the tip of a branch changes revision_id."""
+    import pdb; pdb.set_trace()
     t0 = time.clock()
     import pprint
     # TODO: This requires a round-trip to the remote server to find out whether

@@ -367,44 +367,49 @@ class Importer(object):
         children = {}
         parent_map = {}
         known = {}
-        while needed:
-            rev_id = needed.pop()
-            if rev_id in known:
-                # We may add particular parents multiple times, just ignore
-                # them once they've been found
-                continue
-            res = self._cursor.execute("SELECT gdfo"
-                                       "  FROM revision WHERE revision_id = ?",
-                                       (rev_id,)).fetchone()
-            if res is not None:
-                known[rev_id] = res[0]
-                continue
-            # We don't have this entry recorded yet, add the parents to the
-            # search
-            pmap = self._branch.repository.get_parent_map([rev_id])
-            parent_map.update(pmap)
-            parent_ids = pmap.get(rev_id, None)
-            if parent_ids is None or parent_ids == NULL_PARENTS:
-                # We can insert this rev directly, because we know its gdfo,
-                # as it has no parents.
-                parent_map[rev_id] = ()
-                self._cursor.execute("INSERT INTO revision (revision_id, gdfo)"
-                                     " VALUES (?, ?)", (rev_id, 1))
-                # Wrap around to populate known quickly
-                needed.append(rev_id)
-                if parent_ids is None:
-                    # This is a ghost, add it to the table
-                    self._cursor.execute("INSERT INTO ghost (db_id)"
-                                         " SELECT db_id FROM revision"
-                                         "  WHERE revision_id = ?",
-                                         (rev_id,))
-                continue
-            for parent_id in pmap[rev_id]:
-                if parent_id not in known:
-                    if parent_id not in all_needed:
-                        needed.append(parent_id)
-                        all_needed.add(parent_id)
-                children.setdefault(parent_id, []).append(rev_id)
+        pb = ui.ui_factory.nested_progress_bar()
+        try:
+            while needed:
+                pb.update('Finding ancestry', len(all_needed), len(all_needed))
+                rev_id = needed.pop()
+                if rev_id in known:
+                    # We may add particular parents multiple times, just ignore
+                    # them once they've been found
+                    continue
+                res = self._cursor.execute(
+                    "SELECT gdfo FROM revision WHERE revision_id = ?",
+                    [rev_id]).fetchone()
+                if res is not None:
+                    known[rev_id] = res[0]
+                    continue
+                # We don't have this entry recorded yet, add the parents to the
+                # search
+                pmap = self._branch.repository.get_parent_map([rev_id])
+                parent_map.update(pmap)
+                parent_ids = pmap.get(rev_id, None)
+                if parent_ids is None or parent_ids == NULL_PARENTS:
+                    # We can insert this rev directly, because we know its
+                    # gdfo, as it has no parents.
+                    parent_map[rev_id] = ()
+                    self._cursor.execute("INSERT INTO revision (revision_id, gdfo)"
+                                         " VALUES (?, ?)", (rev_id, 1))
+                    # Wrap around to populate known quickly
+                    needed.append(rev_id)
+                    if parent_ids is None:
+                        # This is a ghost, add it to the table
+                        self._cursor.execute("INSERT INTO ghost (db_id)"
+                                             " SELECT db_id FROM revision"
+                                             "  WHERE revision_id = ?",
+                                             (rev_id,))
+                    continue
+                for parent_id in pmap[rev_id]:
+                    if parent_id not in known:
+                        if parent_id not in all_needed:
+                            needed.append(parent_id)
+                            all_needed.add(parent_id)
+                    children.setdefault(parent_id, []).append(rev_id)
+        finally:
+            pb.finished()
         return known, parent_map, children
 
     def _compute_gdfo_and_insert(self, known, children, parent_map):
@@ -1186,26 +1191,8 @@ class Querier(object):
         self._branch = a_branch
         self._branch_tip_rev_id = a_branch.last_revision()
         self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        self._tip_is_imported = False
         self._stats = defaultdict(lambda: 0)
-
-    def ensure_branch_tip(self):
-        """Ensure that the branch tip has been imported.
-
-        This will run Importer if it has not.
-        """
-        if self._branch_tip_db_id is not None:
-            # It has been imported
-            return
-        if self._cursor is not None:
-            self._db_conn.close()
-            self._cursor = None
-        importer = Importer(self._db_path, self._branch,
-                            tip_revision_id=self._branch_tip_rev_id,
-                            incremental=True)
-        importer.do_import()
-        self._db_conn = importer._db_conn
-        self._cursor = importer._cursor
-        self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
 
     def _get_cursor(self):
         if self._cursor is not None:
@@ -1214,6 +1201,53 @@ class Querier(object):
         self._db_conn = db_conn
         self._cursor = self._db_conn.cursor()
         return self._cursor
+
+    def ensure_branch_tip(self):
+        """Ensure that the branch tip has been imported.
+
+        This will run Importer if it has not.
+        """
+        if self._branch_tip_db_id is not None and self._tip_is_imported:
+            return
+        if self._branch_tip_db_id is None:
+            # This revision has not been seen by the DB, so we know it isn't
+            # imported
+            self._import_tip()
+            return
+        if self._is_imported_db_id(self._branch_tip_db_id):
+            # This revision was seen, and imported
+            self._tip_is_imported = True
+            return
+        self._import_tip()
+
+    def _import_tip(self):
+        if self._cursor is not None:
+            self.close()
+        t = time.time()
+        importer = Importer(self._db_path, self._branch,
+                            tip_revision_id=self._branch_tip_rev_id,
+                            incremental=True)
+        importer.do_import()
+        tdelta = time.time() - t
+        trace.note('imported %d nodes on-the-fly in %.3fs'
+                   % (importer._stats.get('total_nodes_inserted', 0), tdelta))
+        self._db_conn = importer._db_conn
+        self._cursor = importer._cursor
+        self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        self._tip_is_imported = True
+
+    def _is_imported_db_id(self, tip_db_id):
+        res = self._get_cursor().execute(
+            "SELECT count(*) FROM dotted_revno"
+            " WHERE tip_revision = ?"
+            "   AND tip_revision = merged_revision",
+            (tip_db_id,)).fetchone()
+        return res[0] > 0
+
+    def close(self):
+        self._db_conn.close()
+        self._db_conn = None
+        self._cursor = None
 
     def _get_db_id(self, revision_id):
         try:
@@ -1356,8 +1390,9 @@ class Querier(object):
 
     def get_dotted_revno_range_multi(self, revision_ids):
         """Determine the dotted revno, using the range info, etc."""
-        cursor = self._get_cursor()
+        self.ensure_branch_tip()
         t = time.time()
+        cursor = self._get_cursor()
         tip_db_id = self._branch_tip_db_id
         if tip_db_id is None:
             raise TipNotImported(self._branch, self._branch_tip_rev_id)
@@ -1406,8 +1441,9 @@ class Querier(object):
 
     def get_revision_ids(self, revnos):
         """Map from a dotted-revno back into a revision_id."""
+        self.ensure_branch_tip()
         t = time.time()
-        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        tip_db_id = self._branch_tip_db_id
         # TODO: If tip_db_id is None, maybe we want to raise an exception here?
         #       To indicate that the branch has not been imported yet
         revno_strs = set(['.'.join(map(str, revno)) for revno in revnos])
@@ -1426,7 +1462,7 @@ class Querier(object):
                     "SELECT revision_id, revno"
                     "  FROM dotted_revno, revision"
                     " WHERE merged_revision = revision.db_id"
-                    "   tip_revision = ?"
+                    "   AND tip_revision = ?"
                     "   AND revno IN (%s)", len(revno_strs)),
                     [tip_db_id] + list(revno_strs)).fetchall()
                 next_db_id = self._get_lh_parent_db_id(tip_db_id)
@@ -1730,10 +1766,11 @@ class Querier(object):
         stop is *always* exclusive. You can simulate the rest by careful
         selection of stop.
         """
+        self.ensure_branch_tip()
         t = time.time()
-        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        tip_db_id = self._branch_tip_db_id
         if tip_db_id is None:
-            raise ValueError('tip not imported')
+            raise TipNotImported(self._branch, self._branch_tip_rev_id)
         if start_revision_id is not None:
             start_db_id = self._get_db_id(start_revision_id)
         else:

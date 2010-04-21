@@ -93,3 +93,10 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         b.get_config().set_user_option('history_db_path', history_db_path)
         self.assertEqual((2,),
                 history_db._history_db_revision_id_to_dotted_revno(b, 'B'))
+
+    def test_dotted_to_rev_not_imported(self):
+        history_db_path = self.get_history_db_path()
+        b, merge_sorted = self.make_simple_history_branch()
+        b.get_config().set_user_option('history_db_path', history_db_path)
+        self.assertEqual('B',
+                history_db._history_db_dotted_revno_to_revision_id(b, (2,)))
