@@ -42,7 +42,7 @@ def _ensure_db_for_command(db, b):
     return db
 
 
-class cmd_create_history_db(commands.Command):
+class cmd_history_db_create(commands.Command):
     """Create and populate the history database for this branch.
     """
 
@@ -56,6 +56,7 @@ class cmd_create_history_db(commands.Command):
                      option.Option('validate',
                         help='Do extra checks to ensure correctness.'),
                     ]
+    hidden = True
 
     def run(self, directory='.', db=None, expand_all=False, incremental=False,
             validate=False):
@@ -81,7 +82,7 @@ _dotted_revno_walk_types.register('db-range', None)
 _dotted_revno_walk_types.register('db-range-multi', None)
 _dotted_revno_walk_types.register('bzr', None)
 
-class cmd_get_dotted_revno(commands.Command):
+class cmd_history_db_get_dotted_revno(commands.Command):
     """Query the db for a dotted revno.
     """
 
@@ -94,6 +95,7 @@ class cmd_get_dotted_revno(commands.Command):
                         help='How do you want to do the walking.',
                         converter=str, registry=_dotted_revno_walk_types)
                     ]
+    hidden = True
 
     def run(self, directory='.', db=None, revision=None,
             method=None):
@@ -156,7 +158,7 @@ _dotted_to_rev_walk_types = registry.Registry()
 _dotted_to_rev_walk_types.register('db-range', None)
 _dotted_to_rev_walk_types.register('bzr', None)
 
-class cmd_dotted_to_rev(commands.Command):
+class cmd_history_db_dotted_to_rev(commands.Command):
     """Query the db for a dotted revno => revision_id
     """
 
@@ -170,6 +172,7 @@ class cmd_dotted_to_rev(commands.Command):
                         help='How do you want to do the walking.',
                         converter=str, registry=_dotted_to_rev_walk_types)
                     ]
+    hidden = True
 
     def run(self, directory='.', db=None, revno_list=None,
             method=None):
@@ -226,7 +229,7 @@ _mainline_walk_types.register('db-db-id', None)
 _mainline_walk_types.register('db-range', None)
 _mainline_walk_types.register('bzr', None)
 
-class cmd_walk_mainline(commands.Command):
+class cmd_history_db_walk_mainline(commands.Command):
     """Walk the mainline of the branch."""
 
     takes_options = [option.Option('db', type=unicode,
@@ -237,6 +240,7 @@ class cmd_walk_mainline(commands.Command):
                         help='How do you want to do the walking.',
                         converter=str, registry=_mainline_walk_types)
                     ]
+    hidden = True
 
     def run(self, directory='.', db=None, method=None):
         from bzrlib import branch
@@ -283,7 +287,7 @@ _ancestry_walk_types.register('db-dotted', None)
 _ancestry_walk_types.register('bzr-iter-anc', None)
 _ancestry_walk_types.register('bzr-kg', None)
 
-class cmd_walk_ancestry(commands.Command):
+class cmd_history_db_walk_ancestry(commands.Command):
     """Walk the whole ancestry of a branch tip."""
 
     takes_options = [option.Option('db', type=unicode,
@@ -294,6 +298,7 @@ class cmd_walk_ancestry(commands.Command):
                         help='How do you want to do the walking.',
                         converter=str, registry=_ancestry_walk_types)
                     ]
+    hidden = True
 
     def run(self, directory='.', db=None, method=None):
         from bzrlib import branch
@@ -325,11 +330,11 @@ class cmd_walk_ancestry(commands.Command):
         self.outf.write('Found %d ancestors\n' % (len(ancestors),))
         trace.note('Time: %.3fs' % (time.time() - t,))
 
-commands.register_command(cmd_create_history_db)
-commands.register_command(cmd_get_dotted_revno)
-commands.register_command(cmd_dotted_to_rev)
-commands.register_command(cmd_walk_mainline)
-commands.register_command(cmd_walk_ancestry)
+commands.register_command(cmd_history_db_create)
+commands.register_command(cmd_history_db_get_dotted_revno)
+commands.register_command(cmd_history_db_dotted_to_rev)
+commands.register_command(cmd_history_db_walk_mainline)
+commands.register_command(cmd_history_db_walk_ancestry)
 
 
 _orig_do_dotted_revno = getattr(branch.Branch,
