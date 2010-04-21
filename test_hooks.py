@@ -16,6 +16,8 @@
 
 """Test the hook interfaces"""
 
+import os
+
 from bzrlib import (
     errors,
     osutils,
@@ -39,11 +41,18 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         merge_sorted = [('B', 0, (2,), False), ('A', 0, (1,), True)]
         return b, merge_sorted
 
+    def get_history_db_path(self):
+        p = osutils.getcwd() + '/history.db'
+        def remove():
+            if os.path.isfile(p):
+                os.remove(p)
+        self.addCleanup(remove)
+        return p
+
     def test__get_history_db_path(self):
         b = self.make_branch('test')
         self.assertIs(None, history_db._get_history_db_path(b))
-        cwd = osutils.getcwd()
-        history_db_path = cwd + '/history.db'
+        history_db_path = self.get_history_db_path()
         b.get_config().set_user_option('history_db_path', history_db_path)
         self.assertEqual(history_db_path, history_db._get_history_db_path(b))
 
@@ -54,8 +63,8 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         self.assertEqual(merge_sorted,
                 list(history_db._history_db_iter_merge_sorted_revisions(b)))
 
-    def test_iter_merge_sorted_not_cached(self):
-        history_db_path = osutils.getcwd() + '/history.db'
+    def test_iter_merge_sorted_no_init(self):
+        history_db_path = self.get_history_db_path()
         b, merge_sorted = self.make_simple_history_branch()
         b.get_config().set_user_option('history_db_path', history_db_path)
         # Without filling out the cache, it should still give correct results
@@ -64,9 +73,11 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         # TODO: It should populate the cache before running, so check that the
         #       cache is filled
         self.assertIsNot(None, b._history_db_querier)
+        # self.assertEqual({'B': (2,)},
+        #             b._history_db_querier.get_dotted_revno_range_multi(['B']))
 
     def test_iter_merge_sorted_cached(self):
-        history_db_path = osutils.getcwd() + '/history.db'
+        history_db_path = self.get_history_db_path()
         b, merge_sorted = self.make_simple_history_branch()
         b.get_config().set_user_option('history_db_path', history_db_path)
         importer = history_db._mod_history_db.Importer(history_db_path, b)

@@ -25,6 +25,7 @@ from collections import defaultdict, deque
 import time
 
 from bzrlib import (
+    errors,
     lru_cache,
     revision,
     static_tuple,
@@ -33,6 +34,21 @@ from bzrlib import (
     )
 
 from bzrlib.plugins.history_db import schema
+
+
+class TipNotImported(errors.BzrError):
+    """Raised when a Branch tip has not been imported.
+
+    So we can't actually give a valid response.
+    """
+
+    _fmt = ('Branch %(branch)s\'s tip revision %(revision)s has'
+            ' not been imported')
+
+    def __init__(self, branch, revision):
+        errors.BzrError.__init__(self)
+        self.branch = branch
+        self.revision = revision
 
 
 NULL_PARENTS = (revision.NULL_REVISION,)
@@ -1169,6 +1185,7 @@ class Querier(object):
         self._cursor = None
         self._branch = a_branch
         self._branch_tip_rev_id = a_branch.last_revision()
+        self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
         self._stats = defaultdict(lambda: 0)
 
     def _get_cursor(self):
@@ -1180,10 +1197,13 @@ class Querier(object):
         return self._cursor
 
     def _get_db_id(self, revision_id):
-        db_res = self._get_cursor().execute(
-            'SELECT db_id FROM revision'
-            ' WHERE revision_id = ?',
-            [revision_id]).fetchone()
+        try:
+            db_res = self._get_cursor().execute(
+                'SELECT db_id FROM revision'
+                ' WHERE revision_id = ?',
+                [revision_id]).fetchone()
+        except dbapi2.OperationalError:
+            return None
         if db_res is None:
             return None
         return db_res[0]
@@ -1281,8 +1301,9 @@ class Querier(object):
     def get_dotted_revno_range(self, revision_id):
         """Determine the dotted revno, using the range info, etc."""
         t = time.time()
-        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
-        rev_db_id = self._get_db_id(revision_id)
+        tip_db_id = self._branch_tip_db_id
+        if tip_db_id is not None:
+            raise TipNotImported(self._branch, self._branch_tip_rev_id)
         revno = None
         while tip_db_id is not None:
             self._stats['num_steps'] += 1
@@ -1318,7 +1339,9 @@ class Querier(object):
         """Determine the dotted revno, using the range info, etc."""
         cursor = self._get_cursor()
         t = time.time()
-        tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        tip_db_id = self._branch_tip_db_id
+        if tip_db_id is None:
+            raise TipNotImported(self._branch, self._branch_tip_rev_id)
         db_ids = set()
         db_id_to_rev_id = {}
         for rev_id in revision_ids:
@@ -1690,6 +1713,8 @@ class Querier(object):
         """
         t = time.time()
         tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+        if tip_db_id is None:
+            raise ValueError('tip not imported')
         if start_revision_id is not None:
             start_db_id = self._get_db_id(start_revision_id)
         else:
