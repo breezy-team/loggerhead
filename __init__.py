@@ -21,6 +21,7 @@ import time
 from bzrlib import (
     branch,
     commands,
+    debug,
     lazy_import,
     option,
     registry,
@@ -370,7 +371,8 @@ def _get_querier(a_branch):
         return query
     history_db_path = _get_history_db_path(a_branch)
     if history_db_path is None:
-        trace.mutter('"history_db_path" not set for %s' % (a_branch,))
+        if 'history_db' in debug.debug_flags:
+            trace.note('"history_db_path" not set for %s' % (a_branch,))
         query = None
     else:
         try:
@@ -400,7 +402,15 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     """
     t0 = time.clock()
     query = _get_querier(self)
+    fallback = False
+    if stop_rule not in ('exclude', 'with-merges'):
+        trace.mutter('history_db falling back to original'
+                     'iter_merge_sorted_revisions, we don\'t support: %s'
+                     % (stop_rule,))
+        fallback = True
     if query is None:
+        fallback = True
+    if fallback:
         # TODO: Consider other cases where we may want to fall back, like
         #       special arguments, etc that we don't handle well yet.
         trace.mutter('history_db falling back to original'
@@ -412,28 +422,27 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     if stop_rule == 'exclude':
         real_stop_revision_id = stop_revision_id
     else:
-        # We have to get fancy about our stop revision, we'll use the existing
-        # filtering functions to trim things back out, for now, we just use the
-        # left-hand parent as the real stop revision
-        # TODO: Handle a ghost or a first-revision that doesn't have a lh
-        #       parent
+        assert stop_rule == 'with-merges'
+        # 'with-merges' is just exclude vs the previous parent, so walk-by-one.
         if stop_revision_id is None:
             real_stop_revision_id = stop_revision_id
         else:
-            real_stop_revision_id = self.repository.get_parent_map(
-                [stop_revision_id])[stop_revision_id][0]
+            pm = self.repository.get_parent_map([stop_revision_id])
+            parents = pm.get(stop_revision_id, None)
+            if parents is None or not parents:
+                trace.note('stop revision is a ghost, excluding.')
+                real_stop_revision_id = stop_revision_id
+            else:
+                real_stop_revision_id = parents[0]
     merge_sorted = query.iter_merge_sorted_revisions(
                     start_revision_id=start_revision_id,
                     stop_revision_id=real_stop_revision_id)
     t1 = time.clock()
-    if real_stop_revision_id != stop_revision_id:
-        # Ask the existing branch code to do the special filtering
-        merge_sorted = _filter_merge_sorted(self, merge_sorted,
-                        stop_revision_id, stop_rule)
     merge_sorted = self._filter_non_ancestors(iter(merge_sorted))
     t2 = time.clock()
-    trace.note('history_db iter_merge took %.3fs (%.3fs query, %.3fs filter)'
-               % (t2-t0, t1-t0, t2-t1))
+    if 'history_db' in debug.debug_flags:
+        trace.note('history_db iter_merge took %.3fs (%.3fs query)'
+                   % (t2-t0, t1-t0))
     import pprint
     trace.mutter('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
     if direction == 'reverse':
@@ -442,11 +451,6 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
         return reversed(list(filtered))
     else:
         raise ValueError('invalid direction %r' % direction)
-
-
-def _filter_merge_sorted(self, merge_sorted, stop_revision_id, stop_rule):
-    """iter_merge_sorted_revisions has some crazy stop_rules, deal with it."""
-    return merge_sorted
 
 
 def _history_db_revision_id_to_dotted_revno(self, revision_id):
@@ -479,7 +483,6 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
 def _history_db_dotted_revno_to_revision_id(self, revno):
     """See Branch._do_dotted_revno_to_revision_id."""
     # revno should be a dotted revno, aka either 1-part or 3-part tuple
-    import pdb; pdb.set_trace()
     t0 = time.clock()
     query = _get_querier(self)
     if query is None:

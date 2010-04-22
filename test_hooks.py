@@ -75,6 +75,44 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         self.assertEqual({'B': (2,)},
                     b._history_db_querier.get_dotted_revno_range_multi(['B']))
 
+    def test_iter_merge_sorted_no_parents(self):
+        history_db_path = self.get_history_db_path()
+        b, merge_sorted = self.make_simple_history_branch()
+        b.get_config().set_user_option('history_db_path', history_db_path)
+        # Without filling out the cache, it should still give correct results
+        val = history_db._history_db_iter_merge_sorted_revisions(b,
+                        start_revision_id='B', stop_revision_id='A',
+                        stop_rule='with-merges')
+        self.assertEqual(merge_sorted, list(val))
+        val = history_db._history_db_iter_merge_sorted_revisions(b,
+                        start_revision_id='B', stop_revision_id=None,
+                        stop_rule='with-merges')
+        self.assertEqual(merge_sorted, list(val))
+        val = history_db._history_db_iter_merge_sorted_revisions(b,
+                        start_revision_id='B', stop_revision_id=None,
+                        stop_rule='exclude')
+        self.assertEqual(merge_sorted, list(val))
+
+    def test_iter_merge_sorted_ghost(self):
+        history_db_path = self.get_history_db_path()
+        builder = self.make_branch_builder('test')
+        builder.start_series()
+        builder.build_snapshot('A', None, [
+            ('add', ('', 'directory', 'TREE_ROOT', None))])
+        builder.build_snapshot('B', ['A', 'ghost'], [])
+        builder.finish_series()
+        b = builder.get_branch()
+        b.lock_write()
+        self.addCleanup(b.unlock)
+        b.get_config().set_user_option('history_db_path', history_db_path)
+        # Without filling out the cache, it should still give correct results
+        val = history_db._history_db_iter_merge_sorted_revisions(b,
+                        start_revision_id='B', stop_revision_id='ghost',
+                        stop_rule='with-merges')
+        self.assertEqual([('B', 0, (2,), False), ('A', 0, (1,), True)],
+                         list(val))
+
+
     def test_iter_merge_sorted_cached(self):
         history_db_path = self.get_history_db_path()
         b, merge_sorted = self.make_simple_history_branch()
