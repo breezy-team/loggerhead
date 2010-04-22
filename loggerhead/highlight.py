@@ -16,6 +16,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import cgi
+
 from pygments import highlight as _highlight_func
 from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
 from pygments.formatters import HtmlFormatter
@@ -23,11 +25,18 @@ from pygments.util import ClassNotFound
 
 DEFAULT_PYGMENT_STYLE = 'colorful'
 
+# Trying to highlight very large files using pygments was killing
+# loggerhead on launchpad.net, because pygments isn't very fast.
+# So we only highlight files if they're 512K or smaller.
+MAX_HIGHLIGHT_SIZE = 512000;
 
 def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
     Returns a list of highlighted (i.e. HTML formatted) strings.
     """
+
+    if (len(text) > MAX_HIGHLIGHT_SIZE):
+        return map(cgi.escape, text.split('\n'))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
