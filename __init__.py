@@ -417,8 +417,11 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
         # left-hand parent as the real stop revision
         # TODO: Handle a ghost or a first-revision that doesn't have a lh
         #       parent
-        real_stop_revision_id = self.repository.get_parent_map(
-            [stop_revision_id])[stop_revision_id][0]
+        if stop_revision_id is None:
+            real_stop_revision_id = stop_revision_id
+        else:
+            real_stop_revision_id = self.repository.get_parent_map(
+                [stop_revision_id])[stop_revision_id][0]
     merge_sorted = query.iter_merge_sorted_revisions(
                     start_revision_id=start_revision_id,
                     stop_revision_id=real_stop_revision_id)
