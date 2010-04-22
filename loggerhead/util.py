@@ -68,7 +68,7 @@ def date_day(value):
 
 def date_time(value):
     if value is not None:
-        return value.strftime('%Y-%m-%d %T')
+        return value.strftime('%Y-%m-%d %H:%M:%S')
     else:
         return 'N/A'
 
@@ -137,6 +137,7 @@ class Container(object):
     """
 
     def __init__(self, _dict=None, **kw):
+        self._properties = {}
         if _dict is not None:
             for key, value in _dict.iteritems():
                 setattr(self, key, value)
@@ -152,6 +153,22 @@ class Container(object):
             out += '%r => %r, ' % (key, value)
         out += '}'
         return out
+
+    def __getattr__(self, attr):
+        """Used for handling things that aren't already available."""
+        if attr in self._properties:
+            val = self._properties[attr](self, attr)
+            setattr(self, attr, val)
+            return val
+        raise AttributeError('No attribute: %s' % (attr,))
+
+    def _set_property(self, attr, prop_func):
+        """Set a function that will be called when an attribute is desired.
+
+        We will cache the return value, so the function call should be
+        idempotent. We will pass 'self' and the 'attr' name when triggered.
+        """
+        self._properties[attr] = prop_func
 
 
 def trunc(text, limit=10):
