@@ -35,7 +35,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     Returns a list of highlighted (i.e. HTML formatted) strings.
     """
 
-    if (len(text) > MAX_HIGHLIGHT_SIZE):
+    if len(text) > MAX_HIGHLIGHT_SIZE:
         return map(cgi.escape, text.split('\n'))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
