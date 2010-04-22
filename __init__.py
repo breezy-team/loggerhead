@@ -441,10 +441,10 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
     merge_sorted = self._filter_non_ancestors(iter(merge_sorted))
     t2 = time.clock()
     if 'history_db' in debug.debug_flags:
+        import pprint
         trace.note('history_db iter_merge took %.3fs (%.3fs query)'
                    % (t2-t0, t1-t0))
-    import pprint
-    trace.mutter('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
+        trace.mutter('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
     if direction == 'reverse':
         return merge_sorted
     elif direction == 'forward':
@@ -457,20 +457,23 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
     """See Branch._do_revision_id_to_dotted_revno"""
     revno = self._partial_revision_id_to_revno_cache.get(revision_id, None)
     if revno is not None:
-        trace.note('history_db rev=>dotted cached %s' % (revno,))
+        if 'history_db' in debug.debug_flags:
+            trace.note('history_db rev=>dotted cached %s' % (revno,))
         return revno
     t0 = time.clock()
     query = _get_querier(self)
     if query is None:
-        trace.mutter('history_db falling back to original'
-                     'revision_id => dotted_revno')
+        if 'history_db' in debug.debug_flags:
+            trace.mutter('history_db falling back to original'
+                         'revision_id => dotted_revno')
         return _orig_do_rev_id_to_dotted(self, revision_id)
     t1 = time.clock()
     revision_id_map = query.get_dotted_revno_range_multi([revision_id])
     t2 = time.clock()
-    trace.note('history_db rev=>dotted %s took %.3fs, %.3fs to init,'
-               ' %.3fs to query' % (revision_id_map.values(),
-                                    t2-t0, t1-t0, t2-t1))
+    if 'history_db' in debug.debug_flags:
+        trace.note('history_db rev=>dotted %s took %.3fs, %.3fs to init,'
+                   ' %.3fs to query' % (revision_id_map.values(),
+                                        t2-t0, t1-t0, t2-t1))
     self._partial_revision_id_to_revno_cache.update(revision_id_map)
 
     if revision_id not in revision_id_map:
@@ -486,14 +489,16 @@ def _history_db_dotted_revno_to_revision_id(self, revno):
     t0 = time.clock()
     query = _get_querier(self)
     if query is None:
-        trace.mutter('history_db falling back to original'
+        if 'history_db' in debug.debug_flags:
+            trace.mutter('history_db falling back to original'
                      'dotted_revno => revision_id, "history_db_path" not set')
         return _orig_do_dotted_revno(self, revno)
     t1 = time.clock()
     revno_map = query.get_revision_ids([revno])
     t2 = time.clock()
-    trace.note('history_db dotted=>rev took %.3fs, %.3fs to init,'
-               ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
+    if 'history_db' in debug.debug_flags:
+        trace.note('history_db dotted=>rev took %.3fs, %.3fs to init,'
+                   ' %.3fs to query' % (t2-t0, t1-t0, t2-t1))
     self._partial_revision_id_to_revno_cache.update(
         [(r_id, r_no) for r_no, r_id in revno_map.iteritems()])
                
@@ -514,8 +519,9 @@ def _history_db_post_change_branch_tip_hook(params):
     history_db_path = _get_history_db_path(params.branch)
     t1 = time.clock()
     if history_db_path is None:
-        trace.mutter('Note updating history-db, "history_db_path"'
-                     ' not configured')
+        if 'history_db' in debug.debug_flags:
+            trace.mutter('Note updating history-db, "history_db_path"'
+                         ' not configured')
         return
     importer = _mod_history_db.Importer(history_db_path, params.branch,
                                         tip_revision_id=params.new_revid,
@@ -525,11 +531,15 @@ def _history_db_post_change_branch_tip_hook(params):
     t3 = time.clock()
     importer.build_mainline_cache()
     t4 = time.clock()
-    trace.note('history_db post-change-hook took %.3fs'
-               ' (%.3fs to get_config, %.3fs to init, %.3fs to import)'
-               % (t4-t0, t1-t0, t2-t1, t3-t2))
-    trace.mutter('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
-
+    if 'history_db' in debug.debug_flags:
+        info = trace.note
+    else:
+        info = trace.mutter
+    info('history_db post-change-hook took %.3fs'
+         ' (%.3fs to get_config, %.3fs to init, %.3fs to import)'
+         % (t4-t0, t1-t0, t2-t1, t3-t2))
+    trace.mutter('Stats:\n%s'
+                 % (pprint.pformat(dict(importer._stats)),))
 
 
 def _register_history_db_hooks():

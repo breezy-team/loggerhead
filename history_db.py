@@ -25,6 +25,7 @@ from collections import defaultdict, deque
 import time
 
 from bzrlib import (
+    debug,
     errors,
     lru_cache,
     revision,
@@ -126,7 +127,8 @@ class Importer(object):
     def _ensure_schema(self):
         if not schema.is_initialized(self._db_conn, dbapi2.OperationalError):
             schema.create_sqlite_db(self._db_conn)
-            trace.note('Initialized database')
+            if 'history_db' in debug.debug_flags:
+                trace.note('history_db initialized database')
             # We know we can't do this incrementally, because nothing has
             # existed before...
             #self._incremental = False
@@ -1044,14 +1046,6 @@ class _IncrementalMergeSort(object):
                 self._stats['step mainline to-latest NULL'] += 1
             self._step_mainline()
             step_count += 1
-        return
-        if step_count > 10:
-            end_info = ''
-            if start_point is not None:
-                end_info = '%s' % (tuple(self._imported_dotted_revno[start_point][0]),)
-            trace.note('stepped %d for %d, started at %s %s, ended at %s for %s'
-                       % (step_count, base_revno, start_point,
-                          end_info, self._imported_mainline_id, found))
 
     def _pop_node(self):
         """Move the last node from the _depth_first_stack to _scheduled_stack.
@@ -1229,8 +1223,10 @@ class Querier(object):
                             incremental=True)
         importer.do_import()
         tdelta = time.time() - t
-        trace.note('imported %d nodes on-the-fly in %.3fs'
-                   % (importer._stats.get('total_nodes_inserted', 0), tdelta))
+        if 'history_db' in debug.debug_flags:
+            trace.note('imported %d nodes on-the-fly in %.3fs'
+                       % (importer._stats.get('total_nodes_inserted', 0),
+                          tdelta))
         self._db_conn = importer._db_conn
         self._cursor = importer._cursor
         self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
