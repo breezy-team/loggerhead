@@ -70,7 +70,7 @@
                                              title string:Go to ${file/filename}" />
                     </a>
 
-                 <a tal:attributes="href python:url(['/files', revno_url, file.absolutepath])" 
+                 <a tal:attributes="href python:url(['/files', revno_url, file.absolutepath])"
                                         tal:content="file/filename" class="link"></a>
                  </td>
                  <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
@@ -93,7 +93,7 @@
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
                     </a>
 
-                 <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])" 
+                 <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])"
                                         tal:content="file/filename" class="link"></a>
                  </td>
                  <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
@@ -118,7 +118,7 @@
                                              title string:Annotate ${file/filename}"
                              tal:condition="python:file.executable is False" />
                         <!-- Show a different icon id the file executable -->
-                        <img tal:attributes="src python:branch.static_url('/static/images/ico_file_modify.gif'); 
+                        <img tal:attributes="src python:branch.static_url('/static/images/ico_file_modify.gif');
                                              title string:Annotate ${file/filename}"
                              tal:condition="python:file.executable is True" alt="File" />
                     </a>

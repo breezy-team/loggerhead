@@ -1,4 +1,4 @@
-# Copyright 2009 Canonical Ltd
+# Copyright 2009, 2010 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 """Loggerhead web viewer for Bazaar branches.
 
-This provides a new option "--http" to the "bzr serve" command, that 
+This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
@@ -38,7 +38,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     require_any_api(bzrlib, [
         (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
-        (2, 0, 0), (2, 1, 0)])
+        (2, 0, 0), (2, 1, 0), (2, 2, 0)])
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
@@ -58,6 +58,17 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
             (DEFAULT_PORT,))
 
+    def setup_logging(config):
+        import logging
+        import sys
+
+        logger = logging.getLogger('loggerhead')
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        logging.getLogger('simpleTAL').addHandler(handler)
+        logging.getLogger('simpleTALES').addHandler(handler)
+
     def serve_http(transport, host=None, port=None, inet=None):
         from paste.httpexceptions import HTTPExceptionHandler
         from paste.httpserver import serve
@@ -65,7 +76,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
-            import loggerhead
+            import loggerhead.apps.transport
         except ImportError:
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
@@ -81,6 +92,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
+        setup_logging(config)
         app = BranchesFromTransportRoot(transport.base, config)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)

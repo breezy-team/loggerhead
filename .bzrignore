@@ -7,3 +7,5 @@ build
 *.log
 _trial_temp
 loggerhead-memprofile
+./docs/_build/
+tags

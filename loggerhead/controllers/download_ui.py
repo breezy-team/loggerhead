@@ -61,7 +61,7 @@ class DownloadUI (TemplatedBranchView):
         encoded_filename = urllib.quote(filename.encode('utf-8'))
         headers = [
             ('Content-Type', mime_type),
-            ('Content-Length', len(content)),
+            ('Content-Length', str(len(content))),
             ('Content-Disposition',
              "attachment; filename*=utf-8''%s" % (encoded_filename,)),
             ]

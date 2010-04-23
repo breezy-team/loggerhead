@@ -23,7 +23,7 @@ log.roll = 'weekly'
 
     # name of this project
     name = 'bazaar'
-    
+
     # for the top browsing page, you can include a description, in raw HTML.
     #description = 'Bazaar is a <i>revision control system</i>.'
 
@@ -63,13 +63,13 @@ log.roll = 'weekly'
 [paramiko]
     name = 'paramiko'
     cachepath = '/Users/robey/code/paramiko/.bzr/loggerhead-files'
-    
+
     # if an auto_publish_folder is given, any bazaar branches discovered in
     # that folder will be published.  using each branch's 'branch.conf' to
     # provide optional descriptions and public urls is a nice way to avoid
     # having to do much configuration here.
     auto_publish_folder = '/Users/robey/code/paramiko'
-    
+
     # if all of the branches under an auto_publish_folder are exported to
     # the same (base) public url, you can specify that url prefix here, and
     # each discovered branch's public url will be generated.
