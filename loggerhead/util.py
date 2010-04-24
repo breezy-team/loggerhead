@@ -168,6 +168,8 @@ class Container(object):
         We will cache the return value, so the function call should be
         idempotent. We will pass 'self' and the 'attr' name when triggered.
         """
+        if attr.startswith('_'):
+            raise ValueError("Cannot create properties that start with _")
         self._properties[attr] = prop_func
 
 
