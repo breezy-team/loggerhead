@@ -156,11 +156,11 @@ class Container(object):
 
     def __getattr__(self, attr):
         """Used for handling things that aren't already available."""
-        if attr in self._properties:
-            val = self._properties[attr](self, attr)
-            setattr(self, attr, val)
-            return val
-        raise AttributeError('No attribute: %s' % (attr,))
+        if attr.startswith('_') or attr not in self._properties:
+            raise AttributeError('No attribute: %s' % (attr,))
+        val = self._properties[attr](self, attr)
+        setattr(self, attr, val)
+        return val
 
     def _set_property(self, attr, prop_func):
         """Set a function that will be called when an attribute is desired.
