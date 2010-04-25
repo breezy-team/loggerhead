@@ -71,7 +71,6 @@ setup(
                             'stop-loggerhead.1',
                             'serve-branches.1']),
         ('share/doc/loggerhead', ['loggerhead.conf.example',
-                                  'README.mod_wsgi',
                                   'apache-loggerhead.conf',
                                   'bazaar.conf']),
         ],
