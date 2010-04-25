@@ -166,7 +166,7 @@ place and use them as a starting point following these directions:
 
     su -c yum install mod_wsgi
 
-2) Copy the bazaar conf file where apache will find it (May be done for you if
+2) Copy the bazaar.conf file where apache will find it (May be done for you if
    you installed Loggerhead from a distribution package)::
 
     # install -d -o apache -g apache -m 0755 /etc/loggerhead
