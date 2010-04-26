@@ -158,6 +158,9 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPMovedPermanently(
                 self._url_base + '/changes')
         if path == 'static':
+            # TODO: Unfortunately, we still call Branch.open() even if we are
+            #       serving a static path. This probably adds a fair amount of
+            #       overhead...
             return static_app(environ, start_response)
         cls = self.controllers_dict.get(path)
         if cls is None:
@@ -177,5 +180,5 @@ class BranchWSGIApp(object):
         t = time.time()
         val = do_stuff()
         tdelta = time.time() - t
-        self.log.info('Took %.3fs for: %s' % (tdelta, path_info))
+        self.log.info('Took %.3fs to generate: %s' % (tdelta, path_info))
         return val
