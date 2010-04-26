@@ -283,6 +283,7 @@ class History(object):
         else:
             self._file_change_cache = None
         self._branch = branch
+        self._branch_tags = None
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
@@ -653,11 +654,12 @@ iso style "yyyy-mm-dd")
         """
         message, short_message = clean_message(revision.message)
 
-        tags = self._branch.tags.get_reverse_tag_dict()
+        if self._branch_tags is None:
+            self._branch_tags = self._branch.tags.get_reverse_tag_dict()
 
         revtags = None
-        if tags.has_key(revision.revision_id):
-          revtags = ', '.join(tags[revision.revision_id])
+        if revision.revision_id in self._branch_tags:
+          revtags = ', '.join(self._branch_tags[revision.revision_id])
 
         entry = {
             'revid': revision.revision_id,
