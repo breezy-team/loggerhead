@@ -58,8 +58,10 @@ def get_config_and_path(args):
 
 def setup_logging(config):
     logging.basicConfig()
-    logging.getLogger('').setLevel(logging.DEBUG)
+    log_level = config.get_log_level()
+    logging.getLogger('').setLevel(log_level)
     logger = logging.getLogger('loggerhead')
+    logger.setLevel(log_level)
     if config.get_option('log_folder'):
         logfile_path = os.path.join(
             config.get_option('log_folder'), 'serve-branches.log')

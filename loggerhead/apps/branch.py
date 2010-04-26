@@ -19,6 +19,7 @@
 import logging
 import urllib
 import sys
+import time
 
 import bzrlib.branch
 import bzrlib.errors
@@ -151,6 +152,7 @@ class BranchWSGIApp(object):
                     self.served_url = self.url([])
                 except bzrlib.errors.InvalidURL:
                     self.served_url = None
+        path_info = environ.get('PATH_INFO', None)
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
@@ -160,14 +162,20 @@ class BranchWSGIApp(object):
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
-        self.branch.lock_read()
-        try:
+        def do_stuff():
+            self.branch.lock_read()
             try:
-                c = cls(self, self.get_history)
-                return c(environ, start_response)
-            except:
-                environ['exc_info'] = sys.exc_info()
-                environ['branch'] = self
-                raise
-        finally:
-            self.branch.unlock()
+                try:
+                    c = cls(self, self.get_history)
+                    return c(environ, start_response)
+                except:
+                    environ['exc_info'] = sys.exc_info()
+                    environ['branch'] = self
+                    raise
+            finally:
+                self.branch.unlock()
+        t = time.time()
+        val = do_stuff()
+        tdelta = time.time() - t
+        self.log.info('Took %.3fs for: %s' % (tdelta, path_info))
+        return val

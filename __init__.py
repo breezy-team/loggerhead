@@ -63,6 +63,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         import sys
 
         logger = logging.getLogger('loggerhead')
+        log_level = config.get_log_level()
+        if log_level is not None:
+            logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
