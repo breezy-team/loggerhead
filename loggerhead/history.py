@@ -315,7 +315,16 @@ class History(object):
         revid in revid_list.
         """
         if revid_list is None:
-            revid_list = [r[0][1] for r in self._rev_info]
+            # Just yield the mainline, starting at start_revid
+            revid = start_revid
+            is_null = bzrlib.revision.is_null
+            while not is_null(revid):
+                yield revid
+                parents = self._rev_info[self._rev_indices[revid]][2]
+                if not parents:
+                    return
+                revid = parents[0]
+            return
         revid_set = set(revid_list)
         revid = start_revid
 
