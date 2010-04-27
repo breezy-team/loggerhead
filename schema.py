@@ -208,20 +208,18 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
     missing = find_existing()
     if missing:
         ghosts = set()
-        def get_gdfo(rev_id):
-            node = graph._nodes[(rev_id,)]
-            if node.gdfo == 1:
-                # First rev, see if this is actually a ghost
-                if node.parent_keys is None:
-                    ghosts.add(rev_id)
-            return node.gdfo
         def insert_new():
-            cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
-                               ' VALUES (?, ?)',
-                               [(m, get_gdfo(m)) for m in missing])
+            for rev_id in missing:
+                node = graph._nodes[(rev_id,)]
+                if node.gdfo == 1 and node.parent_keys is None:
+                    # First rev, see if this is actually a ghost
+                    ghosts.add(rev_id)
+                cursor.execute('INSERT INTO revision (revision_id, gdfo)'
+                               ' VALUES (?, ?)', (rev_id, node.gdfo))
+                db_id = cursor.lastrowid
+                rev_id_to_db_id[rev_id] = db_id
+                db_id_to_rev_id[db_id] = rev_id
         insert_new()
-        ensure_revisions(cursor, missing, rev_id_to_db_id,
-                         db_id_to_rev_id, graph=graph)
         if ghosts:
             # TODO: We could turn this into a "revision_id IN ()", instead...
             cursor.executemany("INSERT INTO ghost (db_id)"
