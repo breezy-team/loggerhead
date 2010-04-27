@@ -189,6 +189,8 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
     #     if rev_id in missing:
     #         result[rev_id] = db_id
     #         missing.discard(rev_id)
+    if not remaining:
+        return
     def find_existing():
         cur = 0
         missing = set()

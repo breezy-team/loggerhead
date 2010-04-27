@@ -157,7 +157,6 @@ class Importer(object):
     def _insert_nodes(self, tip_rev_id, nodes):
         """Insert all of the nodes mentioned into the database."""
         self._stats['_insert_node_calls'] += 1
-        self._ensure_revisions([n.key[0] for n in nodes])
         if self._is_imported(tip_rev_id):
             # Not importing anything because the data is already present
             return False
