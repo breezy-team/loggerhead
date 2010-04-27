@@ -184,26 +184,28 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
     #      more than 10% of the data in the table, it is faster to do an I/O
     #      friendly sequential scan, than to do a random order scan.
     remaining = [r for r in revision_ids if r not in rev_id_to_db_id]
-    cur = 0
-    missing = set()
     # res = cursor.execute('SELECT revision_id, db_id FROM revision')
     # for rev_id, db_id in res.fetchall():
     #     if rev_id in missing:
     #         result[rev_id] = db_id
     #         missing.discard(rev_id)
-    while cur < len(remaining):
-        next = remaining[cur:cur+_BATCH_SIZE]
-        cur += _BATCH_SIZE
-        res = cursor.execute('SELECT revision_id, db_id FROM revision'
-                             ' WHERE revision_id in (%s)'
-                             % (', '.join('?'*len(next))),
-                             tuple(next))
-        local_missing = set(next)
-        for rev_id, db_id in res.fetchall():
-            rev_id_to_db_id[rev_id] = db_id
-            db_id_to_rev_id[db_id] = rev_id
-            local_missing.discard(rev_id)
-        missing.update(local_missing)
+    def find_existing():
+        cur = 0
+        missing = set()
+        for cur in xrange(0, len(remaining), _BATCH_SIZE):
+            next = remaining[cur:cur+_BATCH_SIZE]
+            res = cursor.execute('SELECT revision_id, db_id FROM revision'
+                                 ' WHERE revision_id in (%s)'
+                                 % (', '.join('?'*len(next))),
+                                 tuple(next))
+            local_missing = set(next)
+            for rev_id, db_id in res.fetchall():
+                rev_id_to_db_id[rev_id] = db_id
+                db_id_to_rev_id[db_id] = rev_id
+                local_missing.discard(rev_id)
+            missing.update(local_missing)
+        return missing
+    missing = find_existing()
     if missing:
         ghosts = set()
         def get_gdfo(rev_id):
@@ -213,9 +215,11 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
                 if node.parent_keys is None:
                     ghosts.add(rev_id)
             return node.gdfo
-        cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
-                           ' VALUES (?, ?)',
-                           [(m, get_gdfo(m)) for m in missing])
+        def insert_new():
+            cursor.executemany('INSERT INTO revision (revision_id, gdfo)'
+                               ' VALUES (?, ?)',
+                               [(m, get_gdfo(m)) for m in missing])
+        insert_new()
         ensure_revisions(cursor, missing, rev_id_to_db_id,
                          db_id_to_rev_id, graph=graph)
         if ghosts:
