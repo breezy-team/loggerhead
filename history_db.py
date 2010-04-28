@@ -107,6 +107,7 @@ class Importer(object):
         self._ensure_schema()
         self._cursor = self._db_conn.cursor()
         self._branch = a_branch
+        self._expanding = False
         if tip_revision_id is None:
             self._branch_tip_rev_id = a_branch.last_revision()
         else:
@@ -147,48 +148,63 @@ class Importer(object):
 
     def _is_imported(self, tip_rev_id):
         res = self._cursor.execute(
-            "SELECT count(*) FROM dotted_revno JOIN revision"
+            "SELECT tip_revision FROM dotted_revno JOIN revision"
             "    ON dotted_revno.tip_revision = revision.db_id"
             " WHERE revision_id = ?"
             "   AND tip_revision = merged_revision",
             (tip_rev_id,)).fetchone()
-        return res[0] > 0
+        return (res is not None)
+
+    def _is_imported_db_id(self, tip_db_id):
+        res = self._cursor.execute(
+            "SELECT tip_revision FROM dotted_revno"
+            " WHERE tip_revision = ?"
+            "   AND tip_revision = merged_revision",
+            (tip_db_id,)).fetchone()
+        return (res is not None)
 
     def _insert_nodes(self, tip_rev_id, nodes):
         """Insert all of the nodes mentioned into the database."""
         self._stats['_insert_node_calls'] += 1
-        if self._is_imported(tip_rev_id):
+        rev_to_db = self._rev_id_to_db_id
+        tip_db_id = rev_to_db[tip_rev_id]
+        if self._is_imported_db_id(tip_db_id):
             # Not importing anything because the data is already present
             return False
         self._stats['total_nodes_inserted'] += len(nodes)
-        rev_to_db = self._rev_id_to_db_id
-        tip_db_id = rev_to_db[tip_rev_id]
         revno_entries = []
-        to_cache_entry = []
+        if self._expanding:
+            to_cache_entry = []
+        else:
+            to_cache_entry = None
         st = static_tuple.StaticTuple
-        for dist, node in enumerate(nodes):
-            # TODO: Do we need to track the 'end_of_merge' and 'merge_depth'
-            #       fields?
-            db_id = rev_to_db[node.key[0]]
-            revno_entries.append((tip_db_id,
-                                  db_id,
-                                  '.'.join(map(str, node.revno)),
-                                  node.end_of_merge,
-                                  node.merge_depth,
-                                  dist))
-            to_cache_entry.append(st(db_id, st(st.from_sequence(node.revno),
-                                               node.end_of_merge,
-                                               node.merge_depth)))
+        def build_revno_info():
+            for dist, node in enumerate(nodes):
+                # TODO: Do we need to track the 'end_of_merge' and 'merge_depth'
+                #       fields?
+                db_id = rev_to_db[node.key[0]]
+                revno_entries.append((tip_db_id,
+                                      db_id,
+                                      '.'.join(map(str, node.revno)),
+                                      node.end_of_merge,
+                                      node.merge_depth,
+                                      dist))
+                if to_cache_entry is not None:
+                    to_cache_entry.append(st(db_id, st(st.from_sequence(node.revno),
+                                                       node.end_of_merge,
+                                                       node.merge_depth)))
+        build_revno_info()
         schema.create_dotted_revnos(self._cursor, revno_entries)
-        self._dotted_revno_cache[tip_db_id] = to_cache_entry
+        if to_cache_entry is not None:
+            self._dotted_revno_cache[tip_db_id] = to_cache_entry
         return True
 
     def _update_parents(self, nodes):
         """Update parent information for all these nodes."""
         # Get the keys and their parents
-        parent_map = dict(
-            (n.key[0], [p[0] for p in self._graph.get_parent_keys(n.key)])
-            for n in nodes)
+        parent_keys = self._graph.get_parent_keys
+        parent_map = dict([(n.key[0], [p[0] for p in parent_keys(n.key)])
+                           for n in nodes])
         self._insert_parent_map(parent_map)
 
     def _insert_parent_map(self, parent_map):
@@ -213,6 +229,7 @@ class Importer(object):
                                  "VALUES (?, ?, ?)", data)
 
     def do_import(self, expand_all=False):
+        self._expanding = expand_all
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         if not expand_all:
             return
@@ -320,7 +337,6 @@ class Importer(object):
                     # in 'forward' order, or we wait to commit until all the
                     # data is imported. However, if we import in 'reverse'
                     # order, it is obvious when we can stop...
-
                     if not self._incremental:
                         # Fairly small perf improvement. But if we are doing
                         # _incremental, we've already called _update_ancestry,
