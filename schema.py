@@ -200,12 +200,10 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
                                  ' WHERE revision_id in (%s)'
                                  % (', '.join('?'*len(next))),
                                  tuple(next))
-            local_missing = set(next)
             for rev_id, db_id in res.fetchall():
                 rev_id_to_db_id[rev_id] = db_id
                 db_id_to_rev_id[db_id] = rev_id
-                local_missing.discard(rev_id)
-            missing.extend(local_missing)
+            missing.extend([r for r in next if r not in rev_id_to_db_id])
         return missing
     missing = find_existing()
     if missing:
