@@ -209,11 +209,15 @@ class Importer(object):
 
     def _insert_parent_map(self, parent_map):
         """Insert all the entries in this parent map into the parent table."""
-        rev_ids = set(parent_map)
-        map(rev_ids.update, parent_map.itervalues())
-        self._ensure_revisions(rev_ids)
-        data = []
         r_to_d = self._rev_id_to_db_id
+        def _ensure_parent_map_keys():
+            rev_ids = set([r for r in parent_map if r not in r_to_d])
+            rev_ids_update = rev_ids.update
+            for parent_keys in parent_map.itervalues():
+                rev_ids_update([p for p in parent_keys if p not in r_to_d])
+            self._ensure_revisions(rev_ids)
+        _ensure_parent_map_keys()
+        data = []
         stuple = static_tuple.StaticTuple.from_sequence
         for rev_id, parent_ids in parent_map.iteritems():
             db_id = r_to_d[rev_id]
@@ -224,6 +228,10 @@ class Importer(object):
             self._db_parent_map[db_id] = parent_db_ids
             for idx, parent_db_id in enumerate(parent_db_ids):
                 data.append((db_id, parent_db_id, idx))
+        # Inserting the data in db-sorted order actually improves perf a fair
+        # amount. ~10%. My guess is that it keeps locality for uniqueness
+        # checks, etc.
+        data.sort()
         self._cursor.executemany("INSERT OR IGNORE INTO parent"
                                  "  (child, parent, parent_idx)"
                                  "VALUES (?, ?, ?)", data)
@@ -310,20 +318,29 @@ class Importer(object):
         return merge_sorted
 
     def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
+        if suppress_progress_and_commit:
+            pb = None
+        else:
+            pb = ui.ui_factory.nested_progress_bar()
+        if pb is not None:
+            pb.update('getting merge_sorted')
         merge_sorted = self._get_merge_sorted_tip(tip_revision_id)
         if not self._incremental:
             # If _incremental all the revisions will have already been ensured
             # by the _update_ancestry code.
+            if pb is not None:
+                pb.update('allocating revisions', 0,
+                          len(merge_sorted))
             self._ensure_revisions([n.key[0] for n in merge_sorted])
+            if pb is not None:
+                pb.update('updating parents', 0,
+                          len(merge_sorted))
+            self._update_parents(merge_sorted)
         try:
-            if suppress_progress_and_commit:
-                pb = None
-            else:
-                pb = ui.ui_factory.nested_progress_bar()
             last_mainline_rev_id = None
             new_nodes = []
             for idx, node in enumerate(merge_sorted):
-                if pb is not None:
+                if pb is not None and idx & 0xFF == 0:
                     pb.update('importing', idx, len(merge_sorted))
                 if last_mainline_rev_id is None:
                     assert not new_nodes
@@ -341,11 +358,6 @@ class Importer(object):
                     # in 'forward' order, or we wait to commit until all the
                     # data is imported. However, if we import in 'reverse'
                     # order, it is obvious when we can stop...
-                    if not self._incremental:
-                        # Fairly small perf improvement. But if we are doing
-                        # _incremental, we've already called _update_ancestry,
-                        # so we know the parents are already updated.
-                        self._update_parents(new_nodes)
                     if not self._insert_nodes(last_mainline_rev_id, new_nodes):
                         # This data has already been imported.
                         new_nodes = []
