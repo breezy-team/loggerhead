@@ -232,6 +232,7 @@ class Importer(object):
     def do_import(self, expand_all=False):
         self._expanding = expand_all
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
+        self._db_conn.commit()
         if not expand_all:
             return
         # We know all the other imports are going to be incremental
@@ -343,14 +344,10 @@ class Importer(object):
                     new_nodes.append(node)
                     continue
                 if node.merge_depth == 0:
-                    # We've seen all the nodes that were introduced by this
-                    # revision into mainline, check to see if we've already
-                    # inserted this data into the db. If we have, then we can
-                    # assume that all parents are *also* inserted into the
-                    # database and stop This is only safe if we either import
-                    # in 'forward' order, or we wait to commit until all the
-                    # data is imported. However, if we import in 'reverse'
-                    # order, it is obvious when we can stop...
+                    # We're at a new mainline. Insert the nodes for the
+                    # previous mainline. If this has already been inserted, we
+                    # assume all previous ones are also. Safe as long as we
+                    # wait to commit() until we insert all parents.
                     if not self._insert_nodes(last_mainline_rev_id, new_nodes):
                         # This data has already been imported.
                         new_nodes = []
@@ -358,18 +355,13 @@ class Importer(object):
                     last_mainline_rev_id = node.key[0]
                     new_nodes = []
                 new_nodes.append(node)
-            if pb is not None:
-                pb.finished()
             if new_nodes:
                 assert last_mainline_rev_id is not None
                 self._insert_nodes(last_mainline_rev_id, new_nodes)
                 new_nodes = []
-        except:
-            self._db_conn.rollback()
-            raise
-        else:
-            if not suppress_progress_and_commit:
-                self._db_conn.commit()
+        finally:
+            if pb is not None:
+                pb.finished()
         return merge_sorted
 
     def _update_ancestry(self, new_tip_rev_id):
