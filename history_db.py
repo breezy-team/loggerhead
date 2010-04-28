@@ -311,6 +311,10 @@ class Importer(object):
 
     def _import_tip(self, tip_revision_id, suppress_progress_and_commit=False):
         merge_sorted = self._get_merge_sorted_tip(tip_revision_id)
+        if not self._incremental:
+            # If _incremental all the revisions will have already been ensured
+            # by the _update_ancestry code.
+            self._ensure_revisions([n.key[0] for n in merge_sorted])
         try:
             if suppress_progress_and_commit:
                 pb = None

@@ -193,7 +193,7 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
         return
     def find_existing():
         cur = 0
-        missing = set()
+        missing = []
         for cur in xrange(0, len(remaining), _BATCH_SIZE):
             next = remaining[cur:cur+_BATCH_SIZE]
             res = cursor.execute('SELECT revision_id, db_id FROM revision'
@@ -205,7 +205,7 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
                 rev_id_to_db_id[rev_id] = db_id
                 db_id_to_rev_id[db_id] = rev_id
                 local_missing.discard(rev_id)
-            missing.update(local_missing)
+            missing.extend(local_missing)
         return missing
     missing = find_existing()
     if missing:
