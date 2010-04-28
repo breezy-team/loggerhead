@@ -155,22 +155,11 @@ class Importer(object):
             (tip_rev_id,)).fetchone()
         return (res is not None)
 
-    def _is_imported_db_id(self, tip_db_id):
-        res = self._cursor.execute(
-            "SELECT tip_revision FROM dotted_revno"
-            " WHERE tip_revision = ?"
-            "   AND tip_revision = merged_revision",
-            (tip_db_id,)).fetchone()
-        return (res is not None)
-
     def _insert_nodes(self, tip_rev_id, nodes):
         """Insert all of the nodes mentioned into the database."""
         self._stats['_insert_node_calls'] += 1
         rev_to_db = self._rev_id_to_db_id
         tip_db_id = rev_to_db[tip_rev_id]
-        if self._is_imported_db_id(tip_db_id):
-            # Not importing anything because the data is already present
-            return False
         self._stats['total_nodes_inserted'] += len(nodes)
         revno_entries = []
         if self._expanding:
@@ -194,7 +183,11 @@ class Importer(object):
                                                        node.end_of_merge,
                                                        node.merge_depth)))
         build_revno_info()
-        schema.create_dotted_revnos(self._cursor, revno_entries)
+        try:
+            schema.create_dotted_revnos(self._cursor, revno_entries)
+        except dbapi2.IntegrityError:
+            # Revisions already exist
+            return False
         if to_cache_entry is not None:
             self._dotted_revno_cache[tip_db_id] = to_cache_entry
         return True
