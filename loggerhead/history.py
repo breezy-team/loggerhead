@@ -243,6 +243,11 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
+        # TODO: These could all be cached globally in a thread-safe LRUCache
+        #       which then used (tip_revision, revid) or (tip_revision, revno)
+        #       as the key.
+        self._revno_revid_cache = {}
+        self._revid_revno_cache = {}
         self._querier = _get_querier(branch)
         if self._querier is None:
             assert cache_path is not None
@@ -271,6 +276,8 @@ class History(object):
     def get_revno(self, revid):
         if revid is None:
             return 'unknown'
+        if revid in self._revid_revno_cache:
+            return self._revid_revno_cache[revid]
         try:
             revnos = self._querier.get_dotted_revno_range_multi([revid])
             dotted_revno = revnos[revid]
@@ -279,12 +286,23 @@ class History(object):
             import sys
             e = sys.exc_info()
             return 'unknown'
-        return '.'.join(map(str, dotted_revno))
+        revno_str = '.'.join(map(str, dotted_revno))
+        self._revno_revid_cache[revno_str] = revid
+        self._revid_revno_cache[revid] = revno_str
+        return revno_str
 
-    def get_dotted_to_rev_id(self, dotted_revnos):
+    def get_revid_for_revno(self, revno_str):
         # TODO: Create a memory cache, doing bi-directional mapping, possibly
         #       persisting between HTTP requests.
-        return self._querier.get_revision_ids(dotted_revnos)
+        if revno_str in self._revno_revid_cache:
+            return self._revno_revid_cache[revno_str]
+        dotted_revno = tuple(map(int, revno_str.split('.')))
+        revnos = self._querier.get_revision_ids([dotted_revno])
+        revnos = dict([('.'.join(map(str, drn)), ri) for drn, ri in revnos])
+        self._revno_revid_cache.update(revnos)
+        self._revid_revno_cache.update(
+            [(ri, rn) for rn, ri in revnos.iteritems()])
+        return revnos[revno_str]
 
     def _get_lh_parent(self, revid):
         """Get the left-hand parent of a given revision id."""
@@ -364,8 +382,7 @@ class History(object):
             return self.last_revid
         try:
             if self.revno_re.match(revid):
-                revno = tuple(map(int, revid.split('.')))
-                val = self.get_dotted_to_rev_id([revno])[revno]
+                val = self.get_revid_for_revno([revid])[revid]
                 # XXX: Do this more cleanly
                 if val is None:
                     raise KeyError
