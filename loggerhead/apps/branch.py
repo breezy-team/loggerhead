@@ -79,7 +79,10 @@ class BranchWSGIApp(object):
                 revinfo_disk_cache = RevInfoDiskCache(cache_path)
         return History(
             self.branch, self.graph_cache, file_cache=file_cache,
-            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
+            revinfo_disk_cache=revinfo_disk_cache,
+            cache_key=self.friendly_name,
+            cache_path=cache_path,
+            )
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):

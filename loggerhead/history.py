@@ -31,6 +31,7 @@
 import bisect
 import datetime
 import logging
+import os
 import re
 import textwrap
 import threading
@@ -44,6 +45,12 @@ import bzrlib.revision
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
+
+from bzrlib.plugins.history_db import (
+    history_db,
+    _get_history_db_path,
+    _get_querier,
+    )
 
 
 def is_branch(folder):
@@ -206,6 +213,7 @@ class RevInfoMemoryCache(object):
 # to hang.
 revision_graph_locks = {}
 revision_graph_check_lock = threading.Lock()
+history_db_importer_lock = threading.Lock()
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -217,75 +225,14 @@ class History(object):
 
     :ivar _file_change_cache: An object that caches information about the
         files that changed between two revisions.
-    :ivar _rev_info: A list of information about revisions.  This is by far
-        the most cryptic data structure in loggerhead.  At the top level, it
-        is a list of 3-tuples [(merge-info, where-merged, parents)].
-        `merge-info` is (seq, revid, merge_depth, revno_str, end_of_merge) --
-        like a merged sorted list, but the revno is stringified.
-        `where-merged` is a tuple of revisions that have this revision as a
-        non-lefthand parent.  Finally, `parents` is just the usual list of
-        parents of this revision.
-    :ivar _rev_indices: A dictionary mapping each revision id to the index of
-        the information about it in _rev_info.
+    :ivar _querier: A HistoryDB.Querier instance, allowing us to query for
+        information in the ancestry of the branch.
     :ivar _revno_revid: A dictionary mapping stringified revnos to revision
         ids.
     """
 
-    def _load_whole_history_data(self, caches, cache_key):
-        """Set the attributes relating to the whole history of the branch.
-
-        :param caches: a list of caches with interfaces like
-            `RevInfoMemoryCache` and be ordered from fastest to slowest.
-        :param cache_key: the key to use with the caches.
-        """
-        self._rev_indices = None
-        self._rev_info = None
-
-        missed_caches = []
-        def update_missed_caches():
-            for cache in missed_caches:
-                cache.set(cache_key, self.last_revid, self._rev_info)
-
-        # Theoretically, it's possible for two threads to race in creating
-        # the Lock() object for their branch, so we put a lock around
-        # creating the per-branch Lock().
-        revision_graph_check_lock.acquire()
-        try:
-            if cache_key not in revision_graph_locks:
-                revision_graph_locks[cache_key] = threading.Lock()
-        finally:
-            revision_graph_check_lock.release()
-
-        revision_graph_locks[cache_key].acquire()
-        try:
-            for cache in caches:
-                data = cache.get(cache_key, self.last_revid)
-                if data is not None:
-                    self._rev_info = data
-                    update_missed_caches()
-                    break
-                else:
-                    missed_caches.append(cache)
-            else:
-                whole_history_data = compute_whole_history_data(self._branch)
-                self._rev_info, self._rev_indices = whole_history_data
-                update_missed_caches()
-        finally:
-            revision_graph_locks[cache_key].release()
-
-        if self._rev_indices is not None:
-            self._revno_revid = {}
-            for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
-                self._revno_revid[revno_str] = revid
-        else:
-            self._revno_revid = {}
-            self._rev_indices = {}
-            for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
-                self._rev_indices[revid] = seq
-                self._revno_revid[revno_str] = revid
-
     def __init__(self, branch, whole_history_data_cache, file_cache=None,
-                 revinfo_disk_cache=None, cache_key=None):
+                 revinfo_disk_cache=None, cache_key=None, cache_path=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
         if file_cache is not None:
@@ -296,15 +243,23 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
+        self._querier = _get_querier(branch)
+        if self._querier is None:
+            assert cache_path is not None
+            self._querier = history_db.Querier(
+                os.path.join(cache_path, 'historydb.sql'), branch)
+            # History-db is not configured for this branch, do it ourselves
+        # sqlite is single-writer, so block concurrant updates.
+        # Note that this was even done in the past because of perf issues, even
+        # without a disk requirement.
+        self._querier.set_importer_lock(history_db_importer_lock)
+        # TODO: Is this being premature? It makes the rest of the code
+        #       simpler...
+        self._querier.ensure_branch_tip()
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
-
-        caches = [RevInfoMemoryCache(whole_history_data_cache)]
-        if revinfo_disk_cache:
-            caches.append(revinfo_disk_cache)
-        self._load_whole_history_data(caches, cache_key)
 
     @property
     def has_revisions(self):
@@ -314,41 +269,74 @@ class History(object):
         return self._branch.get_config()
 
     def get_revno(self, revid):
-        if revid not in self._rev_indices:
-            # ghost parent?
+        if revid is None:
             return 'unknown'
-        seq = self._rev_indices[revid]
-        revno = self._rev_info[seq][0][3]
-        return revno
+        try:
+            revnos = self._querier.get_dotted_revno_range_multi([revid])
+            dotted_revno = revnos[revid]
+        except: # ???
+            import pdb; pdb.set_trace()
+            import sys
+            e = sys.exc_info()
+            return 'unknown'
+        return '.'.join(map(str, dotted_revno))
+
+    def get_dotted_to_rev_id(self, dotted_revnos):
+        # TODO: Create a memory cache, doing bi-directional mapping, possibly
+        #       persisting between HTTP requests.
+        return self._querier.get_revision_ids(dotted_revnos)
+
+    def _get_lh_parent(self, revid):
+        """Get the left-hand parent of a given revision id."""
+        # TODO: Move this into a public method on Querier
+        # TODO: Possibly look into caching some of this info in memory, and
+        #       between HTTP requests.
+        self._querier.ensure_branch_tip()
+        return self._querier._get_lh_parent_rev_id(revid)
+
+    def _get_children(self, revid):
+        """Get the children of the given revision id."""
+        # XXX: We should be filtering this based on self._branch's ancestry...
+        # TODO: We also should be using a method on Querier, instead of doing
+        #       it ourselves
+        c = self._querier._get_cursor()
+        res = c.execute("SELECT c.revision_id"
+                        "  FROM revision p, parent, revision c"
+                        " WHERE child = c.db_id"
+                        "   AND parent = p.db_id"
+                        "   AND p.revision_id = ?",
+                        (revid,)).fetchall()
+        return [r[0] for r in res]
 
     def get_revids_from(self, revid_list, start_revid):
         """
         Yield the mainline (wrt start_revid) revisions that merged each
         revid in revid_list.
         """
+        tip_revid = start_revid
         if revid_list is None:
-            revid_list = [r[0][1] for r in self._rev_info]
+            # This returns the mainline of start_revid
+            # TODO: We could use Querier for this
+            # Note: Don't use self._branch.revision_history, as that always
+            #       grabs the full history, and we now support stopping early.
+            history = self._branch.repository.iter_reverse_revision_history(
+                            start_revid)
+            for rev_id in history:
+                yield rev_id
+            return
         revid_set = set(revid_list)
-        revid = start_revid
 
-        def introduced_revisions(revid):
-            r = set([revid])
-            seq = self._rev_indices[revid]
-            md = self._rev_info[seq][0][2]
-            i = seq + 1
-            while i < len(self._rev_info) and self._rev_info[i][0][2] > md:
-                r.add(self._rev_info[i][0][1])
-                i += 1
-            return r
-        while True:
-            if bzrlib.revision.is_null(revid):
-                return
-            if introduced_revisions(revid) & revid_set:
-                yield revid
-            parents = self._rev_info[self._rev_indices[revid]][2]
-            if len(parents) == 0:
-                return
-            revid = parents[0]
+        while tip_revid is not None and revid_set:
+            parent_revid = self._get_lh_parent(tip_revid)
+            # TODO: Consider caching this, especially between HTTP requests
+            introduced = self._querier.iter_merge_sorted_revisions(
+                start_revision_id=tip_revid, stop_revision_id=parent_revid)
+            introduced_revs = set([i[0] for i in introduced
+                                   if i in revid_set])
+            if introduced_revs:
+                revid_set.difference_update(introduced_revs)
+                yield tip_revid
+            tip_revid = parent_revid
 
     def get_short_revision_history_by_fileid(self, file_id):
         # FIXME: would be awesome if we could get, for a folder, the list of
@@ -366,79 +354,7 @@ class History(object):
         del possible_keys, next_keys
         return revids
 
-    def get_revision_history_since(self, revid_list, date):
-        # if a user asks for revisions starting at 01-sep, they mean inclusive,
-        # so start at midnight on 02-sep.
-        date = date + datetime.timedelta(days=1)
-        # our revid list is sorted in REVERSE date order,
-        # so go thru some hoops here...
-        revid_list.reverse()
-        index = bisect.bisect(_RevListToTimestamps(revid_list,
-                                                   self._branch.repository),
-                              date)
-        if index == 0:
-            return []
-        revid_list.reverse()
-        index = -index
-        return revid_list[index:]
-
-    def get_search_revid_list(self, query, revid_list):
-        """
-        given a "quick-search" query, try a few obvious possible meanings:
-
-            - revision id or # ("128.1.3")
-            - date (US style "mm/dd/yy", earth style "dd-mm-yy", or \
-iso style "yyyy-mm-dd")
-            - comment text as a fallback
-
-        and return a revid list that matches.
-        """
-        # FIXME: there is some silliness in this action.  we have to look up
-        # all the relevant changes (time-consuming) only to return a list of
-        # revids which will be used to fetch a set of changes again.
-
-        # if they entered a revid, just jump straight there;
-        # ignore the passed-in revid_list
-        revid = self.fix_revid(query)
-        if revid is not None:
-            if isinstance(revid, unicode):
-                revid = revid.encode('utf-8')
-            changes = self.get_changes([revid])
-            if (changes is not None) and (len(changes) > 0):
-                return [revid]
-
-        date = None
-        m = self.us_date_re.match(query)
-        if m is not None:
-            date = datetime.datetime(util.fix_year(int(m.group(3))),
-                                     int(m.group(1)),
-                                     int(m.group(2)))
-        else:
-            m = self.earth_date_re.match(query)
-            if m is not None:
-                date = datetime.datetime(util.fix_year(int(m.group(3))),
-                                         int(m.group(2)),
-                                         int(m.group(1)))
-            else:
-                m = self.iso_date_re.match(query)
-                if m is not None:
-                    date = datetime.datetime(util.fix_year(int(m.group(1))),
-                                             int(m.group(2)),
-                                             int(m.group(3)))
-        if date is not None:
-            if revid_list is None:
-                # if no limit to the query was given,
-                # search only the direct-parent path.
-                revid_list = list(self.get_revids_from(None, self.last_revid))
-            return self.get_revision_history_since(revid_list, date)
-
     revno_re = re.compile(r'^[\d\.]+$')
-    # the date regex are without a final '$' so that queries like
-    # "2006-11-30 12:15" still mostly work.  (i think it's better to give
-    # them 90% of what they want instead of nothing at all.)
-    us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))')
-    earth_date_re = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))')
-    iso_date_re = re.compile(r'^(\d\d\d\d)-(\d\d)-(\d\d)')
 
     def fix_revid(self, revid):
         # if a "revid" is actually a dotted revno, convert it to a revid
@@ -448,8 +364,14 @@ iso style "yyyy-mm-dd")
             return self.last_revid
         try:
             if self.revno_re.match(revid):
-                revid = self._revno_revid[revid]
+                revno = tuple(map(int, revid.split('.')))
+                val = self.get_dotted_to_rev_id([revno])[revno]
+                # XXX: Do this more cleanly
+                if val is None:
+                    raise KeyError
+                revid = val
         except KeyError:
+            import pdb; pdb.set_trace()
             raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
 
@@ -528,6 +450,8 @@ iso style "yyyy-mm-dd")
 
     def get_inventory(self, revid):
         if revid not in self._inventory_cache:
+            # TODO: This cache is unbounded, though only used for a single http
+            #       request. Consider what we might do to limit this.
             self._inventory_cache[revid] = (
                 self._branch.repository.get_inventory(revid))
         return self._inventory_cache[revid]
@@ -554,11 +478,11 @@ iso style "yyyy-mm-dd")
 
         merge_point = []
         while True:
-            children = self._rev_info[self._rev_indices[revid]][1]
+            children = self._get_children(revid)
             nexts = []
             for child in children:
-                child_parents = self._rev_info[self._rev_indices[child]][2]
-                if child_parents[0] == revid:
+                child_lh_parent = self._get_lh_parent(child)
+                if child_lh_parent == revid:
                     nexts.append(child)
                 else:
                     merge_point.append(child)
