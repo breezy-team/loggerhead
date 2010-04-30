@@ -438,7 +438,11 @@ def _history_db_iter_merge_sorted_revisions(self, start_revision_id=None,
                     start_revision_id=start_revision_id,
                     stop_revision_id=real_stop_revision_id)
     t1 = time.clock()
-    merge_sorted = self._filter_non_ancestors(iter(merge_sorted))
+    func = getattr(self, '_filter_start_non_ancestors', None)
+    if func is None:
+        func = getattr(self, '_filter_non_ancestors', None)
+    if func is not None:
+        merge_sorted = func(iter(merge_sorted))
     t2 = time.clock()
     if 'history_db' in debug.debug_flags:
         import pprint

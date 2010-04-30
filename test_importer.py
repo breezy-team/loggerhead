@@ -16,6 +16,11 @@
 
 """Test aspects of the importer code."""
 
+import os
+import tempfile
+import threading
+import time
+
 from bzrlib import (
     graph,
     tests,
@@ -678,3 +683,133 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
         inc_merger = self.make_inc_merger(b, 'O', 'O')
         inc_merger.topo_order()
         self.assertScheduledStack(inc_merger, [])
+
+
+class _InterLocker(object):
+    """Wrapper around thread locks to help with testing.
+
+    The idea is that one thread will be wanting to acquire a lock. When it does
+    so, we block it, and signal the testing thread that the acquisition was
+    attempted, so now would be a good time to check that things are proceeding
+    properly.
+    """
+
+    def __init__(self):
+        self._monitored_lock = threading.Lock()
+        # We start the lock in blocked mode, so that we have to call
+        # self.wait_for_acquire before we will let the other thread through.
+        self._monitored_lock.acquire()
+        self._acquire_called = False
+        self._release_called = False
+        self._acquireCondition = threading.Condition()
+        self._releaseCondition = threading.Condition()
+        self._max_wait_time = 1.0
+
+    def acquire(self):
+        """Same as threading.Lock.acquire.
+        
+        This is meant to be called by the thread you are testing / monitoring.
+        """
+        self._acquireCondition.acquire()
+        self._acquire_called = True
+        self._acquireCondition.notify()
+        self._acquireCondition.release()
+        # Acquire the actual lock that this is substituting for
+        t_wait_start = time.time()
+        while not self._monitored_lock.acquire(False):
+            t_waited = time.time() - t_wait_start
+            if t_waited > self._max_wait_time:
+                raise RuntimeError('Acquire timed out after %.1fs'
+                                   % (t_waited,))
+            time.sleep(0.1)
+
+    def release(self):
+        """See threading.Lock.release."""
+        self._monitored_lock.release()
+        self._releaseCondition.acquire()
+        self._release_called = True
+        self._releaseCondition.notify()
+        self._releaseCondition.release()
+
+    def _wait_for_condition(self, condition, evaluator, name, timeout):
+        """Wait for the given condition to trigger.
+
+        :param condition: A Condition variable
+        :param evaluator: A callback to indicate if the condition has actually
+            been fulfilled. Should return True if the condition is ready to go.
+        :param name: An associated name for the condition (used for error
+            messages)
+        :param timeout: If the condition hasn't triggered after timeout
+            seconds, raise an error.
+        :return: When this function returns, the condition lock will be held.
+            Callers are responsible for calling .release()
+        """
+        t_wait_start = time.time()
+        condition.acquire()
+        while not evaluator():
+            t_waited = time.time() - t_wait_start
+            if t_waited > timeout:
+                raise RuntimeError('%s not triggered after %.1f seconds'
+                                   % (name, t_waited))
+            condition.wait(0.1)
+
+    def wait_for_acquire(self):
+        """Called by the test thread.
+
+        This will wait on a Condition until another thread calls 'acquire'.
+        Once that happens, that thread will be blocked, and this call will
+        return. Follow this up with 'wait_for_release' to let the other
+        thread continue, and block until release is called.
+        """
+        self._wait_for_condition(self._acquireCondition, 
+            lambda: self._acquire_called, 'acquire', self._max_wait_time)
+        # Let the other thread start processing from the acquire.
+        self._monitored_lock.release()
+        self._acquireCondition.release()
+
+    def wait_for_release(self):
+        """Block this thread until self.release() is called."""
+        self._wait_for_condition(self._releaseCondition,
+            lambda: self._release_called, 'release', self._max_wait_time)
+        self._releaseCondition.release()
+
+
+class TestQuerier(TestCaseWithGraphs):
+
+    def test_importer_lock(self):
+        fn, temp = tempfile.mkstemp(prefix='test-bzr-history-db-', suffix='.db')
+        os.close(fn)
+        self.addCleanup(os.remove, temp)
+        b = self.make_interesting_branch()
+        b._tip_revision = 'I'
+        importer = history_db.Importer(temp, b, incremental=False)
+        importer.do_import()
+        del importer
+        b._tip_revision = 'O'
+        lock = _InterLocker()
+        query = history_db.Querier(temp, b)
+        query.set_importer_lock(lock)
+        query.close() # We will be doing the rest in another thread, and
+                      # sqlite connections can't be shared between threads
+        t = threading.Thread(target=query.ensure_branch_tip)
+        t.start()
+        # TODO: The only bit we don't handle is that we'd really like the test
+        #       to fail if the other thread didn't exit cleanly. However, this
+        #       is good enough for now.
+        self.addCleanup(t.join)
+        lock.wait_for_acquire()
+        # At this point, the database should not have been updated yet.
+        conn = history_db.dbapi2.connect(temp)
+        res = conn.cursor().execute("SELECT db_id FROM revision"
+                                    " WHERE revision_id = ?",
+                                    ('O',)).fetchone()
+        self.assertIs(None, res)
+        lock.wait_for_release()
+        # Now that it has gotten the lock and finished, we should have the tip
+        # imported properly.
+        res = conn.cursor().execute("SELECT tip_revision"
+                                    "  FROM revision, dotted_revno"
+                                    " WHERE tip_revision = merged_revision"
+                                    "   AND revision_id = ?",
+                                    ('O',)).fetchone()
+        self.assertIsNot(None, res)

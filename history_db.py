@@ -1198,11 +1198,23 @@ class Querier(object):
         self._db_path = db_path
         self._db_conn = None
         self._cursor = None
+        self._importer_lock = None
         self._branch = a_branch
         self._branch_tip_rev_id = a_branch.last_revision()
         self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
         self._tip_is_imported = False
         self._stats = defaultdict(lambda: 0)
+
+    def set_importer_lock(self, lock):
+        """Add a thread-lock for building and running an Importer.
+
+        The DB back-end is generally single-writer, so add a thread lock to
+        avoid having two writers trying to access it at the same time.
+
+        This will be used as part of _import_tip. Note that it doesn't (yet?)
+        support anything like timeout.
+        """
+        self._importer_lock = lock
 
     def _get_cursor(self):
         if self._cursor is not None:
@@ -1233,20 +1245,26 @@ class Querier(object):
     def _import_tip(self):
         if self._cursor is not None:
             self.close()
-        t = time.time()
-        importer = Importer(self._db_path, self._branch,
-                            tip_revision_id=self._branch_tip_rev_id,
-                            incremental=True)
-        importer.do_import()
-        tdelta = time.time() - t
-        if 'history_db' in debug.debug_flags:
-            trace.note('imported %d nodes on-the-fly in %.3fs'
-                       % (importer._stats.get('total_nodes_inserted', 0),
-                          tdelta))
-        self._db_conn = importer._db_conn
-        self._cursor = importer._cursor
-        self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
-        self._tip_is_imported = True
+        if self._importer_lock is not None:
+            self._importer_lock.acquire()
+        try:
+            t = time.time()
+            importer = Importer(self._db_path, self._branch,
+                                tip_revision_id=self._branch_tip_rev_id,
+                                incremental=True)
+            importer.do_import()
+            tdelta = time.time() - t
+            if 'history_db' in debug.debug_flags:
+                trace.note('imported %d nodes on-the-fly in %.3fs'
+                           % (importer._stats.get('total_nodes_inserted', 0),
+                              tdelta))
+            self._db_conn = importer._db_conn
+            self._cursor = importer._cursor
+            self._branch_tip_db_id = self._get_db_id(self._branch_tip_rev_id)
+            self._tip_is_imported = True
+        finally:
+            if self._importer_lock is not None:
+                self._importer_lock.release()
 
     def _is_imported_db_id(self, tip_db_id):
         res = self._get_cursor().execute(
