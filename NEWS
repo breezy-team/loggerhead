@@ -25,6 +25,9 @@ dev [future]
     - Ignore readonly+ prefix when checking if Loggerhead is serving a
       local location. (Reported by Tres Seaver.) (Matt Nordhoff)
 
+    - Set Cache-Control and Expires headers on static pages.
+      (John Arbash Meinel)
+
 
 1.17 [20Aug2009]
 ----------------
