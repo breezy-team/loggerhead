@@ -36,6 +36,7 @@ import re
 import textwrap
 import threading
 
+from bzrlib import lru_cache
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
@@ -207,6 +208,48 @@ class RevInfoMemoryCache(object):
         finally:
             self._lock.release()
 
+
+_revno_revid_cache = lru_cache.LRUCache(10000)
+_revno_revid_lock = threading.RLock()
+
+
+class RevnoRevidMemoryCache(object):
+    """A store that maps revnos to revids based on the branch it is in.
+    """
+
+    def __init__(self, cache, lock, branch_tip):
+        # Note: what we'd really like is something that knew how long it takes
+        # to produce a revno * how often it is accessed. Since some revnos
+        # take 100x longer to produce than others. Could we cheat and just loop
+        # on __getitem__ ?
+        # There are also other possible layouts. A per-branch cache, with an
+        # LRU around the whole thing, etc. I chose this for simplicity.
+        self._branch_tip = branch_tip
+        self._cache = cache
+        # lru_cache is not thread-safe, so we need to lock all accesses.
+        # It is even modified when doing a get() on it.
+        self._lock = lock
+
+    def get(self, key):
+        """Return the data associated with `key`.
+        Otherwise return None.
+        """
+        self._lock.acquire()
+        try:
+            cached = self._cache.get((self._branch_tip, key))
+        finally:
+            self._lock.release()
+        return cached
+
+    def set(self, key, data):
+        """Store `data` under `key`.
+        """
+        self._lock.acquire()
+        try:
+            self._cache[(self._branch_tip, key)] = data
+        finally:
+            self._lock.release()
+
 # Used to store locks that prevent multiple threads from building a 
 # revision graph for the same branch at the same time, because that can
 # cause severe performance issues that are so bad that the system seems
@@ -243,11 +286,9 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
-        # TODO: These could all be cached globally in a thread-safe LRUCache
-        #       which then used (tip_revision, revid) or (tip_revision, revno)
-        #       as the key.
-        self._revno_revid_cache = {}
-        self._revid_revno_cache = {}
+        # Map from (tip_revision, revision_id) => revno_str
+        # and from (tip_revisino, revno_str) => revision_id
+        self._revno_revid_cache = RevInfoMemoryCache(whole_history_data_cache)
         self._querier = _get_querier(branch)
         if self._querier is None:
             assert cache_path is not None
@@ -265,6 +306,8 @@ class History(object):
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
+        self._revno_revid_cache = RevnoRevidMemoryCache(_revno_revid_cache,
+            _revno_revid_lock, self._branch.last_revision())
 
     @property
     def has_revisions(self):
@@ -276,8 +319,9 @@ class History(object):
     def get_revno(self, revid):
         if revid is None:
             return 'unknown'
-        if revid in self._revid_revno_cache:
-            return self._revid_revno_cache[revid]
+        revno_str = self._revno_revid_cache.get(revid)
+        if revno_str is not None:
+            return revno_str
         try:
             revnos = self._querier.get_dotted_revno_range_multi([revid])
             dotted_revno = revnos[revid]
@@ -287,21 +331,23 @@ class History(object):
             e = sys.exc_info()
             return 'unknown'
         revno_str = '.'.join(map(str, dotted_revno))
-        self._revno_revid_cache[revno_str] = revid
-        self._revid_revno_cache[revid] = revno_str
+        self._revno_revid_cache.set(revno_str, revid)
+        self._revno_revid_cache.set(revid, revno_str)
         return revno_str
 
     def get_revid_for_revno(self, revno_str):
         # TODO: Create a memory cache, doing bi-directional mapping, possibly
         #       persisting between HTTP requests.
-        if revno_str in self._revno_revid_cache:
-            return self._revno_revid_cache[revno_str]
+        rev_id = self._revno_revid_cache.get(revno_str)
+        if rev_id is not None:
+            return rev_id
         dotted_revno = tuple(map(int, revno_str.split('.')))
         revnos = self._querier.get_revision_ids([dotted_revno])
-        revnos = dict([('.'.join(map(str, drn)), ri) for drn, ri in revnos])
-        self._revno_revid_cache.update(revnos)
-        self._revid_revno_cache.update(
-            [(ri, rn) for rn, ri in revnos.iteritems()])
+        revnos = dict([('.'.join(map(str, drn)), ri)
+                       for drn, ri in revnos.iteritems()])
+        for revno_str, revid in revnos:
+            self._revno_revid_cache.set(revno_str, revid)
+            self._revno_revid_cache.set(revid, revno_str)
         return revnos[revno_str]
 
     def _get_lh_parent(self, revid):
