@@ -209,7 +209,7 @@ class RevInfoMemoryCache(object):
             self._lock.release()
 
 
-_revno_revid_cache = lru_cache.LRUCache(10000)
+_raw_revno_revid_cache = lru_cache.LRUCache(10000)
 _revno_revid_lock = threading.RLock()
 
 
@@ -233,6 +233,8 @@ class RevnoRevidMemoryCache(object):
     def get(self, key):
         """Return the data associated with `key`.
         Otherwise return None.
+
+        :param key: Can be a revno_str or a revid.
         """
         self._lock.acquire()
         try:
@@ -241,12 +243,15 @@ class RevnoRevidMemoryCache(object):
             self._lock.release()
         return cached
 
-    def set(self, key, data):
+    def set(self, revid, revno_str):
         """Store `data` under `key`.
         """
         self._lock.acquire()
         try:
-            self._cache[(self._branch_tip, key)] = data
+            # TODO: StaticTuples ? Probably only useful if we cache more than
+            #       10k of them. 100k/1M is probably useful.
+            self._cache[(self._branch_tip, revid)] = revno_str
+            self._cache[(self._branch_tip, revno_str)] = revid
         finally:
             self._lock.release()
 
@@ -288,7 +293,6 @@ class History(object):
         self._inventory_cache = {}
         # Map from (tip_revision, revision_id) => revno_str
         # and from (tip_revisino, revno_str) => revision_id
-        self._revno_revid_cache = RevInfoMemoryCache(whole_history_data_cache)
         self._querier = _get_querier(branch)
         if self._querier is None:
             assert cache_path is not None
@@ -303,10 +307,11 @@ class History(object):
         #       simpler...
         self._querier.ensure_branch_tip()
         self._branch_nick = self._branch.get_config().get_nickname()
+        self._show_merge_points = show_merge_points
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
-        self._revno_revid_cache = RevnoRevidMemoryCache(_revno_revid_cache,
+        self._revno_revid_cache = RevnoRevidMemoryCache(_raw_revno_revid_cache,
             _revno_revid_lock, self._branch.last_revision())
 
     @property
@@ -322,31 +327,46 @@ class History(object):
         revno_str = self._revno_revid_cache.get(revid)
         if revno_str is not None:
             return revno_str
-        try:
-            revnos = self._querier.get_dotted_revno_range_multi([revid])
-            dotted_revno = revnos[revid]
-        except: # ???
-            import pdb; pdb.set_trace()
-            import sys
-            e = sys.exc_info()
-            return 'unknown'
+        revnos = self._querier.get_dotted_revno_range_multi([revid])
+        # TODO: Should probably handle KeyError?
+        dotted_revno = revnos[revid]
         revno_str = '.'.join(map(str, dotted_revno))
-        self._revno_revid_cache.set(revno_str, revid)
         self._revno_revid_cache.set(revid, revno_str)
         return revno_str
 
+    def get_revnos(self, revids):
+        """Get a map of revid => revno for all revisions."""
+        revno_map = {}
+        unknown = []
+        for revid in revids:
+            if revid is None:
+                revno_map[revid] = 'unknown'
+                continue
+            revno_str = self._revno_revid_cache.get(revid)
+            if revno_str is not None:
+                revno_map[revid] = revno_str
+                continue
+            unknown.append(revid)
+        if not unknown:
+            return revno_map
+        # querier returns dotted revno tuples
+        query_revno_map = self._querier.get_dotted_revno_range_multi(
+                            unknown)
+        for revid, dotted_revno in query_revno_map.iteritems():
+            revno_str = '.'.join(map(str, dotted_revno))
+            self._revno_revid_cache.set(revid, revno_str)
+            revno_map[revid] = revno_str
+        return revno_map
+
     def get_revid_for_revno(self, revno_str):
-        # TODO: Create a memory cache, doing bi-directional mapping, possibly
-        #       persisting between HTTP requests.
-        rev_id = self._revno_revid_cache.get(revno_str)
-        if rev_id is not None:
-            return rev_id
+        revid = self._revno_revid_cache.get(revno_str)
+        if revid is not None:
+            return revid
         dotted_revno = tuple(map(int, revno_str.split('.')))
         revnos = self._querier.get_revision_ids([dotted_revno])
         revnos = dict([('.'.join(map(str, drn)), ri)
                        for drn, ri in revnos.iteritems()])
         for revno_str, revid in revnos:
-            self._revno_revid_cache.set(revno_str, revid)
             self._revno_revid_cache.set(revid, revno_str)
         return revnos[revno_str]
 
@@ -385,8 +405,8 @@ class History(object):
             #       grabs the full history, and we now support stopping early.
             history = self._branch.repository.iter_reverse_revision_history(
                             start_revid)
-            for rev_id in history:
-                yield rev_id
+            for revid in history:
+                yield revid
             return
         revid_set = set(revid_list)
 
@@ -611,21 +631,30 @@ class History(object):
         if len(changes) == 0:
             return changes
 
-        # some data needs to be recalculated each time, because it may
-        # change as new revisions are added.
+        needed_revnos = set()
         for change in changes:
-            merge_revids = self.simplify_merge_point_list(
-                               self.get_merge_point_list(change.revid))
-            change.merge_points = [
-                util.Container(revid=r,
-                revno=self.get_revno(r)) for r in merge_revids]
-            if len(change.parents) > 0:
-                change.parents = [util.Container(revid=r,
-                    revno=self.get_revno(r)) for r in change.parents]
-            change.revno = self.get_revno(change.revid)
+            needed_revnos.add(change.revid)
+            needed_revnos.update([p_id for p_id in change.parents])
+        revno_map = self.get_revnos(needed_revnos)
 
+        def merge_points_callback(a_change, attr):
+            merge_revids = self.simplify_merge_point_list(
+                               self.get_merge_point_list(a_change.revid))
+            if not merge_revids:
+                return []
+            revno_map = self.get_revnos(merge_revids)
+            return [util.Container(revid=r, revno=revno_map[r])
+                    for r in merge_revids]
         parity = 0
         for change in changes:
+            if self._show_merge_points:
+                change._set_property('merge_points', merge_points_callback)
+            else:
+                change.merge_points = []
+            if len(change.parents) > 0:
+                change.parents = [util.Container(revid=r, revno=revno_map[r])
+                                  for r in change.parents]
+            change.revno = revno_map[change.revid]
             change.parity = parity
             parity ^= 1
 
@@ -635,7 +664,7 @@ class History(object):
         # FIXME: deprecated method in getting a null revision
         revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
                             revid_list)
-        parent_map = self._branch.repository.get_graph().get_parent_map(
+        parent_map = self._branch.repository.get_parent_map(
                          revid_list)
         # We need to return the answer in the same order as the input,
         # less any ghosts.
