@@ -391,7 +391,7 @@ class Importer(object):
         pb = ui.ui_factory.nested_progress_bar()
         try:
             while needed:
-                # pb.update('Finding ancestry', len(all_needed), len(all_needed))
+                pb.update('Finding ancestry', len(all_needed), len(all_needed))
                 rev_id = needed.pop()
                 if rev_id in known:
                     # We may add particular parents multiple times, just ignore
