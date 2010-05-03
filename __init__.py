@@ -70,7 +70,6 @@ class cmd_history_db_create(commands.Command):
             importer = _mod_history_db.Importer(db, b, incremental=incremental,
                                                 validate=validate)
             importer.do_import(expand_all=expand_all)
-            importer.build_mainline_cache()
         finally:
             b.unlock()
         trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
@@ -533,15 +532,13 @@ def _history_db_post_change_branch_tip_hook(params):
     t2 = time.clock()
     importer.do_import()
     t3 = time.clock()
-    importer.build_mainline_cache()
-    t4 = time.clock()
     if 'history_db' in debug.debug_flags:
         info = trace.note
     else:
         info = trace.mutter
     info('history_db post-change-hook took %.3fs'
          ' (%.3fs to get_config, %.3fs to init, %.3fs to import)'
-         % (t4-t0, t1-t0, t2-t1, t3-t2))
+         % (t3-t0, t1-t0, t2-t1, t3-t2))
     trace.mutter('Stats:\n%s'
                  % (pprint.pformat(dict(importer._stats)),))
 

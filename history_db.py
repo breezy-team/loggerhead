@@ -98,6 +98,8 @@ def _get_result_for_many(cursor, query, params):
 class Importer(object):
     """Import data from bzr into the history_db."""
 
+    _MAINLINE_PARENT_RANGE_LEN = 100
+
     def __init__(self, db_path, a_branch, tip_revision_id=None,
                  incremental=False, validate=False):
         db_conn = dbapi2.connect(db_path)
@@ -359,6 +361,7 @@ class Importer(object):
                 assert last_mainline_rev_id is not None
                 self._insert_nodes(last_mainline_rev_id, new_nodes)
                 new_nodes = []
+            self._build_one_mainline(tip_revision_id)
         finally:
             if pb is not None:
                 pb.finished()
@@ -388,7 +391,7 @@ class Importer(object):
         pb = ui.ui_factory.nested_progress_bar()
         try:
             while needed:
-                pb.update('Finding ancestry', len(all_needed), len(all_needed))
+                # pb.update('Finding ancestry', len(all_needed), len(all_needed))
                 rev_id = needed.pop()
                 if rev_id in known:
                     # We may add particular parents multiple times, just ignore
@@ -480,11 +483,23 @@ class Importer(object):
         # Just make sure the db has valid info for all the existing entries
         self._update_ancestry(new_tip_rev_id)
 
-    def _check_range_exists_for(self, head_db_id):
+    def _get_mainline_range_count(self, head_db_id):
         """Does the given head_db_id already have a range defined using it."""
-        return self._cursor.execute("SELECT count(*) FROM mainline_parent_range"
-                                    " WHERE head = ?",
-                                    (head_db_id,)).fetchone()[0] > 0
+        res = self._cursor.execute("SELECT pkey, count, tail"
+                                   " FROM mainline_parent_range"
+                                   " WHERE head = ?"
+                                   " ORDER BY count DESC LIMIT 1",
+                                   [head_db_id]).fetchone()
+        if res is None:
+            return None, None, None
+        return res
+
+    def _get_mainline_range(self, range_key):
+        """Get the revisions in the mainline range specified."""
+        res = self._cursor.execute("SELECT revision FROM mainline_parent"
+                                   " WHERE range = ?"
+                                   " ORDER BY dist DESC", [range_key])
+        return [r[0] for r in res.fetchall()]
 
     def _get_lh_parent_db_id(self, revision_db_id):
         parent_res = self._cursor.execute("""
@@ -514,58 +529,39 @@ class Importer(object):
             " VALUES (?, ?, ?)",
             [(range_key, d, idx) for idx, d in enumerate(range_db_ids)])
 
-    def build_mainline_cache(self):
-        """Given the current branch, cache mainline information."""
-        self._build_one_mainline(self._branch_tip_rev_id)
-        # TODO: expand_all?
-
     def _build_one_mainline(self, head_rev_id):
-        # I'm not sure if this is optimal, but for now, I just walk backwards
-        # through the mainline, and see if there is already a cached version,
-        # or if I've stepped 100 revisions. If I've gone 100, I checkpoint, and
-        # start again.
-        # TODO: To avoid getting trivial ranges after large ranges, we could
-        #       use another technique:
-        #  a) Walk up to X revisions
-        #  b) If we still haven't found a tip, then we stop, and split out a
-        #     Y-revision range. Starting a new range with the remaining X-Y
-        #     nodes.
-        #  c) If we do find a tip, see how many revisions it points to (Z). If
-        #     X + Z < threshold, then collapse the ranges (this could
-        #     potentially be done multiple times.) However, I *think* that if
-        #     the policy is to collapse at 1, then you should avoid chained
-        #     collapses. (Any given revision should have only 1 partial jump
-        #     before it gets into large-range areas.)
-        # The specific thresholds are arbitrary, but it should mean you would
-        # average a larger 'minimum' size. And (c) helps avoid fragmentation.
-        # (Where multiple imports turn a 100-revision range into 20 5-revision
-        # ranges.)
+        # 1) Walk backward until you find an existing entry in the
+        #    mainline_parent_range table (or you reach the end)
+        # 2) If the range has less than X revisions, include it in the
+        #    revisions to be added
+        # 3) chop the list into X revision sections, and insert them
+        #
+        # This should ensure that any given ancestry has at most 1 section
+        # which has less than X revisions, and it should preserve convergence.
         self._ensure_revisions([head_rev_id])
         cur_db_id = self._rev_id_to_db_id[head_rev_id]
         range_db_ids = []
-        try:
-            while cur_db_id is not None:
-                if self._check_range_exists_for(cur_db_id):
-                    # This already exists as a valid 'head' in the range cache,
-                    # so we can assume that all parents are already covered in
-                    # reasonable ranges.
-                    break
-                if len(range_db_ids) >= 100:
-                    # We have a 100 node range
-                    self._insert_range(range_db_ids, cur_db_id)
-                    # We want to start a new range, with
-                    #   new_range.head == last_range.tail
-                    range_db_ids = []
+        while cur_db_id is not None:
+            (range_key, next_count,
+             tail) = self._get_mainline_range_count(cur_db_id)
+            if range_key is not None:
+                # This tip is already present in mainline_parent_range
+                # table.
+                if (range_db_ids
+                    and next_count < self._MAINLINE_PARENT_RANGE_LEN):
+                    range_db_ids.extend(self._get_mainline_range(range_key))
+                    cur_db_id = tail
+                break
+            else:
                 range_db_ids.append(cur_db_id)
-                parent_db_id = self._get_lh_parent_db_id(cur_db_id)
-                cur_db_id = parent_db_id
-            if len(range_db_ids) > 1:
-                self._insert_range(range_db_ids, cur_db_id)
-        except:
-            self._db_conn.rollback()
-            raise
-        else:
-            self._db_conn.commit()
+                cur_db_id = self._get_lh_parent_db_id(cur_db_id)
+        # We now have a list of db ids that need to be split up into
+        # ranges.
+        while range_db_ids:
+            tail_db_ids = range_db_ids[-self._MAINLINE_PARENT_RANGE_LEN:]
+            del range_db_ids[-self._MAINLINE_PARENT_RANGE_LEN:]
+            self._insert_range(tail_db_ids, cur_db_id)
+            cur_db_id = tail_db_ids[0]
 
 
 class _MergeSortNode(object):
