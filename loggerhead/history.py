@@ -356,7 +356,7 @@ class History(object):
             revno_str = '.'.join(map(str, dotted_revno))
             self._revno_revid_cache.set(revid, revno_str)
             revno_map[revid] = revno_str
-            ghosts.discard(revids)
+            ghosts.discard(revid)
         if ghosts:
             revno_map.update([(n, 'unknown') for n in ghosts])
         return revno_map
