@@ -776,10 +776,14 @@ class _InterLocker(object):
 
 class TestQuerier(TestCaseWithGraphs):
 
-    def test_importer_lock(self):
+    def get_db_path(self):
         fn, temp = tempfile.mkstemp(prefix='test-bzr-history-db-', suffix='.db')
         os.close(fn)
         self.addCleanup(os.remove, temp)
+        return temp
+        
+    def test_importer_lock(self):
+        temp = self.get_db_path()
         b = self.make_interesting_branch()
         b._tip_revision = 'I'
         importer = history_db.Importer(temp, b, incremental=False)
@@ -813,3 +817,14 @@ class TestQuerier(TestCaseWithGraphs):
                                     "   AND revision_id = ?",
                                     ('O',)).fetchone()
         self.assertIsNot(None, res)
+
+    def test_get_merged_into(self):
+        db_path = self.get_db_path()
+        b = self.make_interesting_branch()
+        importer = history_db.Importer(db_path, b, incremental=False)
+        importer.do_import()
+        del importer
+        query = history_db.Querier(db_path, b)
+        rev_to_mainline_map = query.get_merged_into(['E', 'F', 'H', 'L'])
+        self.assertEqual({'E': 'G', 'F': 'G', 'H': 'I', 'L': 'O'},
+                         rev_to_mainline_map)

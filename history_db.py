@@ -1377,44 +1377,25 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return None
 
-    def get_dotted_revno_range(self, revision_id):
-        """Determine the dotted revno, using the range info, etc."""
-        t = time.time()
-        tip_db_id = self._branch_tip_db_id
-        if tip_db_id is not None:
-            raise TipNotImported(self._branch, self._branch_tip_rev_id)
-        revno = None
-        while tip_db_id is not None:
-            self._stats['num_steps'] += 1
-            range_res = self._get_cursor().execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (tip_db_id,)).fetchone()
-            if range_res is None:
-                revno_res = self._get_cursor().execute(
-                    "SELECT revno FROM dotted_revno"
-                    " WHERE tip_revision = ? AND merged_revision = ?",
-                    (tip_db_id, rev_db_id)).fetchone()
-                next_db_id = self._get_lh_parent_db_id(tip_db_id)
-            else:
-                pkey, next_db_id = range_res
-                revno_res = self._get_cursor().execute(
-                    "SELECT revno FROM dotted_revno, mainline_parent"
-                    " WHERE tip_revision = mainline_parent.revision"
-                    "   AND mainline_parent.range = ?"
-                    "   AND merged_revision = ?"
-                    " LIMIT 1 -- hint, should always be only 1",
-                    (pkey, rev_db_id)).fetchone()
-            tip_db_id = next_db_id
-            if revno_res is not None:
-                revno = tuple(map(int, revno_res[0].split('.')))
-                break
-        self._stats['query_time'] += (time.time() - t)
-        return revno
+    def _get_range_key_and_tail(self, tip_db_id):
+        """Return the best range w/ head = tip_db_id or None."""
+        range_res = self._get_cursor().execute(
+            "SELECT pkey, tail"
+            "  FROM mainline_parent_range"
+            " WHERE head = ?"
+            " ORDER BY count DESC LIMIT 1",
+            (tip_db_id,)).fetchone()
+        if range_res is None:
+            tail = self._get_lh_parent_db_id(tip_db_id)
+            return None, tail
+        return range_res
 
+    # Compatibility thunk use get_dotted_revnos instead
     def get_dotted_revno_range_multi(self, revision_ids):
+        """See get_dotted_revnos"""
+        return self.get_dotted_revnos(revision_ids)
+
+    def get_dotted_revnos(self, revision_ids):
         """Determine the dotted revno, using the range info, etc."""
         self.ensure_branch_tip()
         t = time.time()
@@ -1433,22 +1414,15 @@ class Querier(object):
         revnos = {}
         while tip_db_id is not None and db_ids:
             self._stats['num_steps'] += 1
-            range_res = cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (tip_db_id,)).fetchone()
-            if range_res is None:
+            range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+            if range_key is None:
                 revno_res = cursor.execute(_add_n_params(
                     "SELECT merged_revision, revno FROM dotted_revno"
                     " WHERE tip_revision = ?"
                     "   AND merged_revision IN (%s)",
                     len(db_ids)), 
                     [tip_db_id] + list(db_ids)).fetchall()
-                next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
-                pkey, next_db_id = range_res
                 revno_res = cursor.execute(_add_n_params(
                     "SELECT merged_revision, revno"
                     "  FROM dotted_revno, mainline_parent"
@@ -1456,7 +1430,7 @@ class Querier(object):
                     "   AND mainline_parent.range = ?"
                     "   AND merged_revision IN (%s)",
                     len(db_ids)), 
-                    [pkey] + list(db_ids)).fetchall()
+                    [range_key] + list(db_ids)).fetchall()
             tip_db_id = next_db_id
             for db_id, revno in revno_res:
                 db_ids.discard(db_id)
@@ -1477,13 +1451,8 @@ class Querier(object):
         cursor = self._get_cursor()
         while tip_db_id is not None and revno_strs:
             self._stats['num_steps'] += 1
-            range_res = cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (tip_db_id,)).fetchone()
-            if range_res is None:
+            range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+            if range_key is None:
                 revision_res = cursor.execute(_add_n_params(
                     "SELECT revision_id, revno"
                     "  FROM dotted_revno, revision"
@@ -1491,9 +1460,7 @@ class Querier(object):
                     "   AND tip_revision = ?"
                     "   AND revno IN (%s)", len(revno_strs)),
                     [tip_db_id] + list(revno_strs)).fetchall()
-                next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
-                pkey, next_db_id = range_res
                 revision_res = cursor.execute(_add_n_params(
                     "SELECT revision_id, revno"
                     "  FROM dotted_revno, mainline_parent, revision"
@@ -1501,7 +1468,7 @@ class Querier(object):
                     "   AND merged_revision = revision.db_id"
                     "   AND mainline_parent.range = ?"
                     "   AND revno IN (%s)", len(revno_strs)),
-                    [pkey] + list(revno_strs)).fetchall()
+                    [range_key] + list(revno_strs)).fetchall()
             tip_db_id = next_db_id
             for revision_id, revno_str in revision_res:
                 dotted = tuple(map(int, revno_str.split('.')))
@@ -1509,6 +1476,54 @@ class Querier(object):
                 revno_map[dotted] = revision_id
         self._stats['query_time'] += (time.time() - t)
         return revno_map
+
+    def get_merged_into(self, revision_ids):
+        """Determine what mainline revisions merged the given revisions."""
+        self.ensure_branch_tip()
+        t = time.time()
+        tip_db_id = self._branch_tip_db_id
+        if tip_db_id is None:
+            raise TipNotImported(self._branch, self._branch_tip_rev_id)
+        cursor = self._get_cursor()
+        db_ids = set()
+        db_id_to_rev_id = {}
+        for rev_id in revision_ids:
+            db_id = self._get_db_id(rev_id)
+            if db_id is None:
+                import pdb; pdb.set_trace()
+            db_ids.add(db_id)
+            db_id_to_rev_id[db_id] = rev_id
+        revision_to_mainline_map = {}
+        while tip_db_id is not None and db_ids:
+            self._stats['num_steps'] += 1
+            range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+            if range_key is None:
+                mainline_res = cursor.execute(_add_n_params(
+                    "SELECT revision_id, merged_revision"
+                    "  FROM dotted_revno, revision"
+                    " WHERE tip_revision = ?"
+                    "   AND tip_revision = revision.db_id"
+                    "   AND merged_revision IN (%s)",
+                    len(db_ids)), 
+                    [tip_db_id] + list(db_ids)).fetchall()
+            else:
+                mainline_res = cursor.execute(_add_n_params(
+                    "SELECT revision_id, merged_revision"
+                    "  FROM dotted_revno, mainline_parent, revision"
+                    " WHERE tip_revision = mainline_parent.revision"
+                    "   AND tip_revision = db_id"
+                    "   AND mainline_parent.range = ?"
+                    "   AND merged_revision IN (%s)",
+                    len(db_ids)), 
+                    [range_key] + list(db_ids)).fetchall()
+            tip_db_id = next_db_id
+            for mainline_revision_id, merged_db_id in mainline_res:
+                db_ids.discard(merged_db_id)
+                revision_to_mainline_map[db_id_to_rev_id[merged_db_id]] = \
+                    mainline_revision_id
+        self._stats['query_time'] += (time.time() - t)
+        return revision_to_mainline_map
+
 
     def walk_mainline(self):
         """Walk the db, and grab all the mainline identifiers."""
@@ -1539,16 +1554,9 @@ class Querier(object):
         :return: (range_or_None, next_db_id)
         """
         cursor = self._get_cursor()
-        range_res = cursor.execute(
-            "SELECT pkey, tail"
-            "  FROM mainline_parent_range"
-            " WHERE head = ?"
-            " ORDER BY count DESC LIMIT 1",
-            (head_db_id,)).fetchone()
-        if range_res is None:
-            parent_db_id = self._get_lh_parent_db_id(head_db_id)
-            return None, parent_db_id
-        range_key, tail_db_id = range_res
+        range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+        if range_key is None:
+            return None, next_db_id
         # TODO: Is ORDER BY dist ASC expensive? We know a priori that the list
         #       is probably already in sorted order, but does sqlite know that?
         range_db_ids = cursor.execute(
@@ -1556,7 +1564,7 @@ class Querier(object):
             " WHERE range = ? ORDER BY dist ASC",
             (range_key,)).fetchall()
         db_ids = [r[0] for r in range_db_ids]
-        return db_ids, tail_db_id
+        return db_ids, next_db_id
 
     def walk_mainline_using_ranges(self):
         t = time.time()
@@ -1656,26 +1664,19 @@ class Querier(object):
         cursor = self._get_cursor()
         while db_id is not None:
             self._stats['num_steps'] += 1
-            range_res = cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (db_id,)).fetchone()
-            if range_res is None:
-                next_db_id = self._get_lh_parent_db_id(db_id)
+            range_key, next_db_id = self._get_range_key_and_tail(db_id) 
+            if range_key is None:
                 merged_revs = cursor.execute(
                     "SELECT merged_revision FROM dotted_revno"
                     " WHERE tip_revision = ?",
                     (db_id,)).fetchall()
                 all_ancestors.update([r[0] for r in merged_revs])
             else:
-                pkey, next_db_id = range_res
                 merged_revs = cursor.execute(
                     "SELECT merged_revision FROM dotted_revno, mainline_parent"
                     " WHERE tip_revision = mainline_parent.revision"
                     "   AND mainline_parent.range = ?",
-                    (pkey,)).fetchall()
+                    [range_key]).fetchall()
                 all_ancestors.update([r[0] for r in merged_revs])
             db_id = next_db_id
         self._stats['query_time'] += (time.time() - t)
@@ -1691,28 +1692,21 @@ class Querier(object):
                 return tip_db_id
             self._stats['num_steps'] += 1
             self._stats['step_find_tip_containing'] += 1
-            range_res = cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (tip_db_id,)).fetchone()
-            if range_res is None:
+            range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+            if range_key is None:
                 present_res = cursor.execute(
                     "SELECT 1 FROM dotted_revno"
                     " WHERE tip_revision = ?"
                     "   AND merged_revision = ?",
                     [tip_db_id, merged_db_id]).fetchone()
-                next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
-                pkey, next_db_id = range_res
                 present_res = cursor.execute(
                     "SELECT 1"
                     "  FROM dotted_revno, mainline_parent"
                     " WHERE tip_revision = mainline_parent.revision"
                     "   AND mainline_parent.range = ?"
                     "   AND merged_revision = ?",
-                    [pkey, merged_db_id]).fetchone()
+                    [range_key, merged_db_id]).fetchone()
             if present_res is not None:
                 # We found a tip that contains merged_db_id
                 return tip_db_id
@@ -1729,13 +1723,8 @@ class Querier(object):
         while tip_db_id is not None:
             self._stats['num_steps'] += 1
             self._stats['step_get_merge_sorted'] += 1
-            range_res = cursor.execute(
-                "SELECT pkey, tail"
-                "  FROM mainline_parent_range"
-                " WHERE head = ?"
-                " ORDER BY count DESC LIMIT 1",
-                (tip_db_id,)).fetchone()
-            if range_res is None:
+            range_key, next_db_id = self._get_range_key_and_tail(tip_db_id)
+            if range_key is None:
                 merged_res = cursor.execute(
                     "SELECT db_id, revision_id, merge_depth, revno,"
                     "       end_of_merge"
@@ -1744,9 +1733,7 @@ class Querier(object):
                     "   AND db_id = merged_revision"
                     " ORDER BY dist",
                     (tip_db_id,)).fetchall()
-                next_db_id = self._get_lh_parent_db_id(tip_db_id)
             else:
-                pkey, next_db_id = range_res
                 # NOTE: Adding the ORDER BY costs us 981ms - 844ms = 137ms when
                 #       doing 'bzr log -n0 -r -10..-1' on bzr.dev.
                 #       That seems like a lot. Extracting them without sorting
@@ -1765,7 +1752,7 @@ class Querier(object):
                     "   AND mainline_parent.range = ?"
                     "   AND db_id = merged_revision",
                     # " ORDER BY mainline_parent.dist, dotted_revno.dist",
-                    [pkey]).fetchall()
+                    [range_key]).fetchall()
             if found_start:
                 for db_id, r_id, depth, revno_str, eom in merged_res:
                     if stop_db_id is not None and db_id == stop_db_id:

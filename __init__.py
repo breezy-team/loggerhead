@@ -133,7 +133,7 @@ class cmd_history_db_get_dotted_revno(commands.Command):
                               for rev_id in rev_ids]
                 else:
                     assert method == 'db-range-multi'
-                    revno_map = query.get_dotted_revno_range_multi(rev_ids)
+                    revno_map = query.get_dotted_revnos(rev_ids)
                     revnos = [(revno_map[rev_id], rev_id) for rev_id in rev_ids]
                 trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
             tdelta = time.time() - t
@@ -202,7 +202,7 @@ class cmd_history_db_dotted_to_rev(commands.Command):
                                     for r in revno_list]
                 else:
                     assert method == 'db-range-multi'
-                    revno_map = query.get_dotted_revno_range_multi(rev_ids)
+                    revno_map = query.get_dotted_revnos(rev_ids)
                     revnos = [(revno_map[rev_id], rev_id) for rev_id in rev_ids]
                 trace.note('Stats:\n%s' % (pprint.pformat(dict(query._stats)),))
             tdelta = time.time() - t
@@ -471,7 +471,7 @@ def _history_db_revision_id_to_dotted_revno(self, revision_id):
                          'revision_id => dotted_revno')
         return _orig_do_rev_id_to_dotted(self, revision_id)
     t1 = time.clock()
-    revision_id_map = query.get_dotted_revno_range_multi([revision_id])
+    revision_id_map = query.get_dotted_revnos([revision_id])
     t2 = time.clock()
     if 'history_db' in debug.debug_flags:
         trace.note('history_db rev=>dotted %s took %.3fs, %.3fs to init,'
