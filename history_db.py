@@ -1477,7 +1477,7 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return revno_map
 
-    def get_merged_into(self, revision_ids):
+    def get_mainline_where_merged(self, revision_ids):
         """Determine what mainline revisions merged the given revisions."""
         self.ensure_branch_tip()
         t = time.time()

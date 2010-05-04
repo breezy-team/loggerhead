@@ -825,6 +825,7 @@ class TestQuerier(TestCaseWithGraphs):
         importer.do_import()
         del importer
         query = history_db.Querier(db_path, b)
-        rev_to_mainline_map = query.get_merged_into(['E', 'F', 'H', 'L'])
+        rev_to_mainline_map = query.get_mainline_where_merged(
+            ['E', 'F', 'H', 'L'])
         self.assertEqual({'E': 'G', 'F': 'G', 'H': 'I', 'L': 'O'},
                          rev_to_mainline_map)
