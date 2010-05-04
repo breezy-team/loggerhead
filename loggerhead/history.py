@@ -307,7 +307,6 @@ class History(object):
         #       simpler...
         self._querier.ensure_branch_tip()
         self._branch_nick = self._branch.get_config().get_nickname()
-        self._show_merge_points = show_merge_points
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
@@ -352,10 +351,13 @@ class History(object):
         # querier returns dotted revno tuples
         query_revno_map = self._querier.get_dotted_revno_range_multi(
                             unknown)
+        ghosts = set(revids)
         for revid, dotted_revno in query_revno_map.iteritems():
             revno_str = '.'.join(map(str, dotted_revno))
             self._revno_revid_cache.set(revid, revno_str)
             revno_map[revid] = revno_str
+            ghosts.discard(revids)
+        revno_map.update([(n, 'unknown') for n in ghosts])
         return revno_map
 
     def get_revid_for_revno(self, revno_str):
@@ -647,10 +649,7 @@ class History(object):
                     for r in merge_revids]
         parity = 0
         for change in changes:
-            if self._show_merge_points:
-                change._set_property('merge_points', merge_points_callback)
-            else:
-                change.merge_points = []
+            change._set_property('merge_points', merge_points_callback)
             if len(change.parents) > 0:
                 change.parents = [util.Container(revid=r, revno=revno_map[r])
                                   for r in change.parents]
