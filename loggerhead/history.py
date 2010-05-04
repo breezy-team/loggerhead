@@ -366,7 +366,7 @@ class History(object):
         revnos = self._querier.get_revision_ids([dotted_revno])
         revnos = dict([('.'.join(map(str, drn)), ri)
                        for drn, ri in revnos.iteritems()])
-        for revno_str, revid in revnos:
+        for revno_str, revid in revnos.iteritems():
             self._revno_revid_cache.set(revid, revno_str)
         return revnos[revno_str]
 
@@ -448,7 +448,7 @@ class History(object):
             return self.last_revid
         try:
             if self.revno_re.match(revid):
-                val = self.get_revid_for_revno([revid])[revid]
+                val = self.get_revid_for_revno(revid)
                 # XXX: Do this more cleanly
                 if val is None:
                     raise KeyError
