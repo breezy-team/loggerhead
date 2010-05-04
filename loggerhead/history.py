@@ -351,7 +351,7 @@ class History(object):
         # querier returns dotted revno tuples
         query_revno_map = self._querier.get_dotted_revno_range_multi(
                             unknown)
-        ghosts = set(revids)
+        ghosts = set(unknown)
         for revid, dotted_revno in query_revno_map.iteritems():
             revno_str = '.'.join(map(str, dotted_revno))
             self._revno_revid_cache.set(revid, revno_str)
@@ -730,6 +730,21 @@ class History(object):
             return self.get_file_changes_uncached(entry)
         else:
             return self._file_change_cache.get_file_changes(entry)
+
+    def get_merged_in(self, entry):
+        """Get the point where this entry was merged into the mainline.
+        
+        :param entry: A Container having .revno and .revid.
+        :return: The revno string of the mainline revision.
+        """
+        if '.' not in entry.revno:
+            return None
+        rev_id_to_mainline = self._querier.get_mainline_where_merged(
+            [entry.revid])
+        revid = rev_id_to_mainline.get(entry.revid, None)
+        if revid is None:
+            return None
+        return self.get_revno(revid)
 
     def add_changes(self, entry):
         changes = self.get_file_changes(entry)
