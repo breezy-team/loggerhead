@@ -5,7 +5,7 @@
   </title>
   <updated tal:content="string:${updated}Z">${updated}</updated>
   <id tal:content="python:branch.url(['/atom'])">url</id>
-  <link rel="self" type="application/atom+xml" tal:attributes="href python:branch.url(['/atom'])" />
+  <link rel="self" type="application/atom+xml" tal:attributes="href python:branch.absolute_url(['/atom'])" />
   <link rel="alternate" type="text/html" tal:attributes="href python:branch.url(['/changes'])" />
 
   <entry tal:repeat="entry changes">
@@ -16,7 +16,7 @@
       updated
     </updated>
     <!-- TODO: The feed validator will generate warnings because this is URL-encoded -->
-    <id tal:content="python:branch.url(['/revision', entry.revno])">
+    <id tal:content="python:branch.absolute_url(['/revision', entry.revno])">
       ID
     </id>
     <author tal:repeat="author entry/authors">
