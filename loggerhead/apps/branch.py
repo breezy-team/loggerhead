@@ -89,10 +89,15 @@ class BranchWSGIApp(object):
             if v is not None:
                 qs.append('%s=%s' % (k, urllib.quote(v)))
         qs = '&'.join(qs)
-        return request.construct_url(
-            self._environ, script_name=self._url_base,
-            path_info=unicode('/'.join(args)).encode('utf-8'),
-            querystring=qs)
+        path_info = urllib.quote(
+            unicode('/'.join(args)).encode('utf-8'), safe='/~:')
+        if qs:
+            path_info += '?' + qs
+        return self._url_base + path_info
+
+    def absolute_url(self, *args, **kw):
+        rel_url = self.url(*args, **kw)
+        return request.resolve_relative_url(rel_url, self._environ)
 
     def context_url(self, *args, **kw):
         kw = util.get_context(**kw)
@@ -154,7 +159,7 @@ class BranchWSGIApp(object):
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
-                self._url_base + '/changes')
+                self.absolute_url('/changes'))
         if path == 'static':
             return static_app(environ, start_response)
         cls = self.controllers_dict.get(path)

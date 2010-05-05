@@ -69,8 +69,8 @@ class BranchesFromTransportServer(object):
     def app_for_non_branch(self, environ):
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPMovedPermanently(
-                environ['SCRIPT_NAME'] + '/')
+            raise httpexceptions.HTTPMovedPermanently.relative_redirect(
+                environ['SCRIPT_NAME'] + '/', environ)
         elif segment == '':
             if self.name:
                 name = self.name

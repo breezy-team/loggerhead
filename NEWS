@@ -28,6 +28,9 @@ dev [future]
     - Set Cache-Control and Expires headers on static pages.
       (John Arbash Meinel)
 
+    - Generate relative links where possible (everywhere but HTTP
+      redirects and feed IDs). (Michael Hudson, Matt Nordhoff)
+
 
 1.17 [20Aug2009]
 ----------------
