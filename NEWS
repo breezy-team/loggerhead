@@ -31,6 +31,9 @@ dev [future]
     - Generate relative links where possible (everywhere but HTTP
       redirects and feed IDs). (Michael Hudson, Matt Nordhoff)
 
+    - Fix bad redirect when visiting "/download" or "/download/".
+      (Matt Nordhoff, #247992)
+
 
 1.17 [20Aug2009]
 ----------------

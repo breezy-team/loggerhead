@@ -45,7 +45,7 @@ class DownloadUI (TemplatedBranchView):
 
         if len(args) < 2:
             raise httpexceptions.HTTPMovedPermanently(
-                self._branch.absolute_url('../changes'))
+                self._branch.absolute_url('/changes'))
 
         revid = h.fix_revid(args[0])
         file_id = args[1]
