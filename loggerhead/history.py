@@ -152,6 +152,9 @@ class FileChangeReporter(object):
                 filename=rich_filename(paths[1], kind),
                 file_id=file_id))
 
+# The lru_cache is not thread-safe, so we need a lock around it for
+# all threads.
+rev_info_memory_cache_lock = threading.RLock()
 
 class RevInfoMemoryCache(object):
     """A store that validates values against the revids they were stored with.
@@ -168,9 +171,6 @@ class RevInfoMemoryCache(object):
 
     def __init__(self, cache):
         self._cache = cache
-        # lru_cache is not thread-safe, so we need to lock all accesses.
-        # It is even modified when doing a get() on it.
-        self._lock = threading.RLock()
 
     def get(self, key, revid):
         """Return the data associated with `key`, subject to a revid check.
@@ -178,11 +178,11 @@ class RevInfoMemoryCache(object):
         If a value was stored under `key`, with the same revid, return it.
         Otherwise return None.
         """
-        self._lock.acquire()
+        rev_info_memory_cache_lock.acquire()
         try:
             cached = self._cache.get(key)
         finally:
-            self._lock.release()
+            rev_info_memory_cache_lock.release()
         if cached is None:
             return None
         stored_revid, data = cached
@@ -194,11 +194,11 @@ class RevInfoMemoryCache(object):
     def set(self, key, revid, data):
         """Store `data` under `key`, to be checked against `revid` on get().
         """
-        self._lock.acquire()
+        rev_info_memory_cache_lock.acquire()
         try:
             self._cache[key] = (revid, data)
         finally:
-            self._lock.release()
+            rev_info_memory_cache_lock.release()
 
 # Used to store locks that prevent multiple threads from building a 
 # revision graph for the same branch at the same time, because that can

@@ -208,8 +208,8 @@ class Root(object):
                                 environ['SCRIPT_NAME']
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPMovedPermanently(
-                environ['SCRIPT_NAME'] + '/')
+            raise httpexceptions.HTTPMovedPermanently.relative_redirect(
+                environ['SCRIPT_NAME'] + '/', environ)
         elif segment == '':
             response = WSGIResponse()
             self.browse(response)
