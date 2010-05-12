@@ -23,8 +23,14 @@ import StringIO
 
 from simpletal import simpleTAL, simpleTALES
 
-logging.getLogger("simpleTAL").setLevel(logging.INFO)
-logging.getLogger("simpleTALES").setLevel(logging.INFO)
+def _restrict_logging(logger_name):
+    logger = logging.getLogger(logger_name)
+    if logger.getEffectiveLevel() < logging.INFO:
+        logger.setLevel(logging.INFO)
+# simpleTAL is *very* verbose in DEBUG mode, which is otherwise the default. So
+# quiet it up a bit.
+_restrict_logging('simpleTAL')
+_restrict_logging('simpleTALES')
 
 
 _zpt_cache = {}
