@@ -73,6 +73,14 @@ def setup_logging(config):
     logfile.setFormatter(formatter)
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
+    def _restrict_logging(logger_name):
+        logger = logging.getLogger(logger_name)
+        if logger.getEffectiveLevel() < logging.INFO:
+            logger.setLevel(logging.INFO)
+    # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+    # default. So quiet it up a bit.
+    _restrict_logging('simpleTAL')
+    _restrict_logging('simpleTALES')
     return logger
 
 

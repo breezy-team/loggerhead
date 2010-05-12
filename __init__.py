@@ -71,6 +71,16 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         logger.addHandler(handler)
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
+        def _restrict_logging(logger_name):
+            logger = logging.getLogger(logger_name)
+            if logger.getEffectiveLevel() < logging.INFO:
+                logger.setLevel(logging.INFO)
+        # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+        # default. So quiet it up a bit.
+        _restrict_logging('simpleTAL')
+        _restrict_logging('simpleTALES')
+
+
 
     def serve_http(transport, host=None, port=None, inet=None):
         from paste.httpexceptions import HTTPExceptionHandler
