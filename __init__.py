@@ -63,11 +63,24 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         import sys
 
         logger = logging.getLogger('loggerhead')
+        log_level = config.get_log_level()
+        if log_level is not None:
+            logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
+        def _restrict_logging(logger_name):
+            logger = logging.getLogger(logger_name)
+            if logger.getEffectiveLevel() < logging.INFO:
+                logger.setLevel(logging.INFO)
+        # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+        # default. So quiet it up a bit.
+        _restrict_logging('simpleTAL')
+        _restrict_logging('simpleTALES')
+
+
 
 
     def _ensure_loggerhead_path():
