@@ -163,8 +163,7 @@ class RevnoRevidMemoryCache(object):
         self._lock = lock
 
     def get(self, key):
-        """Return the data associated with `key`.
-        Otherwise return None.
+        """Return the data associated with `key`. Otherwise return None.
 
         :param key: Can be a revno_str or a revid.
         """
@@ -176,12 +175,11 @@ class RevnoRevidMemoryCache(object):
         return cached
 
     def set(self, revid, revno_str):
-        """Store `data` under `key`.
-        """
+        """Record that in this branch `revid` has revno `revno_str`."""
         self._lock.acquire()
         try:
-            # TODO: StaticTuples ? Probably only useful if we cache more than
-            #       10k of them. 100k/1M is probably useful.
+            # Could use StaticTuples here, but probably only useful if we
+            # cache more than 10k of them. 100k/1M is probably useful.
             self._cache[(self._branch_tip, revid)] = revno_str
             self._cache[(self._branch_tip, revno_str)] = revid
         finally:
@@ -216,17 +214,13 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
-        # Map from (tip_revision, revision_id) => revno_str
-        # and from (tip_revisino, revno_str) => revision_id
         self._querier = _get_querier(branch)
         if self._querier is None:
+            # History-db is not configured for this branch, do it ourselves
             assert cache_path is not None
             self._querier = history_db.Querier(
                 os.path.join(cache_path, 'historydb.sql'), branch)
-            # History-db is not configured for this branch, do it ourselves
-        # sqlite is single-writer, so block concurrant updates.
-        # Note that this was even done in the past because of perf issues, even
-        # without a disk requirement.
+        # sqlite is single-writer, so block concurrent updates.
         self._querier.set_importer_lock(history_db_importer_lock)
         # TODO: Is this being premature? It makes the rest of the code
         #       simpler...
