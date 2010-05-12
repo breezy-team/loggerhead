@@ -158,54 +158,6 @@ class FileChangeReporter(object):
                 file_id=file_id))
 
 
-class RevInfoMemoryCache(object):
-    """A store that validates values against the revids they were stored with.
-
-    We use a unique key for each branch.
-
-    The reason for not just using the revid as the key is so that when a new
-    value is provided for a branch, we replace the old value used for the
-    branch.
-
-    There is another implementation of the same interface in
-    loggerhead.changecache.RevInfoDiskCache.
-    """
-
-    def __init__(self, cache):
-        self._cache = cache
-        # lru_cache is not thread-safe, so we need to lock all accesses.
-        # It is even modified when doing a get() on it.
-        self._lock = threading.RLock()
-
-    def get(self, key, revid):
-        """Return the data associated with `key`, subject to a revid check.
-
-        If a value was stored under `key`, with the same revid, return it.
-        Otherwise return None.
-        """
-        self._lock.acquire()
-        try:
-            cached = self._cache.get(key)
-        finally:
-            self._lock.release()
-        if cached is None:
-            return None
-        stored_revid, data = cached
-        if revid == stored_revid:
-            return data
-        else:
-            return None
-
-    def set(self, key, revid, data):
-        """Store `data` under `key`, to be checked against `revid` on get().
-        """
-        self._lock.acquire()
-        try:
-            self._cache[key] = (revid, data)
-        finally:
-            self._lock.release()
-
-
 _raw_revno_revid_cache = lru_cache.LRUCache(10000)
 _revno_revid_lock = threading.RLock()
 
@@ -277,7 +229,7 @@ class History(object):
     """
 
     def __init__(self, branch, whole_history_data_cache, file_cache=None,
-                 revinfo_disk_cache=None, cache_key=None, cache_path=None):
+                 cache_key=None, cache_path=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
         if file_cache is not None:
