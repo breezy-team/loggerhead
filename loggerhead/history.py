@@ -28,7 +28,6 @@
 #
 
 
-import bisect
 import datetime
 import logging
 import os
@@ -45,11 +44,9 @@ import bzrlib.revision
 
 from loggerhead import search
 from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
 
 from bzrlib.plugins.history_db import (
     history_db,
-    _get_history_db_path,
     _get_querier,
     )
 
