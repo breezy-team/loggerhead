@@ -87,7 +87,7 @@ _log_levels = {
 }
 
 def _optparse_level_to_int_level(option, opt_str, value, parser):
-    return _level_to_int_level(value)
+    parser.values.log_level = _level_to_int_level(value)
 
 
 def _level_to_int_level(value):
