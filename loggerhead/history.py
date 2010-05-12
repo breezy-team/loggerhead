@@ -453,7 +453,7 @@ iso style "yyyy-mm-dd")
             revid = self.last_revid
         if file_id is not None:
             revlist = list(
-                self.get_short_revision_history_by_fileid(file_id, revid))
+                self.get_short_revision_history_by_fileid(file_id))
             revlist = self.get_revids_from(revlist, revid)
         else:
             revlist = self.get_revids_from(None, revid)
