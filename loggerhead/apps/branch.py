@@ -47,16 +47,13 @@ _DEFAULT = object()
 class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
-                 graph_cache=None, branch_link=None, is_root=False,
+                 branch_link=None, is_root=False,
                  served_url=_DEFAULT, use_cdn=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
-        if graph_cache is None:
-            graph_cache = bzrlib.lru_cache.LRUCache(10)
-        self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
         self.use_cdn = use_cdn
@@ -75,8 +72,7 @@ class BranchWSGIApp(object):
             else:
                 file_cache = FileChangeCache(cache_path)
         return History(
-            self.branch, self.graph_cache, file_cache=file_cache,
-            cache_key=self.friendly_name,
+            self.branch, file_cache=file_cache, cache_key=self.friendly_name,
             cache_path=cache_path,
             )
 

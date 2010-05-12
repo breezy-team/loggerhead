@@ -93,23 +93,6 @@ def rich_filename(path, kind):
     return path
 
 
-class _RevListToTimestamps(object):
-    """This takes a list of revisions, and allows you to bisect by date"""
-
-    __slots__ = ['revid_list', 'repository']
-
-    def __init__(self, revid_list, repository):
-        self.revid_list = revid_list
-        self.repository = repository
-
-    def __getitem__(self, index):
-        """Get the date of the index'd item"""
-        return datetime.datetime.fromtimestamp(self.repository.get_revision(
-                   self.revid_list[index]).timestamp)
-
-    def __len__(self):
-        return len(self.revid_list)
-
 class FileChangeReporter(object):
 
     def __init__(self, old_inv, new_inv):
@@ -204,12 +187,6 @@ class RevnoRevidMemoryCache(object):
         finally:
             self._lock.release()
 
-# Used to store locks that prevent multiple threads from building a 
-# revision graph for the same branch at the same time, because that can
-# cause severe performance issues that are so bad that the system seems
-# to hang.
-revision_graph_locks = {}
-revision_graph_check_lock = threading.Lock()
 history_db_importer_lock = threading.Lock()
 
 class History(object):
@@ -228,8 +205,7 @@ class History(object):
         ids.
     """
 
-    def __init__(self, branch, whole_history_data_cache, file_cache=None,
-                 cache_key=None, cache_path=None):
+    def __init__(self, branch, file_cache=None, cache_key=None, cache_path=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
         if file_cache is not None:

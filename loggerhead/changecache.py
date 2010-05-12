@@ -27,10 +27,8 @@ cached a change, it's good forever.
 """
 
 import cPickle
-import marshal
 import os
 import tempfile
-import zlib
 
 try:
     from sqlite3 import dbapi2
