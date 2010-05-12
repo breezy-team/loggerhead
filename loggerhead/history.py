@@ -699,7 +699,7 @@ class History(object):
             'tags': revtags,
         }
         if isinstance(revision, bzrlib.foreign.ForeignRevision):
-            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
+            foreign_revid, mapping = (revision.foreign_revid, revision.mapping)
         elif ":" in revision.revision_id:
             try:
                 foreign_revid, mapping = \
