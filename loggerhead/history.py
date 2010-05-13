@@ -28,7 +28,6 @@
 #
 
 
-import bisect
 import datetime
 import logging
 import os
@@ -45,11 +44,9 @@ import bzrlib.revision
 
 from loggerhead import search
 from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
 
 from bzrlib.plugins.history_db import (
     history_db,
-    _get_history_db_path,
     _get_querier,
     )
 
@@ -95,23 +92,6 @@ def rich_filename(path, kind):
         path += '@'
     return path
 
-
-class _RevListToTimestamps(object):
-    """This takes a list of revisions, and allows you to bisect by date"""
-
-    __slots__ = ['revid_list', 'repository']
-
-    def __init__(self, revid_list, repository):
-        self.revid_list = revid_list
-        self.repository = repository
-
-    def __getitem__(self, index):
-        """Get the date of the index'd item"""
-        return datetime.datetime.fromtimestamp(self.repository.get_revision(
-                   self.revid_list[index]).timestamp)
-
-    def __len__(self):
-        return len(self.revid_list)
 
 class FileChangeReporter(object):
 
@@ -161,54 +141,6 @@ class FileChangeReporter(object):
                 file_id=file_id))
 
 
-class RevInfoMemoryCache(object):
-    """A store that validates values against the revids they were stored with.
-
-    We use a unique key for each branch.
-
-    The reason for not just using the revid as the key is so that when a new
-    value is provided for a branch, we replace the old value used for the
-    branch.
-
-    There is another implementation of the same interface in
-    loggerhead.changecache.RevInfoDiskCache.
-    """
-
-    def __init__(self, cache):
-        self._cache = cache
-        # lru_cache is not thread-safe, so we need to lock all accesses.
-        # It is even modified when doing a get() on it.
-        self._lock = threading.RLock()
-
-    def get(self, key, revid):
-        """Return the data associated with `key`, subject to a revid check.
-
-        If a value was stored under `key`, with the same revid, return it.
-        Otherwise return None.
-        """
-        self._lock.acquire()
-        try:
-            cached = self._cache.get(key)
-        finally:
-            self._lock.release()
-        if cached is None:
-            return None
-        stored_revid, data = cached
-        if revid == stored_revid:
-            return data
-        else:
-            return None
-
-    def set(self, key, revid, data):
-        """Store `data` under `key`, to be checked against `revid` on get().
-        """
-        self._lock.acquire()
-        try:
-            self._cache[key] = (revid, data)
-        finally:
-            self._lock.release()
-
-
 _raw_revno_revid_cache = lru_cache.LRUCache(10000)
 _revno_revid_lock = threading.RLock()
 
@@ -231,8 +163,7 @@ class RevnoRevidMemoryCache(object):
         self._lock = lock
 
     def get(self, key):
-        """Return the data associated with `key`.
-        Otherwise return None.
+        """Return the data associated with `key`. Otherwise return None.
 
         :param key: Can be a revno_str or a revid.
         """
@@ -244,23 +175,16 @@ class RevnoRevidMemoryCache(object):
         return cached
 
     def set(self, revid, revno_str):
-        """Store `data` under `key`.
-        """
+        """Record that in this branch `revid` has revno `revno_str`."""
         self._lock.acquire()
         try:
-            # TODO: StaticTuples ? Probably only useful if we cache more than
-            #       10k of them. 100k/1M is probably useful.
+            # Could use StaticTuples here, but probably only useful if we
+            # cache more than 10k of them. 100k/1M is probably useful.
             self._cache[(self._branch_tip, revid)] = revno_str
             self._cache[(self._branch_tip, revno_str)] = revid
         finally:
             self._lock.release()
 
-# Used to store locks that prevent multiple threads from building a 
-# revision graph for the same branch at the same time, because that can
-# cause severe performance issues that are so bad that the system seems
-# to hang.
-revision_graph_locks = {}
-revision_graph_check_lock = threading.Lock()
 history_db_importer_lock = threading.Lock()
 
 class History(object):
@@ -279,8 +203,7 @@ class History(object):
         ids.
     """
 
-    def __init__(self, branch, whole_history_data_cache, file_cache=None,
-                 revinfo_disk_cache=None, cache_key=None, cache_path=None):
+    def __init__(self, branch, file_cache=None, cache_key=None, cache_path=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
         if file_cache is not None:
@@ -291,17 +214,13 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
-        # Map from (tip_revision, revision_id) => revno_str
-        # and from (tip_revisino, revno_str) => revision_id
         self._querier = _get_querier(branch)
         if self._querier is None:
+            # History-db is not configured for this branch, do it ourselves
             assert cache_path is not None
             self._querier = history_db.Querier(
                 os.path.join(cache_path, 'historydb.sql'), branch)
-            # History-db is not configured for this branch, do it ourselves
-        # sqlite is single-writer, so block concurrant updates.
-        # Note that this was even done in the past because of perf issues, even
-        # without a disk requirement.
+        # sqlite is single-writer, so block concurrent updates.
         self._querier.set_importer_lock(history_db_importer_lock)
         # TODO: Is this being premature? It makes the rest of the code
         #       simpler...
@@ -702,7 +621,7 @@ class History(object):
             'tags': revtags,
         }
         if isinstance(revision, bzrlib.foreign.ForeignRevision):
-            foreign_revid, mapping = (rev.foreign_revid, rev.mapping)
+            foreign_revid, mapping = (revision.foreign_revid, revision.mapping)
         elif ":" in revision.revision_id:
             try:
                 foreign_revid, mapping = \

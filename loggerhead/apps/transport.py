@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2008, 2009, 2010 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,8 @@
 
 import threading
 
-from bzrlib import branch, errors, lru_cache, urlutils
+from bzrlib import branch, errors, urlutils
 from bzrlib.config import LocationConfig
-from bzrlib.smart import request
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
@@ -59,7 +58,6 @@ class BranchesFromTransportServer(object):
             branch,
             name,
             {'cachepath': self._config.SQL_DIR},
-            self.root.graph_cache,
             is_root=is_root,
             use_cdn=self._config.get_option('use_cdn'),
             )
@@ -143,7 +141,6 @@ def get_transport_for_thread(base):
 class BranchesFromTransportRoot(object):
 
     def __init__(self, base, config):
-        self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
 
@@ -167,7 +164,6 @@ class BranchesFromTransportRoot(object):
 class UserBranchesFromTransportRoot(object):
 
     def __init__(self, base, config):
-        self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
         self.trunk_dir = config.get_option('trunk_dir')
