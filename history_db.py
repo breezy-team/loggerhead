@@ -1302,42 +1302,6 @@ class Querier(object):
             return None
         return revno[0]
 
-    def get_dotted_revno(self, revision_id):
-        """Get the dotted revno for a specific revision id."""
-        t = time.time()
-        cur_tip_revision_id = self._branch_tip_rev_id
-        while cur_tip_revision_id is not None:
-            possible_revno = self._get_possible_dotted_revno(
-                cur_tip_revision_id, revision_id)
-            if possible_revno is not None:
-                self._stats['query_time'] += (time.time() - t)
-                return tuple(map(int, possible_revno.split('.')))
-            cur_tip_revision_id = self._get_lh_parent_rev_id(
-                cur_tip_revision_id)
-        # If we got here, we just don't have an answer
-        self._stats['query_time'] += (time.time() - t)
-        return None
-
-    def get_dotted_revno_db_ids(self, revision_id):
-        """Get the dotted revno, but in-memory use db ids."""
-        t = time.time()
-        rev_id_to_db_id = {}
-        db_id_to_rev_id = {}
-        schema.ensure_revisions(self._get_cursor(),
-                                [revision_id, self._branch_tip_rev_id],
-                                rev_id_to_db_id, db_id_to_rev_id, graph=None)
-        tip_db_id = rev_id_to_db_id[self._branch_tip_rev_id]
-        rev_db_id = rev_id_to_db_id[revision_id]
-        while tip_db_id is not None:
-            possible_revno = self._get_possible_dotted_revno_db_id(
-                tip_db_id, rev_db_id)
-            if possible_revno is not None:
-                self._stats['query_time'] += (time.time() - t)
-                return tuple(map(int, possible_revno.split('.')))
-            tip_db_id = self._get_lh_parent_db_id(tip_db_id)
-        self._stats['query_time'] += (time.time() - t)
-        return None
-
     def _get_range_key_and_tail(self, tip_db_id):
         """Return the best range w/ head = tip_db_id or None."""
         range_res = self._get_cursor().execute(
@@ -1350,11 +1314,6 @@ class Querier(object):
             tail = self._get_lh_parent_db_id(tip_db_id)
             return None, tail
         return range_res
-
-    # Compatibility thunk use get_dotted_revnos instead
-    def get_dotted_revno_range_multi(self, revision_ids):
-        """See get_dotted_revnos"""
-        return self.get_dotted_revnos(revision_ids)
 
     def get_dotted_revnos(self, revision_ids):
         """Determine the dotted revno, using the range info, etc."""
@@ -1485,29 +1444,6 @@ class Querier(object):
         self._stats['query_time'] += (time.time() - t)
         return revision_to_mainline_map
 
-
-    def walk_mainline(self):
-        """Walk the db, and grab all the mainline identifiers."""
-        t = time.time()
-        cur_id = self._branch_tip_rev_id
-        all_ids = []
-        while cur_id is not None:
-            all_ids.append(cur_id)
-            cur_id = self._get_lh_parent_rev_id(cur_id)
-        self._stats['query_time'] += (time.time() - t)
-        return all_ids
-
-    def walk_mainline_db_ids(self):
-        """Walk the db, and grab all the mainline identifiers."""
-        t = time.time()
-        db_id = self._get_db_id(self._branch_tip_rev_id)
-        all_ids = []
-        while db_id is not None:
-            all_ids.append(db_id)
-            db_id = self._get_lh_parent_db_id(db_id)
-        self._stats['query_time'] += (time.time() - t)
-        return all_ids
-
     def _get_mainline_range_starting_at(self, head_db_id):
         """Try to find a range at this tip.
 
@@ -1527,7 +1463,7 @@ class Querier(object):
         db_ids = [r[0] for r in range_db_ids]
         return db_ids, next_db_id
 
-    def walk_mainline_using_ranges(self):
+    def walk_mainline(self):
         t = time.time()
         db_id = self._get_db_id(self._branch_tip_rev_id)
         all_ids = []
@@ -1545,75 +1481,6 @@ class Querier(object):
         return all_ids
 
     def walk_ancestry(self):
-        """Walk all parents of the given revision."""
-        remaining = deque([self._branch_tip_rev_id])
-        all = set(remaining)
-        while remaining:
-            next = remaining.popleft()
-            parents = self._get_cursor().execute("""
-                SELECT p.revision_id
-                  FROM parent, revision p, revision c
-                 WHERE parent.child = c.db_id
-                   AND parent.parent = p.db_id
-                   AND c.revision_id = ?
-                   """, (next,)).fetchall()
-            self._stats['num_steps'] += 1
-            next_parents = [p[0] for p in parents if p[0] not in all]
-            all.update(next_parents)
-            remaining.extend(next_parents)
-        return all
-
-    def walk_ancestry_db_ids(self):
-        all_ancestors = set()
-        db_id = self._get_db_id(self._branch_tip_rev_id)
-        all_ancestors.add(db_id)
-        remaining = [db_id]
-        while remaining:
-            self._stats['num_steps'] += 1
-            next = remaining[:100]
-            remaining = remaining[len(next):]
-            res = self._get_cursor().execute(_add_n_params(
-                "SELECT parent FROM parent WHERE child in (%s)",
-                len(db_ids)), next)
-            next_p = [p[0] for p in res if p[0] not in all_ancestors]
-            all_ancestors.update(next_p)
-            remaining.extend(next_p)
-        return all_ancestors
-
-    def walk_ancestry_range(self):
-        """Walk the whole ancestry.
-        
-        Use the mainline_parent_range/mainline_parent table to speed things up.
-        """
-        # All we are doing is pre-seeding the search with all the mainline
-        # revisions, we could probably do more with interleaving calls to
-        # mainline with calls to parents but this is easier to write :)
-        all_mainline = self.walk_mainline_using_ranges()
-        t = time.time()
-        all_ancestors = set(all_mainline)
-        remaining = list(all_mainline)
-        while remaining:
-            self._stats['num_steps'] += 1
-            next = remaining[:100]
-            remaining = remaining[len(next):]
-            res = self._get_cursor().execute(_add_n_params(
-                "SELECT parent FROM parent WHERE child in (%s)",
-                len(next)), next)
-            next_p = [p[0] for p in res if p[0] not in all_ancestors]
-            all_ancestors.update(next_p)
-            remaining.extend(next_p)
-        self._stats['query_time'] += (time.time() - t)
-        # Using this shortcut to grab the mainline first helps, but not a lot.
-        # Probably because the limiting factor is the 'child in (...)' step,
-        # which is 100 entries or so. (note that setting the range to :1000
-        # shows a failure, which indicates the old code path was definitely
-        # capped at a maximum range.)
-        # 1.719s walk_ancestry       
-        # 0.198s walk_ancestry_db_ids
-        # 0.164s walk_ancestry_range
-        return all_ancestors
-
-    def walk_ancestry_range_and_dotted(self):
         """Walk the whole ancestry.
 
         Use the information from the dotted_revno table and the mainline_parent

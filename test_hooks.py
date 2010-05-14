@@ -73,7 +73,7 @@ class TestHistoryDBHooks(tests.TestCaseWithMemoryTransport):
         self.assertIsNot(None, b._history_db_querier)
         self.assertIsNot(None, b._history_db_querier._branch_tip_db_id)
         self.assertEqual({'B': (2,)},
-                    b._history_db_querier.get_dotted_revno_range_multi(['B']))
+                    b._history_db_querier.get_dotted_revnos(['B']))
 
     def test_iter_merge_sorted_no_parents(self):
         history_db_path = self.get_history_db_path()
