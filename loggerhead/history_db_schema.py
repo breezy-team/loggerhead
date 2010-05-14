@@ -16,8 +16,6 @@
 
 """The current SQL schema definition."""
 
-# TODO: Consider using an ORM for all of this. For now, though, I like knowing
-#       what SQL exactly is being executed
 _create_statements = []
 
 revision_t = """
@@ -230,8 +228,6 @@ def ensure_revisions(cursor, revision_ids, rev_id_to_db_id, db_id_to_rev_id,
 
 def create_dotted_revnos(cursor, revno_entries):
     """Create a dotted revno entry for this info."""
-    # # TODO: Consider changing this to a bulk SELECT a bunch which may be
-    # #       missing, .executemany() the ones that aren't present
     # existing = cursor.execute('SELECT revno, end_of_merge, merge_depth'
     #                           '  FROM dotted_revno'
     #                           ' WHERE tip_revision = ?'

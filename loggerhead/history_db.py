@@ -34,7 +34,7 @@ from bzrlib import (
     ui,
     )
 
-from bzrlib.plugins.history_db import schema
+from loggerhead import history_db_schema as schema
 
 
 class TipNotImported(errors.BzrError):

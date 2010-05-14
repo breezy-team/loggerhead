@@ -26,7 +26,7 @@ from bzrlib import (
     tests,
     branch,
     )
-from bzrlib.plugins.history_db import history_db
+from loggerhead import history_db
 
 
 class MockVF(object):

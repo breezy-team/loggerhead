@@ -41,12 +41,10 @@ import bzrlib.errors
 import bzrlib.foreign
 import bzrlib.revision
 
-from loggerhead import search
-from loggerhead import util
-
-from bzrlib.plugins.history_db import (
+from loggerhead import (
     history_db,
-    _get_querier,
+    search,
+    util,
     )
 
 
@@ -217,16 +215,13 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
-        self._querier = _get_querier(branch)
-        if self._querier is None:
-            # History-db is not configured for this branch, do it ourselves
-            assert cache_path is not None
-            self._querier = history_db.Querier(
-                os.path.join(cache_path, 'historydb.sql'), branch)
+        assert cache_path is not None
+        self._querier = history_db.Querier(
+            os.path.join(cache_path, 'historydb.sql'), branch)
         # sqlite is single-writer, so block concurrent updates.
         self._querier.set_importer_lock(history_db_importer_lock)
-        # TODO: Is this being premature? It makes the rest of the code
-        #       simpler...
+        # This may be premature, but for now if you need History, you almost
+        # definitely need the branch imported.
         self._querier.ensure_branch_tip()
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
@@ -297,10 +292,6 @@ class History(object):
 
     def _get_lh_parent(self, revid):
         """Get the left-hand parent of a given revision id."""
-        # TODO: Move this into a public method on Querier
-        # TODO: Possibly look into caching some of this info in memory, and
-        #       between HTTP requests.
-        self._querier.ensure_branch_tip()
         return self._querier._get_lh_parent_rev_id(revid)
 
     def _get_children(self, revid):
