@@ -34,7 +34,10 @@ import re
 import textwrap
 import threading
 
-from bzrlib import lru_cache
+from bzrlib import (
+    graph,
+    lru_cache,
+    )
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
@@ -358,7 +361,10 @@ class History(object):
         if get_kg is not None:
             kg = get_kg([file_key])
             return [k[1] for k in kg._nodes]
-        abort
+        # Walk the ancestry of this file_key, to find interesting revisions
+        g = graph.Graph(self._branch.repository.texts)
+        all_keys = set([key for key, _ in g.iter_ancestry([file_key])])
+        return [k[1] for k in all_keys]
 
     def get_inventory(self, revid):
         if revid not in self._inventory_cache:
