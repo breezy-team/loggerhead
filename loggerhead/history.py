@@ -245,7 +245,7 @@ class History(object):
         revno_str = self._revno_revid_cache.get(revid)
         if revno_str is not None:
             return revno_str
-        revnos = self._querier.get_dotted_revno_range_multi([revid])
+        revnos = self._querier.get_dotted_revnos([revid])
         # TODO: Should probably handle KeyError?
         dotted_revno = revnos[revid]
         revno_str = '.'.join(map(str, dotted_revno))
@@ -268,8 +268,7 @@ class History(object):
         if not unknown:
             return revno_map
         # querier returns dotted revno tuples
-        query_revno_map = self._querier.get_dotted_revno_range_multi(
-                            unknown)
+        query_revno_map = self._querier.get_dotted_revnos(unknown)
         ghosts = set(unknown)
         for revid, dotted_revno in query_revno_map.iteritems():
             revno_str = '.'.join(map(str, dotted_revno))
