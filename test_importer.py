@@ -525,6 +525,12 @@ class Test_IncrementalMergeSort(TestCaseWithGraphs):
             ])
         self.assertEqual(self.A_id, inc_merger._imported_mainline_id)
 
+    def test_handles_empty_branch(self):
+        ancestry = {}
+        b = MockBranch(ancestry, 'null:')
+        importer = history_db.Importer(':memory:', b, incremental=True)
+        importer.do_import()
+
     def test_handles_multi_roots(self):
         # Graph:
         #  A B
@@ -829,3 +835,10 @@ class TestQuerier(TestCaseWithGraphs):
             ['E', 'F', 'H', 'L'])
         self.assertEqual({'E': 'G', 'F': 'G', 'H': 'I', 'L': 'O'},
                          rev_to_mainline_map)
+
+    def test_empty_branche(self):
+        db_path = self.get_db_path()
+        b = MockBranch({}, 'null:')
+        query = history_db.Querier(db_path, b)
+        query.ensure_branch_tip()
+        query.close()

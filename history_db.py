@@ -224,6 +224,8 @@ class Importer(object):
                                  "VALUES (?, ?, ?)", data)
 
     def do_import(self):
+        if revision.is_null(self._branch_tip_rev_id):
+            return
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         self._db_conn.commit()
 
