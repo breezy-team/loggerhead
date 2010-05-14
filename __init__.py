@@ -51,7 +51,6 @@ class cmd_history_db_create(commands.Command):
                         help='Use this as the database for storage'),
                      option.Option('directory', type=unicode, short_name='d',
                         help='Import this location instead of "."'),
-                     option.Option('expand-all', help='Expand all revnos'),
                      option.Option('incremental', short_name='i',
                         help='Consider this an incremental update.'),
                      option.Option('validate',
@@ -59,7 +58,7 @@ class cmd_history_db_create(commands.Command):
                     ]
     hidden = True
 
-    def run(self, directory='.', db=None, expand_all=False, incremental=False,
+    def run(self, directory='.', db=None, incremental=False,
             validate=False):
         import pprint
         from bzrlib import branch
@@ -69,7 +68,7 @@ class cmd_history_db_create(commands.Command):
             db = _ensure_db_for_command(db, b)
             importer = _mod_history_db.Importer(db, b, incremental=incremental,
                                                 validate=validate)
-            importer.do_import(expand_all=expand_all)
+            importer.do_import()
         finally:
             b.unlock()
         trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
