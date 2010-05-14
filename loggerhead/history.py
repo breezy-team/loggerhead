@@ -215,6 +215,8 @@ class History(object):
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
+        if cache_path is None:
+            import pdb; pdb.set_trace()
         assert cache_path is not None
         self._querier = history_db.Querier(
             os.path.join(cache_path, 'historydb.sql'), branch)

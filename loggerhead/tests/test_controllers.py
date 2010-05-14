@@ -10,12 +10,13 @@ class TestInventoryUI(BasicTests):
 
     def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
         tree = self.make_branch_and_tree('.')
+        self.tree = tree
         self.build_tree(shape)
         tree.smart_add([])
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch)
+        branch_app = self.get_branch_wsgi_app()
         return tree.branch, InventoryUI(branch_app, branch_app.get_history)
 
     def test_get_filelist(self):
@@ -29,6 +30,7 @@ class TestRevisionUI(BasicTests):
 
     def make_bzrbranch_and_revision_ui_for_tree_shapes(self, shape1, shape2):
         tree = self.make_branch_and_tree('.')
+        self.tree = tree
         self.build_tree_contents(shape1)
         tree.smart_add([])
         tree.commit('')
@@ -37,7 +39,7 @@ class TestRevisionUI(BasicTests):
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch)
+        branch_app = self.get_branch_wsgi_app()
         branch_app._environ = {
             'wsgi.url_scheme':'',
             'SERVER_NAME':'',
@@ -61,6 +63,7 @@ class TestAnnotateUI(BasicTests):
 
     def make_annotate_ui_for_file_history(self, file_id, rev_ids_texts):
         tree = self.make_branch_and_tree('.')
+        self.tree = tree
         open('filename', 'w').write('')
         tree.add(['filename'], [file_id])
         for rev_id, text in rev_ids_texts:
@@ -68,7 +71,7 @@ class TestAnnotateUI(BasicTests):
             tree.commit(rev_id=rev_id, message='.')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch)
+        branch_app = self.get_branch_wsgi_app()
         return AnnotateUI(branch_app, branch_app.get_history)
 
     def test_annotate_file(self):
