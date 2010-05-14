@@ -44,31 +44,12 @@ class BasicTests(TestCaseWithTransport):
         TestCaseWithTransport.setUp(self)
         logging.basicConfig(level=logging.ERROR)
         logging.getLogger('bzr').setLevel(logging.CRITICAL)
-        self.sql_dir = self.test_home_dir + '/loggerhead-cache'
-        os.mkdir(self.sql_dir)
-        # self.addCleanup(shutil.rmtree, self.sql_dir)
 
     def createBranch(self):
         self.tree = self.make_branch_and_tree('.')
 
-    def get_branch_wsgi_app(self, **kw):
-        if 'config' not in kw:
-            kw = dict(kw)
-            kw['config'] = {'cachepath': self.sql_dir}
-        app = BranchWSGIApp(self.tree.branch, '', **kw)
-        orig = app.get_history
-        def cleanup_get_history(*args, **kwargs):
-            hist = orig(*args, **kwargs)
-            def cleanup():
-                if hist._querier is not None:
-                    hist._querier.close()
-            self.addCleanup(cleanup)
-            return hist
-        app.get_history = cleanup_get_history
-        return app
-
     def setUpLoggerhead(self, **kw):
-        branch_app = self.get_branch_wsgi_app(**kw).app
+        branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
         return TestApp(HTTPExceptionHandler(branch_app))
 
 

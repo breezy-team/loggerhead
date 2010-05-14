@@ -216,10 +216,10 @@ class History(object):
         self._branch_tags = None
         self._inventory_cache = {}
         if cache_path is None:
-            import pdb; pdb.set_trace()
-        assert cache_path is not None
-        self._querier = history_db.Querier(
-            os.path.join(cache_path, 'historydb.sql'), branch)
+            cache_path = ':memory:'
+        else:
+            cache_path = os.path.join(cache_path, 'historydb.sql')
+        self._querier = history_db.Querier(cache_path, branch)
         # sqlite is single-writer, so block concurrent updates.
         self._querier.set_importer_lock(history_db_importer_lock)
         # This may be premature, but for now if you need History, you almost
