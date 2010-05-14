@@ -30,7 +30,7 @@ setup(
     license = "GNU GPL v2 or later",
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
-    scripts = ["start-loggerhead", "stop-loggerhead", "serve-branches"],
+    scripts = ["serve-branches"],
     packages = ["loggerhead",
                 "loggerhead/apps",
                 "loggerhead/controllers",
@@ -64,9 +64,7 @@ setup(
                                    "static/javascript/yui/build/yui-base/*",
                                    "static/images/*"]},
     data_files = [
-        ('share/man/man1', ['start-loggerhead.1',
-                            'stop-loggerhead.1',
-                            'serve-branches.1']),
+        ('share/man/man1', ['serve-branches.1']),
         ('share/doc/loggerhead', ['loggerhead.conf.example']),
         ],
     )
