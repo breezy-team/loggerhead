@@ -246,8 +246,13 @@ class History(object):
         if revno_str is not None:
             return revno_str
         revnos = self._querier.get_dotted_revnos([revid])
-        # TODO: Should probably handle KeyError?
-        dotted_revno = revnos[revid]
+        try:
+            dotted_revno = revnos[revid]
+        except KeyError:
+            # Asking for a revision which isn't in the ancestry can raise a
+            # KeyError, it can also happen on empty branches. So we just return
+            # 'unknown'
+            return 'unknown'
         revno_str = '.'.join(map(str, dotted_revno))
         self._revno_revid_cache.set(revid, revno_str)
         return revno_str
@@ -372,7 +377,6 @@ class History(object):
                     raise KeyError
                 revid = val
         except KeyError:
-            import pdb; pdb.set_trace()
             raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
 
