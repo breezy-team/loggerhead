@@ -339,15 +339,34 @@ class History(object):
             introduced = self._querier.iter_merge_sorted_revisions(
                 start_revision_id=tip_revid, stop_revision_id=parent_revid)
             introduced_revs = set([i[0] for i in introduced
-                                   if i in revid_set])
+                                   if i[0] in revid_set])
             if introduced_revs:
                 revid_set.difference_update(introduced_revs)
                 yield tip_revid
             tip_revid = parent_revid
 
-    def get_short_revision_history_by_fileid(self, file_id):
+    def get_short_revision_history_by_fileid(self, file_id, tip_revid):
         # FIXME: would be awesome if we could get, for a folder, the list of
         # revisions where items within that folder changed.i
+        # TODO: Walk backwards in history in case the file was deleted in tip
+        inv = self.get_inventory(tip_revid)
+        file_key = (file_id, inv[file_id].revision)
+        # Now that we have a file_key, walk the per-file graph to find all
+        # interesting parents
+        get_kg = getattr(self._branch.repository.texts,
+                         'get_known_graph_ancestry', None)
+        if get_kg is not None:
+            kg = get_kg([file_key])
+            return [k[1] for k in kg._nodes]
+        abort
+
+    def get_inventory(self, revid):
+        if revid not in self._inventory_cache:
+            # TODO: This cache is unbounded, though only used for a single http
+            #       request. Consider what we might do to limit this.
+            self._inventory_cache[revid] = (
+                self._branch.repository.get_inventory(revid))
+        return self._inventory_cache[revid]
         possible_keys = [(file_id, revid) for revid in self._rev_indices]
         get_parent_map = self._branch.repository.texts.get_parent_map
         # We chunk the requests as this works better with GraphIndex.
@@ -392,7 +411,7 @@ class History(object):
             revid = self.last_revid
         if file_id is not None:
             revlist = list(
-                self.get_short_revision_history_by_fileid(file_id))
+                self.get_short_revision_history_by_fileid(file_id, revid))
             revlist = self.get_revids_from(revlist, revid)
         else:
             revlist = self.get_revids_from(None, revid)
