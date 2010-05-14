@@ -4,6 +4,9 @@ What's changed in loggerhead?
 dev [future]
 ------------
 
+    - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
+      deprecated. (John Arbash Meinel)
+
     - Syntax highlighting is no longer applied for files greater than 512K,
       reducing codebrowse.launchpad.net overloading.
       (Max Kanat-Alexander, #513044)
@@ -24,6 +27,15 @@ dev [future]
 
     - Ignore readonly+ prefix when checking if Loggerhead is serving a
       local location. (Reported by Tres Seaver.) (Matt Nordhoff)
+
+    - Set Cache-Control and Expires headers on static pages.
+      (John Arbash Meinel)
+
+    - Generate relative links where possible (everywhere but HTTP
+      redirects and feed IDs). (Michael Hudson, Matt Nordhoff)
+
+    - Fix bad redirect when visiting "/download" or "/download/".
+      (Matt Nordhoff, #247992)
 
 
 1.17 [20Aug2009]

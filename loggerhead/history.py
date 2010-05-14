@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2006-2010 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
@@ -140,6 +139,9 @@ class FileChangeReporter(object):
                 filename=rich_filename(paths[1], kind),
                 file_id=file_id))
 
+# The lru_cache is not thread-safe, so we need a lock around it for
+# all threads.
+rev_info_memory_cache_lock = threading.RLock()
 
 _raw_revno_revid_cache = lru_cache.LRUCache(10000)
 _revno_revid_lock = threading.RLock()
@@ -186,6 +188,7 @@ class RevnoRevidMemoryCache(object):
             self._lock.release()
 
 history_db_importer_lock = threading.Lock()
+
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -327,6 +330,7 @@ class History(object):
             #       grabs the full history, and we now support stopping early.
             history = self._branch.repository.iter_reverse_revision_history(
                             start_revid)
+            is_null = bzrlib.revision.is_null
             for revid in history:
                 yield revid
             return
@@ -391,15 +395,40 @@ class History(object):
         if revid is None:
             revid = self.last_revid
         if file_id is not None:
-            # since revid is 'start_revid', possibly should start the path
-            # tracing from revid... FIXME
-            revlist = list(self.get_short_revision_history_by_fileid(file_id))
-            revlist = list(self.get_revids_from(revlist, revid))
+            revlist = list(
+                self.get_short_revision_history_by_fileid(file_id))
+            revlist = self.get_revids_from(revlist, revid)
         else:
-            revlist = list(self.get_revids_from(None, revid))
+            revlist = self.get_revids_from(None, revid)
         return revlist
 
-    def get_view(self, revid, start_revid, file_id, query=None):
+    def _iterate_sufficiently(self, iterable, stop_at, extra_rev_count):
+        """Return a list of iterable.
+
+        If extra_rev_count is None, fully consume iterable.
+        Otherwise, stop at 'stop_at' + extra_rev_count.
+
+        Example:
+          iterate until you find stop_at, then iterate 10 more times.
+        """
+        if extra_rev_count is None:
+            return list(iterable)
+        result = []
+        found = False
+        for n in iterable:
+            result.append(n)
+            if n == stop_at:
+                found = True
+                break
+        if found:
+            for count, n in enumerate(iterable):
+                result.append(n)
+                if count >= extra_rev_count:
+                    break
+        return result
+
+    def get_view(self, revid, start_revid, file_id, query=None,
+                 extra_rev_count=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
         determine the revision list we're viewing (start_revid, file_id, query)
@@ -410,6 +439,10 @@ class History(object):
               file.
             - if a start_revid is given, we're viewing the branch from a
               specific revision up the tree.
+            - if extra_rev_count is given, find the view from start_revid =>
+              revid, and continue an additional 'extra_rev_count'. If not
+              given, then revid_list will contain the full history of
+              start_revid
 
         these may be combined to view revisions for a specific file, from
         a specific revision, with a specific search query.
@@ -428,12 +461,16 @@ class History(object):
 
         if query is None:
             revid_list = self.get_file_view(start_revid, file_id)
+            revid_list = self._iterate_sufficiently(revid_list, revid,
+                                                    extra_rev_count)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
                 revid_list = self.get_file_view(revid, file_id)
+                revid_list = self._iterate_sufficiently(revid_list, revid,
+                                                        extra_rev_count)
                 start_revid = revid
             return revid, start_revid, revid_list
 

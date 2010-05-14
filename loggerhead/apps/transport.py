@@ -32,6 +32,7 @@ from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
+# TODO: Use bzrlib.ui.bool_from_string(), added in bzr 1.18
 _bools = {
     'yes': True, 'no': False,
     'on': True, 'off': False,
@@ -66,8 +67,8 @@ class BranchesFromTransportServer(object):
     def app_for_non_branch(self, environ):
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPMovedPermanently(
-                environ['SCRIPT_NAME'] + '/')
+            raise httpexceptions.HTTPMovedPermanently.relative_redirect(
+                environ['SCRIPT_NAME'] + '/', environ)
         elif segment == '':
             if self.name:
                 name = self.name

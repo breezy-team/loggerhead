@@ -63,16 +63,28 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         import sys
 
         logger = logging.getLogger('loggerhead')
+        log_level = config.get_log_level()
+        if log_level is not None:
+            logger.setLevel(log_level)
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(logging.DEBUG)
         logger.addHandler(handler)
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
+        def _restrict_logging(logger_name):
+            logger = logging.getLogger(logger_name)
+            if logger.getEffectiveLevel() < logging.INFO:
+                logger.setLevel(logging.INFO)
+        # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+        # default. So quiet it up a bit.
+        _restrict_logging('simpleTAL')
+        _restrict_logging('simpleTALES')
 
-    def serve_http(transport, host=None, port=None, inet=None):
-        from paste.httpexceptions import HTTPExceptionHandler
-        from paste.httpserver import serve
 
+
+
+    def _ensure_loggerhead_path():
+        """Ensure that you can 'import loggerhead' and get the root."""
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
@@ -80,6 +92,12 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         except ImportError:
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
+
+    def serve_http(transport, host=None, port=None, inet=None):
+        from paste.httpexceptions import HTTPExceptionHandler
+        from paste.httpserver import serve
+
+        _ensure_loggerhead_path()
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
@@ -132,3 +150,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                     super(cmd_serve, self).run(*args, **kw)
 
         register_command(cmd_serve)
+
+    def load_tests(standard_tests, module, loader):
+        _ensure_loggerhead_path()
+        standard_tests.addTests(loader.loadTestsFromModuleNames(
+            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
+        return standard_tests
