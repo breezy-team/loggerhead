@@ -109,7 +109,6 @@ class Importer(object):
         self._ensure_schema()
         self._cursor = self._db_conn.cursor()
         self._branch = a_branch
-        self._expanding = False
         if tip_revision_id is None:
             self._branch_tip_rev_id = a_branch.last_revision()
         else:
@@ -121,11 +120,14 @@ class Importer(object):
         self._rev_id_to_db_id = {}
         self._db_id_to_rev_id = {}
         self._stats = defaultdict(lambda: 0)
-        # A cache of entries in the dotted_revno table
-        # TODO: This would probably be better as an LRU cache
-        self._dotted_revno_cache = lru_cache.LRUCache(10000)
         # Map child_id => [parent_db_ids]
         self._db_parent_map = {}
+
+    def set_max_cache_size(self, size):
+        """Tell SQLite how many megabytes to cache internally."""
+        page_size = self._db_conn.execute('PRAGMA page_size').fetchone()[0]
+        self._db_conn.execute("PRAGMA cache_size = %d"
+                              % (size / page_size,));
 
     def _ensure_schema(self):
         if not schema.is_initialized(self._db_conn, dbapi2.OperationalError):
@@ -164,10 +166,6 @@ class Importer(object):
         tip_db_id = rev_to_db[tip_rev_id]
         self._stats['total_nodes_inserted'] += len(nodes)
         revno_entries = []
-        if self._expanding:
-            to_cache_entry = []
-        else:
-            to_cache_entry = None
         st = static_tuple.StaticTuple
         def build_revno_info():
             for dist, node in enumerate(nodes):
@@ -180,18 +178,12 @@ class Importer(object):
                                       node.end_of_merge,
                                       node.merge_depth,
                                       dist))
-                if to_cache_entry is not None:
-                    to_cache_entry.append(st(db_id, st(st.from_sequence(node.revno),
-                                                       node.end_of_merge,
-                                                       node.merge_depth)))
         build_revno_info()
         try:
             schema.create_dotted_revnos(self._cursor, revno_entries)
         except dbapi2.IntegrityError:
             # Revisions already exist
             return False
-        if to_cache_entry is not None:
-            self._dotted_revno_cache[tip_db_id] = to_cache_entry
         return True
 
     def _update_parents(self, nodes):
@@ -231,36 +223,11 @@ class Importer(object):
                                  "  (child, parent, parent_idx)"
                                  "VALUES (?, ?, ?)", data)
 
-    def do_import(self, expand_all=False):
-        self._expanding = expand_all
+    def do_import(self):
+        if revision.is_null(self._branch_tip_rev_id):
+            return
         merge_sorted = self._import_tip(self._branch_tip_rev_id)
         self._db_conn.commit()
-        if not expand_all:
-            return
-        # We know all the other imports are going to be incremental
-        self._incremental = True
-        self._stats['nodes_expanded'] += 0 # create an entry
-        # We want to expand every possible mainline into a dotted_revno cache.
-        # We don't really want to have to compute all the ones we have already
-        # cached. And we want to compute as much as possible per pass. So we
-        # start again at the tip, and just skip all the ones that already have
-        # db entries.
-        pb = ui.ui_factory.nested_progress_bar()
-        for idx, node in enumerate(merge_sorted):
-            pb.update('expanding', idx, len(merge_sorted))
-            # this progress is very non-linear, it is expected the first few
-            # will be slow, and the last few very fast.
-            tip_rev_id = node.key[0]
-            if self._is_imported(tip_rev_id):
-                # This node its info is already imported
-                continue
-            self._stats['nodes_expanded'] += 1
-            # Note: Suppressing the commit until we are finished saves a fair
-            #       amount of time. expanding all of bzr.dev goes from 4m37s
-            #       down to 3m21s.
-            self._import_tip(tip_rev_id, suppress_progress_and_commit=True)
-        self._db_conn.commit()
-        pb.finished()
 
     def _get_merge_sorted_tip(self, tip_revision_id):
         if self._incremental:
@@ -795,23 +762,16 @@ class _IncrementalMergeSort(object):
     def _step_mainline(self):
         """Move the mainline pointer by one, updating the data."""
         self._stats['step mainline'] += 1
-        if self._imported_mainline_id in self._importer._dotted_revno_cache:
-            self._stats['step mainline cached'] += 1
-            dotted_info = self._importer._dotted_revno_cache[
-                                self._imported_mainline_id]
-        else:
-            res = self._cursor.execute(
-                "SELECT merged_revision, revno, end_of_merge, merge_depth"
-                "  FROM dotted_revno WHERE tip_revision = ? ORDER BY dist",
-                [self._imported_mainline_id]).fetchall()
-            stuple = static_tuple.StaticTuple.from_sequence
-            st = static_tuple.StaticTuple
-            dotted_info = [st(r[0], st(stuple(map(int, r[1].split('.'))),
-                                       r[2], r[3]))
-                           for r in res]
-            self._stats['step mainline cache missed'] += 1
-            self._importer._dotted_revno_cache[self._imported_mainline_id] = \
-                dotted_info
+        res = self._cursor.execute(
+            "SELECT merged_revision, revno, end_of_merge, merge_depth"
+            "  FROM dotted_revno WHERE tip_revision = ? ORDER BY dist",
+            [self._imported_mainline_id]).fetchall()
+        stuple = static_tuple.StaticTuple.from_sequence
+        st = static_tuple.StaticTuple
+        dotted_info = [st(r[0], st(stuple(map(int, r[1].split('.'))),
+                                   r[2], r[3]))
+                       for r in res]
+        self._stats['step mainline cache missed'] += 1
         self._stats['step mainline added'] += len(dotted_info)
         self._update_info_from_dotted_revno(dotted_info)
         # TODO: We could remove search tips that show up as newly merged
@@ -1271,9 +1231,10 @@ class Querier(object):
         return res[0] > 0
 
     def close(self):
-        self._db_conn.close()
-        self._db_conn = None
-        self._cursor = None
+        if self._db_conn is not None:
+            self._db_conn.close()
+            self._db_conn = None
+            self._cursor = None
 
     def _get_db_id(self, revision_id):
         try:
