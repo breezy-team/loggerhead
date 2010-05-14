@@ -842,3 +842,6 @@ class TestQuerier(TestCaseWithGraphs):
         query = history_db.Querier(db_path, b)
         query.ensure_branch_tip()
         query.close()
+        self.assertEqual({}, query.get_dotted_revnos(['a', 'b', 'c']))
+        self.assertEqual({}, query.get_mainline_where_merged(['a', 'b', 'c']))
+        self.assertEqual([], query.iter_merge_sorted_revisions())

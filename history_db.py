@@ -37,21 +37,6 @@ from bzrlib import (
 from bzrlib.plugins.history_db import schema
 
 
-class TipNotImported(errors.BzrError):
-    """Raised when a Branch tip has not been imported.
-
-    So we can't actually give a valid response.
-    """
-
-    _fmt = ('Branch %(branch)s\'s tip revision %(revision)s has'
-            ' not been imported')
-
-    def __init__(self, branch, revision):
-        errors.BzrError.__init__(self)
-        self.branch = branch
-        self.revision = revision
-
-
 NULL_PARENTS = (revision.NULL_REVISION,)
 
 
@@ -1322,7 +1307,7 @@ class Querier(object):
         cursor = self._get_cursor()
         tip_db_id = self._branch_tip_db_id
         if tip_db_id is None:
-            raise TipNotImported(self._branch, self._branch_tip_rev_id)
+            return {}
         db_ids = set()
         db_id_to_rev_id = {}
         for rev_id in revision_ids:
@@ -1403,7 +1388,7 @@ class Querier(object):
         t = time.time()
         tip_db_id = self._branch_tip_db_id
         if tip_db_id is None:
-            raise TipNotImported(self._branch, self._branch_tip_rev_id)
+            return {}
         cursor = self._get_cursor()
         db_ids = set()
         db_id_to_rev_id = {}
@@ -1611,7 +1596,7 @@ class Querier(object):
         t = time.time()
         tip_db_id = self._branch_tip_db_id
         if tip_db_id is None:
-            raise TipNotImported(self._branch, self._branch_tip_rev_id)
+            return []
         if start_revision_id is not None:
             start_db_id = self._get_db_id(start_revision_id)
         else:
