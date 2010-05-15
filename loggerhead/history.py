@@ -301,21 +301,14 @@ class History(object):
 
     def _get_lh_parent(self, revid):
         """Get the left-hand parent of a given revision id."""
-        return self._querier._get_lh_parent_rev_id(revid)
+        return self._querier.get_lh_parent_rev_id(revid)
 
     def _get_children(self, revid):
         """Get the children of the given revision id."""
         # XXX: We should be filtering this based on self._branch's ancestry...
         # TODO: We also should be using a method on Querier, instead of doing
         #       it ourselves
-        c = self._querier._get_cursor()
-        res = c.execute("SELECT c.revision_id"
-                        "  FROM revision p, parent, revision c"
-                        " WHERE child = c.db_id"
-                        "   AND parent = p.db_id"
-                        "   AND p.revision_id = ?",
-                        (revid,)).fetchall()
-        return [r[0] for r in res]
+        return self._querier.get_children(revid)
 
     def get_revids_from(self, revid_list, start_revid):
         """
