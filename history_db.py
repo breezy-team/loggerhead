@@ -1233,7 +1233,7 @@ class Querier(object):
             return None
         return db_res[0]
 
-    def _get_lh_parent_rev_id(self, revision_id):
+    def get_lh_parent_rev_id(self, revision_id):
         parent_res = self._get_cursor().execute("""
             SELECT p.revision_id
               FROM parent, revision as c, revision as p
@@ -1247,6 +1247,24 @@ class Querier(object):
             return None
         return parent_res[0]
 
+    def get_children(self, revision_id):
+        """Returns all the children the db knows about for this revision_id.
+
+        (we should probably try to filter it based on ancestry of
+        self._branch_tip_rev_id...)
+        """
+        # One option for people who care, is to just have them turn around a
+        # request for get_dotted_revnos(), and things that aren't there are not
+        # in the ancestry.
+        cursor = self._get_cursor()
+        res = cursor.execute("SELECT c.revision_id"
+                             "  FROM revision p, parent, revision c"
+                             " WHERE child = c.db_id"
+                             "   AND parent = p.db_id"
+                             "   AND p.revision_id = ?",
+                             (revid,)).fetchall()
+        return [r[0] for r in res]
+
     def _get_lh_parent_db_id(self, revision_db_id):
         parent_res = self._get_cursor().execute("""
             SELECT parent.parent
@@ -1258,34 +1276,6 @@ class Querier(object):
         if parent_res is None:
             return None
         return parent_res[0]
-
-    def _get_possible_dotted_revno(self, tip_revision_id, merged_revision_id):
-        """Given a possible tip revision, try to determine the dotted revno."""
-        revno = self._get_cursor().execute("""
-            SELECT revno FROM dotted_revno, revision t, revision m
-             WHERE t.revision_id = ?
-               AND t.db_id = dotted_revno.tip_revision
-               AND m.revision_id = ?
-               AND m.db_id = dotted_revno.merged_revision
-            LIMIT 1 -- should always <= 1, but hint to the db?
-            """, (tip_revision_id, merged_revision_id)).fetchone()
-        self._stats['dotted_revno_query'] += 1
-        if revno is None:
-            return None
-        return revno[0]
-
-    def _get_possible_dotted_revno_db_id(self, tip_db_id, merged_db_id):
-        """Get a dotted revno if we have it."""
-        revno = self._get_cursor().execute("""
-            SELECT revno FROM dotted_revno
-             WHERE tip_revision = ?
-               AND merged_revision = ?
-            LIMIT 1 -- should always <= 1, but hint to the db?
-            """, (tip_db_id, merged_db_id)).fetchone()
-        self._stats['dotted_revno_query'] += 1
-        if revno is None:
-            return None
-        return revno[0]
 
     def _get_range_key_and_tail(self, tip_db_id):
         """Return the best range w/ head = tip_db_id or None."""
