@@ -73,6 +73,8 @@ class cmd_history_db_create(commands.Command):
             b.unlock()
         trace.note('Stats:\n%s' % (pprint.pformat(dict(importer._stats)),))
 
+commands.register_command(cmd_history_db_create)
+
 
 _orig_do_dotted_revno = getattr(branch.Branch,
     '_do_dotted_revno_to_revision_id', None)
