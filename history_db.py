@@ -1262,7 +1262,7 @@ class Querier(object):
                              " WHERE child = c.db_id"
                              "   AND parent = p.db_id"
                              "   AND p.revision_id = ?",
-                             (revid,)).fetchall()
+                             (revision_id,)).fetchall()
         return [r[0] for r in res]
 
     def _get_lh_parent_db_id(self, revision_db_id):
