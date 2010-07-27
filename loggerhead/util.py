@@ -36,6 +36,8 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
+from bzrlib import urlutils
+
 from simpletal.simpleTALUtils import HTMLStructureCleaner
 
 log = logging.getLogger("loggerhead.controllers")
@@ -66,7 +68,7 @@ def date_day(value):
 
 def date_time(value):
     if value is not None:
-        return value.strftime('%Y-%m-%d %T')
+        return value.strftime('%Y-%m-%d %H:%M:%S')
     else:
         return 'N/A'
 
@@ -135,6 +137,7 @@ class Container(object):
     """
 
     def __init__(self, _dict=None, **kw):
+        self._properties = {}
         if _dict is not None:
             for key, value in _dict.iteritems():
                 setattr(self, key, value)
@@ -150,6 +153,24 @@ class Container(object):
             out += '%r => %r, ' % (key, value)
         out += '}'
         return out
+
+    def __getattr__(self, attr):
+        """Used for handling things that aren't already available."""
+        if attr.startswith('_') or attr not in self._properties:
+            raise AttributeError('No attribute: %s' % (attr,))
+        val = self._properties[attr](self, attr)
+        setattr(self, attr, val)
+        return val
+
+    def _set_property(self, attr, prop_func):
+        """Set a function that will be called when an attribute is desired.
+
+        We will cache the return value, so the function call should be
+        idempotent. We will pass 'self' and the 'attr' name when triggered.
+        """
+        if attr.startswith('_'):
+            raise ValueError("Cannot create properties that start with _")
+        self._properties[attr] = prop_func
 
 
 def trunc(text, limit=10):
@@ -322,6 +343,14 @@ def human_size(size, min_divisor=0):
     elif divisor == GIG:
         out += 'G'
     return out
+
+
+def local_path_from_url(url):
+    """Convert Bazaar URL to local path, ignoring readonly+ prefix"""
+    readonly_prefix = 'readonly+'
+    if url.startswith(readonly_prefix):
+        url = url[len(readonly_prefix):]
+    return urlutils.local_path_from_url(url)
 
 
 def fill_in_navigation(navigation):

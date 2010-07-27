@@ -58,7 +58,7 @@
             <td class="annoContTit">Contents</td>
           </tr>
 
-          <tr tal:repeat="line contents" 
+          <tr tal:repeat="line contents"
               tal:attributes="class string:blueRow${line/parity}">
             <td class="annoLine"><a tal:attributes="id string:L${line/lineno}; href string:#L${line/lineno}" tal:content="line/lineno">1</a></td>
             <td class="annoRev">

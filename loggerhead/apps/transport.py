@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2008, 2009, 2010 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -18,9 +18,8 @@
 
 import threading
 
-from bzrlib import branch, errors, lru_cache, urlutils
+from bzrlib import branch, errors, urlutils
 from bzrlib.config import LocationConfig
-from bzrlib.smart import request
 from bzrlib.transport import get_transport
 from bzrlib.transport.http import wsgi
 
@@ -28,10 +27,12 @@ from paste.request import path_info_pop
 from paste import httpexceptions
 from paste import urlparser
 
+from loggerhead import util
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
+# TODO: Use bzrlib.ui.bool_from_string(), added in bzr 1.18
 _bools = {
     'yes': True, 'no': False,
     'on': True, 'off': False,
@@ -58,7 +59,6 @@ class BranchesFromTransportServer(object):
             branch,
             name,
             {'cachepath': self._config.SQL_DIR},
-            self.root.graph_cache,
             is_root=is_root,
             use_cdn=self._config.get_option('use_cdn'),
             )
@@ -67,8 +67,8 @@ class BranchesFromTransportServer(object):
     def app_for_non_branch(self, environ):
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPMovedPermanently(
-                environ['SCRIPT_NAME'] + '/')
+            raise httpexceptions.HTTPMovedPermanently.relative_redirect(
+                environ['SCRIPT_NAME'] + '/', environ)
         elif segment == '':
             if self.name:
                 name = self.name
@@ -93,11 +93,8 @@ class BranchesFromTransportServer(object):
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
             base = self.transport.base
-            readonly_prefix = 'readonly+'
-            if base.startswith(readonly_prefix):
-                base = base[len(readonly_prefix):]
             try:
-                path = urlutils.local_path_from_url(base)
+                path = util.local_path_from_url(base)
             except errors.InvalidURL:
                 raise httpexceptions.HTTPNotFound()
             else:
@@ -145,7 +142,6 @@ def get_transport_for_thread(base):
 class BranchesFromTransportRoot(object):
 
     def __init__(self, base, config):
-        self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
 
@@ -169,7 +165,6 @@ class BranchesFromTransportRoot(object):
 class UserBranchesFromTransportRoot(object):
 
     def __init__(self, base, config):
-        self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
         self.trunk_dir = config.get_option('trunk_dir')

@@ -10,7 +10,10 @@ import posixpath
 
 import bzrlib.lru_cache
 
-from bzrlib.util.configobj.configobj import ConfigObj
+try:
+    from bzrlib.util.configobj.configobj import ConfigObj
+except ImportError:
+    from configobj import ConfigObj
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -208,8 +211,8 @@ class Root(object):
                                 environ['SCRIPT_NAME']
         segment = path_info_pop(environ)
         if segment is None:
-            raise httpexceptions.HTTPMovedPermanently(
-                environ['SCRIPT_NAME'] + '/')
+            raise httpexceptions.HTTPMovedPermanently.relative_redirect(
+                environ['SCRIPT_NAME'] + '/', environ)
         elif segment == '':
             response = WSGIResponse()
             self.browse(response)

@@ -1,4 +1,4 @@
-# Copyright 2009 Canonical Ltd
+# Copyright 2009, 2010 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@
 
 """Loggerhead web viewer for Bazaar branches.
 
-This provides a new option "--http" to the "bzr serve" command, that 
+This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
@@ -38,7 +38,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     require_any_api(bzrlib, [
         (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
-        (2, 0, 0), (2, 1, 0)])
+        (2, 0, 0), (2, 1, 0), (2, 2, 0)])
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
@@ -58,17 +58,46 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
             (DEFAULT_PORT,))
 
+    def setup_logging(config):
+        import logging
+        import sys
+
+        logger = logging.getLogger('loggerhead')
+        log_level = config.get_log_level()
+        if log_level is not None:
+            logger.setLevel(log_level)
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setLevel(logging.DEBUG)
+        logger.addHandler(handler)
+        logging.getLogger('simpleTAL').addHandler(handler)
+        logging.getLogger('simpleTALES').addHandler(handler)
+        def _restrict_logging(logger_name):
+            logger = logging.getLogger(logger_name)
+            if logger.getEffectiveLevel() < logging.INFO:
+                logger.setLevel(logging.INFO)
+        # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+        # default. So quiet it up a bit.
+        _restrict_logging('simpleTAL')
+        _restrict_logging('simpleTALES')
+
+
+
+
+    def _ensure_loggerhead_path():
+        """Ensure that you can 'import loggerhead' and get the root."""
+        # loggerhead internal code will try to 'import loggerhead', so
+        # let's put it on the path if we can't find it in the existing path
+        try:
+            import loggerhead.apps.transport
+        except ImportError:
+            import os.path, sys
+            sys.path.append(os.path.dirname(__file__))
+
     def serve_http(transport, host=None, port=None, inet=None):
         from paste.httpexceptions import HTTPExceptionHandler
         from paste.httpserver import serve
 
-        # loggerhead internal code will try to 'import loggerhead', so
-        # let's put it on the path if we can't find it in the existing path
-        try:
-            import loggerhead
-        except ImportError:
-            import os.path, sys
-            sys.path.append(os.path.dirname(__file__))
+        _ensure_loggerhead_path()
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
@@ -81,6 +110,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
+        setup_logging(config)
         app = BranchesFromTransportRoot(transport.base, config)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
@@ -120,3 +150,15 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                     super(cmd_serve, self).run(*args, **kw)
 
         register_command(cmd_serve)
+
+    def load_tests(standard_tests, module, loader):
+        _ensure_loggerhead_path()
+        try:
+            import bzrlib.plugins.loggerhead.loggerhead.tests
+        except ImportError:
+            tests = ['loggerhead.tests']
+        else:
+            tests = ['bzrlib.plugins.loggerhead.loggerhead.tests']
+        standard_tests.addTests(loader.loadTestsFromModuleNames(
+            tests))
+        return standard_tests

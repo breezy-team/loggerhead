@@ -4,6 +4,16 @@ What's changed in loggerhead?
 dev [future]
 ------------
 
+    - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
+      deprecated. (John Arbash Meinel)
+
+    - Syntax highlighting is no longer applied for files greater than 512K,
+      reducing codebrowse.launchpad.net overloading.
+      (Max Kanat-Alexander, #513044)
+
+    - Documentation added in the docs directory. README simplified
+      accordingly. (Tres Seaver).
+
     - Show svn/git/hg revision ids in loggerhead revision view.
       (Jelmer Vernooij)
 
@@ -12,8 +22,24 @@ dev [future]
 
     - Support FastCGI, SCGI and AJP using flup. (Denis Martinez)
 
+    - Repository.get_revision_inventory() was removed in bzr 2.2; use
+      Repository.get_inventory() instead. (Matt Nordhoff, #528194)
+
+    - Ignore readonly+ prefix when checking if Loggerhead is serving a
+      local location. (Reported by Tres Seaver.) (Matt Nordhoff)
+
+    - Set Cache-Control and Expires headers on static pages.
+      (John Arbash Meinel)
+
+    - Generate relative links where possible (everywhere but HTTP
+      redirects and feed IDs). (Michael Hudson, Matt Nordhoff)
+
+    - Fix bad redirect when visiting "/download" or "/download/".
+      (Matt Nordhoff, #247992)
+
+
 1.17 [20Aug2009]
----------------
+----------------
 
     - Add bug links in revision informations (Alexandre Garnier, #314052)
 
@@ -117,7 +143,7 @@ dev [future]
 
     - Fix a file descriptor leak (Matt Nordhoff, #370845)
 
-    - Use transport API internally, so it is possible to specify a remote 
+    - Use transport API internally, so it is possible to specify a remote
       URL to serve-branches. (Jelmer Vernooij, #371787)
 
     - Fix internal server errors when using start-loggerhead. (Matt
@@ -166,7 +192,7 @@ dev [future]
 
 
 1.10 [22Dec2008]
----------------
+----------------
 
     - Add startup deamon script for Linux (Marius Kruger)
 

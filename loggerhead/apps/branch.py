@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2008, 2009, 2010 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ import urllib
 import sys
 
 import bzrlib.branch
+import bzrlib.errors
 import bzrlib.lru_cache
 
 from paste import request
@@ -46,39 +47,29 @@ _DEFAULT = object()
 class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
-                 graph_cache=None, branch_link=None, is_root=False,
+                 branch_link=None, is_root=False,
                  served_url=_DEFAULT, use_cdn=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
         self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
-        if graph_cache is None:
-            graph_cache = bzrlib.lru_cache.LRUCache(10)
-        self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
         self.use_cdn = use_cdn
 
     def get_history(self):
         file_cache = None
-        revinfo_disk_cache = None
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
-            try:
-                from loggerhead.changecache import (
-                    FileChangeCache, RevInfoDiskCache)
-            except ImportError:
-                self.log.debug("Couldn't load python-sqlite,"
-                               " continuing without using a cache")
-            else:
-                file_cache = FileChangeCache(cache_path)
-                revinfo_disk_cache = RevInfoDiskCache(cache_path)
+            from loggerhead.changecache import FileChangeCache
+            file_cache = FileChangeCache(cache_path)
         return History(
-            self.branch, self.graph_cache, file_cache=file_cache,
-            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
+            self.branch, file_cache=file_cache, cache_key=self.friendly_name,
+            cache_path=cache_path,
+            )
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
@@ -88,10 +79,15 @@ class BranchWSGIApp(object):
             if v is not None:
                 qs.append('%s=%s' % (k, urllib.quote(v)))
         qs = '&'.join(qs)
-        return request.construct_url(
-            self._environ, script_name=self._url_base,
-            path_info=unicode('/'.join(args)).encode('utf-8'),
-            querystring=qs)
+        path_info = urllib.quote(
+            unicode('/'.join(args)).encode('utf-8'), safe='/~:')
+        if qs:
+            path_info += '?' + qs
+        return self._url_base + path_info
+
+    def absolute_url(self, *args, **kw):
+        rel_url = self.url(*args, **kw)
+        return request.resolve_relative_url(rel_url, self._environ)
 
     def context_url(self, *args, **kw):
         kw = util.get_context(**kw)
@@ -145,14 +141,15 @@ class BranchWSGIApp(object):
             else:
                 # Loggerhead only supports serving .bzr/ on local branches, so
                 # we shouldn't suggest something that won't work.
-                if self.branch.base.startswith('file://'):
+                try:
+                    util.local_path_from_url(self.branch.base)
                     self.served_url = self.url([])
-                else:
+                except bzrlib.errors.InvalidURL:
                     self.served_url = None
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
-                self._url_base + '/changes')
+                self.absolute_url('/changes'))
         if path == 'static':
             return static_app(environ, start_response)
         cls = self.controllers_dict.get(path)

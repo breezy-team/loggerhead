@@ -19,7 +19,7 @@
             <th class="datecell">Latest Rev</th>
             <th class="datecell">Last Changed</th>
           </tr>
-          
+
           <tr class="blueRow0" tal:condition="python:name != '/'">
             <td class="icocell">
                 <a href="../"><img tal:attributes="src python:static_url('/static/images/ico_folder_up.gif')" /></a>
