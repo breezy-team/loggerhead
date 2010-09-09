@@ -10,10 +10,7 @@ import posixpath
 
 import bzrlib.lru_cache
 
-try:
-    from bzrlib.util.configobj.configobj import ConfigObj
-except ImportError:
-    from configobj import ConfigObj
+from bzrlib.util.configobj.configobj import ConfigObj
 
 from paste.request import path_info_pop
 from paste import httpexceptions

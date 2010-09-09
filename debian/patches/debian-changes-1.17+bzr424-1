@@ -1,0 +1,100 @@
+Description: Upstream changes introduced in version 1.17+bzr424-1
+ This patch has been created by dpkg-source during the package build.
+ Here's the last changelog entry, hopefully it gives details on why
+ those changes were made:
+ .
+ loggerhead (1.17+bzr424-1) unstable; urgency=low
+ .
+   * Use source format version 3.
+   * Bump standards version to 3.8.4
+   * Use new upstream snapshot.
+    + Fixes import issues when running full Bazaar testsuite.
+ .
+ The person named in the Author field signed this changelog entry.
+Author: Jelmer Vernooij <jelmer@debian.org>
+
+---
+The information above should follow the Patch Tagging Guidelines, please
+checkout http://dep.debian.net/deps/dep3/ to learn about the format. Here
+are templates for supplementary fields that you might want to add:
+
+Origin: <vendor|upstream|other>, <url of original patch>
+Bug: <url in upstream bugtracker>
+Bug-Debian: http://bugs.debian.org/<bugnumber>
+Bug-Ubuntu: https://launchpad.net/bugs/<bugnumber>
+Forwarded: <no|not-needed|url proving that it has been forwarded>
+Reviewed-By: <name and email of someone who approved the patch>
+Last-Update: <YYYY-MM-DD>
+
+--- loggerhead-1.17+bzr424.orig/__init__.py
++++ loggerhead-1.17+bzr424/__init__.py
+@@ -153,6 +153,12 @@ if __name__ == 'bzrlib.plugins.loggerhea
+ 
+     def load_tests(standard_tests, module, loader):
+         _ensure_loggerhead_path()
++        try:
++            import bzrlib.plugins.loggerhead.loggerhead.tests
++        except ImportError:
++            tests = ['loggerhead.tests']
++        else:
++            tests = ['bzrlib.plugins.loggerhead.loggerhead.tests']
+         standard_tests.addTests(loader.loadTestsFromModuleNames(
+-            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
++            tests))
+         return standard_tests
+--- loggerhead-1.17+bzr424.orig/loggerhead.conf.example
++++ loggerhead-1.17+bzr424/loggerhead.conf.example
+@@ -8,10 +8,6 @@
+ # use this if you want loggerhead to listen to another interface than 127.0.0.1
+ # server.socket_host = 'your_hostname_or_ip'
+ 
+-# where's bzrlib?
+-# (you only need this if you don't install bzr.)
+-#bzrpath = '/Users/robey/code/bzr/bzr'
+-
+ # if you want a special title on the front page, set it here:
+ title = 'branches in loggerhead'
+ 
+--- /dev/null
++++ loggerhead-1.17+bzr424/serve-branches.conf.example
+@@ -0,0 +1,3 @@
++served_branches=/srv/bzr
++prefix=/loggerhead
++port=8080
+--- loggerhead-1.17+bzr424.orig/setup.py
++++ loggerhead-1.17+bzr424/setup.py
+@@ -35,33 +35,12 @@ setup(
+                 "loggerhead/apps",
+                 "loggerhead/controllers",
+                 "loggerhead/templates",
++                "loggerhead/tests",
+                 "bzrlib.plugins.loggerhead"],
+     package_dir={'bzrlib.plugins.loggerhead':'.'},
+     package_data = {"loggerhead": ["templates/*.pt",
+                                    "static/css/*.css",
+                                    "static/javascript/*.js",
+-                                   "static/javascript/yui/build/anim/*",
+-                                   "static/javascript/yui/build/base/*",
+-                                   "static/javascript/yui/build/cssbase/*",
+-                                   "static/javascript/yui/build/cssgrids/*",
+-                                   "static/javascript/yui/build/dd/*",
+-                                   "static/javascript/yui/build/dump/*",
+-                                   "static/javascript/yui/build/get/*",
+-                                   "static/javascript/yui/build/json/*",
+-                                   "static/javascript/yui/build/node/*",
+-                                   "static/javascript/yui/build/queue/*",
+-                                   "static/javascript/yui/build/yui/*",
+-                                   "static/javascript/yui/build/attribute/*",
+-                                   "static/javascript/yui/build/cookie/*",
+-                                   "static/javascript/yui/build/cssfonts/*",
+-                                   "static/javascript/yui/build/cssreset/*",
+-                                   "static/javascript/yui/build/dom/*",
+-                                   "static/javascript/yui/build/event/*",
+-                                   "static/javascript/yui/build/io/*",
+-                                   "static/javascript/yui/build/loader/*",
+-                                   "static/javascript/yui/build/oop/*",
+-                                   "static/javascript/yui/build/substitute/*",
+-                                   "static/javascript/yui/build/yui-base/*",
+                                    "static/images/*"]},
+     data_files = [
+         ('share/man/man1', ['serve-branches.1']),

@@ -21,10 +21,7 @@ import os
 import shutil
 
 from bzrlib.tests import TestCaseWithTransport
-try:
-    from bzrlib.util.configobj.configobj import ConfigObj
-except ImportError:
-    from configobj import ConfigObj
+from bzrlib.util.configobj.configobj import ConfigObj
 from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
