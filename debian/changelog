@@ -3,8 +3,9 @@ loggerhead (1.17+bzr424-2) UNRELEASED; urgency=low
   * debian/control:
    - Recommend python-pygments to support syntax-highlighting. (LP: #607775)
    - Fix Vcs-Bzr field and add Vcs-Browser field.
+   - Bump Standards-Version to 3.9.1, no-changes needed.
 
- -- Andrew Starr-Bochicchio <a.starr.b@gmail.com>  Wed, 08 Sep 2010 20:43:55 -0400
+ -- Andrew Starr-Bochicchio <a.starr.b@gmail.com>  Wed, 08 Sep 2010 20:44:46 -0400
 
 loggerhead (1.17+bzr424-1) unstable; urgency=low
 
