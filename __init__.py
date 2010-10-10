@@ -153,6 +153,12 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()
+        try:
+            import bzrlib.plugins.loggerhead.loggerhead.tests
+        except ImportError:
+            tests = ['loggerhead.tests']
+        else:
+            tests = ['bzrlib.plugins.loggerhead.loggerhead.tests']
         standard_tests.addTests(loader.loadTestsFromModuleNames(
-            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
+            tests))
         return standard_tests

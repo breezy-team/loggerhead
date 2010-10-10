@@ -35,6 +35,7 @@ setup(
                 "loggerhead/apps",
                 "loggerhead/controllers",
                 "loggerhead/templates",
+                "loggerhead/tests",
                 "bzrlib.plugins.loggerhead"],
     package_dir={'bzrlib.plugins.loggerhead':'.'},
     package_data = {"loggerhead": ["templates/*.pt",
