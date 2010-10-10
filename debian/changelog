@@ -9,8 +9,9 @@ loggerhead (1.17+bzr428-1) UNRELEASED; urgency=low
   [ Jelmer Vernooij ]
   * New upstream snapshot.
   * Cope with bzrlib.util.configobj no longer existing.
+  * Add convenience script for automatically updating dependencies.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Sun, 10 Oct 2010 02:47:40 +0200
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 10 Oct 2010 02:48:28 +0200
 
 loggerhead (1.17+bzr424-1) unstable; urgency=low
 

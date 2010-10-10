@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Jelmer Vernooij <jelmer@debian.org>, Roland Mas <lolando@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: bzr (>= 1.5)
+Build-Depends-Indep: bzr (>= 1.13~), bzr (<< 2.4~)
 Build-Depends: python-central (>= 0.5), cdbs (>= 0.4.43), debhelper (>= 5.0.37.2), python, python-pkg-resources, python-paste (>= 1.6)
 Standards-Version: 3.9.1
 XS-Python-Version: >= 2.4
@@ -13,7 +13,7 @@ Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-bazaar/loggerhead/unstable/fil
 
 Package: loggerhead
 Architecture: all
-Depends: bzr (>= 1.5), bzr (<< 2.3~), ${python:Depends}, python-simpletal, python-pkg-resources, python-paste (>= 1.6), libjs-yui, ${misc:Depends}, adduser
+Depends: bzr (>= 1.13~), bzr (<< 2.4~), ${python:Depends}, python-simpletal, python-pkg-resources, python-paste (>= 1.6), libjs-yui, ${misc:Depends}, adduser
 Suggests: python-pastedeploy (>= 1.3.0)
 Enhances: bzr
 Recommends: bzr-search, python-simplejson, python-pygments
