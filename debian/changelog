@@ -1,11 +1,15 @@
-loggerhead (1.17+bzr424-2) UNRELEASED; urgency=low
+loggerhead (1.17+bzr428-1) UNRELEASED; urgency=low
 
+  [ Andrew Starr-Bochicchio ]
   * debian/control:
    - Recommend python-pygments to support syntax-highlighting. (LP: #607775)
    - Add Vcs-Browser field.
    - Bump Standards-Version to 3.9.1, no-changes needed.
 
- -- Andrew Starr-Bochicchio <a.starr.b@gmail.com>  Wed, 08 Sep 2010 20:44:46 -0400
+  [ Jelmer Vernooij ]
+  * New upstream snapshot.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 10 Oct 2010 02:44:47 +0200
 
 loggerhead (1.17+bzr424-1) unstable; urgency=low
 
