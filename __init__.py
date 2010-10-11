@@ -30,15 +30,16 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
-version_info = (1, 17, 0)
+from info import (
+    bzr_plugin_version as version_info,
+    bzr_compatible_versions,
+    )
 
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [
-        (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
-        (2, 0, 0), (2, 1, 0), (2, 2, 0)])
+    require_any_api(bzrlib, bzr_compatible_versions)
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
