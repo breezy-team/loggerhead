@@ -1,8 +1,9 @@
 loggerhead (1.18-1) UNRELEASED; urgency=low
 
   * New upstream release.
+   + Depends on bzr >= 1.17.
 
- -- Max Bowsher <maxb@f2s.com>  Wed, 17 Nov 2010 00:38:22 +0000
+ -- Max Bowsher <maxb@f2s.com>  Wed, 17 Nov 2010 00:40:58 +0000
 
 loggerhead (1.17+bzr429-1) unstable; urgency=low
 
