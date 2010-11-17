@@ -26,6 +26,8 @@ from bzrlib.diff import show_diff_trees
 
 from loggerhead.controllers import TemplatedBranchView
 
+log = logging.getLogger("loggerhead.controllers")
+
 
 class DiffUI(TemplatedBranchView):
     """Class to output a diff for a single file or revisions."""

@@ -50,8 +50,7 @@ class ChangeLogUI(TemplatedBranchView):
 
         try:
             revid, start_revid, revid_list = history.get_view(
-                revid, start_revid, filter_file_id, query,
-                extra_rev_count=pagesize+1)
+                revid, start_revid, filter_file_id, query)
             util.set_context(kwargs)
 
             if (query is not None) and (len(revid_list) == 0):

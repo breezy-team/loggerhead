@@ -23,6 +23,10 @@ import StringIO
 
 from simpletal import simpleTAL, simpleTALES
 
+logging.getLogger("simpleTAL").setLevel(logging.INFO)
+logging.getLogger("simpleTALES").setLevel(logging.INFO)
+
+
 _zpt_cache = {}
 
 

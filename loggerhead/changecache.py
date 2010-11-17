@@ -27,8 +27,10 @@ cached a change, it's good forever.
 """
 
 import cPickle
+import marshal
 import os
 import tempfile
+import zlib
 
 try:
     from sqlite3 import dbapi2
@@ -113,3 +115,44 @@ class FileChangeCache(object):
             changes = self.history.get_file_changes_uncached(entry)
             cache.add(entry.revid, changes)
         return changes
+
+
+class RevInfoDiskCache(object):
+    """Like `RevInfoMemoryCache` but backed in a sqlite DB."""
+
+    def __init__(self, cache_path):
+        if not os.path.exists(cache_path):
+            os.mkdir(cache_path)
+        filename = os.path.join(cache_path, 'revinfo.sql')
+        create_table = not os.path.exists(filename)
+        if create_table:
+            safe_init_db(
+                filename, "create table Data "
+                "(key binary primary key, revid binary, data binary)")
+        self.connection = dbapi2.connect(filename)
+        self.cursor = self.connection.cursor()
+
+    def get(self, key, revid):
+        self.cursor.execute(
+            "select revid, data from data where key = ?", (dbapi2.Binary(key),))
+        row = self.cursor.fetchone()
+        if row is None:
+            return None
+        elif str(row[0]) != revid:
+            return None
+        else:
+            return marshal.loads(zlib.decompress(row[1]))
+
+    def set(self, key, revid, data):
+        try:
+            self.cursor.execute(
+                'delete from data where key = ?', (dbapi2.Binary(key), ))
+            blob = zlib.compress(marshal.dumps(data))
+            self.cursor.execute(
+                "insert into data (key, revid, data) values (?, ?, ?)",
+                map(dbapi2.Binary, [key, revid, blob]))
+            self.connection.commit()
+        except dbapi2.IntegrityError:
+            # If another thread or process attempted to set the same key, we
+            # don't care too much -- it's only a cache after all!
+            pass
