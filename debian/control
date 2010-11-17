@@ -13,7 +13,7 @@ Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-bazaar/loggerhead/unstable/fil
 
 Package: loggerhead
 Architecture: all
-Depends: bzr (>= 1.17~), bzr (<< 2.4~), ${python:Depends}, python-simpletal, python-pkg-resources, python-paste (>= 1.6), libjs-yui, ${misc:Depends}, adduser
+Depends: bzr (>= 1.17~), bzr (<< 2.4~), ${python:Depends}, python-simpletal, python-pkg-resources, python-paste (>= 1.6), ${misc:Depends}, adduser
 Suggests: python-pastedeploy (>= 1.3.0)
 Enhances: bzr
 Recommends: bzr-search, python-simplejson, python-pygments

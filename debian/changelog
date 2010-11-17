@@ -2,8 +2,12 @@ loggerhead (1.18-1) UNRELEASED; urgency=low
 
   * New upstream release.
    + Depends on bzr >= 1.17.
+  * Remove remnants of patching to use the system YUI, which actually broke
+    the use of YUI entirely. The Debian archive currently only contains YUI 2,
+    but loggerhead uses YUI 3. Therefore, embed YUI 3 as loggerhead upstream
+    does.
 
- -- Max Bowsher <maxb@f2s.com>  Wed, 17 Nov 2010 00:40:58 +0000
+ -- Max Bowsher <maxb@f2s.com>  Wed, 17 Nov 2010 00:54:58 +0000
 
 loggerhead (1.17+bzr429-1) unstable; urgency=low
 
