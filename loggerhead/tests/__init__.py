@@ -20,7 +20,6 @@ def load_tests(standard_tests, module, loader):
         (__name__ + '.' + x) for x in [
             'test_controllers',
             'test_corners',
-            'test_importer',
             'test_simple',
             'test_templating',
         ]]))

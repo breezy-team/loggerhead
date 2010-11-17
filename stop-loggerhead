@@ -1,0 +1,51 @@
+#!/usr/bin/env python
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+"""A script for stopping the loggerhead process."""
+
+import os
+import sys
+from optparse import OptionParser
+
+home = os.path.realpath(os.path.dirname(__file__))
+default_pidfile = os.path.join(home, 'loggerhead.pid')
+parser = OptionParser(usage='usage: %prog [options]', version='%prog')
+parser.add_option('-p', '--pidfile', dest="pidfile", default=default_pidfile,
+                  help="override pidfile location")
+
+options, args = parser.parse_args()
+if len(args) > 0:
+    parser.error('No filename arguments are used, only options.')
+
+try:
+    f = open(options.pidfile, 'r')
+except IOError, e:
+    print 'Pid file %s not found.' % (options.pidfile,)
+    sys.exit(1)
+
+pid = int(f.readline())
+
+try:
+    os.kill(pid, 0)
+except OSError, e:
+    print 'Stale pid file; server is not running.'
+    sys.exit(1)
+
+print
+print 'Shutting down previous server @ pid %d.' % (pid,)
+print
+
+import signal
+os.kill(pid, signal.SIGINT)

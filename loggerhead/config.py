@@ -49,12 +49,6 @@ def command_line_parser():
     parser.add_option("--protocol", dest="protocol",
                       help=("Protocol to use: http, scgi, fcgi, ajp"
                            "(defaults to http)."))
-    parser.add_option("--log-level", default=None, action='callback',
-                      callback=_optparse_level_to_int_level,
-                      type="string",
-                      help="Set the verbosity of logging. Can either"
-                           " be set to a numeric or string"
-                           " (eg, 10=debug, 30=warning)")
     parser.add_option("--memory-profile", action="store_true",
                       help="Profile the memory usage using Dozer.")
     parser.add_option("--prefix", dest="user_prefix",
@@ -76,29 +70,6 @@ def command_line_parser():
     parser.add_option("--allow-writes", action="store_true",
                       help="Allow writing to the Bazaar server.")
     return parser
-
-
-_log_levels = {
-    'debug': 10,
-    'info': 20,
-    'warning': 30,
-    'error': 40,
-    'critical': 50,
-}
-
-def _optparse_level_to_int_level(option, opt_str, value, parser):
-    parser.values.log_level = _level_to_int_level(value)
-
-
-def _level_to_int_level(value):
-    """Convert a string level to an integer value."""
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except ValueError:
-        pass
-    return _log_levels[value.lower()]
 
 
 class LoggerheadConfig(object):
@@ -127,10 +98,6 @@ class LoggerheadConfig(object):
             return global_config
         else:
             return cmd_config
-
-    def get_log_level(self):
-        opt = self.get_option('log_level')
-        return _level_to_int_level(opt)
 
     def get_arg(self, index):
         """Get an arg from the arg list."""

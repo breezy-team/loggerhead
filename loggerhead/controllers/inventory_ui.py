@@ -31,6 +31,8 @@ from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
 
+log = logging.getLogger("loggerhead.controllers")
+
 
 def dirname(path):
     if path is not None:
