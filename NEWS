@@ -1,8 +1,14 @@
 What's changed in loggerhead?
 =============================
 
+dev [future]
+------------
+
 1.18 [10Nov2010]
 ----------------
+
+    - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
+      deprecated. (John Arbash Meinel)
 
     - Syntax highlighting is no longer applied for files greater than 512K,
       reducing codebrowse.launchpad.net overloading.

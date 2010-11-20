@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2007-2010 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,8 @@
 
 import cgi
 import logging
+import os
+import shutil
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
@@ -61,7 +63,7 @@ class TestWithSimpleTree(BasicTests):
                              'with<htmlspecialchars\n')
         self.build_tree_contents(
             [('myfilename', self.filecontents)])
-        self.tree.add('myfilename')
+        self.tree.add('myfilename', 'myfile-id')
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
@@ -69,6 +71,11 @@ class TestWithSimpleTree(BasicTests):
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
+        res.mustcontain(cgi.escape(self.msg))
+
+    def test_changes_for_file(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes?filter_file_id=myfile-id')
         res.mustcontain(cgi.escape(self.msg))
 
     def test_changes_branch_from(self):

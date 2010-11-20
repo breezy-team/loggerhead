@@ -92,7 +92,7 @@ class TemplatedBranchView(object):
 
         vals.update(self.get_values(path, kwargs, headers))
 
-        self.log.info('Getting information for %s: %r secs' % (
+        self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
         if 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
@@ -103,7 +103,7 @@ class TemplatedBranchView(object):
         template.expand_into(w, **vals)
         w.flush()
         self.log.info(
-            'Rendering %s: %r secs, %s bytes' % (
+            'Rendering %s: %.3f secs, %s bytes' % (
                 self.__class__.__name__, time.time() - z, w.bytes))
         return []
 
