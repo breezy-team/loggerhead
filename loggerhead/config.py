@@ -49,7 +49,7 @@ def command_line_parser():
     parser.add_option("--protocol", dest="protocol",
                       help=("Protocol to use: http, scgi, fcgi, ajp"
                            "(defaults to http)."))
-    parser.add_option("--log-level", default=None, action='callback',
+    parser.add_option("--log-level", default='info', action='callback',
                       callback=_optparse_level_to_int_level,
                       type="string",
                       help="Set the verbosity of logging. Can either"
