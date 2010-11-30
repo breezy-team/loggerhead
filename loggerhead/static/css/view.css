@@ -8,9 +8,11 @@
 }
 .annoLine {
 	width:37px;
+	padding-right: .2em;
 }
 .annoContTit, .annoCont {
 	width:auto;
+	padding-left: .3em;
 }
 .annoRevTit, .annoRev {
 	width:70px;
