@@ -47,11 +47,6 @@ class AnnotateUI(ViewUI):
             yield util.Container(
                 parity=parity, new_rev=new_rev, change=change)
             
-        # This is the simplest method of telling that we're at the end
-        # of the iterator, within the template (where it's very hard to
-        # catch StopIteration).
-        yield None
-
     def get_values(self, path, kwargs, headers):
         values = super(AnnotateUI, self).get_values(path, kwargs, headers)
         values['annotated'] = self.annotate_file(values)

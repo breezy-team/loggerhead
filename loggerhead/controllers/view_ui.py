@@ -56,11 +56,14 @@ class ViewUI(TemplatedBranchView):
             file_text = file_text.decode(encoding)
 
         file_lines = bzrlib.osutils.split_lines(file_text)
-
+        # This can throw bzrlib.errors.BinaryFile (which our caller catches).
         bzrlib.textfile.check_text_lines(file_lines)
+        
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
-            hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
+            # highlight strips off extra newlines at the end of the file.
+            extra_lines = len(file_lines) - len(hl_lines)
+            hl_lines.extend([u''] * extra_lines)
         else:
             hl_lines = map(cgi.escape, file_lines)
         

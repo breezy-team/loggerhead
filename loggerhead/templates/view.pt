@@ -70,8 +70,8 @@
             <td class="annoLine"><a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}" tal:content="repeat/line/number">1</a></td>
             <td class="annoRev" tal:condition="annotated">
               <a tal:define="anno python:annotated.next();
-                             global parity python:anno is not None and anno.parity"
-                 tal:condition="python:anno is not None and anno.new_rev"
+                             global parity python:anno.parity"
+                 tal:condition="python:anno.new_rev"
                  tal:content="python:util.trunc(anno.change.revno)"
                  tal:attributes="href python:url(['/revision', anno.change.revno], clear=1);
                                  title python:'%s by %s, on %s (%s)' % (anno.change.revno, ', '.join(util.hide_emails(anno.change.authors)), anno.change.date.strftime('%d %b %Y %H:%M'), util.date_time(anno.change.date))"></a>
