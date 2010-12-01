@@ -1,31 +1,31 @@
 /*table*/
-.annoLineTit, .annoLine, .annoRevTit, .annoRev, .annoComm, .annoCommTit, .annoContTit, .annoCont {
-	width:45px;
+.viewLineTit, .viewLine, .viewRevTit, .viewRev,
+.viewContTit, .viewCont
+{
 	border:1px solid #d2d2d2;
 }
-.annoLine, .annoRev, .annoComm, .annoCont {
+.viewLine, .viewRev, .viewComm, .viewCont {
 	border:none;
 }
-.annoLine {
-	width:37px;
+.viewLine, .viewLineTit {
 	padding-right: .2em;
 }
-.annoContTit, .annoCont {
+.viewLine {
+	width:37px;
+}
+.viewContTit, .viewCont {
 	width:auto;
 	padding-left: .3em;
 }
-.annoRevTit, .annoRev {
+.viewRevTit, .viewRev {
 	width:70px;
 	text-align:center;
 }
-.annoComm, .annoCommTit {
-	width:200px;
-}
-.annoLine, .annoCont {
+.viewLine, .viewCont {
 	font:normal 12px/normal monospace;
         whitespace: pre;
 }
-.annoCont pre { margin: 0; }
-.annoLine {
+.viewCont pre { margin: 0; }
+.viewLine {
 	text-align:right;
 }
