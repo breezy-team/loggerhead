@@ -41,7 +41,7 @@
             </tal:compare-to>
           </span>
           <span class="breadcrumb" tal:condition="specific_path">
-            : <tal:annotate content="structure python:annotate_link(url, change.revno, specific_path)" />
+            : <tal:annotate content="structure python:view_link(url, change.revno, specific_path)" />
           </span>
         </h1>
         <tal:branch-info replace="structure python:branchinfo(branch)" />
@@ -54,7 +54,7 @@
           </a>
         </p>
         <p tal:condition="specific_path">
-          Viewing changes to <tal:annotate content="structure python:annotate_link(url, change.revno, specific_path)" />
+          Viewing changes to <tal:annotate content="structure python:view_link(url, change.revno, specific_path)" />
         </p>
         <ul id="submenuTabs">
           <li id="first"><a tal:attributes="href python:url(['/files', change.revno]);

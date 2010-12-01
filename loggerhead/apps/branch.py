@@ -29,6 +29,7 @@ from paste import httpexceptions
 
 from loggerhead.apps import static_app
 from loggerhead.controllers.annotate_ui import AnnotateUI
+from loggerhead.controllers.view_ui import ViewUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.diff_ui import DiffUI
@@ -124,6 +125,7 @@ class BranchWSGIApp(object):
         'files': InventoryUI,
         'revision': RevisionUI,
         'search': SearchUI,
+        'view': ViewUI,
         }
 
     def last_updated(self):

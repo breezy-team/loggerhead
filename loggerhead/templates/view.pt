@@ -3,12 +3,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
   <head>
     <title metal:fill-slot="title"
-           tal:content="string:${branch/friendly_name} : contents of ${path}
+           tal:content="string:${branch/friendly_name} : contents of ${file_path}
                         at revision ${change/revno}">
     </title>
     <metal:block fill-slot="header_extras">
         <link rel="stylesheet" type="text/css" media="all"
-              tal:attributes="href python:branch.static_url('/static/css/annotate.css')"/>
+              tal:attributes="href python:branch.static_url('/static/css/view.css')"/>
         <link rel="stylesheet" type="text/css" media="all"
               tal:attributes="href python:branch.static_url('/static/css/highlight.css')"/>
     </metal:block>
@@ -36,6 +36,14 @@
             <li id="first">
                 <a tal:attributes="href python:url(['/files', change.revno], clear=1)">browse files</a>
             </li>
+            <li tal:condition="not:annotated">
+              <a tal:attributes="href python:url(['/annotate', revno_url, file_path], clear=1)"
+              >view revision numbers per line</a>
+            </li>
+            <li tal:condition="annotated">
+              <a tal:attributes="href python:url(['/view', revno_url, file_path], clear=1)"
+              >view without revision numbers</a>
+            </li>
             <li>
                 <a tal:attributes="href python:url(['/revision', change.revno], clear=1)">view revision</a>
             </li>
@@ -50,25 +58,30 @@
             </li>
         </ul>
 
-      <div class="annotate">
+      <div class="view">
         <table id="logentries">
           <tr class="logheader">
-            <td class="annoLineTit">Line</td>
-            <td class="annoRevTit">Revision</td>
-            <td class="annoContTit">Contents</td>
+            <td class="viewLineTit">Line</td>
+            <td class="viewRevTit" tal:condition="annotated">Revision</td>
+            <td class="viewContTit">Contents</td>
           </tr>
 
-          <tr tal:repeat="line contents"
-              tal:attributes="class string:blueRow${line/parity}">
-            <td class="annoLine"><a tal:attributes="id string:L${line/lineno}; href string:#L${line/lineno}" tal:content="line/lineno">1</a></td>
-            <td class="annoRev">
-              <a tal:condition="python:line.status=='changed'"
-                 tal:content="python:util.trunc(line.change.revno)"
-                 tal:attributes="href python:url(['/revision', line.change.revno], clear=1);
-                                 title python:'%s by %s, on %s (%s)'%(line.change.revno, ', '.join(util.hide_emails(line.change.authors)), line.change.date.strftime('%d %b %Y %H:%M'), util.date_time(line.change.date))"></a>
-            </td>
-            <td class="annoCont"><pre tal:content="structure line/text"></pre></td>
-          </tr>
+          <tal:rep tal:repeat="line contents">
+            <tr tal:define="anno python:annotated and annotated.next()"
+                tal:attributes="class python:anno and 'blueRow' + str(anno.parity) or None">
+              <td class="viewLine">
+                <a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
+                   tal:content="repeat/line/number">1</a>
+              </td>
+              <td class="viewRev" tal:condition="annotated">
+                <a tal:condition="python:anno.new_rev"
+                   tal:content="python:util.trunc(anno.change.revno)"
+                   tal:attributes="href python:url(['/revision', anno.change.revno], clear=1);
+                                   title python:'%s by %s, on %s (%s)' % (anno.change.revno, ', '.join(util.hide_emails(anno.change.authors)), anno.change.date.strftime('%d %b %Y %H:%M'), util.date_time(anno.change.date))"></a>
+              </td>
+              <td class="viewCont"><pre tal:content="structure line"></pre></td>
+            </tr>
+          </tal:rep>
         </table>
       </div>
 
