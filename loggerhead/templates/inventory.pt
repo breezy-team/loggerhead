@@ -89,11 +89,11 @@
 
             <!-- Show this if it's a symlink -->
             <tr tal:attributes="class string:blueRow${repeat/file/even}" tal:condition="python:file.kind=='symlink'">
-                <td class="autcell"><a tal:attributes="href python:url(['/annotate', change.revno, file.absolutepath])">
+                <td class="autcell"><a tal:attributes="href python:url(['/view', change.revno, file.absolutepath])">
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_file_flecha.gif')" alt="Symlink" />
                     </a>
 
-                 <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])"
+                 <a tal:attributes="href python:url(['/view', revno_url, file.absolutepath])"
                                         tal:content="file/filename" class="link"></a>
                  </td>
                  <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
@@ -113,17 +113,17 @@
 
             <!-- Show this if it's a regular file -->
             <tr tal:attributes="class string:blueRow${repeat/file/even}" tal:condition="python:file.kind=='file'">
-                <td class="autcell"><a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])">
+                <td class="autcell"><a tal:attributes="href python:url(['/view', revno_url, file.absolutepath])">
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif');
-                                             title string:Annotate ${file/filename}"
+                                             title string:View ${file/filename}"
                              tal:condition="python:file.executable is False" />
                         <!-- Show a different icon id the file executable -->
                         <img tal:attributes="src python:branch.static_url('/static/images/ico_file_modify.gif');
-                                             title string:Annotate ${file/filename}"
+                                             title string:View ${file/filename}"
                              tal:condition="python:file.executable is True" alt="File" />
                     </a>
 
-              <a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath])"
+              <a tal:attributes="href python:url(['/view', revno_url, file.absolutepath])"
                                      tal:content="file/filename" class="link"></a></td>
               <td class="date"><a tal:attributes="href python:url(['/revision', file.change.revno]);
                                                   title string:Show revision ${file/change/revno}"
@@ -131,8 +131,8 @@
               </td>
               <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
               <td class="timedate2" tal:content="python:util.human_size(file.size)"></td>
-              <td class="expcell"><a tal:attributes="href python:url(['/annotate', revno_url, file.absolutepath]);
-                                                     title string:Annotate ${file/filename}">
+              <td class="expcell"><a tal:attributes="href python:url(['/view', revno_url, file.absolutepath]);
+                                                     title string:View ${file/filename}">
                                       <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
                                      </a>
               </td>

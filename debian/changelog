@@ -1,3 +1,9 @@
+loggerhead (1.18+bzr433-1) experimental; urgency=low
+
+  * New upstream snapshot.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 02 Dec 2010 01:50:14 +0100
+
 loggerhead (1.18-1) UNRELEASED; urgency=low
 
   * New upstream release.

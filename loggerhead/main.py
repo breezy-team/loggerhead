@@ -58,8 +58,10 @@ def get_config_and_path(args):
 
 def setup_logging(config):
     logging.basicConfig()
-    logging.getLogger('').setLevel(logging.DEBUG)
+    log_level = config.get_log_level()
+    logging.getLogger('').setLevel(log_level)
     logger = logging.getLogger('loggerhead')
+    logger.setLevel(log_level)
     if config.get_option('log_folder'):
         logfile_path = os.path.join(
             config.get_option('log_folder'), 'serve-branches.log')
@@ -71,6 +73,14 @@ def setup_logging(config):
     logfile.setFormatter(formatter)
     logfile.setLevel(logging.DEBUG)
     logger.addHandler(logfile)
+    def _restrict_logging(logger_name):
+        logger = logging.getLogger(logger_name)
+        if logger.getEffectiveLevel() < logging.INFO:
+            logger.setLevel(logging.INFO)
+    # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+    # default. So quiet it up a bit.
+    _restrict_logging('simpleTAL')
+    _restrict_logging('simpleTALES')
     return logger
 
 
