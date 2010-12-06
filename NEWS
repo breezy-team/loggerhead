@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-dev [future]
-------------
+1.18 [10Nov2010]
+----------------
 
     - Syntax highlighting is no longer applied for files greater than 512K,
       reducing codebrowse.launchpad.net overloading.

@@ -30,15 +30,16 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
-version_info = (1, 17, 0)
+from info import (
+    bzr_plugin_version as version_info,
+    bzr_compatible_versions,
+    )
 
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
 
-    require_any_api(bzrlib, [
-        (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
-        (2, 0, 0), (2, 1, 0), (2, 2, 0)])
+    require_any_api(bzrlib, bzr_compatible_versions)
 
     # NB: Normally plugins should lazily load almost everything, but this
     # seems reasonable to have in-line here: bzrlib.commands and options are
@@ -69,10 +70,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
 
-    def serve_http(transport, host=None, port=None, inet=None):
-        from paste.httpexceptions import HTTPExceptionHandler
-        from paste.httpserver import serve
 
+    def _ensure_loggerhead_path():
+        """Ensure that you can 'import loggerhead' and get the root."""
         # loggerhead internal code will try to 'import loggerhead', so
         # let's put it on the path if we can't find it in the existing path
         try:
@@ -80,6 +80,12 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         except ImportError:
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
+
+    def serve_http(transport, host=None, port=None, inet=None):
+        from paste.httpexceptions import HTTPExceptionHandler
+        from paste.httpserver import serve
+
+        _ensure_loggerhead_path()
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
@@ -132,3 +138,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                     super(cmd_serve, self).run(*args, **kw)
 
         register_command(cmd_serve)
+
+    def load_tests(standard_tests, module, loader):
+        _ensure_loggerhead_path()
+        standard_tests.addTests(loader.loadTestsFromModuleNames(
+            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
+        return standard_tests
