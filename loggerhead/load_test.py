@@ -63,6 +63,7 @@ threads active". Though if you know the load pattern, you could approximate
 this.
 """
 
+import threading
 import time
 import Queue
 
@@ -70,6 +71,12 @@ try:
     import simplejson
 except ImportError:
     import json as simplejson
+
+from bzrlib import (
+    errors,
+    transport,
+    urlutils,
+    )
 
 
 class RequestDescription(object):
@@ -80,7 +87,7 @@ class RequestDescription(object):
         self.relpath = descrip_dict['relpath']
 
 
-class RequestThread(object):
+class RequestWorker(object):
     """Process requests in a worker thread."""
 
     _timer = time.time
@@ -93,11 +100,11 @@ class RequestThread(object):
         self.blocking_time = blocking_time
 
     def step_next(self):
-        item = self.queue.get(True, self.blocking_time)
+        url = self.queue.get(True, self.blocking_time)
         self.start_time = self._timer()
-        self.process(item)
+        success = self.process(url)
         self.end_time = self._timer()
-        self.update_stats(item)
+        self.update_stats(url, success)
         self.queue.task_done()
 
     def run(self, stop_event):
@@ -107,26 +114,32 @@ class RequestThread(object):
             except Queue.Empty:
                 pass
 
-    def join(self):
-        """Wait until all requests are finished."""
-        self.queue.join()
+    def process(self, url):
+        base, path = urlutils.split(url)
+        t = transport.get_transport(base)
+        try:
+            content = t.get_bytes(path)
+        except (errors.TransportError, errors.NoSuchFile):
+            return False
+        return True
 
-    def process(self, item):
-        pass
-
-    def update_stats(self, item):
-        self.stats.append((item, self.end_time - self.start_time))
+    def update_stats(self, url, success):
+        self.stats.append((url, success, self.end_time - self.start_time))
 
 
 class ActionScript(object):
     """This tracks the actions that we want to perform."""
 
-    _thread_class = RequestThread
+    _worker_class = RequestWorker
+    _default_base_url = 'http://localhost:8080'
+    _default_blocking_timeout = 60.0
 
     def __init__(self):
-        self.base_url = 'http://localhost:8080'
-        self.blocking_timeout = 60.0
-        self.requests = []
+        self.base_url = self._default_base_url
+        self.blocking_timeout = self._default_blocking_timeout
+        self._requests = []
+        self._threads = {}
+        self.stop_event = threading.Event()
 
     @classmethod
     def parse(cls, content):
@@ -147,6 +160,48 @@ class ActionScript(object):
         if blocking_timeout is not None:
             script.blocking_timeout = blocking_timeout
         for request_dict in request_list:
-            request = RequestDescription(request_dict)
-            script.requests.append(request)
+            script.add_request(request_dict)
         return script
+
+    def add_request(self, request_dict):
+        request = RequestDescription(request_dict)
+        self._requests.append(request)
+
+    def _get_worker(self, thread_id):
+        if thread_id in self._threads:
+            return self._threads[thread_id][0]
+        handler = self._worker_class(thread_id,
+                                     blocking_time=self.blocking_timeout)
+
+        t = threading.Thread(target=handler.run, args=(self.stop_event,),
+                             name='Thread-%s' % (thread_id,))
+        self._threads[thread_id] = (handler, t)
+        t.start()
+        return handler
+
+    def finish_queues(self):
+        """Wait for all queues of all children to finish."""
+        for h, t in self._threads.itervalues():
+            h.queue.join()
+
+    def stop_and_join(self):
+        """Stop all running workers, and return.
+
+        This will stop even if workers still have work items.
+        """
+        self.stop_event.set()
+        for h, t in self._threads.itervalues():
+            # And join the controlling thread
+            t.join(self.blocking_timeout)
+
+    def _full_url(self, relpath):
+        return self.base_url + relpath
+
+    def run(self):
+        self.stop_event.clear()
+        for request in self._requests:
+            full_url = self._full_url(request.relpath)
+            worker = self._get_worker(request.thread)
+            worker.queue.put(full_url)
+        self.finish_queues()
+        self.stop_and_join()
