@@ -121,9 +121,9 @@ def menu(branch, url, fileview_active=False):
 
 
 @templatefunc
-def annotate_link(url, revno, path):
+def view_link(url, revno, path):
     return '<a href="%s" title="Annotate %s">%s</a>' % (
-        url(['/annotate', revno, path]), cgi.escape(path), cgi.escape(path))
+        url(['/view', revno, path]), cgi.escape(path), cgi.escape(path))
 
 @templatefunc
 def revision_link(url, revno, path, frag=''):
