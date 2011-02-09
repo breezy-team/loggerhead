@@ -13,8 +13,6 @@
         <li><a tal:attributes="href python:url('/files', clear=1);
                                title string:Files;
                                id string:on">Files</a></li>
-        <li><a tal:attributes="href string:https://help.launchpad.net/Loggerhead;
-                               title string:Help">Help</a></li> 
         </tal:fileview-active>
       </ul>
 </tal:menu>
