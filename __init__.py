@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Canonical Ltd
+# Copyright 2009, 2010, 2011 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@ from info import (
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
+    from bzrlib import commands
 
     require_any_api(bzrlib, bzr_compatible_versions)
 
@@ -107,10 +108,9 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         transport_server_registry.register('http', serve_http, help=HELP)
     else:
         import bzrlib.builtins
-        from bzrlib.commands import get_cmd_object, register_command
         from bzrlib.option import Option
 
-        _original_command = get_cmd_object('serve')
+        _original_command = commands.get_cmd_object('serve')
 
         class cmd_serve(bzrlib.builtins.cmd_serve):
             __doc__ = _original_command.__doc__
@@ -137,7 +137,15 @@ if __name__ == 'bzrlib.plugins.loggerhead':
                 else:
                     super(cmd_serve, self).run(*args, **kw)
 
-        register_command(cmd_serve)
+        commands.register_command(cmd_serve)
+
+    class cmd_load_test_loggerhead(commands.Command):
+        """Run a load test against a live loggerhead instance.
+        """
+
+        def run(self):
+            from bzrlib.plugins.loggerhead.loggerhead import load_test
+            load_test.run()
 
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()
