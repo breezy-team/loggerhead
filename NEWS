@@ -1,6 +1,15 @@
 What's changed in loggerhead?
 =============================
 
+1.19 [????]
+-----------
+
+    - HEAD requests should not return body content. This is done by adding
+      another wsgi middleware that strips the body when the REQUEST_METHOD is
+      HEAD. Note that you have to add the middleware into your pipeline, and
+      it does not decrease the actual work done.
+      (John Arbash Meinel, #716201)
+
 1.18 [10Nov2010]
 ----------------
 

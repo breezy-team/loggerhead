@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Canonical Ltd
+# Copyright 2009, 2010, 2011 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -82,11 +82,16 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             sys.path.append(os.path.dirname(__file__))
 
     def serve_http(transport, host=None, port=None, inet=None):
+        # TODO: if we supported inet to pass requests in and respond to them,
+        #       then it would be easier to test the full stack, but it probably
+        #       means routing around paste.httpserver.serve which probably
+        #       isn't testing the full stack
         from paste.httpexceptions import HTTPExceptionHandler
         from paste.httpserver import serve
 
         _ensure_loggerhead_path()
 
+        from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
 
@@ -100,6 +105,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         config = LoggerheadConfig(argv)
         setup_logging(config)
         app = BranchesFromTransportRoot(transport.base, config)
+        app = HeadMiddleware(app)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 

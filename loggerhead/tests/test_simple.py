@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2007, 2008, 2009, 2011 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@ from bzrlib.util.configobj.configobj import ConfigObj
 from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
+from loggerhead.apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler
 
@@ -156,6 +157,31 @@ class TestHiddenBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes', status=404)
 
+
+class TestHeadMiddleware(BasicTests):
+
+    def setUp(self):
+        BasicTests.setUp(self)
+        self.createBranch()
+
+        self.msg = 'trivial commit message'
+        self.revid = self.tree.commit(message=self.msg)
+
+    def setUpLoggerhead(self, **kw):
+        branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
+        return TestApp(HTTPExceptionHandler(HeadMiddleware(branch_app)))
+
+    def test_get(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes')
+        res.mustcontain(self.msg)
+        self.assertEqual('text/html', res.header('Content-Type'))
+
+    def test_head(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes', extra_environ={'REQUEST_METHOD': 'HEAD'})
+        self.assertEqual('text/html', res.header('Content-Type'))
+        self.assertEqualDiff('', res.body)
 
 #class TestGlobalConfig(BasicTests):
 #    """
