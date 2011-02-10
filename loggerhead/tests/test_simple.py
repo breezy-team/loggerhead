@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2007-2011 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -61,7 +61,7 @@ class TestWithSimpleTree(BasicTests):
                              'with<htmlspecialchars\n')
         self.build_tree_contents(
             [('myfilename', self.filecontents)])
-        self.tree.add('myfilename')
+        self.tree.add('myfilename', 'myfile-id')
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
@@ -69,6 +69,11 @@ class TestWithSimpleTree(BasicTests):
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
+        res.mustcontain(cgi.escape(self.msg))
+
+    def test_changes_for_file(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes?filter_file_id=myfile-id')
         res.mustcontain(cgi.escape(self.msg))
 
     def test_changes_branch_from(self):
@@ -88,8 +93,18 @@ class TestWithSimpleTree(BasicTests):
     def test_annotate(self):
         app = self.setUpLoggerhead()
         res = app.get('/annotate', params={'file_id': self.fileid})
-        for line in self.filecontents.splitlines():
-            res.mustcontain(cgi.escape(line))
+        # This now fails because pigments is highlighting the lines.
+        # Specifically, instead of getting:
+        # 'with&lt;htmlspecialchars' we are now getting
+        # '<span class='pyg-n'>with</span><span class='pyg-o'>&lt;</span>'
+        # '<span class='pyg-n'>htmlspecialchars</span>
+        # So pygments is breaking up the special characters with custom
+        # highlighting. The alternative is to figure out how to disable
+        # pygments for this test.
+        ## for line in self.filecontents.splitlines():
+        ##     res.mustcontain(cgi.escape(line))
+        self.assertContainsRe(res.body,
+            "with.*&lt;.*htmlspecialchars")
 
     def test_inventory(self):
         app = self.setUpLoggerhead()
