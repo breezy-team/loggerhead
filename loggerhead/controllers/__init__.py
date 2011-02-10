@@ -97,6 +97,9 @@ class TemplatedBranchView(object):
         if 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
+        if environ.get('REQUEST_METHOD') == 'HEAD':
+            # No content for a HEAD request
+            return []
         template = load_template(self.template_path)
         z = time.time()
         w = BufferingWriter(writer, 8192)
