@@ -2,10 +2,15 @@ What's changed in loggerhead?
 =============================
 
 1.19 [???]
-----------
+----------------
+
+    - If we get a HEAD request, there is no reason to expand the template, we
+      shouldn't be returning body content anyway.
+      (John Arbash Meinel, #716201, #716217)
 
     - Merge the pqm changes back into trunk, after trunk was reverted to an old
       revision. (John Arbash Meinel, #716152)
+
 
 1.18 [10Nov2010]
 ----------------
