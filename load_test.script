@@ -1,0 +1,8 @@
+{
+    "parameters": {"base_url": "http://localhost:8080"},
+    "requests": [
+        {"relpath": "/changes"},
+        {"relpath": "/files"}
+    ]
+}
+

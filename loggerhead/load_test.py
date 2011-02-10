@@ -101,6 +101,11 @@ class RequestWorker(object):
 
     def step_next(self):
         url = self.queue.get(True, self.blocking_time)
+        if url == '<noop>':
+            # This is usually an indicator that we want to stop, so just skip
+            # this one.
+            self.queue.task_done()
+            return
         self.start_time = self._timer()
         success = self.process(url)
         self.end_time = self._timer()
@@ -194,6 +199,10 @@ class ActionScript(object):
         """
         self.stop_event.set()
         for h, t in self._threads.itervalues():
+            # Signal the queue that it should stop blocking, we don't have to
+            # wait for the queue to empty, because we may see stop_event before
+            # we see the <noop>
+            h.queue.put('<noop>')
             # And join the controlling thread
             for i in range(10):
                 t.join(self.blocking_timeout / 10.0)
@@ -211,3 +220,11 @@ class ActionScript(object):
             worker.queue.put(full_url, True, self.blocking_timeout)
         self.finish_queues()
         self.stop_and_join()
+
+
+def run_script(filename):
+    with open(filename, 'rb') as f:
+        content = f.read()
+    script = ActionScript.parse(content)
+    script.run()
+    return script

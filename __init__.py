@@ -141,11 +141,22 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     class cmd_load_test_loggerhead(commands.Command):
         """Run a load test against a live loggerhead instance.
+
+        Pass in the name of a script file to run. See loggerhead/load_test.py
+        for a description of the file format.
         """
 
-        def run(self):
+        takes_args = ["filename"]
+
+        def run(self, filename):
             from bzrlib.plugins.loggerhead.loggerhead import load_test
-            load_test.run()
+            print 'starting script'
+            script = load_test.run_script(filename)
+            for worker,_  in script._threads.itervalues():
+                for url, success, time in worker.stats:
+                    print ' %5.3fs %s %s' % (time, str(success)[0], url)
+
+    commands.register_command(cmd_load_test_loggerhead)
 
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()

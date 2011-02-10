@@ -79,6 +79,14 @@ class TestRequestWorkerInfrastructure(tests.TestCase):
         self.assertEqual([('item', True, 1.0), ('next-item', True, 1.0)],
                          rt.stats)
 
+    def test_step_next_does_nothing_for_noop(self):
+        rt = NoopRequestWorker('id')
+        rt.queue.put('item')
+        rt.step_next()
+        rt.queue.put('<noop>')
+        rt.step_next()
+        self.assertEqual([('item', True, 1.0)], rt.stats)
+
     def test_step_next_will_timeout(self):
         # We don't want step_next to block forever
         rt = NoopRequestWorker('id', blocking_time=0.001)
@@ -297,5 +305,34 @@ class TestActionScriptIntegration(tests.TestCaseWithTransport):
         worker = script._get_worker("2")
         self.assertEqual([("second", True), ('or-this', False),
                           ("fourth", True)],
+                         [(s[0].rsplit('/', 1)[1], s[1])
+                          for s in worker.stats])
+
+
+class TestRunScript(tests.TestCaseWithTransport):
+
+    def setUp(self):
+        super(TestRunScript, self).setUp()
+        self.transport_readonly_server = http_server.HttpServer
+
+    def test_run_script(self):
+        self.build_tree(['file1', 'file2', 'file3', 'file4'])
+        url = self.get_readonly_url()
+        self.build_tree_contents([('localhost.script', """{
+    "parameters": {"base_url": "%s", "blocking_timeout": 0.1},
+    "requests": [
+        {"thread": "1", "relpath": "file1"},
+        {"thread": "2", "relpath": "file2"},
+        {"thread": "1", "relpath": "file3"},
+        {"thread": "2", "relpath": "file4"}
+    ]
+}""" % (url,))])
+        script = load_test.run_script('localhost.script')
+        worker = script._threads["1"][0]
+        self.assertEqual([("file1", True), ('file3', True)],
+                         [(s[0].rsplit('/', 1)[1], s[1])
+                          for s in worker.stats])
+        worker = script._threads["2"][0]
+        self.assertEqual([("file2", True), ("file4", True)],
                          [(s[0].rsplit('/', 1)[1], s[1])
                           for s in worker.stats])
