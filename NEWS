@@ -4,6 +4,11 @@ What's changed in loggerhead?
 1.19 [???]
 ----------------
 
+    - Add ``bzr load-test-loggerhead`` as a way to make sure loggerhead can
+      handle concurrent requests, etc. Scripts can be written that spawn
+      multiple threads, and issue concurrent requests.
+      (John Arbash Meinel)
+
     - If we get a HEAD request, there is no reason to expand the template, we
       shouldn't be returning body content anyway.
       (John Arbash Meinel, #716201, #716217)
