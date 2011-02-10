@@ -1,4 +1,5 @@
 {
+    "comment": "A fairly trivial load test script. It just loads the main two pages from a loggerhead install running directly on a branch.",
     "parameters": {"base_url": "http://localhost:8080"},
     "requests": [
         {"relpath": "/changes"},

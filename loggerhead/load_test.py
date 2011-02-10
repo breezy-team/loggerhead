@@ -157,8 +157,6 @@ class ActionScript(object):
             raise ValueError('Missing "parameters" section')
         if 'requests' not in json_dict:
             raise ValueError('Missing "requests" section')
-        if sorted(json_dict.keys()) != ['parameters', 'requests']:
-            raise ValueError('unknown entries present.')
         param_dict = json_dict['parameters']
         request_list = json_dict['requests']
         base_url = param_dict.get('base_url', None)

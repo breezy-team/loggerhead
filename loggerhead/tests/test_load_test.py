@@ -175,9 +175,8 @@ class TestActionScriptInfrastructure(tests.TestCase):
             load_test.ActionScript.parse, '{"parameters": {}}')
         self.assertRaises(ValueError,
             load_test.ActionScript.parse, '{"requests": []}')
-        self.assertRaises(ValueError,
-            load_test.ActionScript.parse,
-                '{"parameters": {}, "requests": [], "garbage": "section"}')
+        load_test.ActionScript.parse(
+            '{"parameters": {}, "requests": [], "comment": "section"}')
         script = load_test.ActionScript.parse(
             empty_script)
         self.assertIsNot(None, script)

@@ -150,11 +150,11 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
         def run(self, filename):
             from bzrlib.plugins.loggerhead.loggerhead import load_test
-            print 'starting script'
             script = load_test.run_script(filename)
             for worker,_  in script._threads.itervalues():
                 for url, success, time in worker.stats:
-                    print ' %5.3fs %s %s' % (time, str(success)[0], url)
+                    self.outf.write(' %5.3fs %s %s\n'
+                                    % (time, str(success)[0], url))
 
     commands.register_command(cmd_load_test_loggerhead)
 
