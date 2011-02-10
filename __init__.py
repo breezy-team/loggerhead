@@ -41,18 +41,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     require_any_api(bzrlib, bzr_compatible_versions)
 
-    # NB: Normally plugins should lazily load almost everything, but this
-    # seems reasonable to have in-line here: bzrlib.commands and options are
-    # normally loaded, and the rest of loggerhead won't be loaded until serve
-    # --http is run.
-
-    # transport_server_registry was added in bzr 1.16. When we drop support for
-    # older releases, we can remove the code to override cmd_serve.
-
-    try:
-        from bzrlib.transport import transport_server_registry
-    except ImportError:
-        transport_server_registry = None
+    from bzrlib.transport import transport_server_registry
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
@@ -69,7 +58,6 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         logger.addHandler(handler)
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
-
 
     def _ensure_loggerhead_path():
         """Ensure that you can 'import loggerhead' and get the root."""
@@ -103,41 +91,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 
-    if transport_server_registry is not None:
-        transport_server_registry.register('http', serve_http, help=HELP)
-    else:
-        import bzrlib.builtins
-        from bzrlib.commands import get_cmd_object, register_command
-        from bzrlib.option import Option
-
-        _original_command = get_cmd_object('serve')
-
-        class cmd_serve(bzrlib.builtins.cmd_serve):
-            __doc__ = _original_command.__doc__
-
-            takes_options = _original_command.takes_options + [
-                Option('http', help=HELP)]
-
-            def run(self, *args, **kw):
-                if 'http' in kw:
-                    from bzrlib.transport import get_transport
-                    allow_writes = kw.get('allow_writes', False)
-                    path = kw.get('directory', '.')
-                    port = kw.get('port', DEFAULT_PORT)
-                    # port might be an int already...
-                    if isinstance(port, basestring) and ':' in port:
-                        host, port = port.split(':')
-                    else:
-                        host = DEFAULT_HOST
-                    if allow_writes:
-                        transport = get_transport(path)
-                    else:
-                        transport = get_transport('readonly+' + path)
-                    serve_http(transport, host, port)
-                else:
-                    super(cmd_serve, self).run(*args, **kw)
-
-        register_command(cmd_serve)
+    transport_server_registry.register('http', serve_http, help=HELP)
 
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()
