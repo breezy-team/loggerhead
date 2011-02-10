@@ -17,6 +17,7 @@
 
 import cgi
 import logging
+import re
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
@@ -93,18 +94,20 @@ class TestWithSimpleTree(BasicTests):
     def test_annotate(self):
         app = self.setUpLoggerhead()
         res = app.get('/annotate', params={'file_id': self.fileid})
-        # This now fails because pigments is highlighting the lines.
-        # Specifically, instead of getting:
-        # 'with&lt;htmlspecialchars' we are now getting
+        # If pygments is installed, it inserts <span class="pyg" content into
+        # the output, to trigger highlighting. And it specifically highlights
+        # the &lt; that we are interested in seeing in the output.
+        # Without pygments we have a simple: 'with&lt;htmlspecialchars'
+        # With it, we have
         # '<span class='pyg-n'>with</span><span class='pyg-o'>&lt;</span>'
         # '<span class='pyg-n'>htmlspecialchars</span>
-        # So pygments is breaking up the special characters with custom
-        # highlighting. The alternative is to figure out how to disable
-        # pygments for this test.
-        ## for line in self.filecontents.splitlines():
-        ##     res.mustcontain(cgi.escape(line))
-        self.assertContainsRe(res.body,
-            "with.*&lt;.*htmlspecialchars")
+        # So we pre-filter the body, to make sure remove spans of that type.
+        body_no_span = re.sub(r'<span class="pyg-.">', '', res.body)
+        body_no_span = body_no_span.replace('</span>', '')
+        for line in self.filecontents.splitlines():
+            escaped = cgi.escape(line)
+            self.assertTrue(escaped in body_no_span,
+                            "did not find %r in %r" % (escaped, body_no_span))
 
     def test_inventory(self):
         app = self.setUpLoggerhead()
