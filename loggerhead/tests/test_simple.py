@@ -1,4 +1,4 @@
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2007-2011 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 import cgi
 import logging
+import re
 
 from bzrlib.tests import TestCaseWithTransport
 from bzrlib.util.configobj.configobj import ConfigObj
@@ -61,7 +62,7 @@ class TestWithSimpleTree(BasicTests):
                              'with<htmlspecialchars\n')
         self.build_tree_contents(
             [('myfilename', self.filecontents)])
-        self.tree.add('myfilename')
+        self.tree.add('myfilename', 'myfile-id')
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
@@ -69,6 +70,11 @@ class TestWithSimpleTree(BasicTests):
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
+        res.mustcontain(cgi.escape(self.msg))
+
+    def test_changes_for_file(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/changes?filter_file_id=myfile-id')
         res.mustcontain(cgi.escape(self.msg))
 
     def test_changes_branch_from(self):
@@ -88,8 +94,20 @@ class TestWithSimpleTree(BasicTests):
     def test_annotate(self):
         app = self.setUpLoggerhead()
         res = app.get('/annotate', params={'file_id': self.fileid})
+        # If pygments is installed, it inserts <span class="pyg" content into
+        # the output, to trigger highlighting. And it specifically highlights
+        # the &lt; that we are interested in seeing in the output.
+        # Without pygments we have a simple: 'with&lt;htmlspecialchars'
+        # With it, we have
+        # '<span class='pyg-n'>with</span><span class='pyg-o'>&lt;</span>'
+        # '<span class='pyg-n'>htmlspecialchars</span>
+        # So we pre-filter the body, to make sure remove spans of that type.
+        body_no_span = re.sub(r'<span class="pyg-.">', '', res.body)
+        body_no_span = body_no_span.replace('</span>', '')
         for line in self.filecontents.splitlines():
-            res.mustcontain(cgi.escape(line))
+            escaped = cgi.escape(line)
+            self.assertTrue(escaped in body_no_span,
+                            "did not find %r in %r" % (escaped, body_no_span))
 
     def test_inventory(self):
         app = self.setUpLoggerhead()
