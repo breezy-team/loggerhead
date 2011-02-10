@@ -78,6 +78,11 @@ from bzrlib import (
     urlutils,
     )
 
+# This code will be doing multi-threaded requests against bzrlib.transport
+# code. We want to make sure to load everything ahead of time, so we don't get
+# lazy-import failures
+_ = transport.get_transport('http://example.com')
+
 
 class RequestDescription(object):
     """Describes info about a request."""
