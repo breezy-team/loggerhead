@@ -118,6 +118,9 @@ class RequestWorker(object):
         base, path = urlutils.split(url)
         t = transport.get_transport(base)
         try:
+            # TODO: We should probably look into using some part of
+            #       blocking_timeout to decide when to stop trying to read
+            #       content
             content = t.get_bytes(path)
         except (errors.TransportError, errors.NoSuchFile):
             return False
@@ -171,7 +174,7 @@ class ActionScript(object):
         if thread_id in self._threads:
             return self._threads[thread_id][0]
         handler = self._worker_class(thread_id,
-                                     blocking_time=self.blocking_timeout)
+                                     blocking_time=self.blocking_timeout/10.0)
 
         t = threading.Thread(target=handler.run, args=(self.stop_event,),
                              name='Thread-%s' % (thread_id,))
@@ -192,7 +195,10 @@ class ActionScript(object):
         self.stop_event.set()
         for h, t in self._threads.itervalues():
             # And join the controlling thread
-            t.join(self.blocking_timeout)
+            for i in range(10):
+                t.join(self.blocking_timeout / 10.0)
+                if not t.isAlive():
+                    break
 
     def _full_url(self, relpath):
         return self.base_url + relpath
@@ -202,6 +208,6 @@ class ActionScript(object):
         for request in self._requests:
             full_url = self._full_url(request.relpath)
             worker = self._get_worker(request.thread)
-            worker.queue.put(full_url)
+            worker.queue.put(full_url, True, self.blocking_timeout)
         self.finish_queues()
         self.stop_and_join()

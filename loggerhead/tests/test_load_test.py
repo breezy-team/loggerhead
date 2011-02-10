@@ -212,7 +212,7 @@ class TestActionScriptInfrastructure(tests.TestCase):
         worker = script._get_worker('id')
         self.assertTrue('id' in script._threads)
         # We should have set the blocking timeout
-        self.assertEqual(script.blocking_timeout,
+        self.assertEqual(script.blocking_timeout / 10.0,
                          worker.blocking_time)
 
         # Another request will return the identical object
@@ -267,3 +267,35 @@ class TestActionScriptInfrastructure(tests.TestCase):
         worker = script._get_worker("2")
         self.assertEqual(["second", "fourth"],
                          [s[0] for s in worker.stats])
+
+
+class TestActionScriptIntegration(tests.TestCaseWithTransport):
+
+    def setUp(self):
+        super(TestActionScriptIntegration, self).setUp()
+        self.transport_readonly_server = http_server.HttpServer
+
+    def test_full_integration(self):
+        self.build_tree(['first', 'second', 'third', 'fourth'])
+        url = self.get_readonly_url()
+        script = load_test.ActionScript.parse("""{
+            "parameters": {"base_url": "%s", "blocking_timeout": 0.1},
+            "requests": [
+                {"thread": "1", "relpath": "first"},
+                {"thread": "2", "relpath": "second"},
+                {"thread": "1", "relpath": "no-this"},
+                {"thread": "2", "relpath": "or-this"},
+                {"thread": "1", "relpath": "third"},
+                {"thread": "2", "relpath": "fourth"}
+            ]}""" % (url,))
+        script.run()
+        worker = script._get_worker("1")
+        self.assertEqual([("first", True), ('no-this', False),
+                          ("third", True)],
+                         [(s[0].rsplit('/', 1)[1], s[1])
+                          for s in worker.stats])
+        worker = script._get_worker("2")
+        self.assertEqual([("second", True), ('or-this', False),
+                          ("fourth", True)],
+                         [(s[0].rsplit('/', 1)[1], s[1])
+                          for s in worker.stats])
