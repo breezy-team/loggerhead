@@ -19,7 +19,10 @@ import cgi
 import logging
 
 from bzrlib.tests import TestCaseWithTransport
-from bzrlib.util.configobj.configobj import ConfigObj
+try:
+    from bzrlib.util.configobj.configobj import ConfigObj
+except ImportError:
+    from configobj import ConfigObj
 from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
