@@ -80,8 +80,6 @@ ul#list-files li.desc {
 }
 /**/
 #loggerheadCont p.expand, #loggerheadCont p.expand a, #loggerheadCont p.expand a:link, #loggerheadCont p.expand a:visited, #loggerheadCont p.expand a:hover {
-    color:#0f6b97;
-    text-decoration:none;
     margin-right:10px;
     float:left;
 }

@@ -16,26 +16,27 @@
   </head>
 
   <body>
+    <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
     <tal:block metal:fill-slot="heading">
-      <h1>
-        <tal:has-link condition="branch/branch_link">
-          <a tal:attributes="href branch/branch_link"
-             tal:content="branch/friendly_name">
-            nice/branch/name
-          </a>
-        </tal:has-link>
-        <tal:no-link condition="not: branch/branch_link">
-          <span metal:use-macro="breadcrumbs/directory"></span>
-        </tal:no-link>
-        <tal:block condition="changes">
-          : changes
-          <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
-          <tal:block condition="start_revid">from revision
-            <span tal:content="python:history.get_revno(start_revid)"/>
-          </tal:block>
-          <tal:block condition="query">matching <tal:block content="query" /></tal:block>
-        </tal:block>
-      </h1>
+        <div id="breadcrumbs">
+            <tal:has-link condition="branch/branch_link">
+              <a tal:attributes="href branch/branch_link"
+                 tal:content="branch/friendly_name">
+                nice/branch/name
+              </a>
+            </tal:has-link>
+            <tal:no-link condition="not: branch/branch_link">
+              <span metal:use-macro="breadcrumbs/directory"></span>
+            </tal:no-link>
+            <tal:block condition="changes">
+              &#187; Changes
+              <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
+              <tal:block condition="start_revid">from revision
+                <span tal:content="python:history.get_revno(start_revid)"/>
+              </tal:block>
+              <tal:block condition="query">matching <tal:block content="query" /></tal:block>
+            </tal:block>
+        </div>
     </tal:block>
 
     <div metal:fill-slot="content">
@@ -69,14 +70,14 @@
       <!-- Table -->
       <table id="logentries">
         <tr class="logheader">
-          <td class="revisionnumber">Rev</td>
-          <td class="expandcell show_if_js">&nbsp;</td>
-          <td class="summarycell">Summary</td>
-          <td class="authorcell">Authors</td>
-          <td tal:condition="show_tag_col" class="tagscell">Tags</td>
-          <td class="datecell">Date</td>
-          <td class="diffcell">Diff</td>
-          <td class="downloadcell">Files</td>
+          <th class="revisionnumber">Rev</th>
+          <th class="expandcell show_if_js">&nbsp;</th>
+          <th class="summarycell">Summary</th>
+          <th class="authorcell">Authors</th>
+          <th tal:condition="show_tag_col" class="tagscell">Tags</th>
+          <th class="datecell">Date</th>
+          <th class="diffcell">Diff</th>
+          <th class="downloadcell">Files</th>
         </tr>
         <tal:block tal:repeat="entry changes">
           <a tal:attributes="name string:entry-${entry/revno}"/>
