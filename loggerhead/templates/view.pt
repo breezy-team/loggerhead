@@ -15,6 +15,13 @@
   </head>
 
   <body>
+      <tal:block metal:fill-slot="backlink">
+          <tal:has-link condition="branch/branch_link">
+            <a tal:attributes="href branch/branch_link">
+              &#8592; Back to branch summary
+            </a>
+          </tal:has-link>
+      </tal:block>
       <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
           <tal:block metal:fill-slot="heading">
           <div id="breadcrumbs">

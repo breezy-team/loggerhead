@@ -23,7 +23,7 @@ body, img, form, tr, ul, li, h1, h2, h3, h4, p, table {
     }
 body, html, table {
     font-size: 93%;
-}
+    }
 body {
     font-weight: normal;
     font-family: UbuntuBeta, Ubuntu, 'Bitstream Vera Sans', 'DejaVu Sans', Tahoma, sans-serif;
@@ -67,7 +67,7 @@ tr td {
     }
 th, td {
     border-color: #D2D2D2;
-}
+    }
 th {
     text-align: left;
     color: #5A5A5A;
@@ -99,6 +99,12 @@ p img {
 /* =========================
    Header & Navigation
 */
+
+.black-link {
+    border-bottom: 1px solid #D2D2D2;
+    padding: 6px 1% 8px 1%;
+    font-size: 85%;
+}
 
 /* Branch Title */
 h1.branch-name {
@@ -182,7 +188,11 @@ ul#submenuTabs li a {
 #logentries {
     margin-bottom: 10px;
     }
-p.expand a {
+p.expand, p.codin {
+    margin-right: 10px;
+    float: left;
+    }
+p.expand a, p.codin a {
     color: #000;
     text-decoration: none;
     }
@@ -332,4 +342,4 @@ ul#pages {
 */
 #footer {
     font-size: 77%;
-}
+    }
