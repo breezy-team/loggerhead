@@ -43,9 +43,9 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-      <div class="black-link">
-            <span metal:define-slot="backlink" />
-      </div>
+      
+      <div metal:define-slot="backlink" />
+      
       <h1 class="branch-name">
         <span metal:define-slot="branchname" />
       </h1>
