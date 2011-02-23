@@ -186,6 +186,7 @@ ul#submenuTabs li a {
 */
 #logentries {
     margin-bottom: 10px;
+    clear: left;
     }
 p.expand, p.codin {
     margin-right: 10px;
