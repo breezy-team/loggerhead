@@ -163,7 +163,6 @@ ul#submenuTabs li a {
     }
 
 #branch-info {
-    display: none; /* DELETE THIS LINE BEFORE COMMIT! IF THIS LINE IS COMMITTED AND YOU SEE IT FEEL FREE TO LAUGH AND POINT. */
     width: 900px;
     padding: 10px;
     margin: 0 0 10px 0;
