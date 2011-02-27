@@ -1,3 +1,9 @@
+loggerhead (1.18-2) unstable; urgency=low
+
+  * Run the test suite during package build.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 27 Feb 2011 23:27:37 +0100
+
 loggerhead (1.18-1) unstable; urgency=low
 
   [ Max Bowsher ]

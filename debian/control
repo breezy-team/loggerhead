@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Jelmer Vernooij <jelmer@debian.org>, Roland Mas <lolando@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: bzr (>= 1.17~), bzr (<< 2.4~)
-Build-Depends: python-central (>= 0.5), cdbs (>= 0.4.43), debhelper (>= 5.0.37.2), python, python-pkg-resources, python-paste (>= 1.6)
+Build-Depends-Indep: bzr (>= 1.17~), bzr (<< 2.4~), python-testtools, python-subunit
+Build-Depends: python-central (>= 0.5), cdbs (>= 0.4.43), debhelper (>= 5.0.37.2), python, python-pkg-resources, python-paste (>= 1.6), python-simpletal
 Standards-Version: 3.9.1
 XS-Python-Version: >= 2.4
 Vcs-Bzr: http://bzr.debian.org/pkg-bazaar/loggerhead/unstable/

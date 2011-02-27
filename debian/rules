@@ -5,6 +5,16 @@ DEB_PYTHON_SYSTEM=pycentral
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/python-distutils.mk
 
+ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+CONCURRENCY = BZR_CONCURRENCY=$(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+endif
+
+ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
+common-post-build-indep::
+	$(CONCURRENCY) BZR_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/bzr selftest \
+	    --parallel=fork -v -s bp.loggerhead
+endif
+
 clean::
 	-rm -rf build test*.tmp 
 	find . -name "*.pyc" -print0 | xargs -0 rm -f
