@@ -67,10 +67,7 @@ import threading
 import time
 import Queue
 
-try:
-    import simplejson
-except ImportError:
-    import json as simplejson
+import simplejson
 
 from bzrlib import (
     errors,
