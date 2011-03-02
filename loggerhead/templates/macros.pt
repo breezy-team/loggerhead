@@ -43,17 +43,21 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-
+      
+      <div metal:define-slot="backlink" />
+      
+      <h1 class="branch-name">
+        <span metal:define-slot="branchname" />
+      </h1>
       <tal:menu define="fileview_active fileview_active"
                 replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 
         <div id="search_terms"></div>
-
-        <h1 metal:define-slot="heading"></h1>
+        <div metal:define-slot="heading" />
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
+        <p id="footer" class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
       </div>
   </body>
 </html>

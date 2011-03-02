@@ -1,31 +1,43 @@
 /*table*/
-.viewLineTit, .viewLine, .viewRevTit, .viewRev,
-.viewContTit, .viewCont
-{
-	border:1px solid #d2d2d2;
-}
-.viewLine, .viewRev, .viewComm, .viewCont {
-	border:none;
-}
-.viewLine, .viewLineTit {
-	padding-right: .2em;
-}
+.viewLineTit,
+.viewRevTit,
+.viewContTit {
+    border: 1px solid #d2d2d2;
+    }
+.viewLine,
+.viewRev,
+.viewComm,
+.viewCont {
+    border: none;
+    }
+.viewLine,
+.viewLineTit {
+    padding-right: .2em;
+    }
 .viewLine {
-	width:37px;
-}
-.viewContTit, .viewCont {
-	width:auto;
-	padding-left: .3em;
-}
-.viewRevTit, .viewRev {
-	width:70px;
-	text-align:center;
-}
-.viewLine, .viewCont {
-	font:normal 12px/normal monospace;
-        whitespace: pre;
-}
-.viewCont pre { margin: 0; }
+    width: 37px;
+    }
+.viewContTit,
+.viewCont {
+    width: auto;
+    padding-left: .3em;
+    }
+.viewRevTit,
+.viewRev {
+    width: 70px;
+    text-align: center;
+    }
+.viewLine,
+.viewCont {
+    font-size: 116%;
+    font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
+    line-height: 108%;
+    whitespace: pre;
+    }
+.viewCont pre {
+    margin: 0;
+    }
 .viewLine {
-	text-align:right;
-}
+    text-align: right;
+    font-size: 93%;
+    }

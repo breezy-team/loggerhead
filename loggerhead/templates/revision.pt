@@ -20,8 +20,18 @@
     </head>
 
     <body>
+      <tal:block metal:fill-slot="backlink">
+          <tal:has-link condition="branch/branch_link">
+            <div class="black-link">
+                <a tal:attributes="href branch/branch_link">
+                  &#8592; Back to branch summary
+                </a>
+            </div>
+          </tal:has-link>
+      </tal:block>
+      <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
       <tal:block metal:fill-slot="heading">
-        <h1>
+        <div id="breadcrumbs">
           <tal:has-link condition="branch/branch_link">
             <a tal:attributes="href branch/branch_link"
                tal:content="branch/friendly_name">
@@ -31,7 +41,7 @@
           <tal:no-link condition="not: branch/branch_link">
             <span metal:use-macro="breadcrumbs/directory"></span>
           </tal:no-link>
-          <span class="breadcrumb">:
+          <span class="breadcrumb">&#187; Revision
             <tal:revno condition="not:specific_path" content="change/revno"></tal:revno>
             <a tal:condition="specific_path" tal:content="change/revno"
                tal:attributes="href python:url(['/revision', change.revno])"
@@ -43,11 +53,11 @@
           <span class="breadcrumb" tal:condition="specific_path">
             : <tal:annotate content="structure python:view_link(url, change.revno, specific_path)" />
           </span>
-        </h1>
+        </div>
         <tal:branch-info replace="structure python:branchinfo(branch)" />
-        <p tal:condition="not:specific_path">
+        <h1 tal:condition="not:specific_path">
           Viewing all changes in revision <tal:revno content="change/revno" />.
-        </p>
+        </h1>
         <p tal:condition="specific_path">
           <a tal:attributes="href python:url(['/revision', change.revno])">
             &#xAB; back to all changes in this revision
