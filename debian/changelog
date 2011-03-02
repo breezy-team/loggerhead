@@ -1,3 +1,10 @@
+loggerhead (1.18-3) UNRELEASED; urgency=low
+
+  * Bump python-simplejson from Recommends to Depends, as loggerhead
+    breaks with python-json. LP: #586611
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Wed, 02 Mar 2011 15:14:52 +0100
+
 loggerhead (1.18-2) unstable; urgency=low
 
   * Run the test suite during package build.
