@@ -186,12 +186,8 @@ def generator_string():
 
         # TODO: On old Python versions, elementtree may be used.
 
-        try:
-            import simplejson
-        except ImportError:
-            pass
-        else:
-            versions.append(('simplejson', simplejson.__version__))
+        import simplejson
+        versions.append(('simplejson', simplejson.__version__))
 
         try:
             Dozer = pkg_resources.get_distribution('Dozer')
