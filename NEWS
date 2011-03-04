@@ -1,11 +1,30 @@
 What's changed in loggerhead?
 =============================
 
-dev [future]
-------------
+1.19 [???]
+----------------
+
+    - Add ``bzr load-test-loggerhead`` as a way to make sure loggerhead can
+      handle concurrent requests, etc. Scripts can be written that spawn
+      multiple threads, and issue concurrent requests.
+      (John Arbash Meinel)
+
+    - If we get a HEAD request, there is no reason to expand the template, we
+      shouldn't be returning body content anyway.
+      (John Arbash Meinel, #716201, #716217)
+
+    - Merge the pqm changes back into trunk, after trunk was reverted to an old
+      revision. (John Arbash Meinel, #716152)
+
+    - The json module is no longer claimed to be supported as alternative for 
+      simplejson. (Jelmer Vernooij, #586611)
 
     - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
       deprecated. (John Arbash Meinel)
+
+
+1.18 [10Nov2010]
+----------------
 
     - Syntax highlighting is no longer applied for files greater than 512K,
       reducing codebrowse.launchpad.net overloading.

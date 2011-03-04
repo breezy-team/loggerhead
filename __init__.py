@@ -1,4 +1,4 @@
-# Copyright 2009, 2010 Canonical Ltd
+# Copyright 2009, 2010, 2011 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -30,28 +30,19 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
-version_info = (1, 17, 0)
+from info import (
+    bzr_plugin_version as version_info,
+    bzr_compatible_versions,
+    )
 
 if __name__ == 'bzrlib.plugins.loggerhead':
     import bzrlib
     from bzrlib.api import require_any_api
+    from bzrlib import commands
 
-    require_any_api(bzrlib, [
-        (1, 13, 0), (1, 15, 0), (1, 16, 0), (1, 17, 0), (1, 18, 0),
-        (2, 0, 0), (2, 1, 0), (2, 2, 0)])
+    require_any_api(bzrlib, bzr_compatible_versions)
 
-    # NB: Normally plugins should lazily load almost everything, but this
-    # seems reasonable to have in-line here: bzrlib.commands and options are
-    # normally loaded, and the rest of loggerhead won't be loaded until serve
-    # --http is run.
-
-    # transport_server_registry was added in bzr 1.16. When we drop support for
-    # older releases, we can remove the code to override cmd_serve.
-
-    try:
-        from bzrlib.transport import transport_server_registry
-    except ImportError:
-        transport_server_registry = None
+    from bzrlib.transport import transport_server_registry
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
@@ -68,7 +59,6 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         logger.addHandler(handler)
         logging.getLogger('simpleTAL').addHandler(handler)
         logging.getLogger('simpleTALES').addHandler(handler)
-
 
     def _ensure_loggerhead_path():
         """Ensure that you can 'import loggerhead' and get the root."""
@@ -102,41 +92,27 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 
-    if transport_server_registry is not None:
-        transport_server_registry.register('http', serve_http, help=HELP)
-    else:
-        import bzrlib.builtins
-        from bzrlib.commands import get_cmd_object, register_command
-        from bzrlib.option import Option
+    transport_server_registry.register('http', serve_http, help=HELP)
 
-        _original_command = get_cmd_object('serve')
+    class cmd_load_test_loggerhead(commands.Command):
+        """Run a load test against a live loggerhead instance.
 
-        class cmd_serve(bzrlib.builtins.cmd_serve):
-            __doc__ = _original_command.__doc__
+        Pass in the name of a script file to run. See loggerhead/load_test.py
+        for a description of the file format.
+        """
 
-            takes_options = _original_command.takes_options + [
-                Option('http', help=HELP)]
+        takes_args = ["filename"]
 
-            def run(self, *args, **kw):
-                if 'http' in kw:
-                    from bzrlib.transport import get_transport
-                    allow_writes = kw.get('allow_writes', False)
-                    path = kw.get('directory', '.')
-                    port = kw.get('port', DEFAULT_PORT)
-                    # port might be an int already...
-                    if isinstance(port, basestring) and ':' in port:
-                        host, port = port.split(':')
-                    else:
-                        host = DEFAULT_HOST
-                    if allow_writes:
-                        transport = get_transport(path)
-                    else:
-                        transport = get_transport('readonly+' + path)
-                    serve_http(transport, host, port)
-                else:
-                    super(cmd_serve, self).run(*args, **kw)
+        def run(self, filename):
+            from bzrlib.plugins.loggerhead.loggerhead import load_test
+            script = load_test.run_script(filename)
+            for thread_id in sorted(script._threads):
+                worker = script._threads[thread_id][0]
+                for url, success, time in worker.stats:
+                    self.outf.write(' %5.3fs %s %s\n'
+                                    % (time, str(success)[0], url))
 
-        register_command(cmd_serve)
+    commands.register_command(cmd_load_test_loggerhead)
 
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()

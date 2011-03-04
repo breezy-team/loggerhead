@@ -16,6 +16,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import bzrlib.osutils
 import cgi
 
 from pygments import highlight as _highlight_func
@@ -36,7 +37,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
 
     if len(text) > MAX_HIGHLIGHT_SIZE:
-        return map(cgi.escape, text.split('\n'))
+        return map(cgi.escape,  bzrlib.osutils.split_lines(text))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
@@ -48,6 +49,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
         except (ClassNotFound, ValueError):
             lexer = TextLexer(encoding=encoding)
 
-    hl_lines = _highlight_func(text, lexer, formatter).split('\n')
+    hl_lines = _highlight_func(text, lexer, formatter)
+    hl_lines = bzrlib.osutils.split_lines(hl_lines)
 
     return hl_lines

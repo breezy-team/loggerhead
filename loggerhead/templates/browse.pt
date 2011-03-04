@@ -4,6 +4,8 @@
     <title>loggerhead branches</title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+    <link rel="shortcut icon"
+          tal:attributes="href python:branch.static_url('/static/images/favicon.ico')" />
   </head>
 
   <body>
