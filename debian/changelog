@@ -2,8 +2,9 @@ loggerhead (1.18-3) UNRELEASED; urgency=low
 
   * Bump python-simplejson from Recommends to Depends, as loggerhead
     breaks with python-json. LP: #586611
+  * Switch to dh_python2. Closes: #616876
 
- -- Jelmer Vernooij <jelmer@debian.org>  Wed, 02 Mar 2011 15:14:52 +0100
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 07 Mar 2011 05:27:48 +0100
 
 loggerhead (1.18-2) unstable; urgency=low
 
