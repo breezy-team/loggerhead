@@ -65,6 +65,5 @@ setup(
                                    "static/images/*"]},
     data_files = [
         ('share/man/man1', ['serve-branches.1']),
-        ('share/doc/loggerhead', ['loggerhead.conf.example']),
         ],
     )
