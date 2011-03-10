@@ -38,6 +38,7 @@ import threading
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
+import bzrlib.export
 import bzrlib.foreign
 import bzrlib.revision
 
@@ -760,3 +761,9 @@ iso style "yyyy-mm-dd")
             removed=sorted(reporter.removed, key=lambda x: x.filename),
             modified=sorted(reporter.modified, key=lambda x: x.filename),
             text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))
+
+    def export(self, revid, dest):
+        """Export a tarball of a revision."""
+        rev_tree = self._branch.repository.revision_tree(revid)
+        bzrlib.export.export(rev_tree, dest)
+        return dest

@@ -110,7 +110,7 @@ class RevisionUI(TemplatedBranchView):
                 self._branch.friendly_name,
                 self._branch.is_root,
                 'changes'))
-
+        can_export = self._branch.export_tarballs
         return {
             'branch': self._branch,
             'revid': revid,
@@ -132,4 +132,5 @@ class RevisionUI(TemplatedBranchView):
             'compare_revid': compare_revid,
             'url': self._branch.context_url,
             'directory_breadcrumbs': directory_breadcrumbs,
+            'can_export': can_export,
         }

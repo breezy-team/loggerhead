@@ -84,7 +84,10 @@
                tal:attributes="href python:url(['/diff', change.revno], clear=1)">download diff</a>
             <a tal:condition="python:compare_revid is not None"
                tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">download diff</a>
-          </li>
+           </li>
+           <li tal:condition="python:can_export">
+            <a tal:attributes="href python:url(['/tarball', change.revno])">download tarball</a>
+           </li>
           <li id="last"><a tal:attributes="href python:url(['/changes', change.revno]);
                                            title string:view history from revision ${change/revno}"
                            tal:content="string:view history from revision ${change/revno}"></a></li>

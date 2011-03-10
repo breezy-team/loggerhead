@@ -19,6 +19,7 @@
 
 import logging
 import mimetypes
+import os
 import urllib
 
 from paste import httpexceptions
@@ -67,3 +68,29 @@ class DownloadUI (TemplatedBranchView):
             ]
         start_response('200 OK', headers)
         return [content]
+
+class DownloadTarballUI(TemplatedBranchView):
+    """Download a revno as a tarball or zip file."""
+    ext = 'tar.gz'
+    dest = os.path.join(os.getcwd(), 'loggerhead/static/downloads/')
+    download_dir = '/static/downloads/'
+ 
+    def get_values(self, path, kwargs, headers):
+        """Return a URL to a tarball.
+
+        In the form of: /tarball/revno_or_revid."""
+        history = self._history
+        if len(self.args):
+            revid = history.fix_revid(self.args[0])
+        else:
+            revid = self.get_revid()
+        revno = history.get_revno(revid)
+        filename = '%s_%s.%s' % (history._branch_nick, revno, self.ext)
+        rpath = os.getcwd()+ '/loggerhead/static/downloads/' + filename
+        if not os.path.exists(rpath):
+            history.export(revid, rpath)
+        if self._branch.export_tarballs:
+            return {'download': '/static/downloads/' + filename}
+        else:
+            # redirect to the home page, the user is cheating :)
+            return {'download': '/'}

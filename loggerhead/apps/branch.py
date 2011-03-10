@@ -33,7 +33,7 @@ from loggerhead.controllers.view_ui import ViewUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.diff_ui import DiffUI
-from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.download_ui import DownloadUI, DownloadTarballUI
 from loggerhead.controllers.filediff_ui import FileDiffUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
@@ -49,7 +49,7 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT, use_cdn=False):
+                 served_url=_DEFAULT, use_cdn=False, export_tarballs=True):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -61,6 +61,7 @@ class BranchWSGIApp(object):
         self.is_root = is_root
         self.served_url = served_url
         self.use_cdn = use_cdn
+        self.export_tarballs = export_tarballs
 
     def get_history(self):
         file_cache = None
@@ -126,6 +127,7 @@ class BranchWSGIApp(object):
         'revision': RevisionUI,
         'search': SearchUI,
         'view': ViewUI,
+        'tarball': DownloadTarballUI,
         }
 
     def last_updated(self):
@@ -171,10 +173,14 @@ class BranchWSGIApp(object):
         try:
             try:
                 c = cls(self, self.get_history)
-                return c(environ, start_response)
+                to_ret = c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()
                 environ['branch'] = self
                 raise
+            if type(to_ret) == type(httpexceptions.HTTPSeeOther('/')):
+                raise to_ret
+            else:
+                return to_ret
         finally:
             self.branch.unlock()

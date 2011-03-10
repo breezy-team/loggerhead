@@ -36,6 +36,7 @@ def command_line_parser():
         use_cdn=False,
         sql_dir=None,
         allow_writes=False,
+        export_tarballs=True,
         )
     parser.add_option("--user-dirs", action="store_true",
                       help="Serve user directories as ~user.")
@@ -69,6 +70,8 @@ def command_line_parser():
                       help="The directory to place the SQL cache in")
     parser.add_option("--allow-writes", action="store_true",
                       help="Allow writing to the Bazaar server.")
+    parser.add_option("--export-tarballs", action="store_true",
+                      help="Allow exporting revisions to tarballs.")
     return parser
 
 
