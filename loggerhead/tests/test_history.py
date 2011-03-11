@@ -17,9 +17,10 @@
 
 """Direct tests of the loggerhead/history.py module"""
 
+from datetime import datetime
 from bzrlib import tests
 
-from loggerhead import history
+from loggerhead import history as _mod_history
 
 
 class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
@@ -40,7 +41,7 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return history.History(b, {})
+        return _mod_history.History(b, {})
 
     def make_merged_ancestry(self):
         # Time goes up
@@ -58,7 +59,7 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return history.History(b, {})
+        return _mod_history.History(b, {})
 
     def make_deep_merged_ancestry(self):
         # Time goes up
@@ -83,32 +84,74 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return history.History(b, {})
+        return _mod_history.History(b, {})
 
-    def assertRevidsFrom(self, expected, his, search_revs, tip_rev):
+    def assertRevidsFrom(self, expected, history, search_revs, tip_rev):
         self.assertEqual(expected,
-                         list(his.get_revids_from(search_revs, tip_rev)))
+                         list(history.get_revids_from(search_revs, tip_rev)))
 
     def test_get_revids_from_simple_mainline(self):
-        his = self.make_linear_ancestry()
+        history = self.make_linear_ancestry()
         self.assertRevidsFrom(['rev-3', 'rev-2', 'rev-1'],
-                              his, None, 'rev-3')
+                              history, None, 'rev-3')
 
     def test_get_revids_from_merged_mainline(self):
-        his = self.make_merged_ancestry()
+        history = self.make_merged_ancestry()
         self.assertRevidsFrom(['rev-3', 'rev-1'],
-                              his, None, 'rev-3')
+                              history, None, 'rev-3')
 
     def test_get_revids_given_one_rev(self):
-        his = self.make_merged_ancestry()
+        history = self.make_merged_ancestry()
         # rev-3 was the first mainline revision to see rev-2.
-        self.assertRevidsFrom(['rev-3'], his, ['rev-2'], 'rev-3')
+        self.assertRevidsFrom(['rev-3'], history, ['rev-2'], 'rev-3')
 
     def test_get_revids_deep_ancestry(self):
-        his = self.make_deep_merged_ancestry()
-        self.assertRevidsFrom(['F'], his, ['F'], 'F')
-        self.assertRevidsFrom(['F'], his, ['E'], 'F')
-        self.assertRevidsFrom(['F'], his, ['D'], 'F')
-        self.assertRevidsFrom(['F'], his, ['C'], 'F')
-        self.assertRevidsFrom(['B'], his, ['B'], 'F')
-        self.assertRevidsFrom(['A'], his, ['A'], 'F')
+        history = self.make_deep_merged_ancestry()
+        self.assertRevidsFrom(['F'], history, ['F'], 'F')
+        self.assertRevidsFrom(['F'], history, ['E'], 'F')
+        self.assertRevidsFrom(['F'], history, ['D'], 'F')
+        self.assertRevidsFrom(['F'], history, ['C'], 'F')
+        self.assertRevidsFrom(['B'], history, ['B'], 'F')
+        self.assertRevidsFrom(['A'], history, ['A'], 'F')
+
+
+class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
+
+    def make_single_commit(self):
+        tree = self.make_branch_and_tree('test')
+        rev_id = tree.commit('Commit Message', timestamp=1299838474.317,
+            timezone=3600, committer='Joe Example <joe@example.com>',
+            revprops={})
+        self.addCleanup(tree.branch.lock_write().unlock)
+        rev = tree.branch.repository.get_revision(rev_id)
+        history = _mod_history.History(tree.branch, {})
+        return history, rev
+
+    def test_simple(self):
+        history, rev = self.make_single_commit()
+        change = history._change_from_revision(rev)
+        self.assertEqual(rev.revision_id, change.revid)
+        self.assertEqual(datetime.fromtimestamp(1299838474.317),
+                         change.date)
+        self.assertEqual(datetime.utcfromtimestamp(1299838474.317),
+                         change.utc_date)
+        self.assertEqual(['Joe Example <joe@example.com>'],
+                         change.authors)
+        self.assertEqual('test', change.branch_nick)
+        self.assertEqual('Commit Message', change.short_comment)
+        self.assertEqual('Commit Message', change.comment)
+        self.assertEqual(['Commit&nbsp;Message'], change.comment_clean)
+        self.assertEqual([], change.parents)
+        self.assertEqual([], change.bugs)
+        self.assertEqual(None, change.tags)
+
+    def test_tags(self):
+        history, rev = self.make_single_commit()
+        b = history._branch
+        b.tags.set_tag('tag-1', rev.revision_id)
+        b.tags.set_tag('tag-2', rev.revision_id)
+        b.tags.set_tag('Tag-10', rev.revision_id)
+        change = history._change_from_revision(rev)
+        # tags are 'naturally' sorted, sorting numbers in order, and ignoring
+        # case, etc.
+        self.assertEqual('tag-1, tag-2, Tag-10', change.tags)
