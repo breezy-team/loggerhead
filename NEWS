@@ -16,11 +16,14 @@ What's changed in loggerhead?
     - Merge the pqm changes back into trunk, after trunk was reverted to an old
       revision. (John Arbash Meinel, #716152)
 
-    - The json module is no longer claimed to be supported as alternative for 
-      simplejson. (Jelmer Vernooij, #586611)
-
     - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
       deprecated. (John Arbash Meinel)
+
+    - Show "Author(s)" as separate from "Committer". And label them
+      correctly. (John Arbash Meinel, #733015)
+
+    - The json module is no longer claimed to be supported as alternative for 
+      simplejson. (Jelmer Vernooij, #586611)
 
 
 1.18 [10Nov2010]
