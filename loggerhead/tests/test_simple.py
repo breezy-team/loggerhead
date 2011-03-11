@@ -32,14 +32,6 @@ from paste.httpexceptions import HTTPExceptionHandler
 
 
 
-def test_config_root():
-    from loggerhead.apps.config import Root
-    config = ConfigObj()
-    app = TestApp(HTTPExceptionHandler(Root(config)))
-    res = app.get('/')
-    res.mustcontain('loggerhead branches')
-
-
 class BasicTests(TestCaseWithTransport):
 
     def setUp(self):
