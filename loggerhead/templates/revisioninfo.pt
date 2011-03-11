@@ -3,6 +3,10 @@
         <ul>
             <li class="committer">
                 <strong>Committer:</strong>
+                <span tal:content="python:util.hide_email(change.committer)"></span>
+            </li>
+            <li class="authors">
+                <strong>Author(s):</strong>
                 <span tal:content="python:', '.join(util.hide_emails(change.authors))"></span>
             </li>
             <li class="timer">
