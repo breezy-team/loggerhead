@@ -1,23 +1,41 @@
 <div class="infoContainer">
     <div id="infTxt">
-        <div class="committer" tal:content="python:', '.join(util.hide_emails(change.authors))"></div>
-        <div class="timer" tal:content="python:util.date_time(change.date)"></div>
-        <div class="mfrom" tal:repeat="parent python:change.parents[1:]">
-            <a tal:attributes="title string:Merged From ${parent/revno};
-                               href python:url(['/revision', parent.revno], clear=1)"
-               tal:content="python:revno_with_nick(parent)"></a>
-        </div>
-        <div class="mto" tal:repeat="merge_point change/merge_points">
-            <a tal:attributes="title string:Merged In ${merge_point/revno};
-                               href python:url(['/revision', merge_point.revno], clear=1)"
-               tal:content="python:revno_with_nick(merge_point)"></a>
-        </div>
-        <div class="mto" tal:condition="merged_in">
-          This revision was merged to the branch mainline in
-          <a tal:attributes="href python:url(['/revision', merged_in], clear=1)">revision
-            <tal:b content="merged_in"/></a>.
-        </div>
-        <div class="revid" tal:content="string:Revision ID: ${change/revid}"></div>
+        <ul>
+            <li class="committer">
+                <strong>Committer:</strong>
+                <span tal:content="python:', '.join(util.hide_emails(change.authors))"></span>
+            </li>
+            <li class="timer">
+                <strong>Date:</strong>
+                <span tal:content="python:util.date_time(change.date)"></span>
+            </li>
+            <li class="mfrom" tal:condition="python:change.parents[1:]">
+                <strong>mfrom:</strong>
+                <span tal:repeat="parent python:change.parents[1:]">
+                    <a tal:attributes="title string:Merged From ${parent/revno};
+                                       href python:url(['/revision', parent.revno], clear=1)"
+                       tal:content="python:revno_with_nick(parent)"></a>
+                </span>
+            </li>
+            <li class="mto" tal:condition="change/merge_points">
+                <strong>mto:</strong>
+                <span tal:repeat="merge_point change/merge_points">
+                    <a tal:attributes="title string:Merged In ${merge_point/revno};
+                                       href python:url(['/revision', merge_point.revno], clear=1)"
+                       tal:content="python:revno_with_nick(merge_point)"></a>
+                </span>
+            </li>
+            <li class="mto" tal:condition="merged_in">
+                <strong>mto:</strong>
+                  This revision was merged to the branch mainline in
+                  <a tal:attributes="href python:url(['/revision', merged_in], clear=1)">revision
+                    <tal:b content="merged_in"/></a>.
+            </li>
+            <li class="revid">
+                <strong>Revision ID:</strong>
+                <span tal:content="change/revid"></span>
+            </li>
+        </ul>
 	<div tal:attributes="class string:foreign-${change/foreign_vcs}"
 	     tal:condition="change/foreign_vcs" 
 	     tal:repeat="revid_part python:change.foreign_revid.keys()"
