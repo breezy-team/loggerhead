@@ -155,3 +155,19 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
         # tags are 'naturally' sorted, sorting numbers in order, and ignoring
         # case, etc.
         self.assertEqual('tag-1, tag-2, Tag-10', change.tags)
+
+    def test_committer_vs_authors(self):
+        tree = self.make_branch_and_tree('test')
+        rev_id = tree.commit('Commit Message', timestamp=1299838474.317,
+            timezone=3600, committer='Joe Example <joe@example.com>',
+            revprops={'authors': u'A Author <aauthor@example.com>\n'
+                                 u'B Author <bauthor@example.com>'})
+        self.addCleanup(tree.branch.lock_write().unlock)
+        rev = tree.branch.repository.get_revision(rev_id)
+        history = _mod_history.History(tree.branch, {})
+        change = history._change_from_revision(rev)
+        self.assertEqual(u'Joe Example <joe@example.com>',
+                         change.committer)
+        self.assertEqual([u'A Author <aauthor@example.com>',
+                          u'B Author <bauthor@example.com>'],
+                         change.authors)
