@@ -17,8 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+import bzrlib.errors
 import time
 
+from paste.httpexceptions import HTTPNotFound
 from paste.request import path_info_pop, parse_querystring
 
 from loggerhead import util
@@ -97,6 +99,9 @@ class TemplatedBranchView(object):
         if 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
+        if environ.get('REQUEST_METHOD') == 'HEAD':
+            # No content for a HEAD request
+            return []
         template = load_template(self.template_path)
         z = time.time()
         w = BufferingWriter(writer, 8192)
@@ -112,6 +117,10 @@ class TemplatedBranchView(object):
         if h is None:
             return None
         if len(self.args) > 0 and self.args != ['']:
-            return h.fix_revid(self.args[0])
+            try:
+                revid = h.fix_revid(self.args[0])
+            except bzrlib.errors.NoSuchRevision:
+                raise HTTPNotFound;
         else:
-            return h.last_revid
+            revid = h.last_revid
+        return revid

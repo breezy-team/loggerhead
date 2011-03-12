@@ -1,2 +1,2 @@
-include loggerhead.conf.example README.txt NEWS
+include README.txt NEWS
 recursive-include loggerhead/static *

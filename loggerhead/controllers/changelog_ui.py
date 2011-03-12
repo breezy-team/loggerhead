@@ -20,10 +20,7 @@
 
 import urllib
 
-try:
-    import simplejson
-except ImportError:
-    import json as simplejson
+import simplejson
 
 from paste.httpexceptions import HTTPServerError
 

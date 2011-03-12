@@ -1,6 +1,5 @@
 ./dist
 ./loggerhead.egg-info
-./loggerhead.conf
 ./loggerhead.pid
 ./logs
 build
