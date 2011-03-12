@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2006-2011 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
@@ -480,7 +479,8 @@ iso style "yyyy-mm-dd")
             revlist = self.get_revids_from(None, revid)
         return revlist
 
-    def _iterate_sufficiently(self, iterable, stop_at, extra_rev_count):
+    @staticmethod
+    def _iterate_sufficiently(iterable, stop_at, extra_rev_count):
         """Return a list of iterable.
 
         If extra_rev_count is None, fully consume iterable.
@@ -500,9 +500,9 @@ iso style "yyyy-mm-dd")
                 break
         if found:
             for count, n in enumerate(iterable):
-                result.append(n)
                 if count >= extra_rev_count:
                     break
+                result.append(n)
         return result
 
     def get_view(self, revid, start_revid, file_id, query=None,

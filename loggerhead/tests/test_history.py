@@ -112,3 +112,31 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         self.assertRevidsFrom(['F'], his, ['C'], 'F')
         self.assertRevidsFrom(['B'], his, ['B'], 'F')
         self.assertRevidsFrom(['A'], his, ['A'], 'F')
+
+
+
+class TestHistory_IterateSufficiently(tests.TestCase):
+
+    def assertIterate(self, expected, iterable, stop_at, extra_rev_count):
+        self.assertEqual(expected, history.History._iterate_sufficiently(
+            iterable, stop_at, extra_rev_count))
+
+    def test_iter_no_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(['a', 'b', 'c'], iter(lst), 'c', 0)
+        self.assertIterate(['a', 'b', 'c', 'd'], iter(lst), 'd', 0)
+
+    def test_iter_not_found(self):
+        # If the key in question isn't found, we just exhaust the list
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'not-there', 0)
+
+    def test_iter_with_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(['a', 'b', 'c'], iter(lst), 'b', 1)
+        self.assertIterate(['a', 'b', 'c', 'd', 'e'], iter(lst), 'c', 2)
+
+    def test_iter_with_too_many_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'y', 10)
+        self.assertIterate(lst, iter(lst), 'z', 10)
