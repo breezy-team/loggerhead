@@ -1,4 +1,4 @@
-# Copyright 2006, 2011 Canonical Ltd
+# Copyright 2006, 2010, 2011 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ def load_tests(standard_tests, module, loader):
         (__name__ + '.' + x) for x in [
             'test_controllers',
             'test_corners',
+            'test_history',
             'test_load_test',
             'test_simple',
             'test_templating',
