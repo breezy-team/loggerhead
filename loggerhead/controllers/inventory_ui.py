@@ -22,7 +22,7 @@ import logging
 import posixpath
 import urllib
 
-from paste.httpexceptions import HTTPNotFound
+from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
 from bzrlib import errors
 from bzrlib.revision import is_null as is_null_rev
@@ -45,7 +45,7 @@ class InventoryUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.inventory'
 
-    def get_filelist(self, inv, path, sort_type):
+    def get_filelist(self, inv, path, sort_type, revno_url):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
@@ -57,6 +57,9 @@ class InventoryUI(TemplatedBranchView):
         file_id = inv.path2id(path)
         dir_ie = inv[file_id]
         file_list = []
+
+        if dir_ie.kind != 'directory':
+            raise HTTPMovedPermanently(self._branch.context_url(['/view', revno_url, path]))
 
         revid_set = set()
 
@@ -150,7 +153,7 @@ class InventoryUI(TemplatedBranchView):
 
             # Create breadcrumb trail for the path within the branch
             branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
-            filelist = self.get_filelist(rev_tree.inventory, path, sort_type)
+            filelist = self.get_filelist(rev_tree.inventory, path, sort_type, revno_url)
         else:
             start_revid = None
             change = None
