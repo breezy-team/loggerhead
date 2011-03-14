@@ -179,14 +179,16 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         # answers for the first few revisions.
         his = self.make_long_linear_ancestry()
         accessed = track_rev_info_accesses(his)
-        result = his.get_revids_from(['X'], 'Z')
+        result = his.get_revids_from(['X', 'V'], 'Z')
         self.assertEqual(set(), accessed)
         self.assertEqual('X', result.next())
         # We access 'W' because we are checking that W wasn't merged into X.
         # The important bit is that we aren't getting the whole ancestry.
         self.assertEqual(set([his._rev_indices[x] for x in 'ZYXW']), accessed)
+        self.assertEqual('V', result.next())
+        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXWVU']), accessed)
         self.assertRaises(StopIteration, result.next)
-        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXW']), accessed)
+        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXWVU']), accessed)
 
 
 
