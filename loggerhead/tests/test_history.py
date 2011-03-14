@@ -99,14 +99,6 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         return history.History(b, {})
 
 
-class TestHistory(TestCaseWithExamples):
-
-    def test_get_file_view_iterable(self):
-        # We want to make sure that get_file_view returns an iterator, rather
-        # than pre-loading all history.
-        pass
-
-
 class _DictProxy(object):
 
     def __init__(self, d):
@@ -221,3 +213,20 @@ class TestHistory_IterateSufficiently(tests.TestCase):
     def test_iter_with_extra_None(self):
         lst = list('abcdefghijklmnopqrstuvwxyz')
         self.assertIterate(lst, iter(lst), 'z', None)
+
+
+
+class TestHistoryGetView(TestCaseWithExamples):
+
+    def test_get_view_limited_history(self):
+        # get_view should only load enough history to serve the result, not all
+        # history.
+        his = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(his)
+        revid, start_revid, revid_list = his.get_view('Z', 'Z', None,
+                                                      extra_rev_count=5)
+        self.assertEqual(['Z', 'Y', 'X', 'W', 'V', 'U'], revid_list)
+        self.assertEqual('Z', revid)
+        self.assertEqual('Z', start_revid)
+        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXWVU']),
+                         accessed)
