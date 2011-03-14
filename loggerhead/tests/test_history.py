@@ -22,7 +22,8 @@ from bzrlib import tests
 from loggerhead import history
 
 
-class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
+class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
+
 
     def make_linear_ancestry(self):
         # Time goes up
@@ -37,6 +38,18 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
             ('add', ('', 'root-id', 'directory', None))])
         builder.build_snapshot('rev-2', ['rev-1'], [])
         builder.build_snapshot('rev-3', ['rev-2'], [])
+        builder.finish_series()
+        b = builder.get_branch()
+        self.addCleanup(b.lock_read().unlock)
+        return history.History(b, {})
+
+    def make_long_linear_ancestry(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('A', None, [
+            ('add', ('', 'root-id', 'directory', None))])
+        for r in "BCDEFGHIJKLMNOPQRSTUVWXYZ":
+            builder.build_snapshot(r, None, [])
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
@@ -85,6 +98,41 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         self.addCleanup(b.lock_read().unlock)
         return history.History(b, {})
 
+
+class TestHistory(TestCaseWithExamples):
+
+    def test_get_file_view_iterable(self):
+        # We want to make sure that get_file_view returns an iterator, rather
+        # than pre-loading all history.
+        pass
+
+
+class _DictProxy(object):
+
+    def __init__(self, d):
+        self._d = d
+        self._accessed = set()
+        self.__setitem__ = d.__setitem__
+
+    def __getitem__(self, name):
+        self._accessed.add(name)
+        return self._d[name]
+
+    def __len__(self):
+        return len(self._d)
+
+
+def track_rev_info_accesses(h):
+    """Track __getitem__ access to History._rev_info,
+
+    :return: set of items accessed
+    """
+    h._rev_info = _DictProxy(h._rev_info)
+    return h._rev_info._accessed
+
+
+class TestHistoryGetRevidsFrom(TestCaseWithExamples):
+
     def assertRevidsFrom(self, expected, his, search_revs, tip_rev):
         self.assertEqual(expected,
                          list(his.get_revids_from(search_revs, tip_rev)))
@@ -113,6 +161,33 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         self.assertRevidsFrom(['B'], his, ['B'], 'F')
         self.assertRevidsFrom(['A'], his, ['A'], 'F')
 
+    def test_get_revids_doesnt_over_produce_simple_mainline(self):
+        # get_revids_from shouldn't walk the whole ancestry just to get the
+        # answers for the first few revisions.
+        his = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(his)
+        result = his.get_revids_from(None, 'Z')
+        self.assertEqual(set(), accessed)
+        self.assertEqual('Z', result.next())
+        # We already know 'Z' because we passed it in.
+        self.assertEqual(set(), accessed)
+        self.assertEqual('Y', result.next())
+        self.assertEqual(set([his._rev_indices['Z']]), accessed)
+
+    def test_get_revids_doesnt_over_produce_for_merges(self):
+        # get_revids_from shouldn't walk the whole ancestry just to get the
+        # answers for the first few revisions.
+        his = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(his)
+        result = his.get_revids_from(['X'], 'Z')
+        self.assertEqual(set(), accessed)
+        self.assertEqual('X', result.next())
+        # We access 'W' because we are checking that W wasn't merged into X.
+        # The important bit is that we aren't getting the whole ancestry.
+        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXW']), accessed)
+        self.assertRaises(StopIteration, result.next)
+        self.assertEqual(set([his._rev_indices[x] for x in 'ZYXW']), accessed)
+
 
 
 class TestHistory_IterateSufficiently(tests.TestCase):
@@ -140,3 +215,7 @@ class TestHistory_IterateSufficiently(tests.TestCase):
         lst = list('abcdefghijklmnopqrstuvwxyz')
         self.assertIterate(lst, iter(lst), 'y', 10)
         self.assertIterate(lst, iter(lst), 'z', 10)
+
+    def test_iter_with_extra_None(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'z', None)

@@ -348,10 +348,14 @@ class History(object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
-        while True:
+        while revid_set:
             if bzrlib.revision.is_null(revid):
                 return
-            if introduced_revisions(revid) & revid_set:
+            rev_introduced = introduced_revisions(revid)
+            matching = rev_introduced.intersection(revid_set)
+            if matching:
+                # We don't need to look for these anymore.
+                revid_set.difference_update(matching)
                 yield revid
             parents = self._rev_info[self._rev_indices[revid]][2]
             if len(parents) == 0:
