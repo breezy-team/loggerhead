@@ -186,13 +186,16 @@ class TestControllerRedirects(BasicTests):
     def test_view_folder(self):
         app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
 
-        self.assertRaises(HTTPMovedPermanently, app.get, '/view/head:/folder')
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/view/head:/folder')
+        self.assertEqual(e.location(), '/files/head:/folder')
 
     def test_files_file(self):
         app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
 
-        self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/folder/file')
-        self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/file')
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/folder/file')
+        self.assertEqual(e.location(), '/view/head:/folder/file')
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/file')
+        self.assertEqual(e.location(), '/view/head:/file')
 
 #class TestGlobalConfig(BasicTests):
 #    """
