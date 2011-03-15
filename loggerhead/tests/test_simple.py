@@ -1,4 +1,4 @@
-# Copyright (C) 2007-2011 Canonical Ltd.
+# Copyright (C) 2007, 2008, 2009, 2011 Canonical Ltd.
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
-from paste.httpexceptions import HTTPExceptionHandler
+from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
 
 
@@ -169,6 +169,33 @@ class TestHiddenBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes', status=404)
 
+
+class TestControllerRedirects(BasicTests):
+    """
+    Test that a file under /files redirects to /view,
+    and a directory under /view redirects to /files.
+    """
+
+    def setUp(self):
+        BasicTests.setUp(self)
+        self.createBranch()
+        self.build_tree(('file', 'folder/', 'folder/file'))
+        self.tree.smart_add([])
+        self.tree.commit('')
+
+    def test_view_folder(self):
+        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
+
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/view/head:/folder')
+        self.assertEqual(e.location(), '/files/head:/folder')
+
+    def test_files_file(self):
+        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
+
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/folder/file')
+        self.assertEqual(e.location(), '/view/head:/folder/file')
+        e = self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/file')
+        self.assertEqual(e.location(), '/view/head:/file')
 
 #class TestGlobalConfig(BasicTests):
 #    """
