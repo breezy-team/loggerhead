@@ -28,7 +28,7 @@ from bzrlib import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from paste.fixture import TestApp
-from paste.httpexceptions import HTTPExceptionHandler
+from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
 
 
@@ -169,6 +169,30 @@ class TestHiddenBranch(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes', status=404)
 
+
+class TestControllerRedirects(BasicTests):
+    """
+    Test that a file under /files redirects to /view,
+    and a directory under /view redirects to /files.
+    """
+
+    def setUp(self):
+        BasicTests.setUp(self)
+        self.createBranch()
+        self.build_tree(('file', 'folder/', 'folder/file'))
+        self.tree.smart_add([])
+        self.tree.commit('')
+
+    def test_view_folder(self):
+        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
+
+        self.assertRaises(HTTPMovedPermanently, app.get, '/view/head:/folder')
+
+    def test_files_file(self):
+        app = TestApp(BranchWSGIApp(self.tree.branch, '').app)
+
+        self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/folder/file')
+        self.assertRaises(HTTPMovedPermanently, app.get, '/files/head:/file')
 
 #class TestGlobalConfig(BasicTests):
 #    """
