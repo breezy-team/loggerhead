@@ -5,7 +5,7 @@
                 <strong>Committer:</strong>
                 <span tal:content="python:util.hide_email(change.committer)"></span>
             </li>
-            <li class="authors">
+            <li class="authors" tal:condition="python:len(change.authors) > 1 or change.authors[0] != change.committer">
                 <strong>Author(s):</strong>
                 <span tal:content="python:', '.join(util.hide_emails(change.authors))"></span>
             </li>

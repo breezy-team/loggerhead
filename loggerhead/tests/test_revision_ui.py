@@ -33,3 +33,14 @@ class TestRevisionUI(BasicTests):
         # exact HTML connections, which I wanted to avoid.
         res.mustcontain('Committer', 'Joe Example',
                         'Author(s)', 'A Author, B Author')
+
+    def test_author_is_committer(self):
+        self.createBranch()
+        self.tree.commit('First', committer="Joe Example <joe@example.com>")
+        app = self.setUpLoggerhead()
+        res = app.get('/revision/1')
+        # We would like to assert that Joe Example is connected to Committer,
+        # and the Authors are connected. However, that requires asserting the
+        # exact HTML connections, which I wanted to avoid.
+        res.mustcontain('Committer', 'Joe Example')
+        self.assertFalse('Author(s)' in res.body)
