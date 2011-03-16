@@ -23,7 +23,7 @@ from bzrlib import tests
 from loggerhead import history as _mod_history
 
 
-class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
+class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
 
     def make_linear_ancestry(self):
         # Time goes up
@@ -38,6 +38,18 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
             ('add', ('', 'root-id', 'directory', None))])
         builder.build_snapshot('rev-2', ['rev-1'], [])
         builder.build_snapshot('rev-3', ['rev-2'], [])
+        builder.finish_series()
+        b = builder.get_branch()
+        self.addCleanup(b.lock_read().unlock)
+        return _mod_history.History(b, {})
+
+    def make_long_linear_ancestry(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('A', None, [
+            ('add', ('', 'root-id', 'directory', None))])
+        for r in "BCDEFGHIJKLMNOPQRSTUVWXYZ":
+            builder.build_snapshot(r, None, [])
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
@@ -90,6 +102,33 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         self.assertEqual(expected,
                          list(history.get_revids_from(search_revs, tip_rev)))
 
+
+class _DictProxy(object):
+
+    def __init__(self, d):
+        self._d = d
+        self._accessed = set()
+        self.__setitem__ = d.__setitem__
+
+    def __getitem__(self, name):
+        self._accessed.add(name)
+        return self._d[name]
+
+    def __len__(self):
+        return len(self._d)
+
+
+def track_rev_info_accesses(h):
+    """Track __getitem__ access to History._rev_info,
+
+    :return: set of items accessed
+    """
+    h._rev_info = _DictProxy(h._rev_info)
+    return h._rev_info._accessed
+
+
+class TestHistoryGetRevidsFrom(TestCaseWithExamples):
+
     def test_get_revids_from_simple_mainline(self):
         history = self.make_linear_ancestry()
         self.assertRevidsFrom(['rev-3', 'rev-2', 'rev-1'],
@@ -113,6 +152,39 @@ class TestHistoryGetRevidsFrom(tests.TestCaseWithMemoryTransport):
         self.assertRevidsFrom(['F'], history, ['C'], 'F')
         self.assertRevidsFrom(['B'], history, ['B'], 'F')
         self.assertRevidsFrom(['A'], history, ['A'], 'F')
+
+    def test_get_revids_doesnt_over_produce_simple_mainline(self):
+        # get_revids_from shouldn't walk the whole ancestry just to get the
+        # answers for the first few revisions.
+        history = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(history)
+        result = history.get_revids_from(None, 'Z')
+        self.assertEqual(set(), accessed)
+        self.assertEqual('Z', result.next())
+        # We already know 'Z' because we passed it in.
+        self.assertEqual(set(), accessed)
+        self.assertEqual('Y', result.next())
+        self.assertEqual(set([history._rev_indices['Z']]), accessed)
+
+    def test_get_revids_doesnt_over_produce_for_merges(self):
+        # get_revids_from shouldn't walk the whole ancestry just to get the
+        # answers for the first few revisions.
+        history = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(history)
+        result = history.get_revids_from(['X', 'V'], 'Z')
+        self.assertEqual(set(), accessed)
+        self.assertEqual('X', result.next())
+        # We access 'W' because we are checking that W wasn't merged into X.
+        # The important bit is that we aren't getting the whole ancestry.
+        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXW']),
+                         accessed)
+        self.assertEqual('V', result.next())
+        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+                         accessed)
+        self.assertRaises(StopIteration, result.next)
+        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+                         accessed)
+
 
 
 class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
@@ -171,3 +243,51 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
         self.assertEqual([u'A Author <aauthor@example.com>',
                           u'B Author <bauthor@example.com>'],
                          change.authors)
+
+
+class TestHistory_IterateSufficiently(tests.TestCase):
+
+    def assertIterate(self, expected, iterable, stop_at, extra_rev_count):
+        self.assertEqual(expected, _mod_history.History._iterate_sufficiently(
+            iterable, stop_at, extra_rev_count))
+
+    def test_iter_no_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(['a', 'b', 'c'], iter(lst), 'c', 0)
+        self.assertIterate(['a', 'b', 'c', 'd'], iter(lst), 'd', 0)
+
+    def test_iter_not_found(self):
+        # If the key in question isn't found, we just exhaust the list
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'not-there', 0)
+
+    def test_iter_with_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(['a', 'b', 'c'], iter(lst), 'b', 1)
+        self.assertIterate(['a', 'b', 'c', 'd', 'e'], iter(lst), 'c', 2)
+
+    def test_iter_with_too_many_extra(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'y', 10)
+        self.assertIterate(lst, iter(lst), 'z', 10)
+
+    def test_iter_with_extra_None(self):
+        lst = list('abcdefghijklmnopqrstuvwxyz')
+        self.assertIterate(lst, iter(lst), 'z', None)
+
+
+
+class TestHistoryGetView(TestCaseWithExamples):
+
+    def test_get_view_limited_history(self):
+        # get_view should only load enough history to serve the result, not all
+        # history.
+        history = self.make_long_linear_ancestry()
+        accessed = track_rev_info_accesses(history)
+        revid, start_revid, revid_list = history.get_view('Z', 'Z', None,
+                                                      extra_rev_count=5)
+        self.assertEqual(['Z', 'Y', 'X', 'W', 'V', 'U'], revid_list)
+        self.assertEqual('Z', revid)
+        self.assertEqual('Z', start_revid)
+        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+                         accessed)

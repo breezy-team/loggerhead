@@ -1,5 +1,4 @@
-#
-# Copyright (C) 2008, 2009 Canonical Ltd.
+# Copyright (C) 2006-2011 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 # Copyright (C) 2006  Robey Pointer <robey@lag.net>
 # Copyright (C) 2006  Goffredo Baroncelli <kreijack@inwind.it>
@@ -350,10 +349,14 @@ class History(object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
-        while True:
+        while revid_set:
             if bzrlib.revision.is_null(revid):
                 return
-            if introduced_revisions(revid) & revid_set:
+            rev_introduced = introduced_revisions(revid)
+            matching = rev_introduced.intersection(revid_set)
+            if matching:
+                # We don't need to look for these anymore.
+                revid_set.difference_update(matching)
                 yield revid
             parents = self._rev_info[self._rev_indices[revid]][2]
             if len(parents) == 0:
@@ -474,15 +477,41 @@ iso style "yyyy-mm-dd")
         if revid is None:
             revid = self.last_revid
         if file_id is not None:
-            # since revid is 'start_revid', possibly should start the path
-            # tracing from revid... FIXME
-            revlist = list(self.get_short_revision_history_by_fileid(file_id))
-            revlist = list(self.get_revids_from(revlist, revid))
+            revlist = list(
+                self.get_short_revision_history_by_fileid(file_id))
+            revlist = self.get_revids_from(revlist, revid)
         else:
-            revlist = list(self.get_revids_from(None, revid))
+            revlist = self.get_revids_from(None, revid)
         return revlist
 
-    def get_view(self, revid, start_revid, file_id, query=None):
+    @staticmethod
+    def _iterate_sufficiently(iterable, stop_at, extra_rev_count):
+        """Return a list of iterable.
+
+        If extra_rev_count is None, fully consume iterable.
+        Otherwise, stop at 'stop_at' + extra_rev_count.
+
+        Example:
+          iterate until you find stop_at, then iterate 10 more times.
+        """
+        if extra_rev_count is None:
+            return list(iterable)
+        result = []
+        found = False
+        for n in iterable:
+            result.append(n)
+            if n == stop_at:
+                found = True
+                break
+        if found:
+            for count, n in enumerate(iterable):
+                if count >= extra_rev_count:
+                    break
+                result.append(n)
+        return result
+
+    def get_view(self, revid, start_revid, file_id, query=None,
+                 extra_rev_count=None):
         """
         use the URL parameters (revid, start_revid, file_id, and query) to
         determine the revision list we're viewing (start_revid, file_id, query)
@@ -493,6 +522,10 @@ iso style "yyyy-mm-dd")
               file.
             - if a start_revid is given, we're viewing the branch from a
               specific revision up the tree.
+            - if extra_rev_count is given, find the view from start_revid =>
+              revid, and continue an additional 'extra_rev_count'. If not
+              given, then revid_list will contain the full history of
+              start_revid
 
         these may be combined to view revisions for a specific file, from
         a specific revision, with a specific search query.
@@ -511,12 +544,16 @@ iso style "yyyy-mm-dd")
 
         if query is None:
             revid_list = self.get_file_view(start_revid, file_id)
+            revid_list = self._iterate_sufficiently(revid_list, revid,
+                                                    extra_rev_count)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
                 revid_list = self.get_file_view(revid, file_id)
+                revid_list = self._iterate_sufficiently(revid_list, revid,
+                                                        extra_rev_count)
                 start_revid = revid
             return revid, start_revid, revid_list
 

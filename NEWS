@@ -28,6 +28,11 @@ What's changed in loggerhead?
     - The json module is no longer claimed to be supported as alternative for 
       simplejson. (Jelmer Vernooij, #586611)
 
+    - Viewing the ``/changes`` page only iterates enough of the history to show
+      the actual revisions displayed, rather than walking the whole mainline.
+      Improves performance on projects with long histories like emacs.
+      (John Arbash Meinel)
+
 
 1.18 [10Nov2010]
 ----------------
