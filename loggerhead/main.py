@@ -56,21 +56,39 @@ def get_config_and_path(args):
     return config, base
 
 
-def setup_logging(config):
-    logging.basicConfig()
-    logging.getLogger('').setLevel(logging.DEBUG)
+def setup_logging(config, init_logging=True, log_file=None):
+    log_level = config.get_log_level()
+    if init_logging:
+        logging.basicConfig()
+        if log_level is not None:
+            logging.getLogger('').setLevel(log_level)
     logger = logging.getLogger('loggerhead')
-    if config.get_option('log_folder'):
-        logfile_path = os.path.join(
-            config.get_option('log_folder'), 'serve-branches.log')
+    if log_level is not None:
+        logger.setLevel(log_level)
+    if log_file is not None:
+        handler = logging.StreamHandler(log_file)
     else:
-        logfile_path = 'serve-branches.log'
-    logfile = logging.FileHandler(logfile_path, 'a')
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
-                                  ' %(message)s')
-    logfile.setFormatter(formatter)
-    logfile.setLevel(logging.DEBUG)
-    logger.addHandler(logfile)
+        if config.get_option('log_folder'):
+            logfile_path = os.path.join(
+                config.get_option('log_folder'), 'serve-branches.log')
+        else:
+            logfile_path = 'serve-branches.log'
+        handler = logging.FileHandler(logfile_path, 'a')
+        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                      ' %(message)s')
+        handler.setFormatter(formatter)
+    # We set the handler to accept all messages, the *logger* won't emit them
+    # if it is configured to suppress it
+    handler.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    def _restrict_logging(logger_name):
+        logger = logging.getLogger(logger_name)
+        if logger.getEffectiveLevel() < logging.INFO:
+            logger.setLevel(logging.INFO)
+    # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
+    # default. So quiet it up a bit.
+    _restrict_logging('simpleTAL')
+    _restrict_logging('simpleTALES')
     return logger
 
 
