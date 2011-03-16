@@ -30,6 +30,8 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
+import sys
+
 from info import (
     bzr_plugin_version as version_info,
     bzr_compatible_versions,
