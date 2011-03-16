@@ -166,8 +166,6 @@ Command-Line Reference
    :maxdepth: 2
 
    serve-branches
-   start-loggerhead
-   stop-loggerhead
 
 
 Support

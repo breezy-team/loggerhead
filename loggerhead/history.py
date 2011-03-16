@@ -152,6 +152,9 @@ class FileChangeReporter(object):
                 filename=rich_filename(paths[1], kind),
                 file_id=file_id))
 
+# The lru_cache is not thread-safe, so we need a lock around it for
+# all threads.
+rev_info_memory_cache_lock = threading.RLock()
 
 class RevInfoMemoryCache(object):
     """A store that validates values against the revids they were stored with.
@@ -175,7 +178,11 @@ class RevInfoMemoryCache(object):
         If a value was stored under `key`, with the same revid, return it.
         Otherwise return None.
         """
-        cached = self._cache.get(key)
+        rev_info_memory_cache_lock.acquire()
+        try:
+            cached = self._cache.get(key)
+        finally:
+            rev_info_memory_cache_lock.release()
         if cached is None:
             return None
         stored_revid, data = cached
@@ -187,7 +194,11 @@ class RevInfoMemoryCache(object):
     def set(self, key, revid, data):
         """Store `data` under `key`, to be checked against `revid` on get().
         """
-        self._cache[key] = (revid, data)
+        rev_info_memory_cache_lock.acquire()
+        try:
+            self._cache[key] = (revid, data)
+        finally:
+            rev_info_memory_cache_lock.release()
 
 # Used to store locks that prevent multiple threads from building a 
 # revision graph for the same branch at the same time, because that can
@@ -283,6 +294,7 @@ class History(object):
         else:
             self._file_change_cache = None
         self._branch = branch
+        self._branch_tags = None
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
         self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
@@ -653,11 +665,12 @@ iso style "yyyy-mm-dd")
         """
         message, short_message = clean_message(revision.message)
 
-        tags = self._branch.tags.get_reverse_tag_dict()
+        if self._branch_tags is None:
+            self._branch_tags = self._branch.tags.get_reverse_tag_dict()
 
         revtags = None
-        if tags.has_key(revision.revision_id):
-          revtags = ', '.join(tags[revision.revision_id])
+        if revision.revision_id in self._branch_tags:
+          revtags = ', '.join(self._branch_tags[revision.revision_id])
 
         entry = {
             'revid': revision.revision_id,
