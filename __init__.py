@@ -49,17 +49,6 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
             (DEFAULT_PORT,))
 
-    def setup_logging(config):
-        import logging
-        import sys
-
-        logger = logging.getLogger('loggerhead')
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-        logging.getLogger('simpleTAL').addHandler(handler)
-        logging.getLogger('simpleTALES').addHandler(handler)
-
     def _ensure_loggerhead_path():
         """Ensure that you can 'import loggerhead' and get the root."""
         # loggerhead internal code will try to 'import loggerhead', so
@@ -78,6 +67,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
+        from loggerhead.main import setup_logging
 
         if host is None:
             host = DEFAULT_HOST
@@ -87,7 +77,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
-        setup_logging(config)
+        setup_logging(config, init_logging=False, log_file=sys.stderr)
         app = BranchesFromTransportRoot(transport.base, config)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)

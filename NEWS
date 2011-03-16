@@ -16,6 +16,9 @@ What's changed in loggerhead?
     - Merge the pqm changes back into trunk, after trunk was reverted to an old
       revision. (John Arbash Meinel, #716152)
 
+    - Redirect ``/files/file.txt`` to ``/view/file.txt`` and ``/view/dir`` to
+      ``/files/dir``. (Jasper St. Pierre, #569358)
+
     - Remove ``start-loggerhead`` and ``stop-loggerhead`` which were already
       deprecated. (John Arbash Meinel)
 
