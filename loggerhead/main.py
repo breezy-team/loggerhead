@@ -74,9 +74,9 @@ def setup_logging(config, init_logging=True, log_file=None):
         else:
             logfile_path = 'serve-branches.log'
         handler = logging.FileHandler(logfile_path, 'a')
-    formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
-                                  ' %(message)s')
-    handler.setFormatter(formatter)
+        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
+                                      ' %(message)s')
+        handler.setFormatter(formatter)
     # We set the handler to accept all messages, the *logger* won't emit them
     # if it is configured to suppress it
     handler.setLevel(logging.DEBUG)
