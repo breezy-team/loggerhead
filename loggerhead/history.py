@@ -35,6 +35,7 @@ import re
 import textwrap
 import threading
 
+from bzrlib import tag
 import bzrlib.branch
 import bzrlib.delta
 import bzrlib.errors
@@ -679,12 +680,17 @@ iso style "yyyy-mm-dd")
 
         revtags = None
         if revision.revision_id in self._branch_tags:
-          revtags = ', '.join(self._branch_tags[revision.revision_id])
+          # tag.sort_* functions expect (tag, data) pairs, so we generate them,
+          # and then strip them
+          tags = [(t, None) for t in self._branch_tags[revision.revision_id]]
+          tag.sort_natural(self._branch, tags)
+          revtags = u', '.join([t[0] for t in tags])
 
         entry = {
             'revid': revision.revision_id,
             'date': datetime.datetime.fromtimestamp(revision.timestamp),
             'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
+            'committer': revision.committer,
             'authors': revision.get_apparent_authors(),
             'branch_nick': revision.properties.get('branch-nick', None),
             'short_comment': short_message,

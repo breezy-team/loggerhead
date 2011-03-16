@@ -23,6 +23,7 @@ def load_tests(standard_tests, module, loader):
             'test_history',
             'test_load_test',
             'test_simple',
+            'test_revision_ui',
             'test_templating',
         ]]))
     return standard_tests
