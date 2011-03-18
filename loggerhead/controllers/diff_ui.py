@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Canonical Ltd.
+# Copyright (C) 2008-2011 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 #
 # This program is free software; you can redistribute it and/or modify
@@ -25,8 +25,6 @@ from paste.request import path_info_pop
 from bzrlib.diff import show_diff_trees
 
 from loggerhead.controllers import TemplatedBranchView
-
-log = logging.getLogger("loggerhead.controllers")
 
 
 class DiffUI(TemplatedBranchView):
