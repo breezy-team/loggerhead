@@ -62,11 +62,16 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             sys.path.append(os.path.dirname(__file__))
 
     def serve_http(transport, host=None, port=None, inet=None):
+        # TODO: if we supported inet to pass requests in and respond to them,
+        #       then it would be easier to test the full stack, but it probably
+        #       means routing around paste.httpserver.serve which probably
+        #       isn't testing the full stack
         from paste.httpexceptions import HTTPExceptionHandler
         from paste.httpserver import serve
 
         _ensure_loggerhead_path()
 
+        from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
         from loggerhead.main import setup_logging
@@ -81,6 +86,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         config = LoggerheadConfig(argv)
         setup_logging(config, init_logging=False, log_file=sys.stderr)
         app = BranchesFromTransportRoot(transport.base, config)
+        app = HeadMiddleware(app)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 

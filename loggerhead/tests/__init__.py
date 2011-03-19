@@ -21,6 +21,7 @@ def load_tests(standard_tests, module, loader):
             'test_controllers',
             'test_corners',
             'test_history',
+            'test_http_head',
             'test_load_test',
             'test_simple',
             'test_revision_ui',
