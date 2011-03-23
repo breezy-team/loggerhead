@@ -213,13 +213,14 @@ def hide_emails(emails):
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
-html_entity_map = {
-    "&": "&amp;",
-    '"': "&quot;",
-    "'": "&#39;", # &apos; is defined in XML, but not HTML.
-    ">": "&gt;",
-    "<": "&lt;",
-    }
+# Can't be a dict; &amp; needs to be done first.
+html_entity_subs = [
+    ("&", "&amp;"),
+    ('"', "&quot;"),
+    ("'", "&#39;"), # &apos; is defined in XML, but not HTML.
+    (">", "&gt;"),
+    ("<", "&lt;"),
+    ]
 
 
 def html_escape(s):
@@ -231,7 +232,9 @@ def html_escape(s):
     If you want to safely fill a format string with escaped values, use
     html_format instead
     """
-    return "".join(html_entity_map.get(c, c) for c in s)
+    for char, repl in html_entity_subs:
+        s = s.replace(char, repl)
+    return s
 
 
 def html_format(template, *args):
