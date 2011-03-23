@@ -14,8 +14,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import cgi
 import os
+import urllib
 
 import pkg_resources
 
@@ -23,6 +23,7 @@ import bzrlib
 
 import loggerhead
 from loggerhead.zptsupport import zpt
+from loggerhead.util import html_escape
 
 
 templatefunctions = {}
@@ -50,15 +51,19 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
         def file_link(filename):
             if currently_showing and filename == currently_showing:
                 return '<b><a href="#%s">%s</a></b>' % (
-                    cgi.escape(filename), cgi.escape(filename))
+                    urllib.quote(filename.encode('utf-8')),
+                    html_escape(filename))
             else:
                 return revision_link(
-                    url, entry.revno, filename, '#' + filename)
+                    url, entry.revno, filename,
+                    '#' + urllib.quote(filename.encode('utf-8')))
     else:
         def file_link(filename):
             return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>' % (
-                url(['/revision', entry.revno]), '#' + filename, cgi.escape(filename),
-                cgi.escape(entry.revno), cgi.escape(filename))
+                url(['/revision', entry.revno]),
+                '#' + urllib.quote(filename.encode('utf-8')),
+                html_escape(filename), html_escape(entry.revno),
+                html_escape(filename))
     return _pt('revisionfilechanges').expand(
         entry=entry, file_changes=file_changes, file_link=file_link, **templatefunctions)
 
@@ -123,13 +128,14 @@ def menu(branch, url, fileview_active=False):
 @templatefunc
 def view_link(url, revno, path):
     return '<a href="%s" title="Annotate %s">%s</a>' % (
-        url(['/view', revno, path]), cgi.escape(path), cgi.escape(path))
+        url(['/view', revno, path]), html_escape(path), html_escape(path))
+
 
 @templatefunc
 def revision_link(url, revno, path, frag=''):
     return '<a href="%s%s" title="View changes to %s in revision %s">%s</a>' % (
-        url(['/revision', revno, path]), frag, cgi.escape(path),
-        cgi.escape(revno), cgi.escape(path))
+        url(['/revision', revno, path]), frag, html_escape(path),
+        html_escape(revno), html_escape(path))
 
 
 @templatefunc
