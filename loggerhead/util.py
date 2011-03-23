@@ -227,12 +227,18 @@ def html_escape(s):
 
     Like cgi.escape, except also escaping " and '. This makes it safe to use
     in both attribute and element content.
+
+    If you want to safely fill a format string with escaped values, use
+    html_format instead
     """
     return "".join(html_entity_map.get(c, c) for c in s)
 
 
 def html_format(template, *args):
-    """Safely format an HTML template string, escaping the arguments."""
+    """Safely format an HTML template string, escaping the arguments.
+
+    The template string must not be user-controlled; it will not be escaped.
+    """
     return template % tuple(html_escape(arg) for arg in args)
 
 
