@@ -231,6 +231,11 @@ def html_escape(s):
     return "".join(html_entity_map.get(c, c) for c in s)
 
 
+def html_format(template, *args):
+    """Safely format an HTML template string, escaping the arguments."""
+    return template % tuple(html_escape(arg) for arg in args)
+
+
 # FIXME: get rid of this method; use fixed_width() and avoid XML().
 
 def html_clean(s):
