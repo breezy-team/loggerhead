@@ -20,7 +20,6 @@
 #
 
 import base64
-import cgi
 import datetime
 import logging
 import re
@@ -214,8 +213,25 @@ def hide_emails(emails):
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
-# FIXME: get rid of this method; use fixed_width() and avoid XML().
+html_entity_map = {
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&#39;", # &apos; is defined in XML, but not HTML.
+    ">": "&gt;",
+    "<": "&lt;",
+    }
 
+
+def html_escape(s):
+    """Transform dangerous (X)HTML characters into entities.
+
+    Like cgi.escape, except also escaping " and '. This makes it safe to use
+    in both attribute and element content.
+    """
+    return "".join(html_entity_map.get(c, c) for c in s)
+
+
+# FIXME: get rid of this method; use fixed_width() and avoid XML().
 
 def html_clean(s):
     """
@@ -223,7 +239,7 @@ def html_clean(s):
     entities, and replace spaces with '&nbsp;'.  this is primarily for use
     in displaying monospace text.
     """
-    s = cgi.escape(s.expandtabs())
+    s = html_escape(s.expandtabs())
     s = s.replace(' ', '&nbsp;')
     return s
 
@@ -269,7 +285,7 @@ def fixed_width(s):
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
 
-    s = cgi.escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
+    s = html_escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
 
     return HSC.clean(s).replace('\n', '<br/>')
 
