@@ -56,9 +56,11 @@ class TestWithSimpleTree(BasicTests):
 
         self.filecontents = ('some\nmultiline\ndata\n'
                              'with<htmlspecialchars\n')
+        filenames = ['myfilename', 'anotherfile<']
         self.build_tree_contents(
-            [('myfilename', self.filecontents)])
-        self.tree.add('myfilename', 'myfile-id')
+            (filename, self.filecontents) for filename in filenames)
+        for filename in filenames:
+            self.tree.add(filename, '%s-id' % filename)
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
@@ -70,7 +72,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_changes_for_file(self):
         app = self.setUpLoggerhead()
-        res = app.get('/changes?filter_file_id=myfile-id')
+        res = app.get('/changes?filter_file_id=myfilename-id')
         res.mustcontain(cgi.escape(self.msg))
 
     def test_changes_branch_from(self):
@@ -131,6 +133,8 @@ class TestWithSimpleTree(BasicTests):
     def test_revision(self):
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')
+        res.mustcontain(no=['anotherfile<'])
+        res.mustcontain('anotherfile&lt;')
         res.mustcontain('myfilename')
 
 

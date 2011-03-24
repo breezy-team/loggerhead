@@ -39,6 +39,9 @@ What's changed in loggerhead?
       Improves performance on projects with long histories like emacs.
       (John Arbash Meinel)
 
+    - Fix escaping of filenames in revision views.
+      (William Grant, #740142)
+
 
 1.18 [10Nov2010]
 ----------------

@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import cgi
 import os
 import time
 
@@ -65,7 +64,7 @@ class ViewUI(TemplatedBranchView):
             extra_lines = len(file_lines) - len(hl_lines)
             hl_lines.extend([u''] * extra_lines)
         else:
-            hl_lines = map(cgi.escape, file_lines)
+            hl_lines = map(util.html_escape, file_lines)
         
         return hl_lines;
 
