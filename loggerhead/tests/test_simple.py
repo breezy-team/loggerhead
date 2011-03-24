@@ -59,9 +59,11 @@ class TestWithSimpleTree(BasicTests):
 
         self.filecontents = ('some\nmultiline\ndata\n'
                              'with<htmlspecialchars\n')
+        filenames = ['myfilename', 'anotherfile<']
         self.build_tree_contents(
-            [('myfilename', self.filecontents)])
-        self.tree.add('myfilename')
+            (filename, self.filecontents) for filename in filenames)
+        for filename in filenames:
+            self.tree.add(filename, '%s-id' % filename)
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
@@ -117,6 +119,8 @@ class TestWithSimpleTree(BasicTests):
     def test_revision(self):
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')
+        res.mustcontain(no=['anotherfile<'])
+        res.mustcontain('anotherfile&lt;')
         res.mustcontain('myfilename')
 
 
