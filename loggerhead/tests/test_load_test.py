@@ -20,7 +20,7 @@ import Queue
 from bzrlib import tests
 from bzrlib.tests import http_server
 
-from bzrlib.plugins.loggerhead.loggerhead import load_test
+from loggerhead import load_test
 
 
 empty_script = """{
