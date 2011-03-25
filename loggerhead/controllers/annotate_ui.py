@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import cgi
 import os
 import time
 
@@ -71,7 +70,7 @@ class AnnotateUI(TemplatedBranchView):
                 hl_lines = highlight(file_name, file_text, encoding)
                 hl_lines.extend([u''] * (len(file_lines) - len(hl_lines)))
             else:
-                hl_lines = map(cgi.escape, file_lines)
+                hl_lines = map(util.html_escape, file_lines)
 
             change_cache = {}
 
