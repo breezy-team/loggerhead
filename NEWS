@@ -42,6 +42,9 @@ What's changed in loggerhead?
     - Fix escaping of filenames in revision views.
       (William Grant, #740142)
 
+    - Fix support for displaying foreign revision ids.
+      (Jelmer Vernooij, #736026)
+
 
 1.18 [10Nov2010]
 ----------------

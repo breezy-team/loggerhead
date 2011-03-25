@@ -17,6 +17,12 @@
 
 """Direct tests of the loggerhead/history.py module"""
 
+from bzrlib.foreign import (
+    ForeignRevision,
+    ForeignVcs,
+    VcsMapping,
+    )
+
 from datetime import datetime
 from bzrlib import tests
 
@@ -291,3 +297,29 @@ class TestHistoryGetView(TestCaseWithExamples):
         self.assertEqual('Z', start_revid)
         self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
                          accessed)
+
+
+class TestHistoryGetChangedUncached(TestCaseWithExamples):
+
+    def test_native(self):
+        history = self.make_linear_ancestry()
+        changes = history.get_changes_uncached(['rev-1', 'rev-2'])
+        self.assertEquals(2, len(changes))
+        self.assertEquals('rev-1', changes[0].revid)
+        self.assertEquals('rev-2', changes[1].revid)
+        self.assertIs(None, getattr(changes[0], 'foreign_vcs', None))
+        self.assertIs(None, getattr(changes[0], 'foreign_revid', None))
+
+    def test_foreign(self):
+        # Test with a mocked foreign revision, as it's not possible
+        # to rely on any foreign plugins being installed.
+        history = self.make_linear_ancestry()
+        foreign_vcs = ForeignVcs(None, "vcs")
+        foreign_vcs.show_foreign_revid = repr
+        foreign_rev = ForeignRevision(("uuid", 1234), VcsMapping(foreign_vcs),
+            "revid-in-bzr", message="message",
+            timestamp=234423423.3)
+        change = history._change_from_revision(foreign_rev)
+        self.assertEquals('revid-in-bzr', change.revid)
+        self.assertEquals("('uuid', 1234)", change.foreign_revid)
+        self.assertEquals("vcs", change.foreign_vcs)
