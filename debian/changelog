@@ -1,12 +1,15 @@
-loggerhead (1.18-3) UNRELEASED; urgency=low
+loggerhead (1.18.1-1) unstable; urgency=high
 
   * Bump python-simplejson from Recommends to Depends, as loggerhead
     breaks with python-json. LP: #586611
   * Switch to dh_python2. Closes: #616876
   * Switch to debhelper 7, drop cdbs.
   * Claim support for Bazaar 2.4.
+  * New upstream release.
+   + Fixes escaping of filenames in revision views. (CVE-2011-0728)
+     LP: #740142
 
- -- Jelmer Vernooij <jelmer@debian.org>  Mon, 07 Mar 2011 05:30:12 +0100
+ -- Jelmer Vernooij <jelmer@debian.org>  Fri, 25 Mar 2011 01:02:13 +0100
 
 loggerhead (1.18-2) unstable; urgency=low
 
