@@ -720,7 +720,11 @@ iso style "yyyy-mm-dd")
           # tag.sort_* functions expect (tag, data) pairs, so we generate them,
           # and then strip them
           tags = [(t, None) for t in self._branch_tags[revision.revision_id]]
-          tag.sort_natural(self._branch, tags)
+          sort_func = getattr(tag, 'sort_natural', None)
+          if sort_func is None:
+              tags.sort()
+          else:
+              sort_func(self._branch, tags)
           revtags = u', '.join([t[0] for t in tags])
 
         entry = {

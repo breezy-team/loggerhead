@@ -18,7 +18,7 @@
 """Direct tests of the loggerhead/history.py module"""
 
 from datetime import datetime
-from bzrlib import tests
+from bzrlib import tag, tests
 
 from loggerhead import history as _mod_history
 
@@ -224,9 +224,12 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
         b.tags.set_tag('tag-2', rev.revision_id)
         b.tags.set_tag('Tag-10', rev.revision_id)
         change = history._change_from_revision(rev)
-        # tags are 'naturally' sorted, sorting numbers in order, and ignoring
-        # case, etc.
-        self.assertEqual('tag-1, tag-2, Tag-10', change.tags)
+        # If available, tags are 'naturally' sorted. (sorting numbers in order,
+        # and ignoring case, etc.)
+        if getattr(tag, 'sort_natural', None) is not None:
+            self.assertEqual('tag-1, tag-2, Tag-10', change.tags)
+        else:
+            self.assertEqual('Tag-10, tag-1, tag-2', change.tags)
 
     def test_committer_vs_authors(self):
         tree = self.make_branch_and_tree('test')
