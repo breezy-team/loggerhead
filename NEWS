@@ -39,11 +39,19 @@ What's changed in loggerhead?
       Improves performance on projects with long histories like emacs.
       (John Arbash Meinel)
 
+    - Fix support for displaying foreign revision ids.
+      (Jelmer Vernooij, #736026)
+
+
+1.18.1 [24Mar2011]
+------------------
+
     - Fix escaping of filenames in revision views.
       (William Grant, #740142)
 
-    - Fix support for displaying foreign revision ids.
-      (Jelmer Vernooij, #736026)
+    - Add missing import to loggerhead.trace, allowing start-loggerhead
+      to run when a log.roll config option is set.
+      (Max Kanat-Alexander, #673999)
 
 
 1.18 [10Nov2010]
