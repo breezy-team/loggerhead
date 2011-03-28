@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Canonical Ltd.
+# Copyright (C) 2008-2011 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 #
 # This program is free software; you can redistribute it and/or modify
