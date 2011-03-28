@@ -1,0 +1,19 @@
+{
+    "comment": "Connect to multiple loggerhead instances and make requests on each. One should be on :8080, one should be on :8081. Multiple threads will place requests on each.",
+    "parameters": {"base_url": "http://localhost"},
+    "requests": [
+        {"thread": "1", "relpath": ":8080/changes"},
+        {"thread": "2", "relpath": ":8080/files"},
+        {"thread": "3", "relpath": ":8081/files"},
+        {"thread": "4", "relpath": ":8081/changes"},
+        {"thread": "1", "relpath": ":8080/changes"},
+        {"thread": "2", "relpath": ":8080/files"},
+        {"thread": "3", "relpath": ":8081/files"},
+        {"thread": "4", "relpath": ":8081/changes"},
+        {"thread": "1", "relpath": ":8080/changes"},
+        {"thread": "2", "relpath": ":8080/files"},
+        {"thread": "3", "relpath": ":8081/files"},
+        {"thread": "4", "relpath": ":8081/changes"}
+    ]
+}
+

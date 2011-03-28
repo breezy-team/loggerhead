@@ -9,6 +9,8 @@
     <title metal:define-slot="title"></title>
     <link rel="stylesheet"
           tal:attributes="href python:branch.static_url('/static/css/global.css')" />
+    <link rel="shortcut icon"
+          tal:attributes="href python:branch.static_url('/static/images/favicon.png')" />
     <tal:comment condition="nothing">
       <script type="text/javascript"
               src="http://getfirebug.com/releases/lite/1.2/firebug-lite-compressed.js"></script>
@@ -43,25 +45,21 @@
 
 <body>
     <!-- Loggerhead Content Area -->
-      <div id="finderBox">
-         <tal:search-box define="navigation navigation"
-                        replace="structure python:search_box(branch,
-                                 navigation)" />
-        <div>
-          <tal:feed-link replace="structure python:feed_link(branch, url)" />
-        </div>
-      </div>
-
+      
+      <div metal:define-slot="backlink" />
+      
+      <h1 class="branch-name">
+        <span metal:define-slot="branchname" />
+      </h1>
       <tal:menu define="fileview_active fileview_active"
                 replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 
         <div id="search_terms"></div>
-
-        <h1 metal:define-slot="heading"></h1>
+        <div metal:define-slot="heading" />
         <div metal:define-slot="content"></div>
 
-        <p class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
+        <p id="footer" class="fl">Loggerhead <tal:version content="loggerhead_version" /> is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches</p>
       </div>
   </body>
 </html>
