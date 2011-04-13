@@ -86,7 +86,10 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         config = LoggerheadConfig(argv)
         setup_logging(config, init_logging=False, log_file=sys.stderr)
         app = BranchesFromTransportRoot(transport.base, config)
-        app = HeadMiddleware(app)
+        # Bug #758618, HeadMiddleware seems to break HTTPExceptionHandler from
+        # actually sending appropriate return codes to the client. Since nobody
+        # desperately needs HeadMiddleware right now, just ignoring it.
+        # app = HeadMiddleware(app)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 
