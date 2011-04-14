@@ -286,7 +286,7 @@ class TestActionScriptIntegration(tests.TestCaseWithTransport):
         self.build_tree(['first', 'second', 'third', 'fourth'])
         url = self.get_readonly_url()
         script = load_test.ActionScript.parse("""{
-            "parameters": {"base_url": "%s", "blocking_timeout": 0.1},
+            "parameters": {"base_url": "%s", "blocking_timeout": 2.0},
             "requests": [
                 {"thread": "1", "relpath": "first"},
                 {"thread": "2", "relpath": "second"},
