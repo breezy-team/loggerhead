@@ -1,3 +1,10 @@
+loggerhead (1.18.1-2) unstable; urgency=low
+
+  * Add build dependency on python-bzrlib.tests, required for newer
+    versions of bzr.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 01 May 2011 02:55:06 +0200
+
 loggerhead (1.18.1-1) unstable; urgency=high
 
   * Bump python-simplejson from Recommends to Depends, as loggerhead
