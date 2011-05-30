@@ -45,6 +45,7 @@ import bzrlib.revision
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
+from bzrlib.export.tar_exporter import export_tarball
 
 
 def is_branch(folder):
@@ -762,8 +763,8 @@ iso style "yyyy-mm-dd")
             modified=sorted(reporter.modified, key=lambda x: x.filename),
             text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))
 
-    def export(self, revid, dest):
+    def export(self, revid, ball):
         """Export a tarball of a revision."""
         rev_tree = self._branch.repository.revision_tree(revid)
-        bzrlib.export.export(rev_tree, dest)
-        return dest
+        export_tarball(rev_tree, ball, None)
+        return ball
