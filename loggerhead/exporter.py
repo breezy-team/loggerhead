@@ -8,28 +8,20 @@ from bzrlib import errors
 from bzrlib.filters import ContentFilterContext
 from bzrlib.filters import filtered_output_bytes
 
-
-
 class TarExporterFileObject(object):
     
     def __init__(self):
-        ""
-        
-class TarExporter(object):
-    """Iterator that exports a tarball"""
+        self._buffer = ''
     
-    def __init__(self, revid, history):
-        self.fileobj = TarExporterFileObject()
-        self.ball = tarfile.open(None, 'w:gz', self.fileobj)
-        rev_tree = self.history._branch.repository.revision_tree(revid)
-        
-        
-    def __iter__(self):
-        return self
+    def write(self, str):
+        self._buffer += str
     
-    def next(self):
-        ""
+    def get_buffer(self):
+        buffer = self._buffer
+        self._buffer = ''
+        return buffer
 
+        
 def export_tarball(history, revid):
     """Export tree contents to a tarball.
 
@@ -89,6 +81,7 @@ def export_tarball(history, revid):
             raise errors.BzrError("don't know how to export {%s} of kind %r" %
                            (ie.file_id, ie.kind))
         ball.addfile(item, fileobj)
+        yield fileobj.get_buffer()
 
         
         
