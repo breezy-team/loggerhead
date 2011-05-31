@@ -26,6 +26,7 @@ from paste import httpexceptions
 from paste.request import path_info_pop
 
 from loggerhead.controllers import TemplatedBranchView
+from loggerhead.exporter import export_tarball
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -70,36 +71,7 @@ class DownloadUI (TemplatedBranchView):
         return [content]
 
 class DownloadTarballUI(TemplatedBranchView):
-    """Download a revno as a tarball or zip file."""
-    ext = 'tar.gz'
-    dest = os.path.join(os.getcwd(), 'loggerhead/static/downloads/')
-    download_dir = '/static/downloads/'
- 
-    def get_values(self, path, kwargs, headers):
-        """Return a URL to a tarball.
-
-        In the form of: /tarball/revno_or_revid."""
-        history = self._history
-        if len(self.args):
-            revid = history.fix_revid(self.args[0])
-        else:
-            revid = self.get_revid()
-        revno = history.get_revno(revid)
-        filename = '%s_%s.%s' % (history._branch_nick, revno, self.ext)
-        rpath = os.getcwd()+ '/loggerhead/static/downloads/' + filename
-        if not os.path.exists(rpath):
-            history.export(revid, rpath)
-        if self._branch.export_tarballs:
-            return {'download': '/static/downloads/' + filename}
-        else:
-            # redirect to the home page, the user is cheating :)
-            return {'download': '/'}
-    
-    @property    
-    def _fileobj(self):
-        """Return the file object."""
-        
-        
+     
     def get_download(self, path, kwargs, headers):
         """Stream a tarball from a bazaar branch."""
         
@@ -108,9 +80,6 @@ class DownloadTarballUI(TemplatedBranchView):
             revid = history.fix_revid(self.args[0])
         else:
             revid = self.get_revid()
-            
-        fileobj = self._fileobj
-        
-        self._history.export(revid, fileobj)
-        
+                    
+        return export_tarball(history, revid)
         
