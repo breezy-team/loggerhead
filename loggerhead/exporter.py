@@ -9,17 +9,46 @@ from bzrlib.filters import ContentFilterContext
 from bzrlib.filters import filtered_output_bytes
 
 
-def export_tarball(tree, ball, root, subdir=None, filtered=False,
-                   force_mtime=None):
+
+class TarExporterFileObject(object):
+    
+    def __init__(self):
+        ""
+        
+class TarExporter(object):
+    """Iterator that exports a tarball"""
+    
+    def __init__(self, revid, history):
+        self.fileobj = TarExporterFileObject()
+        self.ball = tarfile.open(None, 'w:gz', self.fileobj)
+        rev_tree = self.history._branch.repository.revision_tree(revid)
+        
+        
+    def __iter__(self):
+        return self
+    
+    def next(self):
+        ""
+
+def export_tarball(history, revid):
     """Export tree contents to a tarball.
 
-    :param tree: Tree to export
-    :param ball: Tarball to export to
-    :param filtered: Whether to apply filters
-    :param subdir: Sub directory to export
-    :param force_mtime: Option mtime to force, instead of using
-        tree timestamps.
+    :param history: Instance of history to export
+    :param revid: Revision to export
     """
+    
+    root = None
+    subdir = None
+    filtered = False
+    force_mtime = None
+    
+    fileobj = TarExporterFileObject()
+    
+    ball = tarfile.open(None, 'w:gz', fileobj)
+    tree = history._branch.repository.revision_tree(revid)
+    
+    #TODO: remove unnecessary code
+    
     for dp, ie in _export_iter_entries(tree, subdir):
         filename = osutils.pathjoin(root, dp).encode('utf8')
         item = tarfile.TarInfo(filename)
@@ -61,25 +90,5 @@ def export_tarball(tree, ball, root, subdir=None, filtered=False,
                            (ie.file_id, ie.kind))
         ball.addfile(item, fileobj)
 
-
-class TarExporterFileObject(object):
-    
-    def __init__(self):
-        ""
-        
-class TarExporter(object):
-    """Iterator that exports a tarball"""
-    
-    def __init__(self, revid, history):
-        self.fileobj = TarExporterFileObject()
-        self.ball = tarfile.open(None, 'w:gz', self.fileobj)
-        rev_tree = self._branch.repository.revision_tree(revid)
-        
-        
-    def __iter__(self):
-        return self
-    
-    def next(self):
-        
         
         
