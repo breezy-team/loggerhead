@@ -94,3 +94,23 @@ class DownloadTarballUI(TemplatedBranchView):
         else:
             # redirect to the home page, the user is cheating :)
             return {'download': '/'}
+    
+    @property    
+    def _fileobj(self):
+        """Return the file object."""
+        
+        
+    def get_download(self, path, kwargs, headers):
+        """Stream a tarball from a bazaar branch."""
+        
+        history = self._history
+        if len(self.args):
+            revid = history.fix_revid(self.args[0])
+        else:
+            revid = self.get_revid()
+            
+        fileobj = self._fileobj
+        
+        self._history.export(revid, fileobj)
+        
+        
