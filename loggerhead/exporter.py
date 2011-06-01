@@ -8,16 +8,16 @@ from bzrlib import errors
 class TarExporterFileObject(object):
     
     def __init__(self):
-        self._buffer = ''
-    
+        self._buffer = []
+        
     def write(self, str):
-        self._buffer += str
-    
+        self._buffer.append(str)
+        
     def get_buffer(self):
-        buffer = self._buffer
-        self._buffer = ''
-        return buffer
-
+        try:
+            return ''.join(self._buffer)
+        finally:
+            self._buffer = []
         
 def export_tarball(history, revid):
     """Export tree contents to a tarball.
