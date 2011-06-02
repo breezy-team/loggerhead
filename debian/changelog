@@ -1,8 +1,8 @@
-loggerhead (1.18.1+bzr445-1) UNRELEASED; urgency=low
+loggerhead (1.18.1+bzr447-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Mon, 28 Mar 2011 11:56:02 +0200
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 02 Jun 2011 14:11:55 +0200
 
 loggerhead (1.18.1-1) unstable; urgency=high
 
