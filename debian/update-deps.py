@@ -12,10 +12,12 @@ from info import bzr_compatible_versions
 def update_relation(l, pkg, kind, version):
     found = False
     for pr in l:
-        for e in pr:
-            if e["name"] == pkg and e["version"] and e["version"][0] == kind:
-                e["version"] = (kind, version)
-                found = True
+        if len(pr) != 1:
+            continue
+        e = pr[0]
+        if e["name"] == pkg and e["version"] and e["version"][0] == kind:
+            e["version"] = (kind, version)
+            found = True
     if not found:
         l.append([{"version": (kind, version), "name": pkg, "arch": None}])
 
