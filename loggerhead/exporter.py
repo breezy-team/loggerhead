@@ -1,11 +1,8 @@
+"""Exports an archive from a bazaar branch"""
 
-import tarfile
+from bzrlib.export import get_export_generator
 
-from bzrlib.export import _export_iter_entries
-from bzrlib import osutils
-from bzrlib import errors
-
-class TarExporterFileObject(object):
+class ExporterFileObject(object):
     
     def __init__(self):
         self._buffer = []
@@ -19,56 +16,21 @@ class TarExporterFileObject(object):
         finally:
             self._buffer = []
         
-def export_tarball(history, revid):
-    """Export tree contents to a tarball.
+def export_archive(history, revid, format=".tar.gz"):
+    """Export tree contents to an archive
 
     :param history: Instance of history to export
     :param revid: Revision to export
+    :param format: Format of the archive
     """
     
-    root = None
-    subdir = None
-    force_mtime = None
+    fileobj = ExporterFileObject()
     
-    tarfileobj = TarExporterFileObject()
-    
-    ball = tarfile.open(None, 'w:gz', tarfileobj)
     tree = history._branch.repository.revision_tree(revid)
     
-    #TODO: remove unnecessary code
-    
-    for dp, ie in _export_iter_entries(tree, subdir):
-        filename = osutils.pathjoin(root, dp).encode('utf8')
-        item = tarfile.TarInfo(filename)
-        if force_mtime is not None:
-            item.mtime = force_mtime
-        else:
-            item.mtime = tree.get_file_mtime(ie.file_id, dp)
-        if ie.kind == "file":
-            item.type = tarfile.REGTYPE
-            if tree.is_executable(ie.file_id):
-                item.mode = 0755
-            else:
-                item.mode = 0644
-            item.size = tree.get_file_size(ie.file_id)
-            fileobj = tree.get_file(ie.file_id)
-        elif ie.kind == "directory":
-            item.type = tarfile.DIRTYPE
-            item.name += '/'
-            item.size = 0
-            item.mode = 0755
-            fileobj = None
-        elif ie.kind == "symlink":
-            item.type = tarfile.SYMTYPE
-            item.size = 0
-            item.mode = 0755
-            item.linkname = tree.get_symlink_target(ie.file_id)
-            fileobj = None
-        else:
-            raise errors.BzrError("don't know how to export {%s} of kind %r" %
-                           (ie.file_id, ie.kind))
-        ball.addfile(item, fileobj)
-        yield tarfileobj.get_buffer()
-
+    for _ in get_export_generator(tree=tree, fileobj=fileobj, format=format):
         
+        yield fileobj.get_buffer()
+
+    
         
