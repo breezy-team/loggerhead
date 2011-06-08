@@ -31,6 +31,10 @@ def export_archive(history, revid, format=".tar.gz"):
     for _ in get_export_generator(tree=tree, fileobj=fileobj, format=format):
         
         yield fileobj.get_buffer()
+    
+    # Might have additonal contents written
+        
+    yield fileobj.get_buffer()
 
     
         

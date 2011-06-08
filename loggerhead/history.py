@@ -763,13 +763,3 @@ iso style "yyyy-mm-dd")
             modified=sorted(reporter.modified, key=lambda x: x.filename),
             text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))
 
-    def export(self, revid, fileobj):
-        """
-        Export a tarball of a revision.
-        
-        The tarball is compressed with gzip compression.
-        """
-        ball = tarfile.open(None, 'w:gz', fileobj)
-        rev_tree = self._branch.repository.revision_tree(revid)
-        export_tarball(rev_tree, ball, None)
-        return fileobj

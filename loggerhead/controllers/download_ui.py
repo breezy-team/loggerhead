@@ -72,7 +72,7 @@ class DownloadUI (TemplatedBranchView):
 
 class DownloadTarballUI(TemplatedBranchView):
      
-    def get_download(self, path, kwargs, headers):
+    def get_download(self, ):
         """Stream a tarball from a bazaar branch."""
         
         history = self._history
@@ -80,6 +80,8 @@ class DownloadTarballUI(TemplatedBranchView):
             revid = history.fix_revid(self.args[0])
         else:
             revid = self.get_revid()
-                    
-        return export_tarball(history, revid)
-        
+            
+        if self._branch.export_tarballs:
+            return export_tarball(history, revid)
+        else:
+            return httpexceptions.HTTPSeeOther('/')

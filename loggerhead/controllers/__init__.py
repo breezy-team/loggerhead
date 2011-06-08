@@ -93,8 +93,6 @@ class TemplatedBranchView(object):
         headers = {}
 
         vals.update(self.get_values(path, kwargs, headers))
-        if 'download' in vals:
-            return HTTPSeeOther(vals['download'])
 
         self.log.info('Getting information for %s: %r secs' % (
             self.__class__.__name__, time.time() - z))
