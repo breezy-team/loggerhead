@@ -32,6 +32,10 @@ log = logging.getLogger("loggerhead.controllers")
 
 
 class DownloadUI (TemplatedBranchView):
+    
+    def encode_filename(self, filename):
+        
+        return urllib.quote(filename.encode('utf-8'))
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
@@ -60,7 +64,7 @@ class DownloadUI (TemplatedBranchView):
                       path,
                       h.get_revno(revid),
                       len(content))
-        encoded_filename = urllib.quote(filename.encode('utf-8'))
+        encoded_filename = self.encode_filename(filename)
         headers = [
             ('Content-Type', mime_type),
             ('Content-Length', str(len(content))),
@@ -70,10 +74,14 @@ class DownloadUI (TemplatedBranchView):
         start_response('200 OK', headers)
         return [content]
 
-class DownloadTarballUI(TemplatedBranchView):
+class DownloadTarballUI(DownloadUI):
      
-    def get_download(self, ):
+    def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
+        
+        #Tried to re-use code from downloadui, not very successful
+        
+        format = ".tar.gz"
         
         history = self._history
         if len(self.args):
@@ -82,6 +90,17 @@ class DownloadTarballUI(TemplatedBranchView):
             revid = self.get_revid()
             
         if self._branch.export_tarballs:
-            return export_tarball(history, revid)
+            
+            encoded_filename = self.encode_filename("branch" + format)
+            
+            headers = [
+                ('Content-Type', 'application/octet-stream'),
+                ('Content-Disposition',
+                 "attachment; filename*=utf-8''%s" % (encoded_filename,)),
+                ]
+            
+            start_response('200 OK', headers)
+            
+            return export_tarball(history, revid, format)
         else:
-            return httpexceptions.HTTPSeeOther('/')
+            raise httpexceptions.HTTPSeeOther('/')
