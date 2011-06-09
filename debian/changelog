@@ -1,8 +1,13 @@
-loggerhead (1.18.1-3) UNRELEASED; urgency=low
+loggerhead (1.18.1-3) unstable; urgency=low
 
-  * Re-arrange | condition in build deps to make sbuild happy.
+  [ Max Bowsher ]
+  * Re-arrange | condition in build deps to make sbuild happy. Closes: #629783
 
- -- Max Bowsher <_@maxb.eu>  Fri, 03 Jun 2011 00:09:17 +0100
+  [ Jelmer Vernooij ]
+  * Depend on python-bzrlib rather than bzr.
+  * Bump standards version to 3.9.2 (no changes).
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 09 Jun 2011 22:48:50 +0100
 
 loggerhead (1.18.1-2) unstable; urgency=low
 

@@ -12,10 +12,12 @@ from info import bzr_compatible_versions
 def update_relation(l, pkg, kind, version):
     found = False
     for pr in l:
-        for e in pr:
-            if e["name"] == pkg and e["version"] and e["version"][0] == kind:
-                e["version"] = (kind, version)
-                found = True
+        if len(pr) != 1:
+            continue
+        e = pr[0]
+        if e["name"] == pkg and e["version"] and e["version"][0] == kind:
+            e["version"] = (kind, version)
+            found = True
     if not found:
         l.append([{"version": (kind, version), "name": pkg, "arch": None}])
 
@@ -23,17 +25,17 @@ f = open('debian/control', 'r')
 
 source = Deb822(f)
 
-def update_deps(control, field):
+def update_deps(control, field, package):
     bdi = PkgRelation.parse_relations(control[field])
-    update_relation(bdi, "bzr", ">=", "%d.%d~" % bzr_compatible_versions[0][:2])
-    update_relation(bdi, "bzr", "<<", "%d.%d~" % (bzr_compatible_versions[-1][0], bzr_compatible_versions[-1][1]+1))
+    update_relation(bdi, package, ">=", "%d.%d~" % bzr_compatible_versions[0][:2])
+    update_relation(bdi, package, "<<", "%d.%d~" % (bzr_compatible_versions[-1][0], bzr_compatible_versions[-1][1]+1))
     control[field] = PkgRelation.str(bdi)
 
-update_deps(source, "Build-Depends-Indep")
+update_deps(source, "Build-Depends-Indep", "bzr")
 
 binary = Deb822(f)
 
-update_deps(binary, "Depends")
+update_deps(binary, "Depends", "python-bzrlib")
 
 f = open("debian/control", "w+")
 try:
