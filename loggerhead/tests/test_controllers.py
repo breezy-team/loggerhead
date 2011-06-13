@@ -12,6 +12,9 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.tests.test_simple import BasicTests
 from loggerhead import util
 
+from os import tmpnam
+from tarfile import is_tarfile
+
 
 class TestInventoryUI(BasicTests):
 
@@ -125,3 +128,14 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[0].change.revno)
         self.assertEqual('1', annotated[1].change.revno)
+
+class TestDownloadTarballUI(BasicTests):
+    
+    def test_download_tarball(self):
+        app = self.setUpLoggerhead()
+        res = app.get('/tarball')
+        tmpname = tmpnam()
+        f = open(tmpname, 'w')
+        f.write(res)
+        f.close()
+        self.failIf(not is_tarfile(tmpname))
