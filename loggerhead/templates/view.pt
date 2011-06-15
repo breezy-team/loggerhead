@@ -49,11 +49,11 @@
             </li>
             <li tal:condition="not:annotated">
               <a tal:attributes="href python:url(['/annotate', revno_url, file_path], clear=1)"
-              >view revision numbers per line</a>
+              >view with revision information</a>
             </li>
             <li tal:condition="annotated">
               <a tal:attributes="href python:url(['/view', revno_url, file_path], clear=1)"
-              >view without revision numbers</a>
+              >view without revision information</a>
             </li>
             <li>
                 <a tal:attributes="href python:url(['/revision', change.revno], clear=1)">view revision</a>
@@ -71,24 +71,23 @@
 
       <div class="view">
         <table id="logentries">
-          <tr class="logheader">
-            <th class="viewLineTit">Line</th>
-            <th class="viewRevTit" tal:condition="annotated">Revision</th>
-            <th class="viewContTit">Contents</th>
-          </tr>
-
           <tal:rep tal:repeat="line contents">
-            <tr tal:define="anno python:annotated and annotated.next()"
-                tal:attributes="class python:anno and 'blueRow' + str(anno.parity) or None">
-              <td class="viewLine">
-                <a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
-                   tal:content="repeat/line/number">1</a>
-              </td>
-              <td class="viewRev" tal:condition="annotated">
-                <a tal:condition="python:anno.new_rev"
-                   tal:content="python:util.trunc(anno.change.revno)"
+            <tr>
+              <td tal:condition="python:path('repeat/line/number') in annotated"
+                  tal:define="anno python:annotated.get(path('repeat/line/number'), None)"
+                  tal:attributes="rowspan python:anno.revspan"
+                  class="viewRev">
+                <a tal:content="python:'%s' % (anno.change.revno,)"
                    tal:attributes="href python:url(['/revision', anno.change.revno], clear=1);
                                    title python:'%s by %s, on %s (%s)' % (anno.change.revno, ', '.join(util.hide_emails(anno.change.authors)), anno.change.date.strftime('%d %b %Y %H:%M'), util.date_time(anno.change.date))"></a>
+                <span class="viewAuthors" tal:content="python:'by ' + ', '.join(util.hide_emails(anno.change.authors))" />
+                <br />
+
+                <span tal:content="python:anno.message"></span>
+              </td>
+              <td tal:attributes="class python:path('repeat/line/number') in annotated and 'viewLine first' or 'viewLine'">
+                <a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
+                   tal:content="repeat/line/number">1</a>
               </td>
               <td class="viewCont"><pre tal:content="structure line"></pre></td>
             </tr>

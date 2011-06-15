@@ -16,6 +16,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+import itertools
+
 from loggerhead.controllers.view_ui import ViewUI
 from loggerhead import util
 
@@ -29,23 +31,37 @@ class AnnotateUI(ViewUI):
         
         change_cache = {}
         last_line_revid = None
-        parity = 1
-        for line_revid, text in tree.annotate_iter(file_id):
-            if line_revid == last_line_revid:
-                # remember which lines have a new revno and which don't
-                new_rev = False
-            else:
-                new_rev = True
-                parity ^= 1
+        last_lineno = None
+        message = ""
+
+        revisions = {}
+
+        lineno = 0
+        for (line_revid, text), lineno in zip(tree.annotate_iter(file_id), itertools.count(1)):
+            if line_revid != last_line_revid:
                 last_line_revid = line_revid
-                if line_revid in change_cache:
-                    change = change_cache[line_revid]
-                else:
+
+                change = change_cache.get(line_revid, None)
+                if change is None:
                     change = self._history.get_changes([line_revid])[0]
                     change_cache[line_revid] = change
 
-            yield util.Container(
-                parity=parity, new_rev=new_rev, change=change)
+                message = change.comment.splitlines()[0]
+
+                if last_lineno:
+                    # The revspan is of lines between the last revision and this one.
+                    # We set the one for the previous revision when we're creating the current revision.
+                    revisions[last_lineno].revspan = lineno - last_lineno
+
+                revisions[lineno] = util.Container(change=change, message=message)
+
+                last_lineno = lineno
+                last_line_revid = line_revid
+
+        # We never set a revspan for the last revision during the loop above, so set it here.
+        revisions[last_lineno].revspan = lineno - last_lineno + 1
+
+        return revisions
             
     def get_values(self, path, kwargs, headers):
         values = super(AnnotateUI, self).get_values(path, kwargs, headers)

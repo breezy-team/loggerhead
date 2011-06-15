@@ -123,10 +123,10 @@ class ViewUI(TemplatedBranchView):
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         return {
-            # In AnnotateUI, "annotated" is a generator giving revision
-            # numbers per lines, but the template checks if "annotated" is
-            # true or not before using it, so we have to define it here also.
-            'annotated': False,
+            # In AnnotateUI, "annotated" is a dictionary mapping lines to changes.
+            # We exploit the fact that bool({}) is False when checking whether
+            # we're in "annotated" mode.
+            'annotated': {},
             'revno_url': revno_url,
             'file_id': file_id,
             'file_path': path,
