@@ -37,7 +37,7 @@ from loggerhead.controllers.download_ui import DownloadUI
 from loggerhead.controllers.filediff_ui import FileDiffUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.controllers.revlog_ui import RevLogUI, RevLogJSONUI
+from loggerhead.controllers.revlog_ui import RevLogUI
 from loggerhead.controllers.search_ui import SearchUI
 from loggerhead.history import History
 from loggerhead import util
@@ -128,10 +128,6 @@ class BranchWSGIApp(object):
         'view': ViewUI,
         }
 
-    json_controllers_dict = {
-        '+revlog': RevLogJSONUI,
-        }
-
     def last_updated(self):
         h = self.get_history()
         change = h.get_changes([h.last_revid])[0]
@@ -169,9 +165,11 @@ class BranchWSGIApp(object):
         if path == 'static':
             return static_app(environ, start_response)
         elif path == '+json':
-            path2 = request.path_info_pop(environ)
-            cls = self.json_controllers_dict.get(path2)
+            json = True
+            path = request.path_info_pop(environ)
+            cls = self.controllers_dict.get(path)
         else:
+            json = False
             cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
@@ -179,7 +177,10 @@ class BranchWSGIApp(object):
         try:
             try:
                 c = cls(self, self.get_history)
-                return c(environ, start_response)
+                if json:
+                    return c.jsoncall(environ, start_response)
+                else:
+                    return c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()
                 environ['branch'] = self

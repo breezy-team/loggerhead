@@ -18,6 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import bzrlib.errors
+import simplejson
 import time
 
 from paste.httpexceptions import HTTPNotFound
@@ -111,6 +112,30 @@ class TemplatedBranchView(object):
         z = time.time()
         w = BufferingWriter(writer, 8192)
         template.expand_into(w, **vals)
+        w.flush()
+        self.log.info(
+            'Rendering %s: %.3f secs, %s bytes' % (
+                self.__class__.__name__, time.time() - z, w.bytes))
+        return []
+
+    def jsoncall(self, environ, start_response):
+        z = time.time()
+        json_values, headers = self.get_json_values(environ)
+
+        # XXX de-dupe this code.
+        self.log.info('Getting information for %s: %.3f secs' % (
+            self.__class__.__name__, time.time() - z))
+        #headers['Content-Type'] = 'application/json'
+        headers['Content-Type'] = 'text/plain'
+        writer = start_response("200 OK", headers.items())
+        if environ.get('REQUEST_METHOD') == 'HEAD':
+            # No content for a HEAD request
+            return []
+        z = time.time()
+        w = BufferingWriter(writer, 8192)
+
+        w.write(simplejson.dumps(json_values,
+            default=util.convert_to_json_ready))
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
