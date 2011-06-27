@@ -67,8 +67,7 @@ class TemplatedBranchView(object):
         self.__history = self._history_callable()
         return self.__history
 
-    def __call__(self, environ, start_response):
-        z = time.time()
+    def get_core_values(self, environ):
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
@@ -83,6 +82,13 @@ class TemplatedBranchView(object):
             path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
 
+        headers = {}
+        return self.get_values(path, kwargs, headers), headers
+
+    def __call__(self, environ, start_response):
+        z = time.time()
+        core_values, headers = self.get_core_values(environ)
+
         vals = {
             'static_url': self._branch.static_url,
             'branch': self._branch,
@@ -90,9 +96,8 @@ class TemplatedBranchView(object):
             'url': self._branch.context_url,
         }
         vals.update(templatefunctions)
-        headers = {}
 
-        vals.update(self.get_values(path, kwargs, headers))
+        vals.update(core_values)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
