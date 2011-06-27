@@ -87,6 +87,10 @@ class FileDiffUI(TemplatedBranchView):
             self._history._branch.repository, file_id, compare_revid, revid)
 
         return {
-            'util': util,
             'chunks': chunks,
         }
+
+    def get_json_values(self, environ):
+        core_values, headers = self.get_core_values(environ)
+        return core_values, headers
+

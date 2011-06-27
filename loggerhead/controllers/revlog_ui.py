@@ -1,9 +1,6 @@
-import datetime
-import time
 import urllib
 
-from loggerhead import util
-from loggerhead.controllers import BufferingWriter, TemplatedBranchView
+from loggerhead.controllers import TemplatedBranchView
 
 
 class RevLogUI(TemplatedBranchView):
@@ -20,15 +17,11 @@ class RevLogUI(TemplatedBranchView):
         history.add_branch_nicks(change)
 
         return {
-            'branch': self._branch,
             'entry': change,
             'file_changes': file_changes,
-            'util': util,
             'revid': revid,
-            'url': self._branch.context_url,
         }
 
     def get_json_values(self, environ):
         core_values, headers = self.get_core_values(environ)
-        del core_values['branch'], core_values['util'], core_values['url']
         return core_values, headers
