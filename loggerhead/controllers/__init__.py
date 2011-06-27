@@ -88,20 +88,7 @@ class TemplatedBranchView(object):
 
     def __call__(self, environ, start_response):
         z = time.time()
-        if environ.get('loggerhead.as_json'):
-            json_values, headers = self.get_json_values(environ)
-        else:
-            core_values, headers = self.get_core_values(environ)
-
-            vals = {
-                'static_url': self._branch.static_url,
-                'branch': self._branch,
-                'util': util,
-                'url': self._branch.context_url,
-            }
-            vals.update(templatefunctions)
-
-            vals.update(core_values)
+        core_values, headers = self.get_core_values(environ)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
@@ -116,9 +103,17 @@ class TemplatedBranchView(object):
         z = time.time()
         w = BufferingWriter(writer, 8192)
         if environ.get('loggerhead.as_json'):
-            w.write(simplejson.dumps(json_values,
+            w.write(simplejson.dumps(core_values,
                 default=util.convert_to_json_ready))
         else:
+            vals = {
+                'static_url': self._branch.static_url,
+                'branch': self._branch,
+                'util': util,
+                'url': self._branch.context_url,
+            }
+            vals.update(templatefunctions)
+            vals.update(core_values)
             template = load_template(self.template_path)
             template.expand_into(w, **vals)
         w.flush()

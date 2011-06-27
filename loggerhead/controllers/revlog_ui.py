@@ -21,7 +21,3 @@ class RevLogUI(TemplatedBranchView):
             'file_changes': file_changes,
             'revid': revid,
         }
-
-    def get_json_values(self, environ):
-        core_values, headers = self.get_core_values(environ)
-        return core_values, headers

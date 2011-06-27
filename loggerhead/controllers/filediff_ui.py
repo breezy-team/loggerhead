@@ -89,8 +89,3 @@ class FileDiffUI(TemplatedBranchView):
         return {
             'chunks': chunks,
         }
-
-    def get_json_values(self, environ):
-        core_values, headers = self.get_core_values(environ)
-        return core_values, headers
-
