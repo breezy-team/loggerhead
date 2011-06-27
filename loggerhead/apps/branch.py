@@ -165,22 +165,16 @@ class BranchWSGIApp(object):
         if path == 'static':
             return static_app(environ, start_response)
         elif path == '+json':
-            json = True
+            environ['loggerhead.as_json'] = True
             path = request.path_info_pop(environ)
-            cls = self.controllers_dict.get(path)
-        else:
-            json = False
-            cls = self.controllers_dict.get(path)
+        cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
         self.branch.lock_read()
         try:
             try:
                 c = cls(self, self.get_history)
-                if json:
-                    return c.jsoncall(environ, start_response)
-                else:
-                    return c(environ, start_response)
+                return c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()
                 environ['branch'] = self

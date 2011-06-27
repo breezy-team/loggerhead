@@ -88,54 +88,39 @@ class TemplatedBranchView(object):
 
     def __call__(self, environ, start_response):
         z = time.time()
-        core_values, headers = self.get_core_values(environ)
+        if environ.get('loggerhead.as_json'):
+            json_values, headers = self.get_json_values(environ)
+        else:
+            core_values, headers = self.get_core_values(environ)
 
-        vals = {
-            'static_url': self._branch.static_url,
-            'branch': self._branch,
-            'util': util,
-            'url': self._branch.context_url,
-        }
-        vals.update(templatefunctions)
+            vals = {
+                'static_url': self._branch.static_url,
+                'branch': self._branch,
+                'util': util,
+                'url': self._branch.context_url,
+            }
+            vals.update(templatefunctions)
 
-        vals.update(core_values)
+            vals.update(core_values)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
-        if 'Content-Type' not in headers:
+        if environ.get('loggerhead.as_json'):
+            headers['Content-Type'] = 'application/json'
+        elif 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
         if environ.get('REQUEST_METHOD') == 'HEAD':
             # No content for a HEAD request
             return []
-        template = load_template(self.template_path)
         z = time.time()
         w = BufferingWriter(writer, 8192)
-        template.expand_into(w, **vals)
-        w.flush()
-        self.log.info(
-            'Rendering %s: %.3f secs, %s bytes' % (
-                self.__class__.__name__, time.time() - z, w.bytes))
-        return []
-
-    def jsoncall(self, environ, start_response):
-        z = time.time()
-        json_values, headers = self.get_json_values(environ)
-
-        # XXX de-dupe this code.
-        self.log.info('Getting information for %s: %.3f secs' % (
-            self.__class__.__name__, time.time() - z))
-        #headers['Content-Type'] = 'application/json'
-        headers['Content-Type'] = 'text/plain'
-        writer = start_response("200 OK", headers.items())
-        if environ.get('REQUEST_METHOD') == 'HEAD':
-            # No content for a HEAD request
-            return []
-        z = time.time()
-        w = BufferingWriter(writer, 8192)
-
-        w.write(simplejson.dumps(json_values,
-            default=util.convert_to_json_ready))
+        if environ.get('loggerhead.as_json'):
+            w.write(simplejson.dumps(json_values,
+                default=util.convert_to_json_ready))
+        else:
+            template = load_template(self.template_path)
+            template.expand_into(w, **vals)
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
