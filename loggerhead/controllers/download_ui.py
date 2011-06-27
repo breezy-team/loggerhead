@@ -26,7 +26,7 @@ from paste import httpexceptions
 from paste.request import path_info_pop
 
 from loggerhead.controllers import TemplatedBranchView
-from loggerhead.exporter import export_tarball
+from loggerhead.exporter import export_archive
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -101,6 +101,6 @@ class DownloadTarballUI(DownloadUI):
             
             start_response('200 OK', headers)
             
-            return export_tarball(history, revid, format)
+            return export_archive(history, revid, format)
         else:
             raise httpexceptions.HTTPSeeOther('/')
