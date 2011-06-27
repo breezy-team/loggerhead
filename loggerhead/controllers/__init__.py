@@ -68,7 +68,7 @@ class TemplatedBranchView(object):
         self.__history = self._history_callable()
         return self.__history
 
-    def get_core_values(self, environ):
+    def parse_args(self, environ):
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
@@ -82,13 +82,14 @@ class TemplatedBranchView(object):
         if len(args) > 1:
             path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
-
-        headers = {}
-        return self.get_values(path, kwargs, headers), headers
+        self.kwargs = kwargs
+        return path
 
     def __call__(self, environ, start_response):
         z = time.time()
-        core_values, headers = self.get_core_values(environ)
+        path = self.parse_args(environ)
+        headers = {}
+        values = self.get_values(path, self.kwargs, headers)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
@@ -103,19 +104,19 @@ class TemplatedBranchView(object):
         z = time.time()
         w = BufferingWriter(writer, 8192)
         if environ.get('loggerhead.as_json'):
-            w.write(simplejson.dumps(core_values,
+            w.write(simplejson.dumps(values,
                 default=util.convert_to_json_ready))
         else:
-            vals = {
+            template_values = {
                 'static_url': self._branch.static_url,
                 'branch': self._branch,
                 'util': util,
                 'url': self._branch.context_url,
             }
-            vals.update(templatefunctions)
-            vals.update(core_values)
+            template_values.update(templatefunctions)
+            template_values.update(values)
             template = load_template(self.template_path)
-            template.expand_into(w, **vals)
+            template.expand_into(w, **template_values)
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
