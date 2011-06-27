@@ -36,18 +36,23 @@ class DownloadUI (TemplatedBranchView):
     def encode_filename(self, filename):
         
         return urllib.quote(filename.encode('utf-8'))
-
-    def __call__(self, environ, start_response):
-        # /download/<rev_id>/<file_id>/[filename]
-
-        h = self._history
-
+    
+    def get_args(self, environ):
         args = []
         while True:
             arg = path_info_pop(environ)
             if arg is None:
                 break
             args.append(arg)
+            
+        return args
+
+    def __call__(self, environ, start_response):
+        # /download/<rev_id>/<file_id>/[filename]
+
+        h = self._history
+        
+        args = self.get_args(environ)
 
         if len(args) < 2:
             raise httpexceptions.HTTPMovedPermanently(
@@ -84,6 +89,9 @@ class DownloadTarballUI(DownloadUI):
         format = ".tar.gz"
         
         history = self._history
+        
+        self.args = self.get_args(environ)
+        
         if len(self.args):
             revid = history.fix_revid(self.args[0])
         else:
