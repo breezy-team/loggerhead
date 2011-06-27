@@ -54,6 +54,7 @@ class BufferingWriter(object):
 class TemplatedBranchView(object):
 
     template_path = None
+    supports_json = False
 
     def __init__(self, branch, history_callable):
         self._branch = branch
@@ -87,6 +88,9 @@ class TemplatedBranchView(object):
 
     def __call__(self, environ, start_response):
         z = time.time()
+        if environ.get('loggerhead.as_json') and not self.supports_json:
+            raise HTTPNotFound
+
         path = self.parse_args(environ)
         headers = {}
         values = self.get_values(path, self.kwargs, headers)

@@ -77,6 +77,7 @@ def diff_chunks_for_file(repository, file_id, compare_revid, revid):
 class FileDiffUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.filediff'
+    supports_json = True
 
     def get_values(self, path, kwargs, headers):
         revid = urllib.unquote(self.args[0])

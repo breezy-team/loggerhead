@@ -6,6 +6,7 @@ from loggerhead.controllers import TemplatedBranchView
 class RevLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revlog'
+    supports_json = True
 
     def get_values(self, path, kwargs, headers):
         history = self._history
