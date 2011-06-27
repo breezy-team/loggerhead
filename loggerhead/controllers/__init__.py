@@ -86,6 +86,15 @@ class TemplatedBranchView(object):
         self.kwargs = kwargs
         return path
 
+    def add_template_values(self, values):
+            values.update({
+                'static_url': self._branch.static_url,
+                'branch': self._branch,
+                'util': util,
+                'url': self._branch.context_url,
+            })
+            values.update(templatefunctions)
+
     def __call__(self, environ, start_response):
         z = time.time()
         if environ.get('loggerhead.as_json') and not self.supports_json:
@@ -111,16 +120,9 @@ class TemplatedBranchView(object):
             w.write(simplejson.dumps(values,
                 default=util.convert_to_json_ready))
         else:
-            template_values = {
-                'static_url': self._branch.static_url,
-                'branch': self._branch,
-                'util': util,
-                'url': self._branch.context_url,
-            }
-            template_values.update(templatefunctions)
-            template_values.update(values)
+            self.add_template_values(values)
             template = load_template(self.template_path)
-            template.expand_into(w, **template_values)
+            template.expand_into(w, **values)
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
