@@ -18,6 +18,8 @@
 import cgi
 import logging
 import re
+import simplejson
+from cStringIO import StringIO
 
 from bzrlib.tests import TestCaseWithTransport
 try:
@@ -46,6 +48,23 @@ class BasicTests(TestCaseWithTransport):
     def setUpLoggerhead(self, **kw):
         branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
         return TestApp(HTTPExceptionHandler(branch_app))
+
+    def assertOkJsonResponse(self, app, env):
+        start, content = consume_app(app, env)
+        self.assertEqual('200 OK', start[0])
+        self.assertEqual('application/json', dict(start[1])['Content-Type'])
+        self.assertEqual(None, start[2])
+        simplejson.loads(content)
+
+    def make_branch_app(self, branch):
+        branch_app = BranchWSGIApp(branch, friendly_name='friendly-name')
+        branch_app._environ = {
+            'wsgi.url_scheme':'',
+            'SERVER_NAME':'',
+            'SERVER_PORT':'80',
+            }
+        branch_app._url_base = ''
+        return branch_app
 
 
 class TestWithSimpleTree(BasicTests):
@@ -226,6 +245,18 @@ class TestHeadMiddleware(BasicTests):
         res = app.get('/changes', extra_environ={'REQUEST_METHOD': 'HEAD'})
         self.assertEqual('text/html', res.header('Content-Type'))
         self.assertEqualDiff('', res.body)
+
+
+def consume_app(app, env):
+    body = StringIO()
+    start = []
+    def start_response(status, headers, exc_info=None):
+        start.append((status, headers, exc_info))
+        return body.write
+    extra_content = list(app(env, start_response))
+    body.writelines(extra_content)
+    return start[0], body.getvalue()
+
 
 
 #class TestGlobalConfig(BasicTests):

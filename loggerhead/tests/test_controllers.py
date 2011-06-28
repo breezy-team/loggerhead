@@ -1,47 +1,27 @@
-from cStringIO import StringIO
-import logging
-
-from paste.httpexceptions import HTTPServerError
-
-from bzrlib import errors
+import simplejson
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.tests.test_simple import BasicTests
+from loggerhead.tests.test_simple import BasicTests, consume_app
 from loggerhead import util
 
 
 class TestInventoryUI(BasicTests):
 
-    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+    def make_bzrbranch_for_tree_shape(self, shape):
         tree = self.make_branch_and_tree('.')
         self.build_tree(shape)
         tree.smart_add([])
         tree.commit('')
-        tree.branch.lock_read()
-        self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch, '')
-        branch_app.log.setLevel(logging.CRITICAL)
-        # These are usually set in BranchWSGIApp.app(), which is set from env
-        # settings set by BranchesFromTransportRoot, so we fake it.
-        branch_app._static_url_base = '/'
-        branch_app._url_base = '/'
-        return tree.branch, InventoryUI(branch_app, branch_app.get_history)
+        self.addCleanup(tree.branch.lock_read().unlock)
+        return tree.branch
 
-    def consume_app(self, app, extra_environ=None):
-        env = {'SCRIPT_NAME': '/files', 'PATH_INFO': ''}
-        if extra_environ is not None:
-            env.update(extra_environ)
-        body = StringIO()
-        start = []
-        def start_response(status, headers, exc_info=None):
-            start.append((status, headers, exc_info))
-            return body.write
-        extra_content = list(app(env, start_response))
-        body.writelines(extra_content)
-        return start[0], body.getvalue()
+    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+        branch = self.make_bzrbranch_for_tree_shape(shape)
+        branch_app = self.make_branch_app(branch)
+        return branch, InventoryUI(branch_app, branch_app.get_history)
 
     def test_get_filelist(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
@@ -52,7 +32,8 @@ class TestInventoryUI(BasicTests):
     def test_smoke(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        start, content = self.consume_app(inv_ui)
+        start, content = consume_app(inv_ui,
+            {'SCRIPT_NAME': '/files', 'PATH_INFO': ''})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertContainsRe(content, 'filename')
@@ -60,43 +41,74 @@ class TestInventoryUI(BasicTests):
     def test_no_content_for_HEAD(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        start, content = self.consume_app(inv_ui,
-                            extra_environ={'REQUEST_METHOD': 'HEAD'})
+        start, content = consume_app(inv_ui,
+            {'SCRIPT_NAME': '/files', 'PATH_INFO': '',
+             'REQUEST_METHOD': 'HEAD'})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertEqual('', content)
 
+    def test_get_values_smoke(self):
+        branch = self.make_bzrbranch_for_tree_shape(['a-file'])
+        branch_app = self.make_branch_app(branch)
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/files'}
+        inv_ui = branch_app.lookup_app(env)
+        inv_ui.parse_args(env)
+        values = inv_ui.get_values('', {}, {})
+        self.assertEqual('a-file', values['filelist'][0].filename)
+
+    def test_json_render_smoke(self):
+        branch = self.make_bzrbranch_for_tree_shape(['a-file'])
+        branch_app = self.make_branch_app(branch)
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/files'}
+        inv_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(inv_ui, env)
+
 
 class TestRevisionUI(BasicTests):
 
-    def make_bzrbranch_and_revision_ui_for_tree_shapes(self, shape1, shape2):
+    def make_branch_app_for_revision_ui(self, shape1, shape2):
         tree = self.make_branch_and_tree('.')
         self.build_tree_contents(shape1)
         tree.smart_add([])
-        tree.commit('')
+        tree.commit('msg 1', rev_id='rev-1')
         self.build_tree_contents(shape2)
         tree.smart_add([])
-        tree.commit('')
-        tree.branch.lock_read()
-        self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch)
-        branch_app._environ = {
-            'wsgi.url_scheme':'',
-            'SERVER_NAME':'',
-            'SERVER_PORT':'80',
-            }
-        branch_app._url_base = ''
-        branch_app.friendly_name = ''
-        return tree.branch, RevisionUI(branch_app, branch_app.get_history)
+        tree.commit('msg 2', rev_id='rev-2')
+        branch = tree.branch
+        self.addCleanup(branch.lock_read().unlock)
+        return self.make_branch_app(branch)
 
     def test_get_values(self):
-        branch, rev_ui = self.make_bzrbranch_and_revision_ui_for_tree_shapes(
-            [], [])
-        rev_ui.args = ['2']
-        util.set_context({})
-        self.assertIsInstance(
-            rev_ui.get_values('', {}, []),
-            dict)
+        branch_app = self.make_branch_app_for_revision_ui([], [])
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/revision/2'}
+        rev_ui = branch_app.lookup_app(env)
+        rev_ui.parse_args(env)
+        self.assertIsInstance(rev_ui.get_values('', {}, []), dict)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', 'content\n'), ('other-file', 'other\n')],
+                [('file', 'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/head:'}
+        revision_ui = branch_app.lookup_app(env)
+        revision_ui.parse_args(env)
+        values = revision_ui.get_values('', {}, {})
+
+        self.assertEqual(values['revid'], 'rev-2')
+        self.assertEqual(values['change'].comment, 'msg 2')
+        self.assertEqual(values['file_changes'].modified[0].filename, 'file')
+        self.assertEqual(values['merged_in'], None)
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', 'content\n'), ('other-file', 'other\n')],
+                [('file', 'new content\n')])
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:'}
+        revision_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(revision_ui, env)
+
 
 
 class TestAnnotateUI(BasicTests):
@@ -125,3 +137,70 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
         self.assertEqual('1', annotated[2].change.revno)
+
+
+class TestFileDiffUI(BasicTests):
+
+    def make_branch_app_for_filediff_ui(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('rev-1-id', None, [
+            ('add', ('', 'root-id', 'directory', '')),
+            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            message="First commit.")
+        builder.build_snapshot('rev-2-id', None, [
+            ('modify', ('f-id', 'new content\n'))])
+        builder.finish_series()
+        branch = builder.get_branch()
+        self.addCleanup(branch.lock_read().unlock)
+        return self.make_branch_app(branch)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_filediff_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id'}
+        filediff_ui = branch_app.lookup_app(env)
+        filediff_ui.parse_args(env)
+        values = filediff_ui.get_values('', {}, {})
+        chunks = values['chunks']
+        self.assertEqual('insert', chunks[0].diff[1].type)
+        self.assertEqual('new content', chunks[0].diff[1].line)
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_filediff_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id'}
+        filediff_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(filediff_ui, env)
+
+
+class TestRevLogUI(BasicTests):
+
+    def make_branch_app_for_revlog_ui(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('rev-id', None, [
+            ('add', ('', 'root-id', 'directory', '')),
+            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            message="First commit.")
+        builder.finish_series()
+        branch = builder.get_branch()
+        self.addCleanup(branch.lock_read().unlock)
+        return self.make_branch_app(branch)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+revlog/rev-id'}
+        revlog_ui = branch_app.lookup_app(env)
+        revlog_ui.parse_args(env)
+        values = revlog_ui.get_values('', {}, {})
+        self.assertEqual(values['file_changes'].added[1].filename, 'filename')
+        self.assertEqual(values['entry'].comment, "First commit.")
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id'}
+        revlog_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(revlog_ui, env)
+

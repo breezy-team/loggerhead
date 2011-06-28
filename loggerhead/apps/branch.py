@@ -164,6 +164,9 @@ class BranchWSGIApp(object):
                 self.absolute_url('/changes'))
         if path == 'static':
             return static_app
+        elif path == '+json':
+            environ['loggerhead.as_json'] = True
+            path = request.path_info_pop(environ)
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()

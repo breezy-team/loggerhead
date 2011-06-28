@@ -18,6 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import bzrlib.errors
+import simplejson
 import time
 
 from paste.httpexceptions import HTTPNotFound
@@ -53,6 +54,7 @@ class BufferingWriter(object):
 class TemplatedBranchView(object):
 
     template_path = None
+    supports_json = False
 
     def __init__(self, branch, history_callable):
         self._branch = branch
@@ -95,13 +97,17 @@ class TemplatedBranchView(object):
 
     def __call__(self, environ, start_response):
         z = time.time()
+        if environ.get('loggerhead.as_json') and not self.supports_json:
+            raise HTTPNotFound
         path = self.parse_args(environ)
         headers = {}
         values = self.get_values(path, self.kwargs, headers)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
-        if 'Content-Type' not in headers:
+        if environ.get('loggerhead.as_json'):
+            headers['Content-Type'] = 'application/json'
+        elif 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
         if environ.get('REQUEST_METHOD') == 'HEAD':
@@ -109,9 +115,13 @@ class TemplatedBranchView(object):
             return []
         z = time.time()
         w = BufferingWriter(writer, 8192)
-        self.add_template_values(values)
-        template = load_template(self.template_path)
-        template.expand_into(w, **values)
+        if environ.get('loggerhead.as_json'):
+            w.write(simplejson.dumps(values,
+                default=util.convert_to_json_ready))
+        else:
+            self.add_template_values(values)
+            template = load_template(self.template_path)
+            template.expand_into(w, **values)
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
