@@ -67,27 +67,48 @@ class TestInventoryUI(BasicTests):
 
 class TestRevisionUI(BasicTests):
 
-    def make_bzrbranch_and_revision_ui_for_tree_shapes(self, shape1, shape2):
+    def make_branch_app_for_revision_ui(self, shape1, shape2):
         tree = self.make_branch_and_tree('.')
         self.build_tree_contents(shape1)
         tree.smart_add([])
-        tree.commit('')
+        tree.commit('msg 1', rev_id='rev-1')
         self.build_tree_contents(shape2)
         tree.smart_add([])
-        tree.commit('')
-        tree.branch.lock_read()
-        self.addCleanup(tree.branch.unlock)
-        branch_app = self.make_branch_app(tree.branch)
-        return tree.branch, RevisionUI(branch_app, branch_app.get_history)
+        tree.commit('msg 2', rev_id='rev-2')
+        branch = tree.branch
+        self.addCleanup(branch.lock_read().unlock)
+        return self.make_branch_app(branch)
 
     def test_get_values(self):
-        branch, rev_ui = self.make_bzrbranch_and_revision_ui_for_tree_shapes(
-            [], [])
-        rev_ui.args = ['2']
-        util.set_context({})
-        self.assertIsInstance(
-            rev_ui.get_values('', {}, []),
-            dict)
+        branch_app = self.make_branch_app_for_revision_ui([], [])
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/revision/2'}
+        rev_ui = branch_app.lookup_app(env)
+        rev_ui.parse_args(env)
+        self.assertIsInstance(rev_ui.get_values('', {}, []), dict)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', 'content\n'), ('other-file', 'other\n')],
+                [('file', 'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/head:'}
+        revision_ui = branch_app.lookup_app(env)
+        revision_ui.parse_args(env)
+        values = revision_ui.get_values('', {}, {})
+
+        self.assertEqual(values['revid'], 'rev-2')
+        self.assertEqual(values['change'].comment, 'msg 2')
+        self.assertEqual(values['file_changes'].modified[0].filename, 'file')
+        self.assertEqual(values['merged_in'], None)
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', 'content\n'), ('other-file', 'other\n')],
+                [('file', 'new content\n')])
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:'}
+        revision_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(revision_ui, env)
+
 
 
 class TestAnnotateUI(BasicTests):
