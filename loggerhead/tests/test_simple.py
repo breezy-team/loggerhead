@@ -48,14 +48,13 @@ class BasicTests(TestCaseWithTransport):
         return TestApp(HTTPExceptionHandler(branch_app))
 
     def make_branch_app(self, branch):
-        branch_app = BranchWSGIApp(branch)
+        branch_app = BranchWSGIApp(branch, friendly_name='friendly-name')
         branch_app._environ = {
             'wsgi.url_scheme':'',
             'SERVER_NAME':'',
             'SERVER_PORT':'80',
             }
         branch_app._url_base = ''
-        branch_app.friendly_name = ''
         return branch_app
 
 

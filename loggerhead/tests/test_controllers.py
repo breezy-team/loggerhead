@@ -35,12 +35,7 @@ class TestInventoryUI(BasicTests):
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch, '')
-        branch_app.log.setLevel(logging.CRITICAL)
-        # These are usually set in BranchWSGIApp.app(), which is set from env
-        # settings set by BranchesFromTransportRoot, so we fake it.
-        branch_app._static_url_base = '/'
-        branch_app._url_base = '/'
+        branch_app = self.make_branch_app(tree.branch)
         return tree.branch, InventoryUI(branch_app, branch_app.get_history)
 
     def test_get_filelist(self):
