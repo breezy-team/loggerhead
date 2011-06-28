@@ -146,7 +146,6 @@ class TestRevLogUI(BasicTests):
         self.assertEqual(values['file_changes'].added[1].filename, 'filename')
         self.assertEqual(values['entry'].comment, "First commit.")
 
-
     def test_json_render_smoke(self):
         branch_app = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id'}
