@@ -79,7 +79,7 @@ class DownloadTarballUI(DownloadUI):
     def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
         # Tried to re-use code from downloadui, not very successful
-        format = "tgz"
+        format = "tar"
         history = self._history
         self.args = self.get_args(environ)
         if len(self.args):
