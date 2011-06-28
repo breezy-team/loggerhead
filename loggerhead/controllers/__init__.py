@@ -87,19 +87,18 @@ class TemplatedBranchView(object):
         return path
 
     def add_template_values(self, values):
-            values.update({
-                'static_url': self._branch.static_url,
-                'branch': self._branch,
-                'util': util,
-                'url': self._branch.context_url,
-            })
-            values.update(templatefunctions)
+        values.update({
+            'static_url': self._branch.static_url,
+            'branch': self._branch,
+            'util': util,
+            'url': self._branch.context_url,
+        })
+        values.update(templatefunctions)
 
     def __call__(self, environ, start_response):
         z = time.time()
         if environ.get('loggerhead.as_json') and not self.supports_json:
             raise HTTPNotFound
-
         path = self.parse_args(environ)
         headers = {}
         values = self.get_values(path, self.kwargs, headers)
