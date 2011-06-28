@@ -80,7 +80,7 @@ class TestRevisionUI(BasicTests):
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = self.makeBranchApp(tree.branch)
+        branch_app = self.make_branch_app(tree.branch)
         return tree.branch, RevisionUI(branch_app, branch_app.get_history)
 
     def test_get_values(self):
@@ -133,7 +133,7 @@ class TestRevLogUI(BasicTests):
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        branch_app = self.makeBranchApp(branch)
+        branch_app = self.make_branch_app(branch)
         revlog_ui = RevLogUI(branch_app, branch_app.get_history)
         revlog_ui.args = ['rev-id']
         values = revlog_ui.get_values('', {}, {})

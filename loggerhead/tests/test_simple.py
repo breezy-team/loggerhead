@@ -47,7 +47,7 @@ class BasicTests(TestCaseWithTransport):
         branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
         return TestApp(HTTPExceptionHandler(branch_app))
 
-    def makeBranchApp(self, branch):
+    def make_branch_app(self, branch):
         branch_app = BranchWSGIApp(branch)
         branch_app._environ = {
             'wsgi.url_scheme':'',
