@@ -121,7 +121,7 @@ class TestAnnotateUI(BasicTests):
         ann_ui.args = ['rev2']
         annotate_info = ann_ui.get_values('filename',
             kwargs={'file_id': 'file_id'}, headers={})
-        annotated = list(annotate_info['annotated'])
+        annotated = annotate_info['annotated']
         self.assertEqual(2, len(annotated))
-        self.assertEqual('2', annotated[0].change.revno)
-        self.assertEqual('1', annotated[1].change.revno)
+        self.assertEqual('2', annotated[1].change.revno)
+        self.assertEqual('1', annotated[2].change.revno)
