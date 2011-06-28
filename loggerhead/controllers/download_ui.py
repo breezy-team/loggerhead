@@ -32,11 +32,11 @@ log = logging.getLogger("loggerhead.controllers")
 
 
 class DownloadUI (TemplatedBranchView):
-    
+
     def encode_filename(self, filename):
-        
+
         return urllib.quote(filename.encode('utf-8'))
-    
+
     def get_args(self, environ):
         args = []
         while True:
@@ -44,27 +44,21 @@ class DownloadUI (TemplatedBranchView):
             if arg is None:
                 break
             args.append(arg)
-            
         return args
 
     def __call__(self, environ, start_response):
         # /download/<rev_id>/<file_id>/[filename]
-
         h = self._history
-        
         args = self.get_args(environ)
-
         if len(args) < 2:
             raise httpexceptions.HTTPMovedPermanently(
                 self._branch.absolute_url('/changes'))
-
         revid = h.fix_revid(args[0])
         file_id = args[1]
         path, filename, content = h.get_file(file_id, revid)
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
             mime_type = 'application/octet-stream'
-
         self.log.info('/download %s @ %s (%d bytes)',
                       path,
                       h.get_revno(revid),
@@ -79,36 +73,27 @@ class DownloadUI (TemplatedBranchView):
         start_response('200 OK', headers)
         return [content]
 
+
 class DownloadTarballUI(DownloadUI):
-     
+
     def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
-        
-        #Tried to re-use code from downloadui, not very successful
-        
+        # Tried to re-use code from downloadui, not very successful
         format = ".tar.gz"
-        
         history = self._history
-        
         self.args = self.get_args(environ)
-        
         if len(self.args):
             revid = history.fix_revid(self.args[0])
         else:
             revid = self.get_revid()
-            
         if self._branch.export_tarballs:
-            
             encoded_filename = self.encode_filename("branch" + format)
-            
             headers = [
                 ('Content-Type', 'application/octet-stream'),
                 ('Content-Disposition',
                  "attachment; filename*=utf-8''%s" % (encoded_filename,)),
                 ]
-            
             start_response('200 OK', headers)
-            
             return export_archive(history, revid, format)
         else:
             raise httpexceptions.HTTPSeeOther('/')
