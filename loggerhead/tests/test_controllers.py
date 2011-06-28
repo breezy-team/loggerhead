@@ -118,6 +118,41 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual('1', annotated[2].change.revno)
 
 
+class TestFileDiffUI(BasicTests):
+
+    def make_branch_app_for_filediff_ui(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('rev-1-id', None, [
+            ('add', ('', 'root-id', 'directory', '')),
+            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            message="First commit.")
+        builder.build_snapshot('rev-2-id', None, [
+            ('modify', ('f-id', 'new content\n'))])
+        builder.finish_series()
+        branch = builder.get_branch()
+        self.addCleanup(branch.lock_read().unlock)
+        return self.make_branch_app(branch)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_filediff_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id'}
+        filediff_ui = branch_app.lookup_app(env)
+        filediff_ui.parse_args(env)
+        values = filediff_ui.get_values('', {}, {})
+        chunks = values['chunks']
+        self.assertEqual('insert', chunks[0].diff[1].type)
+        self.assertEqual('new content', chunks[0].diff[1].line)
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_filediff_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id'}
+        filediff_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(filediff_ui, env)
+
+
 class TestRevLogUI(BasicTests):
 
     def make_branch_app_for_revlog_ui(self):
