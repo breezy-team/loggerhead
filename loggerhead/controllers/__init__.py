@@ -67,8 +67,7 @@ class TemplatedBranchView(object):
         self.__history = self._history_callable()
         return self.__history
 
-    def __call__(self, environ, start_response):
-        z = time.time()
+    def parse_args(self, environ):
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
@@ -82,17 +81,23 @@ class TemplatedBranchView(object):
         if len(args) > 1:
             path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
+        self.kwargs = kwargs
+        return path
 
-        vals = {
+    def add_template_values(self, values):
+        values.update({
             'static_url': self._branch.static_url,
             'branch': self._branch,
             'util': util,
             'url': self._branch.context_url,
-        }
-        vals.update(templatefunctions)
-        headers = {}
+        })
+        values.update(templatefunctions)
 
-        vals.update(self.get_values(path, kwargs, headers))
+    def __call__(self, environ, start_response):
+        z = time.time()
+        path = self.parse_args(environ)
+        headers = {}
+        values = self.get_values(path, self.kwargs, headers)
 
         self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
@@ -102,10 +107,11 @@ class TemplatedBranchView(object):
         if environ.get('REQUEST_METHOD') == 'HEAD':
             # No content for a HEAD request
             return []
-        template = load_template(self.template_path)
         z = time.time()
         w = BufferingWriter(writer, 8192)
-        template.expand_into(w, **vals)
+        self.add_template_values(values)
+        template = load_template(self.template_path)
+        template.expand_into(w, **values)
         w.flush()
         self.log.info(
             'Rendering %s: %.3f secs, %s bytes' % (
