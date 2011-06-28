@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 import logging
+import simplejson
 
 from paste.httpexceptions import HTTPServerError
 
@@ -12,6 +13,17 @@ from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.controllers.revlog_ui import RevLogUI
 from loggerhead.tests.test_simple import BasicTests
 from loggerhead import util
+
+
+def consume_app(app, env):
+    body = StringIO()
+    start = []
+    def start_response(status, headers, exc_info=None):
+        start.append((status, headers, exc_info))
+        return body.write
+    extra_content = list(app(env, start_response))
+    body.writelines(extra_content)
+    return start[0], body.getvalue()
 
 
 class TestInventoryUI(BasicTests):
@@ -31,19 +43,6 @@ class TestInventoryUI(BasicTests):
         branch_app._url_base = '/'
         return tree.branch, InventoryUI(branch_app, branch_app.get_history)
 
-    def consume_app(self, app, extra_environ=None):
-        env = {'SCRIPT_NAME': '/files', 'PATH_INFO': ''}
-        if extra_environ is not None:
-            env.update(extra_environ)
-        body = StringIO()
-        start = []
-        def start_response(status, headers, exc_info=None):
-            start.append((status, headers, exc_info))
-            return body.write
-        extra_content = list(app(env, start_response))
-        body.writelines(extra_content)
-        return start[0], body.getvalue()
-
     def test_get_filelist(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
@@ -53,7 +52,8 @@ class TestInventoryUI(BasicTests):
     def test_smoke(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        start, content = self.consume_app(inv_ui)
+        start, content = consume_app(inv_ui,
+            {'SCRIPT_NAME': '/files', 'PATH_INFO': ''})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertContainsRe(content, 'filename')
@@ -61,8 +61,9 @@ class TestInventoryUI(BasicTests):
     def test_no_content_for_HEAD(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        start, content = self.consume_app(inv_ui,
-                            extra_environ={'REQUEST_METHOD': 'HEAD'})
+        start, content = consume_app(inv_ui,
+            {'SCRIPT_NAME': '/files', 'PATH_INFO': '',
+             'REQUEST_METHOD': 'HEAD'})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertEqual('', content)
@@ -123,7 +124,7 @@ class TestAnnotateUI(BasicTests):
 
 class TestRevLogUI(BasicTests):
 
-    def test_get_values_smoke(self):
+    def make_branch_app_for_revlog_ui(self):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         builder.build_snapshot('rev-id', None, [
@@ -133,11 +134,26 @@ class TestRevLogUI(BasicTests):
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        branch_app = self.make_branch_app(branch)
-        revlog_ui = RevLogUI(branch_app, branch_app.get_history)
-        revlog_ui.args = ['rev-id']
+        return self.make_branch_app(branch)
+
+    def test_get_values_smoke(self):
+        branch_app = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/+revlog/rev-id'}
+        revlog_ui = branch_app.lookup_app(env)
+        revlog_ui.parse_args(env)
         values = revlog_ui.get_values('', {}, {})
         self.assertEqual(values['file_changes'].added[1].filename, 'filename')
         self.assertEqual(values['entry'].comment, "First commit.")
 
+
+    def test_json_render_smoke(self):
+        branch_app = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id'}
+        revlog_ui = branch_app.lookup_app(env)
+        start, content = consume_app(revlog_ui, env)
+        self.assertEqual('200 OK', start[0])
+        self.assertEqual('application/json', dict(start[1])['Content-Type'])
+        self.assertEqual(None, start[2])
+        simplejson.loads(content)
 
