@@ -761,5 +761,6 @@ iso style "yyyy-mm-dd")
             renamed=sorted(reporter.renamed, key=lambda x: x.new_filename),
             removed=sorted(reporter.removed, key=lambda x: x.filename),
             modified=sorted(reporter.modified, key=lambda x: x.filename),
-            text_changes=sorted(reporter.text_changes, key=lambda x: x.filename))
+            text_changes=sorted(reporter.text_changes,
+                                key=lambda x: x.filename))
 

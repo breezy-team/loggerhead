@@ -1,5 +1,6 @@
 from cStringIO import StringIO
 import logging
+import tarfile
 
 from paste.httpexceptions import HTTPServerError
 
@@ -11,9 +12,6 @@ from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.tests.test_simple import BasicTests
 from loggerhead import util
-
-from os import tmpnam
-from tarfile import is_tarfile
 
 
 class TestInventoryUI(BasicTests):
@@ -129,13 +127,18 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual('2', annotated[0].change.revno)
         self.assertEqual('1', annotated[1].change.revno)
 
+
 class TestDownloadTarballUI(BasicTests):
-    
+
+    def setUp(self):
+        super(TestDownloadTarballUI, self).setUp()
+        self.createBranch()
+
     def test_download_tarball(self):
         app = self.setUpLoggerhead()
         res = app.get('/tarball')
-        tmpname = tmpnam()
-        f = open(tmpname, 'w')
+        f = open('tarball', 'w')
         f.write(res)
         f.close()
-        self.failIf(not is_tarfile(tmpname))
+        self.failIf(not tarfile.is_tarfile('tarball'))
+        # Now check the content. TBC
