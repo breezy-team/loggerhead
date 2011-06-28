@@ -1,42 +1,27 @@
-from cStringIO import StringIO
-import logging
 import simplejson
-
-from paste.httpexceptions import HTTPServerError
-
-from bzrlib import errors
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.controllers.revlog_ui import RevLogUI
-from loggerhead.tests.test_simple import BasicTests
+from loggerhead.tests.test_simple import BasicTests, consume_app
 from loggerhead import util
-
-
-def consume_app(app, env):
-    body = StringIO()
-    start = []
-    def start_response(status, headers, exc_info=None):
-        start.append((status, headers, exc_info))
-        return body.write
-    extra_content = list(app(env, start_response))
-    body.writelines(extra_content)
-    return start[0], body.getvalue()
 
 
 class TestInventoryUI(BasicTests):
 
-    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+    def make_bzrbranch_for_tree_shape(self, shape):
         tree = self.make_branch_and_tree('.')
         self.build_tree(shape)
         tree.smart_add([])
         tree.commit('')
-        tree.branch.lock_read()
-        self.addCleanup(tree.branch.unlock)
-        branch_app = self.make_branch_app(tree.branch)
-        return tree.branch, InventoryUI(branch_app, branch_app.get_history)
+        self.addCleanup(tree.branch.lock_read().unlock)
+        return tree.branch
+
+    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+        branch = self.make_bzrbranch_for_tree_shape(shape)
+        branch_app = self.make_branch_app(branch)
+        return branch, InventoryUI(branch_app, branch_app.get_history)
 
     def test_get_filelist(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
@@ -62,6 +47,22 @@ class TestInventoryUI(BasicTests):
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertEqual('', content)
+
+    def test_get_values_smoke(self):
+        branch = self.make_bzrbranch_for_tree_shape(['a-file'])
+        branch_app = self.make_branch_app(branch)
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/files'}
+        inv_ui = branch_app.lookup_app(env)
+        inv_ui.parse_args(env)
+        values = inv_ui.get_values('', {}, {})
+        self.assertEqual('a-file', values['filelist'][0].filename)
+
+    def test_json_render_smoke(self):
+        branch = self.make_bzrbranch_for_tree_shape(['a-file'])
+        branch_app = self.make_branch_app(branch)
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/files'}
+        inv_ui = branch_app.lookup_app(env)
+        self.assertOkJsonResponse(inv_ui, env)
 
 
 class TestRevisionUI(BasicTests):
@@ -145,9 +146,5 @@ class TestRevLogUI(BasicTests):
         branch_app = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id'}
         revlog_ui = branch_app.lookup_app(env)
-        start, content = consume_app(revlog_ui, env)
-        self.assertEqual('200 OK', start[0])
-        self.assertEqual('application/json', dict(start[1])['Content-Type'])
-        self.assertEqual(None, start[2])
-        simplejson.loads(content)
+        self.assertOkJsonResponse(revlog_ui, env)
 
