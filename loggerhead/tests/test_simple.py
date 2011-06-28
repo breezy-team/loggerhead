@@ -47,6 +47,17 @@ class BasicTests(TestCaseWithTransport):
         branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
         return TestApp(HTTPExceptionHandler(branch_app))
 
+    def makeBranchApp(self, branch):
+        branch_app = BranchWSGIApp(branch)
+        branch_app._environ = {
+            'wsgi.url_scheme':'',
+            'SERVER_NAME':'',
+            'SERVER_PORT':'80',
+            }
+        branch_app._url_base = ''
+        branch_app.friendly_name = ''
+        return branch_app
+
 
 class TestWithSimpleTree(BasicTests):
 

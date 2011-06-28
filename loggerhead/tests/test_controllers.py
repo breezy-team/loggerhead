@@ -9,6 +9,7 @@ from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
+from loggerhead.controllers.revlog_ui import RevLogUI
 from loggerhead.tests.test_simple import BasicTests
 from loggerhead import util
 
@@ -79,14 +80,7 @@ class TestRevisionUI(BasicTests):
         tree.commit('')
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
-        branch_app = BranchWSGIApp(tree.branch)
-        branch_app._environ = {
-            'wsgi.url_scheme':'',
-            'SERVER_NAME':'',
-            'SERVER_PORT':'80',
-            }
-        branch_app._url_base = ''
-        branch_app.friendly_name = ''
+        branch_app = self.makeBranchApp(tree.branch)
         return tree.branch, RevisionUI(branch_app, branch_app.get_history)
 
     def test_get_values(self):
@@ -125,3 +119,25 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
         self.assertEqual('1', annotated[2].change.revno)
+
+
+class TestRevLogUI(BasicTests):
+
+    def test_get_values_smoke(self):
+        builder = self.make_branch_builder('branch')
+        builder.start_series()
+        builder.build_snapshot('rev-id', None, [
+            ('add', ('', 'root-id', 'directory', '')),
+            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            message="First commit.")
+        builder.finish_series()
+        branch = builder.get_branch()
+        self.addCleanup(branch.lock_read().unlock)
+        branch_app = self.makeBranchApp(branch)
+        revlog_ui = RevLogUI(branch_app, branch_app.get_history)
+        revlog_ui.args = ['rev-id']
+        values = revlog_ui.get_values('', {}, {})
+        self.assertEqual(values['file_changes'].added[1].filename, 'filename')
+        self.assertEqual(values['entry'].comment, "First commit.")
+
+
