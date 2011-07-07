@@ -36,6 +36,7 @@ def dq(p):
 class RevisionUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revision'
+    supports_json = True
 
     def get_values(self, path, kwargs, headers):
         h = self._history
@@ -44,9 +45,10 @@ class RevisionUI(TemplatedBranchView):
         filter_file_id = kwargs.get('filter_file_id', None)
         start_revid = h.fix_revid(kwargs.get('start_revid', None))
         query = kwargs.get('q', None)
-        remember = h.fix_revid(kwargs.get('remember', None))
         compare_revid = h.fix_revid(kwargs.get('compare_revid', None))
 
+        # TODO: This try/except looks to date before real exception handling
+        # and should be removed
         try:
             revid, start_revid, revid_list = h.get_view(revid,
                                                         start_revid,
@@ -55,14 +57,13 @@ class RevisionUI(TemplatedBranchView):
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
-
-        navigation = util.Container(
-            revid_list=revid_list, revid=revid, start_revid=start_revid,
-            filter_file_id=filter_file_id, pagesize=1,
-            scan_url='/revision', branch=self._branch, feed=True, history=h)
-        if query is not None:
-            navigation.query = query
-        util.fill_in_navigation(navigation)
+        # XXX: Some concern about namespace collisions. These are only stored
+        # here so they can be expanded into the template later. Should probably
+        # be stored in a specific dict/etc.
+        self.revid_list = revid_list
+        self.compare_revid = compare_revid
+        self.path = path
+        kwargs['start_revid'] = start_revid
 
         change = h.get_changes([revid])[0]
 
@@ -71,24 +72,6 @@ class RevisionUI(TemplatedBranchView):
         else:
             file_changes = h.file_changes_for_revision_ids(
                 compare_revid, change.revid)
-
-        if path in ('', '/'):
-            path = None
-
-        link_data = {}
-        path_to_id = {}
-        if path:
-            item = [x for x in file_changes.text_changes if x.filename == path][0]
-            diff_chunks = diff_chunks_for_file(
-                self._history._branch.repository, item.file_id,
-                item.old_revision, item.new_revision)
-        else:
-            diff_chunks = None
-            for i, item in enumerate(file_changes.text_changes):
-                item.index = i
-                link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
-                path_to_id[item.filename] = 'diff-' + str(i)
 
         h.add_branch_nicks(change)
 
@@ -104,6 +87,49 @@ class RevisionUI(TemplatedBranchView):
         else:
             merged_in = None
 
+        return {
+            'revid': revid,
+            'change': change,
+            'file_changes': file_changes,
+            'merged_in': merged_in,
+        }
+
+    def add_template_values(self, values):
+        super(RevisionUI, self).add_template_values(values)
+        remember = self._history.fix_revid(self.kwargs.get('remember', None))
+        query = self.kwargs.get('q', None)
+        filter_file_id = self.kwargs.get('filter_file_id', None)
+        start_revid = self.kwargs['start_revid']
+        navigation = util.Container(
+            revid_list=self.revid_list, revid=values['revid'],
+            start_revid=start_revid,
+            filter_file_id=filter_file_id, pagesize=1,
+            scan_url='/revision', branch=self._branch, feed=True,
+            history=self._history)
+        if query is not None:
+            navigation.query = query
+        util.fill_in_navigation(navigation)
+        path = self.path
+        if path in ('', '/'):
+            path = None
+
+
+        file_changes = values['file_changes']
+        link_data = {}
+        path_to_id = {}
+        if path:
+            item = [x for x in file_changes.text_changes if x.filename == path][0]
+            diff_chunks = diff_chunks_for_file(
+                self._history._branch.repository, item.file_id,
+                item.old_revision, item.new_revision)
+        else:
+            diff_chunks = None
+            for i, item in enumerate(file_changes.text_changes):
+                item.index = i
+                link_data['diff-' + str(i)] = '%s/%s/%s' % (
+                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
+                path_to_id[item.filename] = 'diff-' + str(i)
+
         # Directory Breadcrumbs
         directory_breadcrumbs = (
             util.directory_breadcrumbs(
@@ -111,26 +137,20 @@ class RevisionUI(TemplatedBranchView):
                 self._branch.is_root,
                 'changes'))
         can_export = self._branch.export_tarballs
-        return {
-            'branch': self._branch,
-            'revid': revid,
-            'change': change,
-            'file_changes': file_changes,
-            'diff_chunks': diff_chunks,
+
+        values.update({
+            'history': self._history,
             'link_data': simplejson.dumps(link_data),
-            'specific_path': path,
             'json_specific_path': simplejson.dumps(path),
             'path_to_id': simplejson.dumps(path_to_id),
-            'start_revid': start_revid,
-            'filter_file_id': filter_file_id,
-            'util': util,
-            'history': h,
-            'merged_in': merged_in,
-            'navigation': navigation,
-            'query': query,
-            'remember': remember,
-            'compare_revid': compare_revid,
-            'url': self._branch.context_url,
             'directory_breadcrumbs': directory_breadcrumbs,
+            'navigation': navigation,
+            'remember': remember,
+            'compare_revid': self.compare_revid,
+            'filter_file_id': filter_file_id,
+            'diff_chunks': diff_chunks,
+            'query': query,
             'can_export': can_export,
-        }
+            'specific_path': path,
+            'start_revid': start_revid,
+        })

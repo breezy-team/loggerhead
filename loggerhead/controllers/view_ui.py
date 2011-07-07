@@ -17,7 +17,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-import cgi
 import os
 import time
 
@@ -25,7 +24,7 @@ import bzrlib.errors
 import bzrlib.textfile
 import bzrlib.osutils
 
-from paste.httpexceptions import HTTPBadRequest, HTTPServerError
+from paste.httpexceptions import HTTPBadRequest, HTTPServerError, HTTPMovedPermanently
 
 from loggerhead.controllers import TemplatedBranchView
 try:
@@ -65,7 +64,7 @@ class ViewUI(TemplatedBranchView):
             extra_lines = len(file_lines) - len(hl_lines)
             hl_lines.extend([u''] * extra_lines)
         else:
-            hl_lines = map(cgi.escape, file_lines)
+            hl_lines = map(util.html_escape, file_lines)
         
         return hl_lines;
 
@@ -120,11 +119,14 @@ class ViewUI(TemplatedBranchView):
             raise HTTPServerError('Could not fetch changes')
         branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
 
+        if inv[file_id].kind == "directory":
+            raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
+
         return {
-            # In AnnotateUI, "annotated" is a generator giving revision
-            # numbers per lines, but the template checks if "annotated" is
-            # true or not before using it, so we have to define it here also.
-            'annotated': False,
+            # In AnnotateUI, "annotated" is a dictionary mapping lines to changes.
+            # We exploit the fact that bool({}) is False when checking whether
+            # we're in "annotated" mode.
+            'annotated': {},
             'revno_url': revno_url,
             'file_id': file_id,
             'file_path': path,

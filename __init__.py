@@ -30,6 +30,8 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
+import sys
+
 from info import (
     bzr_plugin_version as version_info,
     bzr_compatible_versions,
@@ -49,17 +51,6 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
             (DEFAULT_PORT,))
 
-    def setup_logging(config):
-        import logging
-        import sys
-
-        logger = logging.getLogger('loggerhead')
-        handler = logging.StreamHandler(sys.stderr)
-        handler.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
-        logging.getLogger('simpleTAL').addHandler(handler)
-        logging.getLogger('simpleTALES').addHandler(handler)
-
     def _ensure_loggerhead_path():
         """Ensure that you can 'import loggerhead' and get the root."""
         # loggerhead internal code will try to 'import loggerhead', so
@@ -71,13 +62,19 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             sys.path.append(os.path.dirname(__file__))
 
     def serve_http(transport, host=None, port=None, inet=None):
+        # TODO: if we supported inet to pass requests in and respond to them,
+        #       then it would be easier to test the full stack, but it probably
+        #       means routing around paste.httpserver.serve which probably
+        #       isn't testing the full stack
         from paste.httpexceptions import HTTPExceptionHandler
         from paste.httpserver import serve
 
         _ensure_loggerhead_path()
 
+        from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
+        from loggerhead.main import setup_logging
 
         if host is None:
             host = DEFAULT_HOST
@@ -87,8 +84,12 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         if not transport.is_readonly():
             argv.insert(0, '--allow-writes')
         config = LoggerheadConfig(argv)
-        setup_logging(config)
+        setup_logging(config, init_logging=False, log_file=sys.stderr)
         app = BranchesFromTransportRoot(transport.base, config)
+        # Bug #758618, HeadMiddleware seems to break HTTPExceptionHandler from
+        # actually sending appropriate return codes to the client. Since nobody
+        # desperately needs HeadMiddleware right now, just ignoring it.
+        # app = HeadMiddleware(app)
         app = HTTPExceptionHandler(app)
         serve(app, host=host, port=port)
 

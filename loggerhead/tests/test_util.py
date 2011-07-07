@@ -1,4 +1,4 @@
-# Copyright 2006, 2010, 2011 Canonical Ltd
+# Copyright 2011 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,18 +14,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from bzrlib import tests
 
-def load_tests(standard_tests, module, loader):
-    standard_tests.addTests(loader.loadTestsFromModuleNames([
-        (__name__ + '.' + x) for x in [
-            'test_controllers',
-            'test_corners',
-            'test_history',
-            'test_http_head',
-            'test_load_test',
-            'test_simple',
-            'test_revision_ui',
-            'test_templating',
-            'test_util',
-        ]]))
-    return standard_tests
+from loggerhead.util import html_escape, html_format
+
+
+class TestHTMLEscaping(tests.TestCase):
+
+    def test_html_escape(self):
+        self.assertEqual(
+            "foo &quot;&#39;&lt;&gt;&amp;",
+            html_escape("foo \"'<>&"))
+
+    def test_html_format(self):
+        self.assertEqual(
+            '<foo bar="baz&quot;&#39;">&lt;baz&gt;&amp;</foo>',
+            html_format(
+                '<foo bar="%s">%s</foo>', "baz\"'", "<baz>&"))

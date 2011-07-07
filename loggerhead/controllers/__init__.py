@@ -18,6 +18,7 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import bzrlib.errors
+import simplejson
 import time
 
 from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
@@ -53,6 +54,7 @@ class BufferingWriter(object):
 class TemplatedBranchView(object):
 
     template_path = None
+    supports_json = False
 
     def __init__(self, branch, history_callable):
         self._branch = branch
@@ -67,8 +69,7 @@ class TemplatedBranchView(object):
         self.__history = self._history_callable()
         return self.__history
 
-    def __call__(self, environ, start_response):
-        z = time.time()
+    def parse_args(self, environ):
         kwargs = dict(parse_querystring(environ))
         util.set_context(kwargs)
         args = []
@@ -82,33 +83,48 @@ class TemplatedBranchView(object):
         if len(args) > 1:
             path = unicode('/'.join(args[1:]), 'utf-8')
         self.args = args
+        self.kwargs = kwargs
+        return path
 
-        vals = {
+    def add_template_values(self, values):
+        values.update({
             'static_url': self._branch.static_url,
             'branch': self._branch,
             'util': util,
             'url': self._branch.context_url,
-        }
-        vals.update(templatefunctions)
+        })
+        values.update(templatefunctions)
+
+    def __call__(self, environ, start_response):
+        z = time.time()
+        if environ.get('loggerhead.as_json') and not self.supports_json:
+            raise HTTPNotFound
+        path = self.parse_args(environ)
         headers = {}
+        values = self.get_values(path, self.kwargs, headers)
 
-        vals.update(self.get_values(path, kwargs, headers))
-
-        self.log.info('Getting information for %s: %r secs' % (
+        self.log.info('Getting information for %s: %.3f secs' % (
             self.__class__.__name__, time.time() - z))
-        if 'Content-Type' not in headers:
+        if environ.get('loggerhead.as_json'):
+            headers['Content-Type'] = 'application/json'
+        elif 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
         writer = start_response("200 OK", headers.items())
         if environ.get('REQUEST_METHOD') == 'HEAD':
             # No content for a HEAD request
             return []
-        template = load_template(self.template_path)
         z = time.time()
         w = BufferingWriter(writer, 8192)
-        template.expand_into(w, **vals)
+        if environ.get('loggerhead.as_json'):
+            w.write(simplejson.dumps(values,
+                default=util.convert_to_json_ready))
+        else:
+            self.add_template_values(values)
+            template = load_template(self.template_path)
+            template.expand_into(w, **values)
         w.flush()
         self.log.info(
-            'Rendering %s: %r secs, %s bytes' % (
+            'Rendering %s: %.3f secs, %s bytes' % (
                 self.__class__.__name__, time.time() - z, w.bytes))
         return []
 

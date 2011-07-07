@@ -1,4 +1,4 @@
-# Copyright (C) 2008  Canonical Ltd.
+# Copyright (C) 2008-2011 Canonical Ltd.
 #                     (Authored by Martin Albisetti <argentina@gmail.com>)
 #
 # This program is free software; you can redistribute it and/or modify
@@ -17,16 +17,14 @@
 #
 
 from cStringIO import StringIO
-import logging
 import time
 
 from paste.request import path_info_pop
 
 from bzrlib.diff import show_diff_trees
+from bzrlib.revision import NULL_REVISION
 
 from loggerhead.controllers import TemplatedBranchView
-
-log = logging.getLogger("loggerhead.controllers")
 
 
 class DiffUI(TemplatedBranchView):
@@ -49,8 +47,10 @@ class DiffUI(TemplatedBranchView):
         revid_from = self._history.fix_revid(revid_from)
         change = self._history.get_changes([revid_from])[0]
 
-        if len(args) is 2:
+        if len(args) == 2:
             revid_to = self._history.fix_revid(args[1])
+        elif len(change.parents) == 0:
+            revid_to = NULL_REVISION
         else:
             revid_to = change.parents[0].revid
 

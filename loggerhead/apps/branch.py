@@ -138,7 +138,7 @@ class BranchWSGIApp(object):
     def public_branch_url(self):
         return self.branch.get_config().get_user_option('public_branch')
 
-    def app(self, environ, start_response):
+    def lookup_app(self, environ):
         # Check again if the branch is blocked from being served, this is
         # mostly for tests. It's already checked in apps/transport.py
         if self.branch.get_config().get_user_option('http_serve') == 'False':
@@ -165,22 +165,24 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPMovedPermanently(
                 self.absolute_url('/changes'))
         if path == 'static':
-            return static_app(environ, start_response)
+            return static_app
+        elif path == '+json':
+            environ['loggerhead.as_json'] = True
+            path = request.path_info_pop(environ)
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
+        return cls(self, self.get_history)
+
+    def app(self, environ, start_response):
         self.branch.lock_read()
         try:
             try:
-                c = cls(self, self.get_history)
-                to_ret = c(environ, start_response)
+                c = self.lookup_app(environ)
+                return c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()
                 environ['branch'] = self
                 raise
-            if type(to_ret) == type(httpexceptions.HTTPSeeOther('/')):
-                raise to_ret
-            else:
-                return to_ret
         finally:
             self.branch.unlock()

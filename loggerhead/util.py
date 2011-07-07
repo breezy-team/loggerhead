@@ -20,7 +20,6 @@
 #
 
 import base64
-import cgi
 import datetime
 import logging
 import re
@@ -214,8 +213,39 @@ def hide_emails(emails):
 # only do this if unicode turns out to be a problem
 #_BADCHARS_RE = re.compile(ur'[\u007f-\uffff]')
 
-# FIXME: get rid of this method; use fixed_width() and avoid XML().
+# Can't be a dict; &amp; needs to be done first.
+html_entity_subs = [
+    ("&", "&amp;"),
+    ('"', "&quot;"),
+    ("'", "&#39;"), # &apos; is defined in XML, but not HTML.
+    (">", "&gt;"),
+    ("<", "&lt;"),
+    ]
 
+
+def html_escape(s):
+    """Transform dangerous (X)HTML characters into entities.
+
+    Like cgi.escape, except also escaping " and '. This makes it safe to use
+    in both attribute and element content.
+
+    If you want to safely fill a format string with escaped values, use
+    html_format instead
+    """
+    for char, repl in html_entity_subs:
+        s = s.replace(char, repl)
+    return s
+
+
+def html_format(template, *args):
+    """Safely format an HTML template string, escaping the arguments.
+
+    The template string must not be user-controlled; it will not be escaped.
+    """
+    return template % tuple(html_escape(arg) for arg in args)
+
+
+# FIXME: get rid of this method; use fixed_width() and avoid XML().
 
 def html_clean(s):
     """
@@ -223,7 +253,7 @@ def html_clean(s):
     entities, and replace spaces with '&nbsp;'.  this is primarily for use
     in displaying monospace text.
     """
-    s = cgi.escape(s.expandtabs())
+    s = html_escape(s.expandtabs())
     s = s.replace(' ', '&nbsp;')
     return s
 
@@ -269,7 +299,7 @@ def fixed_width(s):
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
 
-    s = cgi.escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
+    s = html_escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
 
     return HSC.clean(s).replace('\n', '<br/>')
 
@@ -633,3 +663,13 @@ def convert_file_errors(application):
             else:
                 raise
     return new_application
+
+
+def convert_to_json_ready(obj):
+    if isinstance(obj, Container):
+        d = obj.__dict__.copy()
+        del d['_properties']
+        return d
+    elif isinstance(obj, datetime.datetime):
+        return tuple(obj.utctimetuple())
+    raise TypeError(repr(obj) + " is not JSON serializable")
