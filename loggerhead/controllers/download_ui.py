@@ -88,7 +88,7 @@ class DownloadTarballUI(DownloadUI):
             revid = self.get_revid()
         if self._branch.export_tarballs:
             root = 'branch'
-            encoded_filename = self.encode_filename(root + format)
+            encoded_filename = self.encode_filename(root + '.' + format)
             headers = [
                 ('Content-Type', 'application/octet-stream'),
                 ('Content-Disposition',
