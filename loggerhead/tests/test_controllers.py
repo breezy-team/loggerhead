@@ -1,4 +1,3 @@
-<<<<<<< TREE
 from cStringIO import StringIO
 import logging
 import tarfile
@@ -6,9 +5,7 @@ import tarfile
 from paste.httpexceptions import HTTPServerError
 
 from bzrlib import errors
-=======
 import simplejson
->>>>>>> MERGE-SOURCE
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
