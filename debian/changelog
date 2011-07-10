@@ -1,6 +1,10 @@
 loggerhead (1.18.1+bzr447-2) UNRELEASED; urgency=low
 
+  [ Max Bowsher ]
   * Re-arrange | condition in build deps to make sbuild happy.
+
+  [ Andrew Starr-Bochicchio ]
+  * Add new loggerhead-doc package (Closes: #626335).
 
  -- Max Bowsher <_@maxb.eu>  Fri, 03 Jun 2011 00:14:16 +0100
 

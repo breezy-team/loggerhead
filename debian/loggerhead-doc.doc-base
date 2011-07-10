@@ -1,0 +1,11 @@
+Document: loggerhead
+Title: Loggerhead: A web viewer for bzr branches
+Author: Giuseppe Torelli
+Abstract: Loggerhead is a web viewer for projects in Bazaar.
+ It can be used to navigate a branch history, annotate files,
+ view patches, perform searches, etc.
+Section: Project Management
+
+Format: HTML
+Index: /usr/share/doc/loggerhead/html/index.html
+Files: /usr/share/doc/loggerhead/html/*.html

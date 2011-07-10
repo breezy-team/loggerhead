@@ -12,3 +12,13 @@ override_dh_auto_test:
 	$(CONCURRENCY) BZR_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/bzr selftest \
 	    --parallel=fork -v -s bp.loggerhead
 endif
+
+override_dh_auto_clean:
+	dh_auto_clean
+	cd docs/ && $(MAKE) clean
+
+override_dh_auto_build:
+	dh_auto_build --with python2 --buildsystem=python_distutils
+	cd docs/ && $(MAKE) html
+	rm -rf docs/_build/html/_static/jquery.js
+	ln -s /usr/share/javascript/jquery/jquery.js docs/_build/html/_static/
