@@ -5,6 +5,7 @@ loggerhead (1.18.1+bzr447-2) UNRELEASED; urgency=low
 
   [ Andrew Starr-Bochicchio ]
   * Add new loggerhead-doc package (Closes: #626335).
+  * Bump Standards-Version to 3.9.2, no changes.
 
  -- Max Bowsher <_@maxb.eu>  Fri, 03 Jun 2011 00:14:16 +0100
 
