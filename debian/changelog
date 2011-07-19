@@ -1,4 +1,4 @@
-loggerhead (1.18.1+bzr447-2) UNRELEASED; urgency=low
+loggerhead (1.18.1+bzr447-2) unstable; urgency=low
 
   [ Max Bowsher ]
   * Re-arrange | condition in build deps to make sbuild happy.
