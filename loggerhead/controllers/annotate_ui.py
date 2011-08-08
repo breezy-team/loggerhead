@@ -58,6 +58,10 @@ class AnnotateUI(ViewUI):
                 last_lineno = lineno
                 last_line_revid = line_revid
 
+        # Zero-size file. Return empty revisions.
+        if last_lineno is None:
+            return revisions
+
         # We never set a revspan for the last revision during the loop above, so set it here.
         revisions[last_lineno].revspan = lineno - last_lineno + 1
 
