@@ -148,7 +148,7 @@ class TestAnnotateUI(BasicTests):
 
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation must be present.
-        history = [('rev1', '')]
+        history = [('rev1', '' , '.')]
         ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
         ann_ui.args = ['rev1']
         annotate_info = ann_ui.get_values('filename',
