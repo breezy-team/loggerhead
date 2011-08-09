@@ -46,7 +46,11 @@ class AnnotateUI(ViewUI):
                     change = self._history.get_changes([line_revid])[0]
                     change_cache[line_revid] = change
 
-                message = change.comment.splitlines()[0]
+                try:
+                    message = change.comment.splitlines()[0]
+                except IndexError:
+                    # Comment not present for this revision
+                    message = ""
 
                 if last_lineno:
                     # The revspan is of lines between the last revision and this one.
