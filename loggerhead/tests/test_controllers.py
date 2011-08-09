@@ -117,16 +117,16 @@ class TestAnnotateUI(BasicTests):
         tree = self.make_branch_and_tree('.')
         self.build_tree_contents([('filename', '')])
         tree.add(['filename'], [file_id])
-        for rev_id, text in rev_ids_texts:
+        for rev_id, text, message in rev_ids_texts:
             self.build_tree_contents([('filename', text)])
-            tree.commit(rev_id=rev_id, message='.')
+            tree.commit(rev_id=rev_id, message=message)
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
         branch_app = BranchWSGIApp(tree.branch, friendly_name='test_name')
         return AnnotateUI(branch_app, branch_app.get_history)
 
     def test_annotate_file(self):
-        history = [('rev1', 'old\nold\n'), ('rev2', 'new\nold\n')]
+        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '.')]
         ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
@@ -137,8 +137,15 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
         self.assertEqual('1', annotated[2].change.revno)
-
-
+    
+    def test_annotate_empty_comment(self):
+        # Testing empty comment handling without breaking
+        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        ann_ui.args = ['rev2']
+        annotate_info = ann_ui.get_values('filename',
+            kwargs={'file_id': 'file_id'}, headers={})
+    
 class TestFileDiffUI(BasicTests):
 
     def make_branch_app_for_filediff_ui(self):
