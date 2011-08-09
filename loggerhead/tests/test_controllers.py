@@ -138,6 +138,17 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual('2', annotated[1].change.revno)
         self.assertEqual('1', annotated[2].change.revno)
 
+    def test_annotate_file_zero_sized(self):
+        # Test against a zero-sized file. No annotation must be present.
+        history = [('rev1', '')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        # A lot of this state is set up by __call__, but we'll do it directly
+        # here.
+        ann_ui.args = ['rev1']
+        annotate_info = ann_ui.get_values('filename',
+            kwargs={'file_id': 'file_id'}, headers={})
+        annotated = annotate_info['annotated']
+        self.assertEqual(0, len(annotated))
 
 class TestFileDiffUI(BasicTests):
 
