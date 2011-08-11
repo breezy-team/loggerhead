@@ -137,7 +137,7 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
         self.assertEqual('1', annotated[2].change.revno)
-    
+
     def test_annotate_empty_comment(self):
         # Testing empty comment handling without breaking
         history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '')]
@@ -145,7 +145,17 @@ class TestAnnotateUI(BasicTests):
         ann_ui.args = ['rev2']
         annotate_info = ann_ui.get_values('filename',
             kwargs={'file_id': 'file_id'}, headers={})
-    
+
+    def test_annotate_file_zero_sized(self):
+        # Test against a zero-sized file without breaking. No annotation must be present.
+        history = [('rev1', '' , '.')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        ann_ui.args = ['rev1']
+        annotate_info = ann_ui.get_values('filename',
+            kwargs={'file_id': 'file_id'}, headers={})
+        annotated = annotate_info['annotated']
+        self.assertEqual(0, len(annotated))
+
 class TestFileDiffUI(BasicTests):
 
     def make_branch_app_for_filediff_ui(self):
