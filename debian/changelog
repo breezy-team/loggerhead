@@ -1,3 +1,9 @@
+loggerhead (1.18.1+bzr447-3) UNRELEASED; urgency=low
+
+  * Mark as compatible with pre-releases of bzr 2.5.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sun, 28 Aug 2011 14:34:30 +0200
+
 loggerhead (1.18.1+bzr447-2) unstable; urgency=low
 
   [ Max Bowsher ]
@@ -14,6 +20,17 @@ loggerhead (1.18.1+bzr447-1) experimental; urgency=low
   * New upstream snapshot.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Thu, 02 Jun 2011 14:11:55 +0200
+
+loggerhead (1.18.1-3) unstable; urgency=low
+
+  [ Max Bowsher ]
+  * Re-arrange | condition in build deps to make sbuild happy. Closes: #629783
+
+  [ Jelmer Vernooij ]
+  * Depend on python-bzrlib rather than bzr.
+  * Bump standards version to 3.9.2 (no changes).
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Thu, 09 Jun 2011 22:48:50 +0100
 
 loggerhead (1.18.1-2) unstable; urgency=low
 
