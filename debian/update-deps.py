@@ -28,7 +28,7 @@ source = Deb822(f)
 def update_deps(control, field, package):
     bdi = PkgRelation.parse_relations(control[field])
     update_relation(bdi, package, ">=", "%d.%d~" % bzr_compatible_versions[0][:2])
-    update_relation(bdi, package, "<<", "%d.%d~" % (bzr_compatible_versions[-1][0], bzr_compatible_versions[-1][1]+1))
+    update_relation(bdi, package, "<<", "%d.%d.0" % (bzr_compatible_versions[-1][0], bzr_compatible_versions[-1][1]+1))
     control[field] = PkgRelation.str(bdi)
 
 update_deps(source, "Build-Depends-Indep", "bzr")
