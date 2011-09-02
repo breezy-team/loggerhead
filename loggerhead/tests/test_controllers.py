@@ -86,6 +86,18 @@ class TestRevisionUI(BasicTests):
         rev_ui.parse_args(env)
         self.assertIsInstance(rev_ui.get_values('', {}, []), dict)
 
+    def test_add_template_values(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', 'content\n')], [('file', 'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/1/non-existent-file',
+               'QUERY_STRING':'start_revid=1' }
+        revision_ui = branch_app.lookup_app(env)
+        path = revision_ui.parse_args(env)
+        values = revision_ui.get_values(path, revision_ui.kwargs, {})
+        revision_ui.add_template_values(values)
+        self.assertIs(values['diff_chunks'], None)
+
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
                 [('file', 'content\n'), ('other-file', 'other\n')],
