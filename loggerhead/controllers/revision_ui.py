@@ -118,10 +118,14 @@ class RevisionUI(TemplatedBranchView):
         link_data = {}
         path_to_id = {}
         if path:
-            item = [x for x in file_changes.text_changes if x.filename == path][0]
-            diff_chunks = diff_chunks_for_file(
-                self._history._branch.repository, item.file_id,
-                item.old_revision, item.new_revision)
+            items = [x for x in file_changes.text_changes if x.filename == path]
+            if len(items) > 0:
+                item = items[0]
+                diff_chunks = diff_chunks_for_file(
+                    self._history._branch.repository, item.file_id,
+                    item.old_revision, item.new_revision)
+            else:
+                diff_chunks = None
         else:
             diff_chunks = None
             for i, item in enumerate(file_changes.text_changes):
