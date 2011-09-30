@@ -33,14 +33,17 @@ def update_deps(control, field, package):
 
 update_deps(source, "Build-Depends-Indep", "bzr")
 
-binary = Deb822(f)
+binary1 = Deb822(f)
+binary2 = Deb822(f)
 
-update_deps(binary, "Depends", "python-bzrlib")
+update_deps(binary1, "Depends", "python-bzrlib")
 
 f = open("debian/control", "w+")
 try:
     source.dump(f)
     f.write("\n")
-    binary.dump(f)
+    binary1.dump(f)
+    f.write("\n")
+    binary2.dump(f)
 finally:
     f.close()

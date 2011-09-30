@@ -3,8 +3,9 @@ loggerhead (1.18.1+bzr457-1) UNRELEASED; urgency=low
   * Mark as compatible with pre-releases of bzr 2.5.
   * New upstream snapshot.
   * Move local changes into debian/. Closes: #643204
+  * Fix update-deps.py to not remove loggerhead-doc.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Fri, 30 Sep 2011 10:05:39 +0200
+ -- Jelmer Vernooij <jelmer@debian.org>  Fri, 30 Sep 2011 10:20:06 +0200
 
 loggerhead (1.18.1+bzr447-2) unstable; urgency=low
 
