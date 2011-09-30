@@ -99,24 +99,6 @@ class FakeShelf(object):
             pass
 
 
-class FileChangeCache(object):
-
-    def __init__(self, cache_path):
-
-        if not os.path.exists(cache_path):
-            os.mkdir(cache_path)
-
-        self._changes_filename = os.path.join(cache_path, 'filechanges.sql')
-
-    def get_file_changes(self, entry):
-        cache = FakeShelf(self._changes_filename)
-        changes = cache.get(entry.revid)
-        if changes is None:
-            changes = self.history.get_file_changes_uncached(entry)
-            cache.add(entry.revid, changes)
-        return changes
-
-
 class RevInfoDiskCache(object):
     """Like `RevInfoMemoryCache` but backed in a sqlite DB."""
 

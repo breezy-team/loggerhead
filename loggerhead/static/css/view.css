@@ -1,31 +1,30 @@
 /*table*/
-.viewLineTit,
-.viewRevTit,
-.viewContTit {
-    border: 1px solid #d2d2d2;
-    }
-.viewLine,
+#logentries,
 .viewRev,
+.viewLine {
+    border: 1px solid #d2d2d2;
+}
+.viewRev {
+    border-right: none;
+    white-space: nowrap;
+    width: 1px;
+    padding: .3em .6em;
+}
 .viewComm,
 .viewCont {
     border: none;
     }
-.viewLine,
-.viewLineTit {
+.viewLine {
+    border-style: none solid none none;
+    width: 20px;
+    padding-left: .6em;
     padding-right: .2em;
     }
-.viewLine {
-    width: 37px;
-    }
-.viewContTit,
+.viewLine.first {
+    border-style: solid solid none none;
+}
 .viewCont {
-    width: auto;
-    padding-left: .3em;
-    }
-.viewRevTit,
-.viewRev {
-    width: 70px;
-    text-align: center;
+    padding-left: .4em;
     }
 .viewLine,
 .viewCont {
@@ -38,6 +37,11 @@
     margin: 0;
     }
 .viewLine {
-    text-align: right;
+    text-align: center;
+    }
+.viewLine {
     font-size: 93%;
     }
+.viewAuthors {
+    color: #999999;
+}

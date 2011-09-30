@@ -63,23 +63,20 @@ class BranchWSGIApp(object):
         self.use_cdn = use_cdn
 
     def get_history(self):
-        file_cache = None
         revinfo_disk_cache = None
         cache_path = self._config.get('cachepath', None)
         if cache_path is not None:
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
             try:
-                from loggerhead.changecache import (
-                    FileChangeCache, RevInfoDiskCache)
+                from loggerhead.changecache import RevInfoDiskCache
             except ImportError:
                 self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
             else:
-                file_cache = FileChangeCache(cache_path)
                 revinfo_disk_cache = RevInfoDiskCache(cache_path)
         return History(
-            self.branch, self.graph_cache, file_cache=file_cache,
+            self.branch, self.graph_cache,
             revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
 
     def url(self, *args, **kw):
@@ -136,7 +133,7 @@ class BranchWSGIApp(object):
     def public_branch_url(self):
         return self.branch.get_config().get_user_option('public_branch')
 
-    def app(self, environ, start_response):
+    def lookup_app(self, environ):
         # Check again if the branch is blocked from being served, this is
         # mostly for tests. It's already checked in apps/transport.py
         if self.branch.get_config().get_user_option('http_serve') == 'False':
@@ -163,14 +160,20 @@ class BranchWSGIApp(object):
             raise httpexceptions.HTTPMovedPermanently(
                 self.absolute_url('/changes'))
         if path == 'static':
-            return static_app(environ, start_response)
+            return static_app
+        elif path == '+json':
+            environ['loggerhead.as_json'] = True
+            path = request.path_info_pop(environ)
         cls = self.controllers_dict.get(path)
         if cls is None:
             raise httpexceptions.HTTPNotFound()
+        return cls(self, self.get_history)
+
+    def app(self, environ, start_response):
         self.branch.lock_read()
         try:
             try:
-                c = cls(self, self.get_history)
+                c = self.lookup_app(environ)
                 return c(environ, start_response)
             except:
                 environ['exc_info'] = sys.exc_info()

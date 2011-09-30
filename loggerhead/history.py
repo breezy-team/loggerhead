@@ -215,8 +215,6 @@ class History(object):
     around it, serve the request, throw the History object away, unlock the
     branch and throw it away.
 
-    :ivar _file_change_cache: An object that caches information about the
-        files that changed between two revisions.
     :ivar _rev_info: A list of information about revisions.  This is by far
         the most cryptic data structure in loggerhead.  At the top level, it
         is a list of 3-tuples [(merge-info, where-merged, parents)].
@@ -284,15 +282,10 @@ class History(object):
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
 
-    def __init__(self, branch, whole_history_data_cache, file_cache=None,
+    def __init__(self, branch, whole_history_data_cache,
                  revinfo_disk_cache=None, cache_key=None):
         assert branch.is_locked(), (
             "Can only construct a History object with a read-locked branch.")
-        if file_cache is not None:
-            self._file_change_cache = file_cache
-            file_cache.history = self
-        else:
-            self._file_change_cache = None
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
@@ -759,18 +752,12 @@ iso style "yyyy-mm-dd")
             entry["foreign_revid"] = mapping.vcs.show_foreign_revid(foreign_revid)
         return util.Container(entry)
 
-    def get_file_changes_uncached(self, entry):
+    def get_file_changes(self, entry):
         if entry.parents:
             old_revid = entry.parents[0].revid
         else:
             old_revid = bzrlib.revision.NULL_REVISION
         return self.file_changes_for_revision_ids(old_revid, entry.revid)
-
-    def get_file_changes(self, entry):
-        if self._file_change_cache is None:
-            return self.get_file_changes_uncached(entry)
-        else:
-            return self._file_change_cache.get_file_changes(entry)
 
     def add_changes(self, entry):
         changes = self.get_file_changes(entry)

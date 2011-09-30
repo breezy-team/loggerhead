@@ -1,12 +1,12 @@
 import urllib
 
-from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
 
 
 class RevLogUI(TemplatedBranchView):
 
     template_path = 'loggerhead.templates.revlog'
+    supports_json = True
 
     def get_values(self, path, kwargs, headers):
         history = self._history
@@ -18,10 +18,7 @@ class RevLogUI(TemplatedBranchView):
         history.add_branch_nicks(change)
 
         return {
-            'branch': self._branch,
             'entry': change,
             'file_changes': file_changes,
-            'util': util,
             'revid': revid,
-            'url': self._branch.context_url,
         }
