@@ -1,4 +1,4 @@
-loggerhead (1.18.1+bzr457-1) UNRELEASED; urgency=low
+loggerhead (1.18.1+bzr457-1) unstable; urgency=low
 
   * Mark as compatible with pre-releases of bzr 2.5.
   * New upstream snapshot.
