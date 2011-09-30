@@ -152,6 +152,7 @@ ul#submenuTabs li a {
     float: left;
     display: inline;
     height: 22px;
+    line-height: 22px;
     padding: 0 0 0 18px;
     background: transparent url(../images/ico_description.gif) no-repeat center left;
     }
@@ -163,7 +164,6 @@ ul#submenuTabs li a {
     }
 
 #branch-info {
-    width: 900px;
     padding: 10px;
     margin: 0 0 10px 0;
     color: #666;

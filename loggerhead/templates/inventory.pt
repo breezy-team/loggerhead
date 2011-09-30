@@ -19,22 +19,18 @@
           </tal:has-link>
       </tal:block>
       <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
-      <tal:block metal:fill-slot="heading">
-      <div id="breadcrumbs">
+          <tal:block metal:fill-slot="heading">
+          <div id="breadcrumbs">
           <tal:has-link condition="branch/branch_link">
             <a tal:attributes="href branch/branch_link"
                tal:content="branch/friendly_name">
               nice/branch/name
             </a>
           </tal:has-link>
-          <span tal:condition="not: branch/branch_link">
-            <span metal:use-macro="breadcrumbs/directory" />
-          </span>
-          <tal:block condition="python:change">
-            &#187; Viewing
-            <span metal:use-macro="breadcrumbs/branch" />
-            for revision <span tal:content="change/revno"/>
-          </tal:block>
+          <tal:no-link condition="not: branch/branch_link">
+            <span metal:use-macro="breadcrumbs/directory"></span>
+          </tal:no-link>
+          <span>: <span metal:use-macro="breadcrumbs/branch" /> (revision <tal:revno content="change/revno"></tal:revno>)</span>
         </div>
       </tal:block>
 

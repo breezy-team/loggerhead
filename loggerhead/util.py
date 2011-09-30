@@ -663,3 +663,13 @@ def convert_file_errors(application):
             else:
                 raise
     return new_application
+
+
+def convert_to_json_ready(obj):
+    if isinstance(obj, Container):
+        d = obj.__dict__.copy()
+        del d['_properties']
+        return d
+    elif isinstance(obj, datetime.datetime):
+        return tuple(obj.utctimetuple())
+    raise TypeError(repr(obj) + " is not JSON serializable")
