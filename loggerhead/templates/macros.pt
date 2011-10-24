@@ -40,6 +40,17 @@
             tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
     <script type="text/javascript"
             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
+    <script type="text/javascript"
+            tal:attributes="src python:branch.static_url('/static/javascript/privacy.js')"></script>
+    <script type="text/javascript">
+        Y = YUI().use("loggerhead.privacy");
+        Y.on('domready' function() {
+            if (Y.one(document.body).hasClass('private')) {
+                Y.loggerhead.privacy.setup_privacy_notification();
+                Y.loggerhead.privacy.display_privacy_notification();
+            }
+        });
+    </script>
     <metal:block metal:define-slot="header_extras" />
   </head>
 

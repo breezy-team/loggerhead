@@ -49,7 +49,7 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT, use_cdn=False):
+                 served_url=_DEFAULT, use_cdn=False, private=False):
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -61,6 +61,7 @@ class BranchWSGIApp(object):
         self.is_root = is_root
         self.served_url = served_url
         self.use_cdn = use_cdn
+        self.private = private
 
     def get_history(self):
         revinfo_disk_cache = None
