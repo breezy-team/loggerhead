@@ -1,4 +1,4 @@
-Y = YUI().use("node", "io-base", "anim", "loggerhead.privacy");
+Y = YUI().use("base", "node", "io-base", "anim");
 
 var global_timeout_id = null;
 var global_search_request = null;
@@ -280,26 +280,19 @@ Collapsable.prototype.toggle = function()
   }
 };
 
-
-
-YUI.add('lp.app.privacy', function(Y) {
-
-var namespace = Y.namespace('lp.app.privacy');
-
 var notification_node = null;
 /*
  * Display privacy notifications
  *
  * This should be called after the page has loaded e.g. on 'domready'.
  */
-
 function setup_privacy_notification(config) {
     if (notification_node !== null) {
         return;
     }
     var notification_text = 'The information on this page is private';
     var hidden = true;
-    var target_id = "maincontent";
+    var target_id = "loggerheadCont";
     if (config !== undefined) {
         if (config.notification_text !== undefined) {
             notification_text = config.notification_text;
@@ -312,7 +305,7 @@ function setup_privacy_notification(config) {
         }
     }
     var id_selector = "#" + target_id;
-    var main = Y.one(id_selector);
+    var main = Y.get(id_selector);
     notification_node = Y.Node.create('<div></div>')
         .addClass('global-notification');
     if (hidden) {
@@ -325,14 +318,6 @@ function setup_privacy_notification(config) {
 
     main.appendChild(notification_node);
     notification_node.appendChild(notification_span);
-}
-namespace.setup_privacy_notification = setup_privacy_notification;
-
-/**
- * For unit tests - we need to reset the notification setup.
- */
-namespace._reset_privacy_notification = function () {
-    notification_node = null;
 };
 
 function display_privacy_notification() {
@@ -340,13 +325,13 @@ function display_privacy_notification() {
      this is because we have no way to use feature flags in
      css directly. This should be removed if the feature
      is accepted. */
-    var body = Y.one('body');
+    var body = Y.get('body');
     body.addClass('feature-flag-bugs-private-notification-enabled');
     /* Set the visible flag so that the content moves down. */
     body.addClass('global-notification-visible');
 
     setup_privacy_notification();
-    var global_notification = Y.one('.global-notification');
+    var global_notification = Y.get('.global-notification');
     if (global_notification.hasClass('hidden')) {
         global_notification.addClass('transparent');
         global_notification.removeClass('hidden');
@@ -362,8 +347,8 @@ function display_privacy_notification() {
             duration: 0.2,
             easing: Y.Easing.easeOut
         });
-        var login_space = new Y.Anim({
-            node: '.login-logout',
+        var black_link_space = new Y.Anim({
+            node: '.black-link',
             to: {'top': '45px'},
             duration: 0.2,
             easing: Y.Easing.easeOut
@@ -371,10 +356,9 @@ function display_privacy_notification() {
 
         fade_in.run();
         body_space.run();
-        login_space.run();
+        black_link_space.run();
     }
-}
-namespace.display_privacy_notification = display_privacy_notification;
+};
 
 /*
  * Hide privacy notifications
@@ -383,7 +367,7 @@ namespace.display_privacy_notification = display_privacy_notification;
  */
 function hide_privacy_notification() {
     setup_privacy_notification();
-    if (!Y.one('.global-notification').hasClass('hidden')) {
+    if (!Y.get('.global-notification').hasClass('hidden')) {
         var fade_out = new Y.Anim({
             node: '.global-notification',
             to: {opacity: 0},
@@ -395,8 +379,8 @@ function hide_privacy_notification() {
             duration: 0.2,
             easing: Y.Easing.easeOut
         });
-        var login_space = new Y.Anim({
-            node: '.login-logout',
+        var black_link_space = new Y.Anim({
+            node: '.black-link',
             to: {'top': '6px'},
             duration: 0.2,
             easing: Y.Easing.easeOut
@@ -405,14 +389,14 @@ function hide_privacy_notification() {
             fade_out.get('node').addClass('hidden');
         });
         body_space.on('end', function() {
-            Y.one('body').removeClass('global-notification-visible');
+            Y.get('body').removeClass('global-notification-visible');
         });
 
         fade_out.run();
         body_space.run();
-        login_space.run();
+        black_link_space.run();
 
-        var privacy_portlet =  Y.one('.portlet.private');
+        var privacy_portlet =  Y.get('.portlet.private');
         if (privacy_portlet !== null) {
             var portlet_colour = new Y.Anim({
                 node: privacy_portlet,
@@ -425,9 +409,11 @@ function hide_privacy_notification() {
             portlet_colour.run();
         }
     }
-}
-namespace.hide_privacy_notification = hide_privacy_notification;
+};
 
-
-}, "0.1", {"requires": ["base", "node", "anim"]});
-
+Y.on('domready', function() {
+    if (Y.get(document.body).hasClass('private')) {
+        setup_privacy_notification();
+        display_privacy_notification();
+    }
+});
