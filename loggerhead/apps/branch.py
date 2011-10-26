@@ -63,6 +63,12 @@ class BranchWSGIApp(object):
         self.use_cdn = use_cdn
         self.private = private
 
+    def public_or_private(self):
+        if self.private:
+            return "private"
+        else:
+            return "public"
+
     def get_history(self):
         revinfo_disk_cache = None
         cache_path = self._config.get('cachepath', None)

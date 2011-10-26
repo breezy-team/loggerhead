@@ -43,7 +43,7 @@
     <metal:block metal:define-slot="header_extras" />
   </head>
 
-<body>
+ <body tal:attributes="class python:branch.public_or_private()">
     <!-- Loggerhead Content Area -->
       
       <div metal:define-slot="backlink" />
