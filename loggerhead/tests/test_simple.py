@@ -56,8 +56,8 @@ class BasicTests(TestCaseWithTransport):
         self.assertEqual(None, start[2])
         simplejson.loads(content)
 
-    def make_branch_app(self, branch):
-        branch_app = BranchWSGIApp(branch, friendly_name='friendly-name')
+    def make_branch_app(self, branch, **kw):
+        branch_app = BranchWSGIApp(branch, friendly_name='friendly-name', **kw)
         branch_app._environ = {
             'wsgi.url_scheme':'',
             'SERVER_NAME':'',
@@ -85,9 +85,9 @@ class TestWithSimpleTree(BasicTests):
         self.revid = self.tree.commit(message=self.msg)
 
     def test_public_private(self):
-        app = self.setUpLoggerhead(private=True)
+        app = self.make_branch_app(self.tree.branch, private=True)
         self.assertEqual(app.public_private_css(), 'private')
-        app = self.setUpLoggerhead()
+        app = self.make_branch_app(self.tree.branch)
         self.assertEqual(app.public_private_css(), 'public')
 
     def test_changes(self):
