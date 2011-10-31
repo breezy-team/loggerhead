@@ -84,6 +84,12 @@ class TestWithSimpleTree(BasicTests):
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)
 
+    def test_public_private(self):
+        app = self.setUpLoggerhead(private=True)
+        self.assertEqual(app.public_private_css(), 'private')
+        app = self.setUpLoggerhead()
+        self.assertEqual(app.public_private_css(), 'public')
+
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')

@@ -63,7 +63,7 @@ class BranchWSGIApp(object):
         self.use_cdn = use_cdn
         self.private = private
 
-    def public_or_private(self):
+    def public_private_css(self):
         if self.private:
             return "private"
         else:
