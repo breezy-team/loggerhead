@@ -248,8 +248,7 @@ class TestControllerHooks(BasicTests):
         self.assertRaises(KeyError, app.lookup_app, env)
 
     def test_working_hook(self):
-        # A hook that returns None doesn't influence the searching for
-        # a controller.
+        # A hook can provide an app to use for a particular request.
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom'}
         myhook = lambda app, environ: "I am hooked"
         branch = self.make_branch('.')
