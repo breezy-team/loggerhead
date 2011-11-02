@@ -1,11 +1,7 @@
-import simplejson
-
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.tests.test_simple import BasicTests, consume_app
-from loggerhead import util
 
 
 class TestInventoryUI(BasicTests):
@@ -167,6 +163,7 @@ class TestAnnotateUI(BasicTests):
             kwargs={'file_id': 'file_id'}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
+
 
 class TestFileDiffUI(BasicTests):
 
