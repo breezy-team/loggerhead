@@ -43,7 +43,7 @@ What's changed in loggerhead?
       (Jelmer Vernooij, #736026)
 
     - Add hook 'controller' to BranchWSGIApp, allowing other bzr plugins
-      to provide custom branch-specific controllers. (Jelmer Vernooij)
+      to provide custom branch-specific controllers. (Jelmer Vernooij, #585822)
 
 
 1.18.1 [24Mar2011]
