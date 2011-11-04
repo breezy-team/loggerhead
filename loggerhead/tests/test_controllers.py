@@ -1,11 +1,7 @@
-import simplejson
-
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.controllers.revision_ui import RevisionUI
 from loggerhead.tests.test_simple import BasicTests, consume_app
-from loggerhead import util
 
 
 class TestInventoryUI(BasicTests):
@@ -168,6 +164,7 @@ class TestAnnotateUI(BasicTests):
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
 
+
 class TestFileDiffUI(BasicTests):
 
     def make_branch_app_for_filediff_ui(self):
@@ -233,3 +230,31 @@ class TestRevLogUI(BasicTests):
         revlog_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revlog_ui, env)
 
+
+class TestControllerHooks(BasicTests):
+
+    def test_dummy_hook(self):
+        return
+        # A hook that returns None doesn't influence the searching for
+        # a controller.
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom'}
+        myhook = lambda app, environ: None
+        branch = self.make_branch('.')
+        self.addCleanup(branch.lock_read().unlock)
+        app = self.make_branch_app(branch)
+        self.addCleanup(BranchWSGIApp.hooks.uninstall_named_hook, 'controller',
+            'captain hook')
+        BranchWSGIApp.hooks.install_named_hook('controller', myhook, "captain hook")
+        self.assertRaises(KeyError, app.lookup_app, env)
+
+    def test_working_hook(self):
+        # A hook can provide an app to use for a particular request.
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom'}
+        myhook = lambda app, environ: "I am hooked"
+        branch = self.make_branch('.')
+        self.addCleanup(branch.lock_read().unlock)
+        app = self.make_branch_app(branch)
+        self.addCleanup(BranchWSGIApp.hooks.uninstall_named_hook, 'controller',
+            'captain hook')
+        BranchWSGIApp.hooks.install_named_hook('controller', myhook, "captain hook")
+        self.assertEquals("I am hooked", app.lookup_app(env))

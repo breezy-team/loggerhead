@@ -22,6 +22,7 @@ import sys
 
 import bzrlib.branch
 import bzrlib.errors
+from bzrlib.hooks import Hooks
 import bzrlib.lru_cache
 
 from paste import request
@@ -162,6 +163,10 @@ class BranchWSGIApp(object):
                     self.served_url = self.url([])
                 except bzrlib.errors.InvalidURL:
                     self.served_url = None
+        for hook in self.hooks['controller']:
+            controller = hook(self, environ)
+            if controller is not None:
+                return controller
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
@@ -172,9 +177,9 @@ class BranchWSGIApp(object):
             environ['loggerhead.as_json'] = True
             path = request.path_info_pop(environ)
         cls = self.controllers_dict.get(path)
-        if cls is None:
-            raise httpexceptions.HTTPNotFound()
-        return cls(self, self.get_history)
+        if cls is not None:
+            return cls(self, self.get_history)
+        raise httpexceptions.HTTPNotFound()
 
     def app(self, environ, start_response):
         self.branch.lock_read()
@@ -188,3 +193,23 @@ class BranchWSGIApp(object):
                 raise
         finally:
             self.branch.unlock()
+
+
+class BranchWSGIAppHooks(Hooks):
+    """A dictionary mapping hook name to a list of callables for WSGI app branch hooks.
+    """
+
+    def __init__(self):
+        """Create the default hooks.
+        """
+        Hooks.__init__(self, "bzrlib.plugins.loggerhead.apps.branch",
+            "BranchWSGIApp.hooks")
+        self.add_hook('controller',
+            "Invoked when looking for the controller to use for a "
+            "branch subpage. The api signature is (branch_app, environ)."
+            "If a hook can provide a controller, it should return one, "
+            "as a standard WSGI app. If it can't provide a controller, "
+            "it should return None", (1, 19))
+
+
+BranchWSGIApp.hooks = BranchWSGIAppHooks()
