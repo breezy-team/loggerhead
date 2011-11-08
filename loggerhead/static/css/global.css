@@ -343,3 +343,64 @@ ul#pages {
 #footer {
     font-size: 77%;
     }
+
+    
+/* ====================
+   Global notifications
+*/
+/* Move the content down so the notification banner doesn't hide any content. */
+body.global-notification-visible {
+    padding-top: 40px;
+    }
+body.global-notification-visible .login-logout {
+    top: 45px;
+    }
+.global-notification {
+    position: fixed;
+    z-index: 10;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 8px 20px;
+    /* Define colour for browsers that don't support transparency */
+    background-color: #8d1f1f;
+    /* Set transparent background for browsers that support it */
+    background-color: rgba(125,0,0,0.9);
+    color: #fff;
+    text-shadow: 0 -1px 0 #631616;
+    font-size: 14px;
+    line-height: 21px;
+    font-weight: bold;
+    -moz-box-shadow: 0 0 5px #333;
+    -webkit-box-shadow: 0 0 5px #333;
+    box-shadow: 0 0 5px #333;
+    }
+.global-notification .sprite.notification-private {
+    float: left;
+    display: inline-block;
+    height: 21px;
+    width: 20px;
+    margin-right: 10px;
+    padding: 0;
+    }
+.global-notification-close, .global-notification-close:active,
+.global-notification-close:visited {
+    color: #e47a7a;
+    }
+.global-notification-close {
+    display: block;
+    position: absolute;
+    top: 11px;
+    right: 20px;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 14px;
+    }
+.global-notification-close .sprite.notification-close {
+    float: right;
+    display: block;
+    height: 9px;
+    width: 8px;
+    margin: 3px 0 0 7px;
+    padding: 0;
+    }

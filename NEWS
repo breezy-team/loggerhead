@@ -45,6 +45,10 @@ What's changed in loggerhead?
     - Add hook 'controller' to BranchWSGIApp, allowing other bzr plugins
       to provide custom branch-specific controllers. (Jelmer Vernooij, #585822)
 
+    - Add privacy notification code to loggerhead, allowing branches to be
+      marked as private and a notification ribbon to be displayed via
+      javascript on the view pages. (JC Sackett, #823471)
+
 
 1.18.1 [24Mar2011]
 ------------------
