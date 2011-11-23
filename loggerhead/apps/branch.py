@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
+
 """The WSGI application for serving a Bazaar branch."""
 
 import logging
@@ -34,7 +34,7 @@ from loggerhead.controllers.view_ui import ViewUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.diff_ui import DiffUI
-from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.download_ui import DownloadUI, DownloadTarballUI
 from loggerhead.controllers.filediff_ui import FileDiffUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
@@ -50,7 +50,13 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT, use_cdn=False, private=False):
+                 served_url=_DEFAULT, use_cdn=False, private=False,
+                 export_tarballs=True):
+        """Create branch-publishing WSGI app.
+
+        :param export_tarballs: If true, allow downloading snapshots of revisions
+            as tarballs.
+        """
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -63,6 +69,7 @@ class BranchWSGIApp(object):
         self.served_url = served_url
         self.use_cdn = use_cdn
         self.private = private
+        self.export_tarballs = export_tarballs
 
     def public_private_css(self):
         if self.private:
@@ -131,6 +138,7 @@ class BranchWSGIApp(object):
         'revision': RevisionUI,
         'search': SearchUI,
         'view': ViewUI,
+        'tarball': DownloadTarballUI,
         }
 
     def last_updated(self):
