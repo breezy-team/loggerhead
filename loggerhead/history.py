@@ -45,7 +45,6 @@ import bzrlib.revision
 from loggerhead import search
 from loggerhead import util
 from loggerhead.wholehistory import compute_whole_history_data
-from bzrlib.export.tar_exporter import export_tarball
 
 
 def is_branch(folder):
