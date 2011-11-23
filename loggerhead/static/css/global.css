@@ -355,6 +355,10 @@ body.global-notification-visible {
 body.global-notification-visible .login-logout {
     top: 45px;
     }
+.notification-private {
+    background-image: url(/images/notification-private.png); /* sprite-ref: icon-sprites */
+    background-repeat: no-repeat;
+    }
 .global-notification {
     position: fixed;
     z-index: 10;
