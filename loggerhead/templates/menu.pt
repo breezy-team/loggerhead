@@ -6,7 +6,7 @@
                                id string:on">Changes</a></li>
         <li><a tal:attributes="href python:url('/files', clear=1);
                                title string:Files">Files</a></li>
-        <li><a tal:attributes="href python:url(['/revision', change.revno], clear=1);
+        <li><a tal:attributes="href python:url('/tarball', clear=1);
                                title string:Tarball">Tarball</a></li>
         </tal:changes-active>
         <tal:fileview-active tal:condition="fileview_active">
@@ -15,7 +15,7 @@
         <li><a tal:attributes="href python:url('/files', clear=1);
                                title string:Files;
                                id string:on">Files</a></li>
-        <li><a tal:attributes="href python:url(['/revision', change.revno], clear=1);
+        <li><a tal:attributes="href python:url('/tarball', clear=1);
                                title string:Tarball">Tarball</a></li>
         </tal:fileview-active>
       </ul>
