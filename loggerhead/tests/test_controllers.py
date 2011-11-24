@@ -297,4 +297,4 @@ class TestDownloadTarballUI(BasicTests):
         f = open('tarball', 'w')
         f.write(res)
         f.close()
-        self.failIf(not tarfile.is_tarfile('tarball'))>>>>>>> MERGE-SOURCE
+        self.failIf(not tarfile.is_tarfile('tarball'))
