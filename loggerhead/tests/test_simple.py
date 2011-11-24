@@ -46,7 +46,7 @@ class BasicTests(TestCaseWithTransport):
         self.tree = self.make_branch_and_tree('.')
 
     def setUpLoggerhead(self, **kw):
-        branch_app = BranchWSGIApp(self.tree.branch, '', export_tarballs=True, **kw).app
+        branch_app = BranchWSGIApp(self.tree.branch, '', **kw).app
         return TestApp(HTTPExceptionHandler(branch_app))
 
     def assertOkJsonResponse(self, app, env):

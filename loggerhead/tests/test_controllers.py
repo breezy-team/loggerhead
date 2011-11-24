@@ -19,6 +19,9 @@ import logging
 import tarfile
 import tempfile
 
+from paste.fixture import (
+    AppError,
+    )
 from paste.httpexceptions import HTTPServerError
 
 from testtools.matchers import (
@@ -313,6 +316,7 @@ class TestDownloadTarballUI(BasicTests):
         self.createBranch()
 
     def test_download_tarball(self):
+        # Tarball downloads are enabled by default.
         app = self.setUpLoggerhead()
         response = app.get('/tarball')
         self.assertThat(
@@ -327,3 +331,14 @@ class TestDownloadTarballUI(BasicTests):
         self.assertEquals(
             response.header('Content-Disposition'),
             "attachment; filename*=utf-8''branch.tgz")
+
+    def test_download_tarball_forbidden(self):
+        app = self.setUpLoggerhead(export_tarballs=False)
+        e = self.assertRaises(
+            AppError, 
+            app.get,
+            '/tarball')
+        self.assertContainsRe(
+            str(e),
+            '(?s).*403 Forbidden'
+            '.*Tarball downloads are not allowed from this server')

@@ -97,4 +97,5 @@ class DownloadTarballUI(DownloadUI):
             start_response('200 OK', headers)
             return export_archive(history, root, revid, archive_format)
         else:
-            raise httpexceptions.HTTPSeeOther('/')
+            raise httpexceptions.HTTPForbidden(
+                "Tarball downloads are not allowed from this server")
