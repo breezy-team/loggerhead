@@ -294,8 +294,17 @@ class TestDownloadTarballUI(BasicTests):
 
     def test_download_tarball(self):
         app = self.setUpLoggerhead()
-        res = app.get('/tarball')
+        response = app.get('/tarball')
         f = tempfile.NamedTemporaryFile()
         self.addCleanup(f.close)
-        f.write(res.body)
+        f.write(response.body)
         self.failIf(not tarfile.is_tarfile(f.name))
+        # Maybe the c-t should be more specific, but this is probably good for
+        # making sure it gets saved without the client trying to decompress it
+        # or anything.
+        self.assertEquals(
+            response.header('Content-Type'),
+            'application/octet-stream')
+        self.assertEquals(
+            response.header('Content-Disposition'),
+            "attachment; filename*=utf-8''branch.tar")
