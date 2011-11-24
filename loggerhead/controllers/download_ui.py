@@ -79,7 +79,7 @@ class DownloadTarballUI(DownloadUI):
     def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
         # Tried to re-use code from downloadui, not very successful
-        format = "tar"
+        archive_format = "tgz"
         history = self._history
         self.args = self.get_args(environ)
         if len(self.args):
@@ -88,13 +88,13 @@ class DownloadTarballUI(DownloadUI):
             revid = self.get_revid()
         if self._branch.export_tarballs:
             root = 'branch'
-            encoded_filename = self.encode_filename(root + '.' + format)
+            encoded_filename = self.encode_filename(root + '.' + archive_format)
             headers = [
                 ('Content-Type', 'application/octet-stream'),
                 ('Content-Disposition',
                  "attachment; filename*=utf-8''%s" % (encoded_filename,)),
                 ]
             start_response('200 OK', headers)
-            return export_archive(history, root, revid, format)
+            return export_archive(history, root, revid, archive_format)
         else:
             raise httpexceptions.HTTPSeeOther('/')

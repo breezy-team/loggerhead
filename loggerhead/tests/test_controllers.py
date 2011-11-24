@@ -300,6 +300,7 @@ class IsTarfile(Matcher):
         f = tempfile.NamedTemporaryFile()
         try:
             f.write(content_bytes)
+            f.flush()
             tarfile.open(f.name, mode='r|' + self.compression)
         finally:
             f.close()
@@ -316,7 +317,7 @@ class TestDownloadTarballUI(BasicTests):
         response = app.get('/tarball')
         self.assertThat(
             response.body,
-            IsTarfile(''))
+            IsTarfile('gz'))
         # Maybe the c-t should be more specific, but this is probably good for
         # making sure it gets saved without the client trying to decompress it
         # or anything.
@@ -325,4 +326,4 @@ class TestDownloadTarballUI(BasicTests):
             'application/octet-stream')
         self.assertEquals(
             response.header('Content-Disposition'),
-            "attachment; filename*=utf-8''branch.tar")
+            "attachment; filename*=utf-8''branch.tgz")
