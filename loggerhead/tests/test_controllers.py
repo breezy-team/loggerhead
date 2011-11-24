@@ -17,6 +17,7 @@
 from cStringIO import StringIO
 import logging
 import tarfile
+import tempfile
 
 from paste.httpexceptions import HTTPServerError
 
@@ -294,7 +295,7 @@ class TestDownloadTarballUI(BasicTests):
     def test_download_tarball(self):
         app = self.setUpLoggerhead()
         res = app.get('/tarball')
-        f = open('tarball', 'w')
-        f.write(res)
-        f.close()
-        self.failIf(not tarfile.is_tarfile('tarball'))
+        f = tempfile.NamedTemporaryFile()
+        self.addCleanup(f.close)
+        f.write(res.body)
+        self.failIf(not tarfile.is_tarfile(f.name))
