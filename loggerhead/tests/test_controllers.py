@@ -21,6 +21,11 @@ import tempfile
 
 from paste.httpexceptions import HTTPServerError
 
+from testtools.matchers import (
+    Matcher,
+    Mismatch,
+    )
+
 from bzrlib import errors
 import simplejson
 
@@ -286,6 +291,20 @@ class TestControllerHooks(BasicTests):
         self.assertEquals("I am hooked", app.lookup_app(env))
 
 
+class IsTarfile(Matcher):
+
+    def __init__(self, compression):
+        self.compression = compression
+
+    def match(self, content_bytes):
+        f = tempfile.NamedTemporaryFile()
+        try:
+            f.write(content_bytes)
+            tarfile.open(f.name, mode='r|' + self.compression)
+        finally:
+            f.close()
+
+
 class TestDownloadTarballUI(BasicTests):
 
     def setUp(self):
@@ -295,10 +314,9 @@ class TestDownloadTarballUI(BasicTests):
     def test_download_tarball(self):
         app = self.setUpLoggerhead()
         response = app.get('/tarball')
-        f = tempfile.NamedTemporaryFile()
-        self.addCleanup(f.close)
-        f.write(response.body)
-        self.failIf(not tarfile.is_tarfile(f.name))
+        self.assertThat(
+            response.body,
+            IsTarfile(''))
         # Maybe the c-t should be more specific, but this is probably good for
         # making sure it gets saved without the client trying to decompress it
         # or anything.
