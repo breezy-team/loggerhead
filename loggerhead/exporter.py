@@ -53,7 +53,6 @@ def export_archive(history, root, revid, archive_format):
     """
     fileobj = ExporterFileObject()
     tree = history._branch.repository.revision_tree(revid)
-    import pdb;pdb.set_trace()
     for _ in get_export_generator(tree=tree, root=root, fileobj=fileobj,
         format=archive_format):
         yield fileobj.get_buffer()
