@@ -1,4 +1,5 @@
-<div id="branch-info">
+<div id="branch-info"
+  tal:condition="python:branch.served_url">
   To get this branch, use: <br/>
   <code>bzr branch
   <tal:served-url tal:replace="python:branch.served_url" /></code>

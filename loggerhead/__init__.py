@@ -22,7 +22,7 @@ We also check the versions of some dependencies.
 
 import pkg_resources
 
-__version__ = '1.18.1'
+__version__ = '1.18.1'  # Keep in sync with ../info.py.
 required_bzrlib = (1, 17)
 
 pkg_resources.get_distribution('Paste>=1.6')

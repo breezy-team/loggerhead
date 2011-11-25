@@ -1,7 +1,45 @@
+# Copyright (C) 2008-2011 Canonical Ltd.
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+from cStringIO import StringIO
+import logging
+import tarfile
+import tempfile
+
+from paste.fixture import (
+    AppError,
+    )
+from paste.httpexceptions import HTTPServerError
+
+from testtools.matchers import (
+    Matcher,
+    Mismatch,
+    )
+
+from bzrlib import errors
+import simplejson
+
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.tests.test_simple import BasicTests, consume_app
+from loggerhead.tests.test_simple import (
+    BasicTests,
+    consume_app,
+    TestWithSimpleTree,
+    )
 
 
 class TestInventoryUI(BasicTests):
@@ -258,3 +296,74 @@ class TestControllerHooks(BasicTests):
             'captain hook')
         BranchWSGIApp.hooks.install_named_hook('controller', myhook, "captain hook")
         self.assertEquals("I am hooked", app.lookup_app(env))
+
+
+class IsTarfile(Matcher):
+
+    def __init__(self, compression):
+        self.compression = compression
+
+    def match(self, content_bytes):
+        f = tempfile.NamedTemporaryFile()
+        try:
+            f.write(content_bytes)
+            f.flush()
+            tarfile.open(f.name, mode='r|' + self.compression)
+        finally:
+            f.close()
+
+
+class MatchesTarballHeaders(Matcher):
+
+    def __init__(self, expect_filename):
+        self.expect_filename = expect_filename
+
+    def match(self, response):
+        # Maybe the c-t should be more specific, but this is probably good for
+        # making sure it gets saved without the client trying to decompress it
+        # or anything.
+        if (response.header('Content-Type') == 'application/octet-stream'
+            and response.header('Content-Disposition') ==
+            "attachment; filename*=utf-8''" + self.expect_filename):
+            pass
+        else:
+            return Mismatch("wrong response headers: %r"
+                % response.headers)
+
+
+class TestDownloadTarballUI(TestWithSimpleTree):
+
+    def setUp(self):
+        super(TestDownloadTarballUI, self).setUp()
+
+    def test_download_tarball(self):
+        # Tarball downloads are enabled by default.
+        app = self.setUpLoggerhead()
+        response = app.get('/tarball')
+        self.assertThat(
+            response.body,
+            IsTarfile('gz'))
+        self.assertThat(
+            response,
+            MatchesTarballHeaders('branch.tgz'))
+
+    def test_download_tarball_of_version(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/tarball/1')
+        self.assertThat(
+            response.body,
+            IsTarfile('gz'))
+        self.assertThat(
+            response,
+            MatchesTarballHeaders('branch-r1.tgz'))
+
+    def test_download_tarball_forbidden(self):
+        app = self.setUpLoggerhead(export_tarballs=False)
+        e = self.assertRaises(
+            AppError, 
+            app.get,
+            '/tarball')
+        self.assertContainsRe(
+            str(e),
+            '(?s).*403 Forbidden'
+            '.*Tarball downloads are not allowed')
