@@ -33,6 +33,9 @@ from loggerhead.apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
+from loggerhead.tests.fixtures import (
+    SampleBranch,
+    )
 
 
 class BasicTests(TestCaseWithTransport):
@@ -71,18 +74,14 @@ class TestWithSimpleTree(BasicTests):
 
     def setUp(self):
         BasicTests.setUp(self)
-        self.createBranch()
+        self.sample_branch_fixture = SampleBranch(self)
 
-        self.filecontents = ('some\nmultiline\ndata\n'
-                             'with<htmlspecialchars\n')
-        filenames = ['myfilename', 'anotherfile<']
-        self.build_tree_contents(
-            (filename, self.filecontents) for filename in filenames)
-        for filename in filenames:
-            self.tree.add(filename, '%s-id' % filename)
-        self.fileid = self.tree.path2id('myfilename')
-        self.msg = 'a very exciting commit message <'
-        self.revid = self.tree.commit(message=self.msg)
+        # XXX: This could be cleaned up more... -- mbp 2011-11-25
+        self.useFixture(self.sample_branch_fixture)
+        self.tree = self.sample_branch_fixture.tree
+        self.fileid = self.sample_branch_fixture.fileid
+        self.filecontents = self.sample_branch_fixture.filecontents
+        self.msg = self.sample_branch_fixture.msg
 
     def test_public_private(self):
         app = self.make_branch_app(self.tree.branch, private=True)
