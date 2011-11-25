@@ -79,23 +79,29 @@ class DownloadTarballUI(DownloadUI):
     def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
         # Tried to re-use code from downloadui, not very successful
+        if not self._branch.export_tarballs:
+            raise httpexceptions.HTTPForbidden(
+                "Tarball downloads are not allowed")
         archive_format = "tgz"
         history = self._history
         self.args = self.get_args(environ)
         if len(self.args):
             revid = history.fix_revid(self.args[0])
+            version_part = '-r' + self.args[0]
         else:
             revid = self.get_revid()
-        if self._branch.export_tarballs:
-            root = 'branch'
-            encoded_filename = self.encode_filename(root + '.' + archive_format)
-            headers = [
-                ('Content-Type', 'application/octet-stream'),
-                ('Content-Disposition',
-                 "attachment; filename*=utf-8''%s" % (encoded_filename,)),
-                ]
-            start_response('200 OK', headers)
-            return export_archive(history, root, revid, archive_format)
-        else:
-            raise httpexceptions.HTTPForbidden(
-                "Tarball downloads are not allowed from this server")
+            version_part = ''
+        # XXX: Perhaps some better suggestion based on the URL or path?
+        #
+        # TODO: Perhaps set the tarball suggested mtime to the revision
+        # mtime.
+        root = self._branch.friendly_name or 'branch'
+        encoded_filename = self.encode_filename(
+            root + version_part + '.' + archive_format)
+        headers = [
+            ('Content-Type', 'application/octet-stream'),
+            ('Content-Disposition',
+                "attachment; filename*=utf-8''%s" % (encoded_filename,)),
+            ]
+        start_response('200 OK', headers)
+        return export_archive(history, root, revid, archive_format)

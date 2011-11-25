@@ -35,7 +35,11 @@ import simplejson
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
 from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.tests.test_simple import BasicTests, consume_app
+from loggerhead.tests.test_simple import (
+    BasicTests,
+    consume_app,
+    TestWithSimpleTree,
+    )
 
 
 class TestInventoryUI(BasicTests):
@@ -309,11 +313,28 @@ class IsTarfile(Matcher):
             f.close()
 
 
-class TestDownloadTarballUI(BasicTests):
+class MatchesTarballHeaders(Matcher):
+
+    def __init__(self, expect_filename):
+        self.expect_filename = expect_filename
+
+    def match(self, response):
+        # Maybe the c-t should be more specific, but this is probably good for
+        # making sure it gets saved without the client trying to decompress it
+        # or anything.
+        if (response.header('Content-Type') == 'application/octet-stream'
+            and response.header('Content-Disposition') ==
+            "attachment; filename*=utf-8''" + self.expect_filename):
+            pass
+        else:
+            return Mismatch("wrong response headers: %r"
+                % response.headers)
+
+
+class TestDownloadTarballUI(TestWithSimpleTree):
 
     def setUp(self):
         super(TestDownloadTarballUI, self).setUp()
-        self.createBranch()
 
     def test_download_tarball(self):
         # Tarball downloads are enabled by default.
@@ -322,15 +343,19 @@ class TestDownloadTarballUI(BasicTests):
         self.assertThat(
             response.body,
             IsTarfile('gz'))
-        # Maybe the c-t should be more specific, but this is probably good for
-        # making sure it gets saved without the client trying to decompress it
-        # or anything.
-        self.assertEquals(
-            response.header('Content-Type'),
-            'application/octet-stream')
-        self.assertEquals(
-            response.header('Content-Disposition'),
-            "attachment; filename*=utf-8''branch.tgz")
+        self.assertThat(
+            response,
+            MatchesTarballHeaders('branch.tgz'))
+
+    def test_download_tarball_of_version(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/tarball/1')
+        self.assertThat(
+            response.body,
+            IsTarfile('gz'))
+        self.assertThat(
+            response,
+            MatchesTarballHeaders('branch-r1.tgz'))
 
     def test_download_tarball_forbidden(self):
         app = self.setUpLoggerhead(export_tarballs=False)
@@ -341,4 +366,4 @@ class TestDownloadTarballUI(BasicTests):
         self.assertContainsRe(
             str(e),
             '(?s).*403 Forbidden'
-            '.*Tarball downloads are not allowed from this server')
+            '.*Tarball downloads are not allowed')
