@@ -140,6 +140,7 @@ class RevisionUI(TemplatedBranchView):
                 self._branch.friendly_name,
                 self._branch.is_root,
                 'changes'))
+        can_export = self._branch.export_tarballs
 
         values.update({
             'history': self._history,
@@ -153,6 +154,7 @@ class RevisionUI(TemplatedBranchView):
             'filter_file_id': filter_file_id,
             'diff_chunks': diff_chunks,
             'query': query,
+            'can_export': can_export,
             'specific_path': path,
             'start_revid': start_revid,
         })

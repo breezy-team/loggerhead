@@ -21,7 +21,7 @@ import bzrlib.errors
 import simplejson
 import time
 
-from paste.httpexceptions import HTTPNotFound
+from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
 from paste.request import path_info_pop, parse_querystring
 
 from loggerhead import util
