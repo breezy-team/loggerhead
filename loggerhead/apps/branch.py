@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-#
+
 """The WSGI application for serving a Bazaar branch."""
 
 import logging
@@ -22,6 +22,7 @@ import sys
 
 import bzrlib.branch
 import bzrlib.errors
+from bzrlib.hooks import Hooks
 import bzrlib.lru_cache
 
 from paste import request
@@ -33,7 +34,7 @@ from loggerhead.controllers.view_ui import ViewUI
 from loggerhead.controllers.atom_ui import AtomUI
 from loggerhead.controllers.changelog_ui import ChangeLogUI
 from loggerhead.controllers.diff_ui import DiffUI
-from loggerhead.controllers.download_ui import DownloadUI
+from loggerhead.controllers.download_ui import DownloadUI, DownloadTarballUI
 from loggerhead.controllers.filediff_ui import FileDiffUI
 from loggerhead.controllers.inventory_ui import InventoryUI
 from loggerhead.controllers.revision_ui import RevisionUI
@@ -49,7 +50,13 @@ class BranchWSGIApp(object):
 
     def __init__(self, branch, friendly_name=None, config={},
                  graph_cache=None, branch_link=None, is_root=False,
-                 served_url=_DEFAULT, use_cdn=False):
+                 served_url=_DEFAULT, use_cdn=False, private=False,
+                 export_tarballs=True):
+        """Create branch-publishing WSGI app.
+
+        :param export_tarballs: If true, allow downloading snapshots of revisions
+            as tarballs.
+        """
         self.branch = branch
         self._config = config
         self.friendly_name = friendly_name
@@ -61,6 +68,14 @@ class BranchWSGIApp(object):
         self.is_root = is_root
         self.served_url = served_url
         self.use_cdn = use_cdn
+        self.private = private
+        self.export_tarballs = export_tarballs
+
+    def public_private_css(self):
+        if self.private:
+            return "private"
+        else:
+            return "public"
 
     def get_history(self):
         revinfo_disk_cache = None
@@ -123,6 +138,7 @@ class BranchWSGIApp(object):
         'revision': RevisionUI,
         'search': SearchUI,
         'view': ViewUI,
+        'tarball': DownloadTarballUI,
         }
 
     def last_updated(self):
@@ -155,6 +171,10 @@ class BranchWSGIApp(object):
                     self.served_url = self.url([])
                 except bzrlib.errors.InvalidURL:
                     self.served_url = None
+        for hook in self.hooks['controller']:
+            controller = hook(self, environ)
+            if controller is not None:
+                return controller
         path = request.path_info_pop(environ)
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
@@ -165,9 +185,9 @@ class BranchWSGIApp(object):
             environ['loggerhead.as_json'] = True
             path = request.path_info_pop(environ)
         cls = self.controllers_dict.get(path)
-        if cls is None:
-            raise httpexceptions.HTTPNotFound()
-        return cls(self, self.get_history)
+        if cls is not None:
+            return cls(self, self.get_history)
+        raise httpexceptions.HTTPNotFound()
 
     def app(self, environ, start_response):
         self.branch.lock_read()
@@ -181,3 +201,23 @@ class BranchWSGIApp(object):
                 raise
         finally:
             self.branch.unlock()
+
+
+class BranchWSGIAppHooks(Hooks):
+    """A dictionary mapping hook name to a list of callables for WSGI app branch hooks.
+    """
+
+    def __init__(self):
+        """Create the default hooks.
+        """
+        Hooks.__init__(self, "bzrlib.plugins.loggerhead.apps.branch",
+            "BranchWSGIApp.hooks")
+        self.add_hook('controller',
+            "Invoked when looking for the controller to use for a "
+            "branch subpage. The api signature is (branch_app, environ)."
+            "If a hook can provide a controller, it should return one, "
+            "as a standard WSGI app. If it can't provide a controller, "
+            "it should return None", (1, 19))
+
+
+BranchWSGIApp.hooks = BranchWSGIAppHooks()
