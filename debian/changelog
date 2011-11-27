@@ -1,6 +1,7 @@
 loggerhead (1.19~bzr461-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
+  * Add build-dependency on python-fixtures, required for running testsuite.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Sat, 26 Nov 2011 18:50:21 +0100
 
