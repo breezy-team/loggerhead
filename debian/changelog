@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr461-1) UNRELEASED; urgency=low
+loggerhead (1.19~bzr461-1) unstable; urgency=low
 
   * New upstream snapshot.
   * Add build-dependency on python-fixtures, required for running testsuite.
