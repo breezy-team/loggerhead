@@ -555,8 +555,8 @@ def lsprof(f):
 #         for re-ordering an existing page by different sort
 
 t_context = threading.local()
-_valid = ('start_revid', 'file_id', 'filter_file_id', 'q', 'remember',
-          'compare_revid', 'sort')
+_valid = (
+    'start_revid', 'filter_file_id', 'q', 'remember', 'compare_revid', 'sort')
 
 
 def set_context(map):
