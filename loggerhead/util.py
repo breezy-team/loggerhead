@@ -226,7 +226,7 @@ html_entity_subs = [
 def html_escape(s):
     """Transform dangerous (X)HTML characters into entities.
 
-    Like cgi.escape, except also escaping " and '. This makes it safe to use
+    Like cgi.escape, except also escaping \" and '. This makes it safe to use
     in both attribute and element content.
 
     If you want to safely fill a format string with escaped values, use
@@ -484,7 +484,7 @@ def branch_breadcrumbs(path, inv, view):
     for index, dir_name in enumerate(dir_parts):
         inner_breadcrumbs.append({
             'dir_name': dir_name,
-            'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            'path': '/'.join(dir_parts[:index + 1]),
             'suffix': '/' + view,
         })
     return inner_breadcrumbs
@@ -555,8 +555,8 @@ def lsprof(f):
 #         for re-ordering an existing page by different sort
 
 t_context = threading.local()
-_valid = ('start_revid', 'file_id', 'filter_file_id', 'q', 'remember',
-          'compare_revid', 'sort')
+_valid = (
+    'start_revid', 'filter_file_id', 'q', 'remember', 'compare_revid', 'sort')
 
 
 def set_context(map):
