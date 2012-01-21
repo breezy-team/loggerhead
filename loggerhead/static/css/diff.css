@@ -29,6 +29,7 @@ ul#list-files li.desc {
     margin: 0 0 5px 0;
     font-size:  77%;
     color: #666;
+    word-wrap: break-word;
     }
 /*Diff Boxes*/
 .diffBox {
