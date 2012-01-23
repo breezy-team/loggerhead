@@ -786,7 +786,8 @@ iso style "yyyy-mm-dd")
         """
         repo = self._branch.repository
         if (bzrlib.revision.is_null(old_revid) or
-            bzrlib.revision.is_null(new_revid)):
+            bzrlib.revision.is_null(new_revid) or
+            old_revid == new_revid):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
