@@ -136,22 +136,19 @@ class FileChangeReporter(object):
                 new_revision=self.revid(self.new_inv, file_id)))
         if versioned == 'added':
             self.added.append(util.Container(
-                filename=rich_filename(paths[1], kind),
-                file_id=file_id, kind=kind[1]))
+                filename=rich_filename(paths[1], kind), kind=kind[1]))
         elif versioned == 'removed':
             self.removed.append(util.Container(
-                filename=rich_filename(paths[0], kind),
-                file_id=file_id, kind=kind[0]))
+                filename=rich_filename(paths[0], kind), kind=kind[0]))
         elif renamed:
             self.renamed.append(util.Container(
                 old_filename=rich_filename(paths[0], kind[0]),
                 new_filename=rich_filename(paths[1], kind[1]),
-                file_id=file_id,
-                text_modified=modified == 'modified'))
+                text_modified=modified == 'modified', exe_change=exe_change))
         else:
             self.modified.append(util.Container(
                 filename=rich_filename(paths[1], kind),
-                file_id=file_id))
+                text_modified=modified == 'modified', exe_change=exe_change))
 
 # The lru_cache is not thread-safe, so we need a lock around it for
 # all threads.
