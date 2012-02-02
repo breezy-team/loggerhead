@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-1.19 [???]
-----------------
+1.19 [????]
+-----------
 
     - Add ``bzr load-test-loggerhead`` as a way to make sure loggerhead can
       handle concurrent requests, etc. Scripts can be written that spawn
@@ -49,6 +49,9 @@ What's changed in loggerhead?
       marked as private and a notification ribbon to be displayed via
       javascript on the view pages. (JC Sackett, #823471)
 
+    - Add a script and documentation for running under mod_wsgi.
+      (Stuart Colville, Toshio Kuratomi)
+
 
 1.18.1 [24Mar2011]
 ------------------
@@ -93,7 +96,6 @@ What's changed in loggerhead?
 
     - Fix bad redirect when visiting "/download" or "/download/".
       (Matt Nordhoff, #247992)
-
 
 1.17 [20Aug2009]
 ----------------
