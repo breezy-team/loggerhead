@@ -35,7 +35,7 @@ class DirEntry(object):
         if branch is not None:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_change = datetime.datetime.fromtimestamp(
+                self.last_change = datetime.datetime.utcfromtimestamp(
                     branch.repository.get_revision(
                         branch.last_revision()).timestamp)
             except:

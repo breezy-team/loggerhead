@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-1.19 [????]
------------
+NEXT
+----
 
     - Add ``bzr load-test-loggerhead`` as a way to make sure loggerhead can
       handle concurrent requests, etc. Scripts can be written that spawn
@@ -51,6 +51,9 @@ What's changed in loggerhead?
 
     - Add a script and documentation for running under mod_wsgi.
       (Stuart Colville, Toshio Kuratomi)
+
+    - Make tz calculations consistent and use UTC in the UI everywhere we show
+      a precise timestamp. (Robert Collins, #594591)
 
 
 1.18.1 [24Mar2011]

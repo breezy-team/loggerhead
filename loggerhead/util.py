@@ -52,13 +52,12 @@ def fix_year(year):
 # Display of times.
 
 # date_day -- just the day
-# date_time -- full date with time
+# date_time -- full date with time (UTC)
 #
-# displaydate -- for use in sentences
 # approximatedate -- for use in tables
 #
-# displaydate and approximatedate return an elementtree <span> Element
-# with the full date in a tooltip.
+# approximatedate return an elementtree <span> Element
+# with the full date (UTC) in a tooltip.
 
 
 def date_day(value):
@@ -67,17 +66,10 @@ def date_day(value):
 
 def date_time(value):
     if value is not None:
-        return value.strftime('%Y-%m-%d %H:%M:%S')
+        # Note: this assumes that the value is UTC in some fashion.
+        return value.strftime('%Y-%m-%d %H:%M:%S UTC')
     else:
         return 'N/A'
-
-
-def _displaydate(date):
-    delta = abs(datetime.datetime.now() - date)
-    if delta > datetime.timedelta(1, 0, 0):
-        # far in the past or future, display the date
-        return 'on ' + date_day(date)
-    return _approximatedate(date)
 
 
 def _approximatedate(date):
@@ -124,10 +116,6 @@ def _wrap_with_date_time_title(date, formatted_date):
 def approximatedate(date):
     #FIXME: Returns an object instead of a string
     return _wrap_with_date_time_title(date, _approximatedate(date))
-
-
-def displaydate(date):
-    return _wrap_with_date_time_title(date, _displaydate(date))
 
 
 class Container(object):

@@ -129,8 +129,8 @@
             <td tal:condition="show_tag_col" tal:content="string:${entry/tags}"
                 class="tagcell"></td>
             <td class="date">
-              <span tal:attributes="title python:util.date_time(entry.date)"
-                    tal:content="python:util._approximatedate(entry.date)"></span>
+              <span tal:attributes="title python:util.date_time(entry.utc_date)"
+                    tal:content="python:util._approximatedate(entry.utc_date)"></span>
             </td>
             <td class="diffr"><a tal:attributes="title python:'Show diff at revision '+entry.revno;
                                                  href python:url(['/revision', entry.revno], clear=1)">
