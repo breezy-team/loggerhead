@@ -30,7 +30,10 @@ setup(
     license = "GNU GPL v2 or later",
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
-    scripts = ["serve-branches"],
+    scripts = [
+        "serve-branches",
+        "loggerhead.wsgi",
+        ],
     packages = ["loggerhead",
                 "loggerhead/apps",
                 "loggerhead/controllers",
@@ -65,5 +68,8 @@ setup(
                                    "static/images/*"]},
     data_files = [
         ('share/man/man1', ['serve-branches.1']),
+        ('share/doc/loggerhead', ['loggerhead.conf.example',
+                                  'apache-loggerhead.conf',
+                                  'bazaar.conf']),
         ],
     )
