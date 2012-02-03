@@ -22,7 +22,10 @@ import tempfile
 from paste.fixture import (
     AppError,
     )
-from paste.httpexceptions import HTTPServerError
+from paste.httpexceptions import (
+    HTTPNotFound,
+    HTTPServerError,
+    )
 
 from testtools.matchers import (
     Matcher,
@@ -201,6 +204,13 @@ class TestAnnotateUI(BasicTests):
             kwargs={'file_id': 'file_id'}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
+
+    def test_annotate_nonexistent_file(self):
+        history = [('rev1', '' , '.')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        ann_ui.args = ['rev1']
+        self.assertRaises(
+            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
 
 class TestFileDiffUI(BasicTests):

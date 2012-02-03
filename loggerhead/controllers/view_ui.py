@@ -24,7 +24,12 @@ import bzrlib.errors
 import bzrlib.textfile
 import bzrlib.osutils
 
-from paste.httpexceptions import HTTPBadRequest, HTTPServerError, HTTPMovedPermanently
+from paste.httpexceptions import (
+    HTTPBadRequest,
+    HTTPMovedPermanently,
+    HTTPNotFound,
+    HTTPServerError,
+    )
 
 from loggerhead.controllers import TemplatedBranchView
 try:
@@ -119,7 +124,12 @@ class ViewUI(TemplatedBranchView):
             raise HTTPServerError('Could not fetch changes')
         branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
 
-        if inv[file_id].kind == "directory":
+        try:
+            file = inv[file_id]
+        except bzrlib.errors.NoSuchId:
+            raise HTTPNotFound()
+
+        if file.kind == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         return {
