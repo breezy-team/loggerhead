@@ -14,26 +14,18 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from cStringIO import StringIO
-import logging
 import tarfile
 import tempfile
 
 from paste.fixture import (
     AppError,
     )
-from paste.httpexceptions import (
-    HTTPNotFound,
-    HTTPServerError,
-    )
+from paste.httpexceptions import HTTPNotFound
 
 from testtools.matchers import (
     Matcher,
     Mismatch,
     )
-
-from bzrlib import errors
-import simplejson
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.controllers.annotate_ui import AnnotateUI
@@ -159,7 +151,6 @@ class TestRevisionUI(BasicTests):
         self.assertOkJsonResponse(revision_ui, env)
 
 
-
 class TestAnnotateUI(BasicTests):
 
     def make_annotate_ui_for_file_history(self, file_id, rev_ids_texts):
@@ -192,12 +183,13 @@ class TestAnnotateUI(BasicTests):
         history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '')]
         ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
         ann_ui.args = ['rev2']
-        annotate_info = ann_ui.get_values('filename',
-            kwargs={'file_id': 'file_id'}, headers={})
+        ann_ui.get_values(
+            'filename', kwargs={'file_id': 'file_id'}, headers={})
 
     def test_annotate_file_zero_sized(self):
-        # Test against a zero-sized file without breaking. No annotation must be present.
-        history = [('rev1', '' , '.')]
+        # Test against a zero-sized file without breaking. No annotation
+        # must be present.
+        history = [('rev1', '', '.')]
         ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
         ann_ui.args = ['rev1']
         annotate_info = ann_ui.get_values('filename',
@@ -206,9 +198,16 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(0, len(annotated))
 
     def test_annotate_nonexistent_file(self):
-        history = [('rev1', '' , '.')]
+        history = [('rev1', '', '.')]
         ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
         ann_ui.args = ['rev1']
+        self.assertRaises(
+            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
+
+    def test_annotate_nonexistent_rev(self):
+        history = [('rev1', '', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        ann_ui.args = ['norev']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
@@ -308,6 +307,55 @@ class TestControllerHooks(BasicTests):
         self.assertEquals("I am hooked", app.lookup_app(env))
 
 
+class MatchesDownloadHeaders(Matcher):
+
+    def __init__(self, expect_filename, expect_mimetype):
+        self.expect_filename = expect_filename
+        self.expect_mimetype = expect_mimetype
+
+    def match(self, response):
+        # Maybe the c-t should be more specific, but this is probably good for
+        # making sure it gets saved without the client trying to decompress it
+        # or anything.
+        if (response.header('Content-Type') == self.expect_mimetype
+            and response.header('Content-Disposition') ==
+            "attachment; filename*=utf-8''" + self.expect_filename):
+            pass
+        else:
+            return Mismatch("wrong response headers: %r"
+                % response.headers)
+
+    def __str__(self):
+        return 'MatchesDownloadHeaders(%r, %r)' % (
+            self.expect_filename, self.expect_mimetype)
+
+
+class TestDownloadUI(TestWithSimpleTree):
+
+    def test_download(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/download/1/myfilename-id/myfilename')
+        self.assertEqual(
+            'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+        self.assertThat(
+            response,
+            MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
+
+    def test_download_bad_revision(self):
+        app = self.setUpLoggerhead()
+        e = self.assertRaises(
+            AppError,
+            app.get, '/download/norev/myfilename-id/myfilename')
+        self.assertContainsRe(str(e), '404 Not Found')
+
+    def test_download_bad_fileid(self):
+        app = self.setUpLoggerhead()
+        e = self.assertRaises(
+            AppError,
+            app.get, '/download/1/myfilename-notid/myfilename')
+        self.assertContainsRe(str(e), '404 Not Found')
+
+
 class IsTarfile(Matcher):
 
     def __init__(self, compression):
@@ -323,28 +371,7 @@ class IsTarfile(Matcher):
             f.close()
 
 
-class MatchesTarballHeaders(Matcher):
-
-    def __init__(self, expect_filename):
-        self.expect_filename = expect_filename
-
-    def match(self, response):
-        # Maybe the c-t should be more specific, but this is probably good for
-        # making sure it gets saved without the client trying to decompress it
-        # or anything.
-        if (response.header('Content-Type') == 'application/octet-stream'
-            and response.header('Content-Disposition') ==
-            "attachment; filename*=utf-8''" + self.expect_filename):
-            pass
-        else:
-            return Mismatch("wrong response headers: %r"
-                % response.headers)
-
-
 class TestDownloadTarballUI(TestWithSimpleTree):
-
-    def setUp(self):
-        super(TestDownloadTarballUI, self).setUp()
 
     def test_download_tarball(self):
         # Tarball downloads are enabled by default.
@@ -355,7 +382,7 @@ class TestDownloadTarballUI(TestWithSimpleTree):
             IsTarfile('gz'))
         self.assertThat(
             response,
-            MatchesTarballHeaders('branch.tgz'))
+            MatchesDownloadHeaders('branch.tgz', 'application/octet-stream'))
 
     def test_download_tarball_of_version(self):
         app = self.setUpLoggerhead()
@@ -365,12 +392,13 @@ class TestDownloadTarballUI(TestWithSimpleTree):
             IsTarfile('gz'))
         self.assertThat(
             response,
-            MatchesTarballHeaders('branch-r1.tgz'))
+            MatchesDownloadHeaders(
+                'branch-r1.tgz', 'application/octet-stream'))
 
     def test_download_tarball_forbidden(self):
         app = self.setUpLoggerhead(export_tarballs=False)
         e = self.assertRaises(
-            AppError, 
+            AppError,
             app.get,
             '/tarball')
         self.assertContainsRe(

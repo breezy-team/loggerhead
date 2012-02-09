@@ -19,10 +19,14 @@
 
 import logging
 import mimetypes
-import os
 import urllib
 
+from bzrlib.errors import (
+    NoSuchId,
+    NoSuchRevision,
+    )
 from paste import httpexceptions
+from paste.httpexceptions import HTTPNotFound
 from paste.request import path_info_pop
 
 from loggerhead.controllers import TemplatedBranchView
@@ -55,7 +59,10 @@ class DownloadUI (TemplatedBranchView):
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
         file_id = args[1]
-        path, filename, content = h.get_file(file_id, revid)
+        try:
+            path, filename, content = h.get_file(file_id, revid)
+        except (NoSuchId, NoSuchRevision):
+            raise HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
             mime_type = 'application/octet-stream'
