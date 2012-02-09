@@ -26,7 +26,6 @@ from bzrlib.errors import (
     NoSuchRevision,
     )
 from paste import httpexceptions
-from paste.httpexceptions import HTTPNotFound
 from paste.request import path_info_pop
 
 from loggerhead.controllers import TemplatedBranchView
@@ -62,7 +61,7 @@ class DownloadUI (TemplatedBranchView):
         try:
             path, filename, content = h.get_file(file_id, revid)
         except (NoSuchId, NoSuchRevision):
-            raise HTTPNotFound()
+            raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
             mime_type = 'application/octet-stream'
