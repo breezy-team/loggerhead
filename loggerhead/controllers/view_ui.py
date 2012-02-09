@@ -18,9 +18,12 @@
 #
 
 import os
-import time
 
-import bzrlib.errors
+from bzrlib.errors import (
+    BinaryFile,
+    NoSuchId,
+    NoSuchRevision,
+    )
 import bzrlib.textfile
 import bzrlib.osutils
 
@@ -76,7 +79,7 @@ class ViewUI(TemplatedBranchView):
     def file_contents(self, file_id, revid):
         try:
             file_lines = self.text_lines(file_id, revid)
-        except bzrlib.errors.BinaryFile:
+        except BinaryFile:
             # bail out; this isn't displayable text
             return ['(This is a binary file.)']
 
@@ -92,17 +95,17 @@ class ViewUI(TemplatedBranchView):
             raise HTTPBadRequest('No file_id or filename '
                                  'provided to view')
 
-        if file_id is None:
-            file_id = history.get_file_id(revid, path)
+        try:
+            if file_id is None:
+                file_id = history.get_file_id(revid, path)
+            if path is None:
+                path = history.get_path(revid, file_id)
+        except (NoSuchId, NoSuchRevision):
+            raise HTTPNotFound()
 
-        # no navbar for revisions
-        navigation = util.Container()
-
-        if path is None:
-            path = history.get_path(revid, file_id)
         filename = os.path.basename(path)
 
-        change = history.get_changes([ revid ])[0]
+        change = history.get_changes([revid])[0]
         # If we're looking at the tip, use head: in the URL instead
         if revid == branch.last_revision():
             revno_url = 'head:'
@@ -126,11 +129,14 @@ class ViewUI(TemplatedBranchView):
 
         try:
             file = inv[file_id]
-        except bzrlib.errors.NoSuchId:
+        except NoSuchId:
             raise HTTPNotFound()
 
         if file.kind == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
+
+        # no navbar for revisions
+        navigation = util.Container()
 
         return {
             # In AnnotateUI, "annotated" is a dictionary mapping lines to changes.

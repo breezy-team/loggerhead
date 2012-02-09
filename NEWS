@@ -55,8 +55,9 @@ NEXT
     - Make tz calculations consistent and use UTC in the UI everywhere we show
       a precise timestamp. (Robert Collins, #594591)
 
-    - Avoid crashing when viewing or annotating a non-existent file.
-      (William Grant, #728209)
+    - Avoid crashing when viewing, annotating or downloading a
+      non-existent file or revision.
+      (William Grant, #728209, #929275)
 
 
 1.18.1 [24Mar2011]
