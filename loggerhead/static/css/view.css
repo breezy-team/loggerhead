@@ -1,47 +1,40 @@
 /*table*/
 #logentries,
-.viewRev,
 .viewLine {
     border: 1px solid #d2d2d2;
-}
+    }
 .viewRev {
     border-right: none;
     white-space: nowrap;
     width: 1px;
     padding: .3em .6em;
-}
+    }
 .viewComm,
 .viewCont {
     border: none;
     }
 .viewLine {
     border-style: none solid none none;
-    width: 20px;
-    padding-left: .6em;
-    padding-right: .2em;
     }
 .viewLine.first {
     border-style: solid solid none none;
-}
-.viewCont {
-    padding-left: .4em;
     }
-.viewLine,
 .viewCont {
-    font-size: 116%;
-    font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
-    line-height: 108%;
-    whitespace: pre;
+    padding: 0.2em 0.5em;
     }
+.viewLine {
+    padding: 0.2em 0.2em;
+    }
+.viewLine pre,
 .viewCont pre {
+    font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
+    font-size: 100%;
+    line-height: 110%;
     margin: 0;
     }
-.viewLine {
-    text-align: center;
-    }
-.viewLine {
-    font-size: 93%;
+.viewLine pre {
+    text-align: right;
     }
 .viewAuthors {
     color: #999999;
-}
+    }
