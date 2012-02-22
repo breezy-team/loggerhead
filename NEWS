@@ -59,6 +59,9 @@ NEXT
       non-existent file or revision.
       (William Grant, #728209, #929275)
 
+    - Fix diff and view page styling to be more compact and more easily
+      copyable. (William Grant, #743295)
+
 
 1.18.1 [24Mar2011]
 ------------------

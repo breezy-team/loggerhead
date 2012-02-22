@@ -54,14 +54,14 @@ function make_sbs(chunk) {
     if (added.length > removed.length) {
       for (var j = common; j < added.length; j++) {
         a = added[j];
-        a.insertBefore(a.create('<div class="blank">&nbsp;</div>'), a.query('.lineNumber.second'));
+        a.insertBefore(a.create('<div class="code blank">&nbsp;</div>'), a.query('.lineNumber.second'));
       }
     }
     else if (added.length < removed.length) {
       for (var j = common; j < removed.length; j++) {
         r = removed[j];
         r.insertBefore(r.query('.code.delete'), r.query('.lineNumber.second'));
-        r.insertBefore(r.create('<div class="blank">&nbsp;</div>'), r.query('.clear'));
+        r.insertBefore(r.create('<div class="code blank">&nbsp;</div>'), r.query('.clear'));
       }
     }
     added.length = 0;

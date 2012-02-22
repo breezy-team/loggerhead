@@ -71,7 +71,7 @@
 
       <div class="view">
         <table id="logentries">
-          <tal:rep tal:repeat="line contents">
+          <tal:rep tal:condition="annotated" tal:repeat="line contents">
             <tr>
               <td tal:condition="python:path('repeat/line/number') in annotated"
                   tal:define="anno python:annotated.get(path('repeat/line/number'), None)"
@@ -86,12 +86,23 @@
                 <span tal:content="python:anno.message"></span>
               </td>
               <td tal:attributes="class python:path('repeat/line/number') in annotated and 'viewLine first' or 'viewLine'">
-                <a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
-                   tal:content="repeat/line/number">1</a>
+                <pre><a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
+                   tal:content="repeat/line/number">1</a></pre>
               </td>
               <td class="viewCont"><pre tal:content="structure line"></pre></td>
             </tr>
           </tal:rep>
+          <tr tal:condition="not: annotated">
+            <td class="viewLine">
+              <pre><tal:blah repeat="line python:range(1, len(contents) + 1)"><a
+                 tal:attributes="id string:L${line}; href string:#L${line}"
+                 tal:content="line">1</a>
+              </tal:blah></pre>
+            </td>
+            <td class="viewCont">
+              <pre tal:content="structure python:''.join(contents)"></pre>
+            </td>
+            </tr>
         </table>
       </div>
 
