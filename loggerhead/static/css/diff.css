@@ -68,17 +68,11 @@ ul#list-files li.desc {
     color: #000;
     font-size: 85%;
     font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
-    line-height: 180%;
-    }
-.blank {
-    float: left;
-    padding: 0 1%;
     }
 .unified .code {
     width: 89%;
     }
-.sbs .code,
-.blank {
+.sbs .code {
     width: 43%;
     overflow: hidden;
     }
