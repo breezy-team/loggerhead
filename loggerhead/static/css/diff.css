@@ -37,9 +37,9 @@ ul#list-files li.desc {
     background: #eef6fa;
     border: 1px solid #d2d2d2;
     margin: 10px 0 0 0;
-    -webkit-border-radius: 7px 7px 0px 0px;
-    -moz-border-radius: 7px 7px 0px 0px;
-    border-radius: 7px 7px 0px 0px;
+    -webkit-border-radius: 7px 7px 7px 0px;
+    -moz-border-radius: 7px 7px 7px 0px;
+    border-radius: 7px 7px 7px 0px;
     }
 .diffBox img {
     vertical-align: middle;
