@@ -64,6 +64,11 @@ ul#list-files li.desc {
 .unified .lineNumber.second {
     border-left: 0;
     }
+.unified {
+    border-width: 1px;
+    border-bottom-style: solid;
+    border-color: #d5d5d5;
+}
 .code,
 .lineNumber {
     float: left;
