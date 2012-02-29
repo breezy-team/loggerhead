@@ -52,6 +52,7 @@ ul#list-files li.desc {
     }
 .diffinfo {
     overflow: hidden;
+    border-bottom: 1px solid #d5d5d5;
     }
 .lineNumber {
     width: 2%;
