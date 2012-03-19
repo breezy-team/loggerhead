@@ -28,9 +28,6 @@
 .viewLine pre,
 .viewCont pre {
     font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
-    font-size: 100%;
-    line-height: 110%;
-    margin: 0;
     }
 .viewLine pre {
     text-align: right;
