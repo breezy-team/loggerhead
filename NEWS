@@ -65,6 +65,9 @@ NEXT
     - Some small UI changes; extra border at the bottom of file diffs and
       rounded corners in UI. (Cruz Bishop)
 
+    - Updated the Free Software Foundation address in headers. (Toshio
+      Kuratomi)
+
 
 1.18.1 [24Mar2011]
 ------------------
