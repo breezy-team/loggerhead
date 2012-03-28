@@ -68,6 +68,9 @@ NEXT
     - Updated the Free Software Foundation address in headers. (Toshio
       Kuratomi)
 
+    - Updated css to handle wrapping of long comments.
+      (Francesco Del Degan, #276768)
+
 
 1.18.1 [24Mar2011]
 ------------------
