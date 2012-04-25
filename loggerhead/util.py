@@ -332,7 +332,7 @@ P95_GIG = int(0.9 * GIG)
 def human_size(size, min_divisor=0):
     size = int(size)
     if (size == 0) and (min_divisor == 0):
-        return '0'
+        return 'Empty'
     if (size < 512) and (min_divisor == 0):
         return str(size) + ' bytes'
 
