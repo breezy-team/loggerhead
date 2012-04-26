@@ -71,6 +71,8 @@ NEXT
     - Updated css to handle wrapping of long comments.
       (Francesco Del Degan, #276768)
 
+    - Updated formatting of file sizes in file listings. (Cruz Bishop)
+
 
 1.18.1 [24Mar2011]
 ------------------

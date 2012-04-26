@@ -332,9 +332,9 @@ P95_GIG = int(0.9 * GIG)
 def human_size(size, min_divisor=0):
     size = int(size)
     if (size == 0) and (min_divisor == 0):
-        return '0'
+        return 'Empty'
     if (size < 512) and (min_divisor == 0):
-        return str(size)
+        return str(size) + ' bytes'
 
     if (size >= P95_GIG) or (min_divisor >= GIG):
         divisor = GIG
@@ -355,11 +355,11 @@ def human_size(size, min_divisor=0):
     if (base < 100) and (dot != 0):
         out += '.%d' % (dot,)
     if divisor == KILO:
-        out += 'K'
+        out += ' KB'
     elif divisor == MEG:
-        out += 'M'
+        out += ' MB'
     elif divisor == GIG:
-        out += 'G'
+        out += ' GB'
     return out
 
 
