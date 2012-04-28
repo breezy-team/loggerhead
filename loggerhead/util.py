@@ -333,7 +333,7 @@ def human_size(size, min_divisor=0):
     size = int(size)
     if (size == 0) and (min_divisor == 0):
         return 'Empty'
-    if (size < 512) and (min_divisor == 0):
+    if (size < 1024) and (min_divisor == 0):
         return str(size) + ' bytes'
 
     if (size >= P95_GIG) or (min_divisor >= GIG):
