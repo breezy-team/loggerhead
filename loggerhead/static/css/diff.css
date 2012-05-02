@@ -55,7 +55,7 @@ ul#list-files li.desc {
     border-bottom: 1px solid #d5d5d5;
     }
 .lineNumber {
-    width: 2%;
+    width: 3%;
     border-width: 0 1px;
     border-style: solid;
     border-color: #d5d5d5;
@@ -74,7 +74,7 @@ ul#list-files li.desc {
     font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
     }
 .unified .code {
-    width: 89%;
+    width: 87%;
     }
 .sbs .code {
     width: 43%;
