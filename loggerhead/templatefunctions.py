@@ -143,6 +143,10 @@ def revision_link(url, revno, path, frag=''):
 @templatefunc
 def loggerhead_version():
     return loggerhead.__version__
+    
+@templatefunc
+def loggerhead_revision():
+    return loggerhead.__revision__
 
 _cached_generator_string = None
 
