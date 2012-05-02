@@ -60,10 +60,10 @@
         <div metal:define-slot="content"></div>
 
         <p id="footer" class="fl">
-			Loggerhead is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches
-			<br />
-			Version: <tal:version content="loggerhead_version" />, Revision: <tal:revision content="loggerhead_revision" />
-		</p>
+            Loggerhead is a web-based interface for <a href="http://bazaar-vcs.org/">Bazaar</a> branches
+            <br />
+            Version: <tal:version content="loggerhead_version" />, Revision: <tal:revision content="loggerhead_revision" />
+        </p>
       </div>
   </body>
 </html>
