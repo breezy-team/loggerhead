@@ -23,6 +23,7 @@ We also check the versions of some dependencies.
 import pkg_resources
 
 __version__ = '1.18.1'  # Keep in sync with ../info.py.
+__revision__ = None
 required_bzrlib = (1, 17)
 
 pkg_resources.get_distribution('Paste>=1.6')
@@ -30,4 +31,13 @@ try:
     pkg_resources.get_distribution('PasteDeploy>=1.3')
 except pkg_resources.DistributionNotFound:
     # No paste.deploy is OK, but an old paste.deploy is bad.
+    pass
+
+try:
+    from bzrlib.branch import Branch
+    branch = Branch.open('./');
+
+    __revision__ = branch.revno()
+    
+except:
     pass

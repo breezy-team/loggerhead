@@ -73,6 +73,9 @@ NEXT
 
     - Updated formatting of file sizes in file listings. (Cruz Bishop)
 
+    - Added revision number with release info in the page footer, when
+      available. (Cruz Bishop, #392668).
+
 
 1.18.1 [24Mar2011]
 ------------------
