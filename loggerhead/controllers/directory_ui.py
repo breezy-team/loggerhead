@@ -19,6 +19,7 @@
 import datetime
 import logging
 import stat
+import urllib
 
 from bzrlib import branch, errors
 
@@ -29,18 +30,17 @@ from loggerhead.controllers import TemplatedBranchView
 class DirEntry(object):
 
     def __init__(self, dirname, parity, branch):
-        self.dirname = dirname
+        self.dirname = urllib.unquote(dirname)
         self.parity = parity
         self.branch = branch
         if branch is not None:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_change = datetime.datetime.utcfromtimestamp(
-                    branch.repository.get_revision(
-                        branch.last_revision()).timestamp)
+                self.last_revision = branch.repository.get_revision(branch.last_revision())
+                self.last_change_time = datetime.datetime.utcfromtimestamp(self.last_revision.timestamp)
             except:
-                self.last_change = None
-
+                self.last_revision = None
+                self.last_change_time = None
 
 class DirectoryUI(TemplatedBranchView):
     """

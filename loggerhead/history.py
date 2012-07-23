@@ -722,6 +722,7 @@ iso style "yyyy-mm-dd")
             'revid': revision.revision_id,
             'date': datetime.datetime.fromtimestamp(revision.timestamp),
             'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
+            'timestamp': revision.timestamp,
             'committer': revision.committer,
             'authors': revision.get_apparent_authors(),
             'branch_nick': revision.properties.get('branch-nick', None),
