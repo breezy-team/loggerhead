@@ -159,6 +159,26 @@ function zoom_to_diff (path) {
   }
 }
 
+var original_diff_download_link = null;
+
+function compute_diff_links() {
+  var diffs = Y.all('.diff');
+  if (diffs == null) return;
+  var numlines = document.getElementById('contextLines').value;
+  diffs.each(
+    function(item, i)
+    {
+      item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '/' + numlines; 
+    });
+  if(original_diff_download_link == null) original_diff_download_link = document.getElementById('download_link').href;
+  document.getElementById('download_link').href = original_diff_download_link + '/' + numlines;
+}
+
+function get_num_lines() {
+  var numlines = document.getElementById('contextLines').value;
+  return numlines;
+}
+
 Y.on(
   "domready", function () {
     Y.all(".show_if_js").removeClass("show_if_js");
@@ -174,16 +194,16 @@ Y.on(
     }
     var diffs = Y.all('.diff');
     if (diffs == null) return;
+    var numlines = document.getElementById('contextLines').value;
     diffs.each(
       function(item, i)
       {
-        var source_url = null;
-        if (!specific_path)
-          source_url = global_path + '+filediff/' + link_data[item.get('id')];
+        var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '/' + numlines;
         item.query('.the-link').on(
           'click',
           function(e) {
             e.preventDefault();
+            item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '/' + document.getElementById('contextLines').value;
             collapsable.toggle();
           });
         var collapsable = new Collapsable(
@@ -198,6 +218,7 @@ Y.on(
           });
        item.collapsable=collapsable;
        });
+    compute_diff_links();
     if (window.location.hash && !specific_path) {
       zoom_to_diff(window.location.hash.substring(1));
     }

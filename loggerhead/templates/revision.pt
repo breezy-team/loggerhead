@@ -80,9 +80,9 @@
             </a>
           </li>
           <li>
-            <a tal:condition="python:compare_revid is None"
+            <a id="download_link" tal:condition="python:compare_revid is None"
                tal:attributes="href python:url(['/diff', change.revno], clear=1)">download diff</a>
-            <a tal:condition="python:compare_revid is not None"
+            <a id="download_link" tal:condition="python:compare_revid is not None"
                tal:attributes="href python:url(['/diff', change.revno, history.get_revno(compare_revid)], clear=1)">download diff</a>
            </li>
            <li tal:condition="python:can_export">
@@ -123,6 +123,7 @@
         <p class="expand show_if_js"><a id="toggle_unified_sbs" href="#">Show diffs side-by-side</a></p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" alt="added" /> added</p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/deleteCode.gif')" alt="removed" /> removed</p>
+        <form onSubmit="compute_diff_links(); return false">Lines of Context:<input type="text" id="contextLines" size="2" length="7" value="5" onKeyUp="compute_diff_links(); return false"/></form>
         <div class="clear"><!-- --></div>
 
       </tal:block>

@@ -31,7 +31,9 @@ class DiffUI(TemplatedBranchView):
     """Class to output a diff for a single file or revisions."""
 
     def __call__(self, environ, start_response):
-        # /diff/<rev_id>/<rev_id>
+        # End of URL is always /diff/<rev_id>/<rev_id>/<context_lines>
+        # or /diff/<rev_id>/<context_lines>.
+        # This allows users to choose how much context they want to see.
         """Default method called from /diff URL."""
         z = time.time()
 
@@ -43,16 +45,19 @@ class DiffUI(TemplatedBranchView):
             args.append(arg)
 
         revid_from = args[0]
-        # Convert a revno to a revid if we get a revno
+        # Convert a revno to a revid if we get a revno.
         revid_from = self._history.fix_revid(revid_from)
         change = self._history.get_changes([revid_from])[0]
 
-        if len(args) == 2:
+        if len(args) == 3:
             revid_to = self._history.fix_revid(args[1])
+            numlines = int(args[2])
         elif len(change.parents) == 0:
             revid_to = NULL_REVISION
+            numlines = int(args[1])
         else:
             revid_to = change.parents[0].revid
+            numlines = int(args[1])
 
         repo = self._branch.branch.repository
         revtree1 = repo.revision_tree(revid_to)
@@ -60,12 +65,12 @@ class DiffUI(TemplatedBranchView):
 
         diff_content_stream = StringIO()
         show_diff_trees(revtree1, revtree2, diff_content_stream,
-                        old_label='', new_label='')
+                        old_label='', new_label='', context=numlines)
 
         content = diff_content_stream.getvalue()
 
-        self.log.info('/diff %r:%r in %r secs' % (revid_from, revid_to,
-                                                  time.time() - z))
+        self.log.info('/diff %r:%r in %r secs with %r context' % (revid_from, revid_to,
+                                                  time.time() - z, numlines))
 
         revno1 = self._history.get_revno(revid_from)
         revno2 = self._history.get_revno(revid_to)
