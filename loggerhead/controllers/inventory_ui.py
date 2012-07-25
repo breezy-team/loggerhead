@@ -79,7 +79,7 @@ class InventoryUI(TemplatedBranchView):
             else:
                 absolutepath = path + '/' + pathname
             if entry.kind == 'directory':
-                #determine the last time something in the folder was changed
+                # determine the last time something in the folder was changed
                 pathname += '/'
                 sub_dir_id = inv.path2id(absolutepath)
                 sub_dir_ie = inv[sub_dir_id]

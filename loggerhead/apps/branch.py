@@ -94,8 +94,8 @@ class BranchWSGIApp(object):
             self.branch, self.graph_cache,
             revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
     
-    #before the addition of this method, clicking to sort by date from 
-    #within a branch caused a jump up to the top of that branch
+    # Before the addition of this method, clicking to sort by date from 
+    # within a branch caused a jump up to the top of that branch.
     def sort_url(self, *args, **kw):
         if isinstance(args[0], list):
             args = args[0]
@@ -162,7 +162,7 @@ class BranchWSGIApp(object):
 
     def public_branch_url(self):
         return self.branch.get_config().get_user_option('public_branch')
-    
+
     def lookup_app(self, environ):
         # Check again if the branch is blocked from being served, this is
         # mostly for tests. It's already checked in apps/transport.py
