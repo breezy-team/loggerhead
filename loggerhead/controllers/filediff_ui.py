@@ -83,10 +83,11 @@ class FileDiffUI(TemplatedBranchView):
         revid = urllib.unquote(self.args[0])
         compare_revid = urllib.unquote(self.args[1])
         file_id = urllib.unquote(self.args[2])
+
         try:
-            context_lines = int(urllib.unquote(self.args[3]))
-        except IndexError, TypeError:
-            context_lines = 5
+            context_lines = int(kwargs['context'])
+        except (KeyError, ValueError):
+            context_lines = 3 # This is the default.
         
         chunks = diff_chunks_for_file(
             self._history._branch.repository, file_id, compare_revid, revid, context_lines)

@@ -19,7 +19,7 @@
 from cStringIO import StringIO
 import time
 
-from paste.request import path_info_pop
+from paste.request import path_info_pop, parse_querystring
 
 from bzrlib.diff import show_diff_trees
 from bzrlib.revision import NULL_REVISION
@@ -31,9 +31,10 @@ class DiffUI(TemplatedBranchView):
     """Class to output a diff for a single file or revisions."""
 
     def __call__(self, environ, start_response):
-        # End of URL is always /diff/<rev_id>/<rev_id>/<context_lines>
-        # or /diff/<rev_id>/<context_lines>.
+        # End of URL is now /diff/<rev_id>?context=<context_lines>
+        # or /diff/<rev_id>/<rev_id>?context=<context_lines>
         # This allows users to choose how much context they want to see.
+        # Old format was /diff/<rev_id>/<rev_id> or /diff/<rev_id>
         """Default method called from /diff URL."""
         z = time.time()
 
@@ -44,20 +45,27 @@ class DiffUI(TemplatedBranchView):
                 break
             args.append(arg)
 
+        numlines = 3 # This is the default.
+
+        opts = parse_querystring(environ)
+        for opt in opts:
+            if opt[0] == 'context':
+                try:
+                    numlines = int(opt[1])
+                except ValueError:
+                    pass
+
         revid_from = args[0]
         # Convert a revno to a revid if we get a revno.
         revid_from = self._history.fix_revid(revid_from)
         change = self._history.get_changes([revid_from])[0]
 
-        if len(args) == 3:
+        if len(args) == 2:
             revid_to = self._history.fix_revid(args[1])
-            numlines = int(args[2])
         elif len(change.parents) == 0:
             revid_to = NULL_REVISION
-            numlines = int(args[1])
         else:
             revid_to = change.parents[0].revid
-            numlines = int(args[1])
 
         repo = self._branch.branch.repository
         revtree1 = repo.revision_tree(revid_to)

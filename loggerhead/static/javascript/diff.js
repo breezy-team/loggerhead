@@ -168,10 +168,10 @@ function compute_diff_links() {
   diffs.each(
     function(item, i)
     {
-      item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '/' + numlines; 
+      item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + numlines; 
     });
   if(original_diff_download_link == null) original_diff_download_link = document.getElementById('download_link').href;
-  document.getElementById('download_link').href = original_diff_download_link + '/' + numlines;
+  document.getElementById('download_link').href = original_diff_download_link + '?context=' + numlines;
 }
 
 function get_num_lines() {
@@ -198,12 +198,12 @@ Y.on(
     diffs.each(
       function(item, i)
       {
-        var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '/' + numlines;
+        var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + numlines;
         item.query('.the-link').on(
           'click',
           function(e) {
             e.preventDefault();
-            item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '/' + document.getElementById('contextLines').value;
+            item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + document.getElementById('contextLines').value;
             collapsable.toggle();
           });
         var collapsable = new Collapsable(
