@@ -22,7 +22,7 @@ We also check the versions of some dependencies.
 
 import pkg_resources
 
-__version__ = '1.18.1'  # Keep in sync with ../info.py.
+__version__ = '1.18.2'  # Keep in sync with ../info.py.
 __revision__ = None
 required_bzrlib = (1, 17)
 

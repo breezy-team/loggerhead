@@ -4,6 +4,9 @@ What's changed in loggerhead?
 NEXT
 ----
 
+1.18.2 [12Sep2012]
+------------------
+
     - Add ``bzr load-test-loggerhead`` as a way to make sure loggerhead can
       handle concurrent requests, etc. Scripts can be written that spawn
       multiple threads, and issue concurrent requests.
