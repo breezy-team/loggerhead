@@ -276,7 +276,7 @@ li.files#file {
     background: url(../images/ico_file.gif) 2px 0 no-repeat;
 }
 li.files#directory {
-    background: url(../images/ico_folder.gif) 2px 0 no-repeat;
+    background: url(../images/ico_folder.png) 2px 0 no-repeat;
 }
 .revnolink a {
     color: #000;
