@@ -270,9 +270,14 @@ ul.expandrev li.desc {
     color: #666;
     }
 ul.expandrev li.files {
-    background: url(../images/ico_file.gif) 2px 0 no-repeat;
     margin-left: 8px;
     }
+li.files#file {
+    background: url(../images/ico_file.gif) 2px 0 no-repeat;
+}
+li.files#directory {
+    background: url(../images/ico_folder.gif) 2px 0 no-repeat;
+}
 .revnolink a {
     color: #000;
     }
