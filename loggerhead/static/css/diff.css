@@ -7,6 +7,7 @@
     background: #fcfcfc url(../images/bg_infobox.gif) repeat-y top right;
     border: 1px solid #b7b7b7;
     border-radius: 5px; 
+    word-wrap: break-word;
     }
 ul#list-files {
     float: right;
@@ -30,7 +31,6 @@ ul#list-files li.desc {
     margin: 0 0 5px 0;
     font-size:  77%;
     color: #666;
-    word-wrap: break-word;
     }
 /*Diff Boxes*/
 .diffBox {
