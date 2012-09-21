@@ -6,7 +6,7 @@
     color: #666;
     background: #fcfcfc url(../images/bg_infobox.gif) repeat-y top right;
     border: 1px solid #b7b7b7;
-    border-radius: 5px; 
+    border-radius: 13px / 7px; 
     }
 ul#list-files {
     float: right;
