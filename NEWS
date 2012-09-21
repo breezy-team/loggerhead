@@ -4,6 +4,9 @@ What's changed in loggerhead?
 NEXT
 ----
 
+    - Fixed weird icon in file lists (e.g. revision summaries) when a file or
+      directory with a blank name was listed. (Cruz Bishop, #387337).
+
     - Add directory icons for directories in file lists (e.g. revision
       summaries). Previously they were using the file icon.
       (Cruz Bishop, #1053340).

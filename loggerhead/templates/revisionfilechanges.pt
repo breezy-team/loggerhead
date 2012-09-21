@@ -3,7 +3,8 @@
     <tal:block condition="repeat/added/start">
       <li class="desc">files added:</li>
     </tal:block>
-    <li class="files" tal:attributes="id python:'file' if (added.kind == 'file') else 'directory'">
+    <li class="files" tal:omit-tag="python:added.filename == ''"
+                      tal:attributes="id python:'file' if (added.kind == 'file') else 'directory'">
       <tal:revision condition="python:added.kind == 'file'"
                     content="structure python:file_link(added.filename)" />
       <tal:revision condition="python:added.kind != 'file'"
