@@ -4,6 +4,10 @@ What's changed in loggerhead?
 NEXT
 ----
 
+    - Add directory icons for directories in file lists (e.g. revision
+      summaries). Previously they were using the file icon.
+      (Cruz Bishop, #1053340).
+
 1.18.2 [12Sep2012]
 ------------------
 
