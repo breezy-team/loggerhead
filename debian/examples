@@ -1,1 +1,3 @@
 debian/serve-branches.conf.example
+bazaar.conf
+apache-loggerhead.conf

@@ -1,3 +1,5 @@
 /usr/bin/
 /usr/lib/
 /usr/share/man/
+loggerhead/static /usr/share/loggerhead/
+loggerhead.wsgi /usr/bin/
