@@ -84,7 +84,7 @@
                                                      title string:Show revision ${file/change/revno}"
                                      tal:content="file/change/revno"></a>
                  </td>
-                 <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+                 <td class="date" tal:content="python:util.date_time(file.change.utc_date)"></td>
                  <td class="timedate2"></td>
                  <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
                                                      title string:Show revision ${file/change/revno}">
@@ -107,7 +107,7 @@
                                                      title string:Show revision ${file/change/revno}"
                                      tal:content="file/change/revno"></a>
                  </td>
-                 <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+                 <td class="date" tal:content="python:util.date_time(file.change.utc_date)"></td>
                  <td class="timedate2">.</td>
                  <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
                                                         title string:Show revision ${file/change/revno}">
@@ -136,7 +136,7 @@
                                                   title string:Show revision ${file/change/revno}"
                                   tal:content="file/change/revno"></a>
               </td>
-              <td class="date" tal:content="python:util.date_time(file.change.date)"></td>
+              <td class="date" tal:content="python:util.date_time(file.change.utc_date)"></td>
               <td class="timedate2" tal:content="python:util.human_size(file.size)"></td>
               <td class="expcell"><a tal:attributes="href python:url(['/view', revno_url, file.absolutepath]);
                                                      title string:View ${file/filename}">

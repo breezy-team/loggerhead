@@ -16,7 +16,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
 import base64
@@ -52,13 +52,12 @@ def fix_year(year):
 # Display of times.
 
 # date_day -- just the day
-# date_time -- full date with time
+# date_time -- full date with time (UTC)
 #
-# displaydate -- for use in sentences
 # approximatedate -- for use in tables
 #
-# displaydate and approximatedate return an elementtree <span> Element
-# with the full date in a tooltip.
+# approximatedate return an elementtree <span> Element
+# with the full date (UTC) in a tooltip.
 
 
 def date_day(value):
@@ -67,17 +66,10 @@ def date_day(value):
 
 def date_time(value):
     if value is not None:
-        return value.strftime('%Y-%m-%d %H:%M:%S')
+        # Note: this assumes that the value is UTC in some fashion.
+        return value.strftime('%Y-%m-%d %H:%M:%S UTC')
     else:
         return 'N/A'
-
-
-def _displaydate(date):
-    delta = abs(datetime.datetime.now() - date)
-    if delta > datetime.timedelta(1, 0, 0):
-        # far in the past or future, display the date
-        return 'on ' + date_day(date)
-    return _approximatedate(date)
 
 
 def _approximatedate(date):
@@ -124,10 +116,6 @@ def _wrap_with_date_time_title(date, formatted_date):
 def approximatedate(date):
     #FIXME: Returns an object instead of a string
     return _wrap_with_date_time_title(date, _approximatedate(date))
-
-
-def displaydate(date):
-    return _wrap_with_date_time_title(date, _displaydate(date))
 
 
 class Container(object):
@@ -226,7 +214,7 @@ html_entity_subs = [
 def html_escape(s):
     """Transform dangerous (X)HTML characters into entities.
 
-    Like cgi.escape, except also escaping " and '. This makes it safe to use
+    Like cgi.escape, except also escaping \" and '. This makes it safe to use
     in both attribute and element content.
 
     If you want to safely fill a format string with escaped values, use
@@ -344,9 +332,9 @@ P95_GIG = int(0.9 * GIG)
 def human_size(size, min_divisor=0):
     size = int(size)
     if (size == 0) and (min_divisor == 0):
-        return '0'
+        return 'Empty'
     if (size < 512) and (min_divisor == 0):
-        return str(size)
+        return str(size) + ' bytes'
 
     if (size >= P95_GIG) or (min_divisor >= GIG):
         divisor = GIG
@@ -367,11 +355,11 @@ def human_size(size, min_divisor=0):
     if (base < 100) and (dot != 0):
         out += '.%d' % (dot,)
     if divisor == KILO:
-        out += 'K'
+        out += ' KB'
     elif divisor == MEG:
-        out += 'M'
+        out += ' MB'
     elif divisor == GIG:
-        out += 'G'
+        out += ' GB'
     return out
 
 
@@ -484,7 +472,7 @@ def branch_breadcrumbs(path, inv, view):
     for index, dir_name in enumerate(dir_parts):
         inner_breadcrumbs.append({
             'dir_name': dir_name,
-            'file_id': inv.path2id('/'.join(dir_parts[:index + 1])),
+            'path': '/'.join(dir_parts[:index + 1]),
             'suffix': '/' + view,
         })
     return inner_breadcrumbs
@@ -555,8 +543,8 @@ def lsprof(f):
 #         for re-ordering an existing page by different sort
 
 t_context = threading.local()
-_valid = ('start_revid', 'file_id', 'filter_file_id', 'q', 'remember',
-          'compare_revid', 'sort')
+_valid = (
+    'start_revid', 'filter_file_id', 'q', 'remember', 'compare_revid', 'sort')
 
 
 def set_context(map):

@@ -11,7 +11,7 @@
             </li>
             <li class="timer">
                 <strong>Date:</strong>
-                <span tal:content="python:util.date_time(change.date)"></span>
+                <span tal:content="python:util.date_time(change.utc_date)"></span>
             </li>
             <li class="mfrom" tal:condition="python:change.parents[1:]">
                 <strong>mfrom:</strong>

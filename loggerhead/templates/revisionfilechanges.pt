@@ -36,6 +36,7 @@
       <tal:old-name condition="not:renamed/text_modified" content="renamed/new_filename" class="filename">
         new_filename
       </tal:old-name>
+      <tal:prop-change condition="renamed/exe_change" content="string:*" />
     </li>
   </ul>
 
@@ -44,7 +45,9 @@
       <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
-      <tal:revision content="structure python:file_link(item.filename)" />
+      <tal:revision condition="item/text_modified" content="structure python:file_link(item.filename)" />
+      <tal:revision condition="not:item/text_modified" content="item/filename" />
+      <tal:prop-change condition="item/exe_change" content="string:*" />
     </li>
   </ul>
 </tal:block>

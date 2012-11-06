@@ -149,6 +149,61 @@ run behind a proxy at the root of a site, but if you're running it at
 some path into the site, you'll need to specify it using
 ``--prefix=/some_path``.
 
+Serving Loggerhead with mod_wsgi
+--------------------------------
+
+A second method for using Loggerhead with apache is to have apache itself
+execute Loggerhead via mod_wsgi.  You need to add configuration for apache and
+for bazaar to make this work.  Example config files are in the Loggerhead doc
+directory as apache-loggerhead.conf and bazaar.conf.  You can copy them into
+place and use them as a starting point following these directions:
+
+1) Install mod_wsgi.  On Ubuntu and other Debian derived distros::
+
+    sudo apt-get install libapache2-mod-wsgi
+
+   On Fedora-derived distros::
+
+    su -c yum install mod_wsgi
+
+2) Copy the bazaar.conf file where apache will find it (May be done for you if
+   you installed Loggerhead from a distribution package)::
+
+    # install -d -o apache -g apache -m 0755 /etc/loggerhead
+    # cp -p /usr/share/doc/loggerhead*/bazaar.conf /etc/loggerhead/
+    # ln -s /etc/loggerhead /var/www/.bazaar
+
+3) Create the cache directory (May be done for you if you installed Loggerhead
+   from a distribution package)::
+
+    # install -d -o apache -g apache -m 0700 /var/cache/loggerhead/
+
+4) Edit /etc/loggerhead/bazaar.conf.  You need to set http_root_dir to the filesystem
+   path that you will find your bzr branches under.  Note that normal
+   directories under that path will also be visible in Loggerhead.
+
+5) Install the apache conf file::
+
+     # cp -p /usr/share/doc/loggerhead*/apache-loggerhead.conf /etc/httpd/conf.d/loggerhead.conf
+
+6) Edit /etc/httpd/conf.d/loggerhead.conf to point to the url you desire to
+   serve Loggerhead on.  This should match with the setting for
+   http_user_prefix in bazaar.conf
+
+7) Restart apache and you should be able to start browsing
+
+.. note:: If you have SELinux enabled on your system you may need to allow
+   apache to execute files in temporary directories.  You will get a
+   MemoryError traceback from python if this is the case.  This is because of
+   the way that python ctypes interacts with libffi.  To rectify this, you may
+   have to do several things, such as mounting tmpdirs so programs can be
+   executed on them and setting this SELinux boolean::
+
+       setsebool httpd_tmp_exec on
+
+   This bug has information about how python and/or Linux distros might solve
+   this issue permanently and links to bugs which diagnose the root cause.
+   https://bugzilla.redhat.com/show_bug.cgi?id=582009
 
 Search
 ------

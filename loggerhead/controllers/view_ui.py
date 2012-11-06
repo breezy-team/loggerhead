@@ -14,17 +14,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
 import os
-import time
 
-import bzrlib.errors
+from bzrlib.errors import (
+    BinaryFile,
+    NoSuchId,
+    NoSuchRevision,
+    )
 import bzrlib.textfile
 import bzrlib.osutils
 
-from paste.httpexceptions import HTTPBadRequest, HTTPServerError, HTTPMovedPermanently
+from paste.httpexceptions import (
+    HTTPBadRequest,
+    HTTPMovedPermanently,
+    HTTPNotFound,
+    HTTPServerError,
+    )
 
 from loggerhead.controllers import TemplatedBranchView
 try:
@@ -71,7 +79,7 @@ class ViewUI(TemplatedBranchView):
     def file_contents(self, file_id, revid):
         try:
             file_lines = self.text_lines(file_id, revid)
-        except bzrlib.errors.BinaryFile:
+        except BinaryFile:
             # bail out; this isn't displayable text
             return ['(This is a binary file.)']
 
@@ -87,17 +95,17 @@ class ViewUI(TemplatedBranchView):
             raise HTTPBadRequest('No file_id or filename '
                                  'provided to view')
 
-        if file_id is None:
-            file_id = history.get_file_id(revid, path)
+        try:
+            if file_id is None:
+                file_id = history.get_file_id(revid, path)
+            if path is None:
+                path = history.get_path(revid, file_id)
+        except (NoSuchId, NoSuchRevision):
+            raise HTTPNotFound()
 
-        # no navbar for revisions
-        navigation = util.Container()
-
-        if path is None:
-            path = history.get_path(revid, file_id)
         filename = os.path.basename(path)
 
-        change = history.get_changes([ revid ])[0]
+        change = history.get_changes([revid])[0]
         # If we're looking at the tip, use head: in the URL instead
         if revid == branch.last_revision():
             revno_url = 'head:'
@@ -119,8 +127,16 @@ class ViewUI(TemplatedBranchView):
             raise HTTPServerError('Could not fetch changes')
         branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
 
-        if inv[file_id].kind == "directory":
+        try:
+            file = inv[file_id]
+        except NoSuchId:
+            raise HTTPNotFound()
+
+        if file.kind == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
+
+        # no navbar for revisions
+        navigation = util.Container()
 
         return {
             # In AnnotateUI, "annotated" is a dictionary mapping lines to changes.

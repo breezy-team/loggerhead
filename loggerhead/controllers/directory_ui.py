@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
 import datetime
@@ -35,7 +35,7 @@ class DirEntry(object):
         if branch is not None:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_change = datetime.datetime.fromtimestamp(
+                self.last_change = datetime.datetime.utcfromtimestamp(
                     branch.repository.get_revision(
                         branch.last_revision()).timestamp)
             except:

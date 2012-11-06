@@ -14,14 +14,17 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software
-# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+# Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
 import logging
 import mimetypes
-import os
 import urllib
 
+from bzrlib.errors import (
+    NoSuchId,
+    NoSuchRevision,
+    )
 from paste import httpexceptions
 from paste.request import path_info_pop
 
@@ -55,7 +58,10 @@ class DownloadUI (TemplatedBranchView):
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
         file_id = args[1]
-        path, filename, content = h.get_file(file_id, revid)
+        try:
+            path, filename, content = h.get_file(file_id, revid)
+        except (NoSuchId, NoSuchRevision):
+            raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
             mime_type = 'application/octet-stream'
