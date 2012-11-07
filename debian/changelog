@@ -3,8 +3,9 @@ loggerhead (1.19~bzr477-0) unstable; urgency=low
   * New upstream snapshot (actually, it's 1.18.2).
   * I guess I should step up as maintainer (closes: #668933).  Thanks,
     Jelmer!
+  * Ship static files in their proper place.
 
- -- Roland Mas <lolando@debian.org>  Tue, 06 Nov 2012 18:30:34 +0100
+ -- Roland Mas <lolando@debian.org>  Tue, 06 Nov 2012 20:52:06 +0100
 
 loggerhead (1.19~bzr461-1) unstable; urgency=low
 
