@@ -1,9 +1,10 @@
 loggerhead (1.19~bzr477-2) UNRELEASED; urgency=low
 
   * Port to current YUI API, and use the packaged version rather than
-    shipping an embedded copy (closes: #607447).
+    shipping an embedded copy (closes: #607447).  Thanks to Rick Harding
+    for much help with the porting.
 
- -- Roland Mas <lolando@debian.org>  Wed, 07 Nov 2012 11:27:49 +0100
+ -- Roland Mas <lolando@debian.org>  Wed, 07 Nov 2012 17:07:16 +0100
 
 loggerhead (1.19~bzr477-1) unstable; urgency=low
 
