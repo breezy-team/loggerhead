@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr477-0) unstable; urgency=low
+loggerhead (1.19~bzr477-1) unstable; urgency=low
 
   * New upstream snapshot (actually, it's 1.18.2).
   * I guess I should step up as maintainer (closes: #668933).  Thanks,
