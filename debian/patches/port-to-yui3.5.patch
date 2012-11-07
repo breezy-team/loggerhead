@@ -1,0 +1,355 @@
+Index: unstable/loggerhead/templates/macros.pt
+===================================================================
+--- unstable.orig/loggerhead/templates/macros.pt
++++ unstable/loggerhead/templates/macros.pt
+@@ -25,19 +25,19 @@
+     <script type="text/javascript"
+             tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('event-base/event-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('attribute-base/attribute-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('base-base/base-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('dom-base/dom-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('node-base/node-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('anim-base/anim-base-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
++            tal:attributes="src python:branch.yui_url('io-base/io-base-min.js')"></script>
+     <script type="text/javascript"
+             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
+     <metal:block metal:define-slot="header_extras" />
+Index: unstable/loggerhead/static/javascript/custom.js
+===================================================================
+--- unstable.orig/loggerhead/static/javascript/custom.js
++++ unstable/loggerhead/static/javascript/custom.js
+@@ -1,13 +1,12 @@
+-Y = YUI().use("base", "node", "io-base", "anim");
+-
+ var global_timeout_id = null;
+ var global_search_request = null;
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on(
+   'domready',
+   function()
+   {
+-    var search_box = Y.get('#q');
++    var search_box = Y.one('#q');
+     if (!Y.Lang.isNull(search_box))
+     {
+       function get_suggestions() {
+@@ -29,11 +28,11 @@
+         var region = search_box.get('region');
+         var current_query = search_box.get('value');
+ 
+-        Y.get('#search_terms').setStyle('display', 'block');
+-        Y.get('#search_terms').setStyle('position', 'absolute');
+-        Y.get('#search_terms').setStyle('left', region.left);
+-        Y.get('#search_terms').setStyle('top', region.bottom);
+-        Y.get('#search_terms').set('innerHTML','Loading...');
++        Y.one('#search_terms').setStyle('display', 'block');
++        Y.one('#search_terms').setStyle('position', 'absolute');
++        Y.one('#search_terms').setStyle('left', region.left);
++        Y.one('#search_terms').setStyle('top', region.bottom);
++        Y.one('#search_terms').set('innerHTML','Loading...');
+       }
+       search_box.on(
+         "keyup",
+@@ -41,7 +40,7 @@
+         {
+           if(search_box.get('value') == '')
+           {
+-            Y.get('#search_terms').setStyle('display', 'none');
++            Y.one('#search_terms').setStyle('display', 'none');
+           }
+           else
+           {
+@@ -53,26 +52,32 @@
+           }
+         });
+     }
+-  });
++  }
++);
++});
+ 
+ function cool_search(tid, response, query)
+ {
+-  var q = Y.get('#q');
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
++  var q = Y.one('#q');
+   var region = q.get('region');
+   var current_query = q.get('value');
+   if (current_query == query)
+   {
+-    Y.get('#search_terms').set('innerHTML', response.responseText);
+-    Y.get('#search_terms').setStyle('display', 'block');
+-    Y.get('#search_terms').setStyle('position', 'absolute');
+-    Y.get('#search_terms').setStyle('left', region.left);
+-    Y.get('#search_terms').setStyle('top', region.bottom);
++    Y.one('#search_terms').set('innerHTML', response.responseText);
++    Y.one('#search_terms').setStyle('display', 'block');
++    Y.one('#search_terms').setStyle('position', 'absolute');
++    Y.one('#search_terms').setStyle('left', region.left);
++    Y.one('#search_terms').setStyle('top', region.bottom);
+   }
++});
+ }
+ 
+ function hide_search()
+ {
+-  setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
++  setTimeout("Y.one('#search_terms').setStyle('display','none')", 300);
++});
+ }
+ 
+ function Collapsable(config)
+@@ -104,6 +109,7 @@
+ {
+   if (this.anim) this.anim.stop();
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   this.anim = new Y.Anim(
+     {
+       node: this.container,
+@@ -118,12 +124,14 @@
+ 
+   this.anim.run();
+   this.anim.on('end', this.animComplete, this, callback);
++});
+ }
+ 
+ Collapsable.prototype._load_finished = function(tid, res, args)
+ {
+   var l = res.responseText.split('\n');
+   l.splice(0, 1);
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   var newNode = Y.Node.create(l.join(''));
+   if (this.node_process)
+     this.node_process(newNode);
+@@ -135,10 +143,12 @@
+   this.container.setStyle('marginBottom', parseFloat(this.container.getStyle('marginBottom')) + delta);
+   this.loading.ancestor().removeChild(this.loading);
+   this._animate(args[0]);
++});
+ };
+ 
+ Collapsable.prototype._ensure_container = function(callback)
+ {
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   if (this.container == null) {
+     this.container = Y.Node.create('<div></div>');
+     if (this.closed_node) {
+@@ -158,6 +168,7 @@
+     this.container.ancestor().replaceChild(outer, this.container);
+     outer.appendChild(this.container);
+   }
++});
+ }
+ 
+ /* What happens when you click open.
+@@ -305,7 +316,8 @@
+         }
+     }
+     var id_selector = "#" + target_id;
+-    var main = Y.get(id_selector);
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
++    var main = Y.one(id_selector);
+     notification_node = Y.Node.create('<div></div>')
+         .addClass('global-notification');
+     if (hidden) {
+@@ -317,6 +329,7 @@
+     notification_node.set('innerHTML', notification_text);
+     main.appendChild(notification_node);
+     notification_node.appendChild(notification_span);
++});
+ };
+ 
+ function display_privacy_notification() {
+@@ -324,13 +337,14 @@
+      this is because we have no way to use feature flags in
+      css directly. This should be removed if the feature
+      is accepted. */
+-    var body = Y.get('body');
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
++    var body = Y.one('body');
+     body.addClass('feature-flag-bugs-private-notification-enabled');
+     // Set the visible flag so that the content moves down.
+     body.addClass('global-notification-visible');
+ 
+     setup_privacy_notification();
+-    var global_notification = Y.get('.global-notification');
++    var global_notification = Y.one('.global-notification');
+     if (global_notification.hasClass('hidden')) {
+         global_notification.addClass('transparent');
+         global_notification.removeClass('hidden');
+@@ -357,12 +371,15 @@
+         body_space.run();
+         black_link_space.run();
+     }
++});
+ };
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on('domready', function() {
+-    var body = Y.get('body');
++    var body = Y.one('body');
+     if (body.hasClass('private')) {
+         setup_privacy_notification();
+         display_privacy_notification();
+     }
+ });
++});
+Index: unstable/loggerhead/static/javascript/diff.js
+===================================================================
+--- unstable.orig/loggerhead/static/javascript/diff.js
++++ unstable/loggerhead/static/javascript/diff.js
+@@ -87,6 +87,7 @@
+ 
+ function toggle_unified_sbs(event) {
+   event.preventDefault();
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   var pts = Y.all(".pseudotable");
+   if (unified) {
+     pts && pts.each(make_sbs);
+@@ -98,12 +99,16 @@
+     unified = true;
+     Y.get("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
+   }
++});
+ }
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on("click", toggle_unified_sbs, '#toggle_unified_sbs');
++});
+ 
+ function toggle_expand_all_revisionview(action)
+ {
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   var diffs = Y.all('.diff');
+   if (diffs == null) return;
+   diffs.each(
+@@ -123,8 +128,10 @@
+         collapsable.open();
+       }
+     });
++});
+ }
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on(
+   'click',
+   function (event) {
+@@ -142,6 +149,7 @@
+   },
+   '#collapse_all a'
+ );
++});
+ 
+ function node_process(node) {
+   if (!unified) {
+@@ -159,6 +167,7 @@
+   }
+ }
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on(
+   "domready", function () {
+     Y.all(".show_if_js").removeClass("show_if_js");
+@@ -179,8 +188,8 @@
+       {
+         var source_url = null;
+         if (!specific_path)
+-          source_url = global_path + '+filediff/' + link_data[item.get('id')];
+-        item.query('.the-link').on(
++          source_url = global_path + '+filediff/' + link_data[item.one('id')];
++        item.one('.the-link').on(
+           'click',
+           function(e) {
+             e.preventDefault();
+@@ -188,13 +197,14 @@
+           });
+         var collapsable = new Collapsable(
+           {
+-            expand_icon: item.query('.expand_diff'),
+-            open_node: item.query('.diffinfo'),
++            expand_icon: item.one('.expand_diff'),
++            open_node: item.one('.diffinfo'),
+             close_node: null,
+             source: source_url,
+             is_open: specific_path != null,
+-            loading: item.query('.loading'),
+-            node_process: node_process
++            loading: item.one('.loading'),
++            node_process: node_process,
++	    Y: Y
+           });
+        item.collapsable=collapsable;
+        });
+@@ -202,3 +212,4 @@
+       zoom_to_diff(window.location.hash.substring(1));
+     }
+   });
++});
+Index: unstable/loggerhead/static/javascript/changelog.js
+===================================================================
+--- unstable.orig/loggerhead/static/javascript/changelog.js
++++ unstable/loggerhead/static/javascript/changelog.js
+@@ -1,5 +1,6 @@
+ function toggle_expand_all(action)
+ {
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+   var revlogs = Y.all('.revision_log');
+   if (revlogs == null) return;
+   revlogs.each(
+@@ -19,8 +20,10 @@
+         collapsable.open();
+       }
+     });
++});
+ }
+ 
++YUI().use("base", "event", "node", "io-base", "anim", function(Y) {
+ Y.on(
+   'click',
+   function (event) {
+@@ -61,7 +64,8 @@
+             close_node: item.query('.short_description'),
+             source: global_path + '+revlog/' + revid,
+             loading: item.query('.loading'),
+-            is_open: false
++            is_open: false,
++	    Y: Y
+           });
+ 
+         item.query('.expand_revisioninfo a').on(
+@@ -74,3 +78,4 @@
+       });
+ 
+   });
++});
+Index: unstable/loggerhead/apps/branch.py
+===================================================================
+--- unstable.orig/loggerhead/apps/branch.py
++++ unstable/loggerhead/apps/branch.py
+@@ -121,7 +121,7 @@
+ 
+     def yui_url(self, path):
+         if self.use_cdn:
+-            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
++            base = 'http://yui.yahooapis.com/3.5.1/build/'
+         else:
+             base = self.static_url('/static/javascript/yui/build/')
+         return base + path
