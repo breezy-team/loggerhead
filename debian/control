@@ -27,7 +27,7 @@ Description: Web viewer for Bazaar
 Package: loggerhead-doc
 Architecture: all
 Section: doc
-Depends: ${misc:Depends}, libjs-jquery
+Depends: ${misc:Depends}, libjs-jquery, libjs-underscore
 Suggests: loggerhead
 Enhances: loggerhead
 Description: Web viewer for Bazaar (documentation)

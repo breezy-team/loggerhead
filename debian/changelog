@@ -1,4 +1,10 @@
-loggerhead (1.19~bzr479-1) unstable; urgency=low
+loggerhead (1.19~bzr479-2) unstable; urgency=low
+
+  * Use packaged underscore.js rather than shipping an embedded copy.
+
+ -- Roland Mas <lolando@debian.org>  Thu, 08 Nov 2012 20:46:47 +0100
+
+Loggerhead (1.19~bzr479-1) unstable; urgency=low
 
   * Port to current YUI API, and use the packaged version rather than
     shipping an embedded copy (closes: #607447).  Thanks to Rick Harding
