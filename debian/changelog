@@ -1,5 +1,6 @@
 loggerhead (1.19~bzr479-2) unstable; urgency=low
 
+  * Updated Standards-Version to 3.9.3 (no changes).
   * Use packaged underscore.js rather than shipping an embedded copy.
 
  -- Roland Mas <lolando@debian.org>  Thu, 08 Nov 2012 20:46:47 +0100
