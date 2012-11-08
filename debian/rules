@@ -21,7 +21,3 @@ override_dh_auto_build:
 	dh_auto_build --with python2 --buildsystem=python_distutils
 	cd docs/ && $(MAKE) html
 	cd docs/_build/html/_static/ && rm jquery.js underscore.js
-
-override_dh_install:
-	rm -rv debian/*/usr/lib/python2.7/dist-packages/loggerhead/static
-	dh_install
