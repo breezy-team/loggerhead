@@ -35,7 +35,7 @@ from loggerhead.controllers import TemplatedBranchView
 def dirname(path):
     if path is not None:
         path = path.rstrip('/')
-        path = urllib.quote(posixpath.dirname(path))
+        path = urllib.quote(posixpath.dirname(path).encode('utf-8'))
     return path
 
 
