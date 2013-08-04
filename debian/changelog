@@ -1,9 +1,9 @@
-loggerhead (1.19~bzr479-3) UNRELEASED; urgency=low
+loggerhead (1.19~bzr479-3) unstable; urgency=low
 
   * Team upload.
-  * debian/control: Mark as compatible with bzr 2.6.
+  * debian/control: Mark as compatible with bzr 2.6. (Closes: #718729).
 
- -- Andrew Starr-Bochicchio <asb@debian.org>  Sun, 04 Aug 2013 17:02:10 -0400
+ -- Andrew Starr-Bochicchio <asb@debian.org>  Sun, 04 Aug 2013 17:03:32 -0400
 
 loggerhead (1.19~bzr479-2) unstable; urgency=low
 
