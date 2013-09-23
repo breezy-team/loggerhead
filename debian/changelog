@@ -1,3 +1,9 @@
+loggerhead (1.19~bzr479-4) UNRELEASED; urgency=low
+
+  * Remove myself from uploaders.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Mon, 23 Sep 2013 23:18:43 +0100
+
 loggerhead (1.19~bzr479-3) unstable; urgency=low
 
   * Team upload.
