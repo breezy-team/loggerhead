@@ -10,6 +10,7 @@ loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=low
     We already use the system copy anyways.
   * In debian/watch, use the dversionmangle option to remove the dfsg
     before version number comparison.
+  * Bump Standards-Version to 3.9.5, no changes needed.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 23 Sep 2013 23:18:43 +0100
 
