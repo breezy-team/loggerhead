@@ -12,6 +12,7 @@ loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=low
     before version number comparison.
   * Bump Standards-Version to 3.9.5, no changes needed.
   * Add myself to Uploaders.
+  * Run wrap-and-sort over debian/control.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 23 Sep 2013 23:18:43 +0100
 
