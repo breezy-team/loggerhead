@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=low
+loggerhead (1.19~bzr479+dfsg-1) unstable; urgency=medium
 
   [ Jelmer Vernooij ]
   * Remove myself from uploaders.
@@ -14,7 +14,7 @@ loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=low
   * Add myself to Uploaders.
   * Run wrap-and-sort over debian/control.
 
- -- Jelmer Vernooij <jelmer@debian.org>  Mon, 23 Sep 2013 23:18:43 +0100
+ -- Andrew Starr-Bochicchio <asb@debian.org>  Tue, 11 Mar 2014 13:25:26 -0400
 
 loggerhead (1.19~bzr479-3) unstable; urgency=low
 
