@@ -8,6 +8,8 @@ loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=low
   * Add get-orig-source target that strips out the bundled
     copy of YUI3 and create a DFSG clean tarball (Closes: #737427).
     We already use the system copy anyways.
+  * In debian/watch, use the dversionmangle option to remove the dfsg
+    before version number comparison.
 
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 23 Sep 2013 23:18:43 +0100
 
