@@ -1,5 +1,18 @@
 #!/usr/bin/make -f
 
+PKD   = $(abspath $(dir $(MAKEFILE_LIST)))
+PKG   = $(word 2,$(shell dpkg-parsechangelog -l$(PKD)/changelog | grep ^Source))
+UVER  = $(shell dpkg-parsechangelog -l$(PKD)/changelog | perl -ne 'print $$1 if m{^Version:\s+(?:\d+:)?(\d.*)(?:\-\d+.*)};')
+REV   = $(shell echo $(VER) | perl -ne 'print "$$1" if m/(?:git|svn|hg|bzr)(\d+)/;')
+UURL = lp:loggerhead
+DTYPE = +dfsg
+VER  ?= $(subst $(DTYPE),,$(UVER))
+
+## http://wiki.debian.org/onlyjob/get-orig-source
+.PHONY: get-orig-source
+get-orig-source: $(PKG)_$(VER)$(DTYPE).orig.tar.xz $(info I: $(PKG)_$(VER)$(DTYPE))
+	@
+
 %:
 	dh --with python2 --buildsystem=python_distutils $*
 
@@ -21,3 +34,16 @@ override_dh_auto_build:
 	dh_auto_build --with python2 --buildsystem=python_distutils
 	cd docs/ && $(MAKE) html
 	cd docs/_build/html/_static/ && rm jquery.js underscore.js
+
+$(PKG)_$(VER)$(DTYPE).orig.tar.xz:
+	$(if $(wildcard $(PKG)-$(VER)),$(error $(PKG)-$(VER) exist, aborting..))
+	bzr export --revision=$(REV) $(PKG)-$(VER) $(UURL) \
+	|| $(RM) -r $(PKG)-$(VER)
+	@echo "# Removing copy of YUI3..."
+	cd $(PKG)-$(VER) \
+		&& $(RM) -r -v \
+		loggerhead/static/javascript/yui/*
+	@echo "# Packing..."
+	find -L "$(PKG)-$(VER)" -xdev -type f -print | sort \
+	| XZ_OPT="-6v" tar -caf "$(PKG)_$(VER)$(DTYPE).orig.tar.xz" -T- --owner=root --group=root --mode=a+rX \
+	&& $(RM) -r "$(PKG)-$(VER)"
