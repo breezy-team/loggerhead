@@ -1,2 +1,2 @@
 version=3
-https://launchpad.net/loggerhead/+download http://launchpad.net/loggerhead/.*/loggerhead-(.+).tar.gz
+http://launchpad.net/loggerhead/+download https://launchpad.net/loggerhead/.*/loggerhead-(.+).tar.gz
