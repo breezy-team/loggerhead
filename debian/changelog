@@ -1,3 +1,9 @@
+loggerhead (1.19~bzr479+dfsg-1) UNRELEASED; urgency=medium
+
+  * Use canonical URL in Vcs-Bzr header.
+
+ -- Jelmer Vernooij <jelmer@debian.org>  Sat, 05 Jul 2014 23:33:22 +0200
+
 loggerhead (1.19~bzr479+dfsg-1) unstable; urgency=medium
 
   [ Jelmer Vernooij ]

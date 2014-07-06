@@ -20,7 +20,7 @@ Build-Depends: debhelper (>= 7.0.50~),
                python-simpletal
 Standards-Version: 3.9.5
 X-Python-Version: >= 2.4
-Vcs-Bzr: http://bzr.debian.org/pkg-bazaar/loggerhead/unstable/
+Vcs-Bzr: http://anonscm.debian.org/bzr/pkg-bazaar/loggerhead/unstable/
 Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-bazaar/loggerhead/unstable/files
 
 Package: loggerhead
