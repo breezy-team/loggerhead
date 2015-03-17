@@ -11,6 +11,8 @@ NEXT
       summaries). Previously they were using the file icon.
       (Cruz Bishop, #1053340).
 
+    - Format files under one kilobyte as "x bytes". (Cruz Bishop, #990217)
+
 1.18.2 [12Sep2012]
 ------------------
 
