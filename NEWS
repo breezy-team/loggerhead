@@ -19,6 +19,8 @@ NEXT
     - Add ``loggerhead/middleware`` and a few other files to the sdist.
       (Toshio Kuratomi)
 
+    - Widen the line number boxes just a little bit. (Cruz Bishop, #310255)
+
 1.18.2 [12Sep2012]
 ------------------
 
