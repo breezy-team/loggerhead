@@ -16,6 +16,9 @@ NEXT
     - Make the number of lines of context in embedded diffs on revision
       pages configurable via a ``context`` query argument. (Paul Nixon)
 
+    - Add ``loggerhead/middleware`` and a few other files to the sdist.
+      (Toshio Kuratomi)
+
 1.18.2 [12Sep2012]
 ------------------
 

@@ -1,6 +1,12 @@
+include COPYING.txt
+include HACKING
 include NEWS
 include README.txt
 include apache-loggerhead.conf
 include bazaar.conf
 include loggerhead.conf.example
+include loggerheadd
+include Makefile
+recursive-include docs *
 recursive-include loggerhead/static *
+recursive-include loggerhead/tests/ *.py *.pt
