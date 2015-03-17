@@ -24,6 +24,9 @@ NEXT
     - Use breaking word-wrap on the entire information box. (Cruz Bishop,
       #258368)
 
+    - Add some more minor UI changes to do with rounded corners. (Cruz
+      Bishop)
+
 1.18.2 [12Sep2012]
 ------------------
 
