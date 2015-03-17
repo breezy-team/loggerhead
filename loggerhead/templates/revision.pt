@@ -123,7 +123,7 @@
         <p class="expand show_if_js"><a id="toggle_unified_sbs" href="#">Show diffs side-by-side</a></p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/newCode.gif')" alt="added" /> added</p>
         <p class="codin"><img tal:attributes="src python:branch.static_url('/static/images/deleteCode.gif')" alt="removed" /> removed</p>
-        <form onSubmit="compute_diff_links(); return false">Lines of Context:<input type="text" id="contextLines" size="2" length="7" value="5" onKeyUp="compute_diff_links(); return false"/></form>
+        <form onSubmit="compute_diff_links(); return false">Lines of Context:<input type="text" id="contextLines" size="2" length="7" value="3" onKeyUp="compute_diff_links(); return false"/></form>
         <div class="clear"><!-- --></div>
 
       </tal:block>
