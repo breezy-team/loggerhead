@@ -21,6 +21,9 @@ NEXT
 
     - Widen the line number boxes just a little bit. (Cruz Bishop, #310255)
 
+    - Use breaking word-wrap on the entire information box. (Cruz Bishop,
+      #258368)
+
 1.18.2 [12Sep2012]
 ------------------
 
