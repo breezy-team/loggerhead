@@ -13,6 +13,9 @@ NEXT
 
     - Format files under one kilobyte as "x bytes". (Cruz Bishop, #990217)
 
+    - Make the number of lines of context in embedded diffs on revision
+      pages configurable via a ``context`` query argument. (Paul Nixon)
+
 1.18.2 [12Sep2012]
 ------------------
 
