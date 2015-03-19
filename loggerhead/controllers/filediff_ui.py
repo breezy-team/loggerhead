@@ -53,7 +53,10 @@ def _process_diff(difftext):
     return chunks
 
 
-def diff_chunks_for_file(repository, file_id, compare_revid, revid, context_lines):
+def diff_chunks_for_file(repository, file_id, compare_revid, revid,
+                         context_lines=None):
+    if context_lines is None:
+        context_lines = 3
     lines = {}
     args = []
     for r in (compare_revid, revid):
@@ -87,10 +90,11 @@ class FileDiffUI(TemplatedBranchView):
         try:
             context_lines = int(kwargs['context'])
         except (KeyError, ValueError):
-            context_lines = 3 # This is the default.
-        
+            context_lines = None
+
         chunks = diff_chunks_for_file(
-            self._history._branch.repository, file_id, compare_revid, revid, context_lines)
+            self._history._branch.repository, file_id, compare_revid, revid,
+            context_lines=context_lines)
 
         return {
             'chunks': chunks,
