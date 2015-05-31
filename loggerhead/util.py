@@ -76,6 +76,7 @@ def _approximatedate(date):
     if date is None:
         return 'Never'
     delta = datetime.datetime.utcnow() - date
+    future = delta < datetime.timedelta(0, 0, 0)
     delta = abs(delta)
     years = delta.days / 365
     months = delta.days / 30 # This is approximate.
@@ -84,6 +85,8 @@ def _approximatedate(date):
     minutes = (delta.seconds - (3600*hours)) / 60
     seconds = delta.seconds % 60
     result = ''
+    if future:
+        result += 'in '
     if years != 0:
         amount = years
         unit = 'year'
@@ -105,7 +108,8 @@ def _approximatedate(date):
     if amount != 1:
         unit += 's'
     result += '%s %s' % (amount, unit)
-    result += ' ago'
+    if not future:
+        result += ' ago'
     return result
 
 
