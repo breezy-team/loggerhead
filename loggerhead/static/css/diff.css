@@ -55,7 +55,7 @@ ul#list-files li.desc {
     border-bottom: 1px solid #d5d5d5;
     }
 .lineNumber {
-    width: 3%;
+    width: 2.5%;
     border-width: 0 1px;
     border-style: solid;
     border-color: #d5d5d5;
