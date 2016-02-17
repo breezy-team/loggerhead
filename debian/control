@@ -5,7 +5,7 @@ Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Roland Mas <lolando@debian.org>,
            Andrew Starr-Bochicchio <asb@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: bzr (<< 2.7.0),
+Build-Depends-Indep: bzr (<< 2.8.0),
                      bzr (>= 1.17~),
                      python-bzrlib.tests | bzr (<< 2.4.0~beta1-2),
                      python-fixtures,
@@ -27,7 +27,7 @@ Package: loggerhead
 Architecture: all
 Depends: adduser,
          libjs-yui3-min,
-         python-bzrlib (<< 2.7.0),
+         python-bzrlib (<< 2.8.0),
          python-bzrlib (>= 1.17~),
          python-paste (>= 1.6),
          python-pkg-resources,
