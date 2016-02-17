@@ -5,6 +5,7 @@ loggerhead (1.19~bzr479+dfsg-2) unstable; urgency=medium
 
   [ Vincent Ladeuil ]
   * Bump versionized dependency on bzr.
+  * Add myself to Uploaders.
 
  -- Vincent Ladeuil <v.ladeuil+lp@free.fr>  Wed, 17 Feb 2016 11:49:46 +0100
 
