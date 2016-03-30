@@ -591,27 +591,17 @@ iso style "yyyy-mm-dd")
             return []
 
         merge_point = []
-        while True:
+        nexts = [revid]
+        while nexts:
+            revid = nexts.pop()
             children = self._rev_info[self._rev_indices[revid]][1]
-            nexts = []
             for child in children:
                 child_parents = self._rev_info[self._rev_indices[child]][2]
                 if child_parents[0] == revid:
                     nexts.append(child)
                 else:
                     merge_point.append(child)
-
-            if len(nexts) == 0:
-                # only merge
-                return merge_point
-
-            while len(nexts) > 1:
-                # branch
-                next = nexts.pop()
-                merge_point_next = self.get_merge_point_list(next)
-                merge_point.extend(merge_point_next)
-
-            revid = nexts[0]
+        return merge_point
 
     def simplify_merge_point_list(self, revids):
         """if a revision is already merged, don't show further merge points"""
