@@ -4,7 +4,8 @@ Priority: optional
 Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Roland Mas <lolando@debian.org>,
            Vincent Ladeuil <v.ladeuil+lp@free.fr>,
-           Andrew Starr-Bochicchio <asb@debian.org>
+           Andrew Starr-Bochicchio <asb@debian.org>,
+           Jelmer Vernooĳ <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
 Build-Depends-Indep: bzr (<< 2.8.0),
                      bzr (>= 1.17~),
