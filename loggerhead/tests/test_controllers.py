@@ -80,7 +80,8 @@ class TestInventoryUI(BasicTests):
     def test_get_values_smoke(self):
         branch = self.make_bzrbranch_for_tree_shape(['a-file'])
         branch_app = self.make_branch_app(branch)
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/files'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/files',
+               'REQUEST_METHOD': 'GET'}
         inv_ui = branch_app.lookup_app(env)
         inv_ui.parse_args(env)
         values = inv_ui.get_values('', {}, {})
@@ -89,7 +90,8 @@ class TestInventoryUI(BasicTests):
     def test_json_render_smoke(self):
         branch = self.make_bzrbranch_for_tree_shape(['a-file'])
         branch_app = self.make_branch_app(branch)
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/files'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/files',
+               'REQUEST_METHOD': 'GET'}
         inv_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(inv_ui, env)
 
@@ -110,7 +112,8 @@ class TestRevisionUI(BasicTests):
 
     def test_get_values(self):
         branch_app = self.make_branch_app_for_revision_ui([], [])
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/revision/2'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/revision/2',
+               'REQUEST_METHOD': 'GET'}
         rev_ui = branch_app.lookup_app(env)
         rev_ui.parse_args(env)
         self.assertIsInstance(rev_ui.get_values('', {}, []), dict)
@@ -120,7 +123,8 @@ class TestRevisionUI(BasicTests):
                 [('file', 'content\n')], [('file', 'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/1/non-existent-file',
-               'QUERY_STRING':'start_revid=1' }
+               'QUERY_STRING':'start_revid=1',
+               'REQUEST_METHOD': 'GET'}
         revision_ui = branch_app.lookup_app(env)
         path = revision_ui.parse_args(env)
         values = revision_ui.get_values(path, revision_ui.kwargs, {})
@@ -132,7 +136,8 @@ class TestRevisionUI(BasicTests):
                 [('file', 'content\n'), ('other-file', 'other\n')],
                 [('file', 'new content\n')])
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/revision/head:'}
+               'PATH_INFO': '/revision/head:',
+               'REQUEST_METHOD': 'GET'}
         revision_ui = branch_app.lookup_app(env)
         revision_ui.parse_args(env)
         values = revision_ui.get_values('', {}, {})
@@ -146,7 +151,8 @@ class TestRevisionUI(BasicTests):
         branch_app = self.make_branch_app_for_revision_ui(
                 [('file', 'content\n'), ('other-file', 'other\n')],
                 [('file', 'new content\n')])
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:',
+                'REQUEST_METHOD': 'GET'}
         revision_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revision_ui, env)
 
@@ -231,7 +237,8 @@ class TestFileDiffUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id'}
+               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id',
+               'REQUEST_METHOD': 'GET'}
         filediff_ui = branch_app.lookup_app(env)
         filediff_ui.parse_args(env)
         values = filediff_ui.get_values('', {}, {})
@@ -242,7 +249,8 @@ class TestFileDiffUI(BasicTests):
     def test_json_render_smoke(self):
         branch_app = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id'}
+               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id',
+               'REQUEST_METHOD': 'GET'}
         filediff_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(filediff_ui, env)
 
@@ -264,7 +272,8 @@ class TestRevLogUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+revlog/rev-id'}
+               'PATH_INFO': '/+revlog/rev-id',
+               'REQUEST_METHOD': 'GET'}
         revlog_ui = branch_app.lookup_app(env)
         revlog_ui.parse_args(env)
         values = revlog_ui.get_values('', {}, {})
@@ -273,7 +282,8 @@ class TestRevLogUI(BasicTests):
 
     def test_json_render_smoke(self):
         branch_app = self.make_branch_app_for_revlog_ui()
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id',
+               'REQUEST_METHOD': 'GET'}
         revlog_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revlog_ui, env)
 
@@ -284,7 +294,8 @@ class TestControllerHooks(BasicTests):
         return
         # A hook that returns None doesn't influence the searching for
         # a controller.
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom',
+               'REQUEST_METHOD': 'GET'}
         myhook = lambda app, environ: None
         branch = self.make_branch('.')
         self.addCleanup(branch.lock_read().unlock)
@@ -296,7 +307,8 @@ class TestControllerHooks(BasicTests):
 
     def test_working_hook(self):
         # A hook can provide an app to use for a particular request.
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom'}
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom',
+               'REQUEST_METHOD': 'GET'}
         myhook = lambda app, environ: "I am hooked"
         branch = self.make_branch('.')
         self.addCleanup(branch.lock_read().unlock)
