@@ -19,7 +19,7 @@ import urllib
 
 import pkg_resources
 
-import bzrlib
+import breezy
 
 import loggerhead
 from loggerhead.zptsupport import zpt
@@ -162,10 +162,10 @@ def generator_string():
         versions.append(('Loggerhead', loggerhead.__version__))
 
         import sys
-        python_version = bzrlib._format_version_tuple(sys.version_info)
+        python_version = breezy._format_version_tuple(sys.version_info)
         versions.append(('Python', python_version))
 
-        versions.append(('Bazaar', bzrlib.__version__))
+        versions.append(('Bazaar', breezy.__version__))
 
         Paste = pkg_resources.get_distribution('Paste')
         versions.append(('Paste', Paste.version))
@@ -188,11 +188,11 @@ def generator_string():
             versions.append(('Pygments', pygments.__version__))
 
         try:
-            from bzrlib.plugins import search
+            from breezy.plugins import search
         except ImportError:
             pass
         else:
-            bzr_search_version = bzrlib._format_version_tuple(
+            bzr_search_version = breezy._format_version_tuple(
                 search.version_info)
             versions.append(('bzr-search', bzr_search_version))
 

@@ -24,7 +24,7 @@ import pkg_resources
 
 __version__ = '1.18.2'  # Keep in sync with ../info.py.
 __revision__ = None
-required_bzrlib = (1, 17)
+required_breezy = (1, 17)
 
 pkg_resources.get_distribution('Paste>=1.6')
 try:
@@ -34,7 +34,7 @@ except pkg_resources.DistributionNotFound:
     pass
 
 try:
-    from bzrlib.branch import Branch
+    from breezy.branch import Branch
     branch = Branch.open('./');
 
     __revision__ = branch.revno()

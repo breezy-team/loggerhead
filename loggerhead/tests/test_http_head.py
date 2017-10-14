@@ -18,7 +18,7 @@
 
 from cStringIO import StringIO
 
-from bzrlib import tests
+from breezy import tests
 
 from loggerhead.apps import http_head
 

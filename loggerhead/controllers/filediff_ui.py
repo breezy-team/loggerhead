@@ -1,9 +1,9 @@
 from StringIO import StringIO
 import urllib
 
-from bzrlib import diff
-from bzrlib import errors
-from bzrlib import osutils
+from breezy import diff
+from breezy import errors
+from breezy import osutils
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView

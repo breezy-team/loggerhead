@@ -17,7 +17,7 @@ from optparse import OptionParser
 import sys
 import tempfile
 
-from bzrlib import config
+from breezy import config
 
 _temporary_sql_dir = None
 

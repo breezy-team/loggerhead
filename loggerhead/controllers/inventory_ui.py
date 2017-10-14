@@ -24,8 +24,8 @@ import urllib
 
 from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
-from bzrlib import errors
-from bzrlib.revision import is_null as is_null_rev
+from breezy import errors
+from breezy.revision import is_null as is_null_rev
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView

@@ -17,14 +17,14 @@
 
 """Direct tests of the loggerhead/history.py module"""
 
-from bzrlib.foreign import (
+from breezy.foreign import (
     ForeignRevision,
     ForeignVcs,
     VcsMapping,
     )
 
 from datetime import datetime
-from bzrlib import tag, tests
+from breezy import tag, tests
 
 from loggerhead import history as _mod_history
 

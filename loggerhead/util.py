@@ -35,7 +35,7 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
-from bzrlib import urlutils
+from breezy import urlutils
 
 from simpletal.simpleTALUtils import HTMLStructureCleaner
 

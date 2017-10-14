@@ -12,7 +12,7 @@
 #
 """Exports an archive from a bazaar branch"""
 
-from bzrlib.export import get_export_generator
+from breezy.export import get_export_generator
 
 
 class ExporterFileObject(object):

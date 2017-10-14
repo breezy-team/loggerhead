@@ -21,8 +21,8 @@ import time
 
 from paste.request import path_info_pop, parse_querystring
 
-from bzrlib.diff import show_diff_trees
-from bzrlib.revision import NULL_REVISION
+from breezy.diff import show_diff_trees
+from breezy.revision import NULL_REVISION
 
 from loggerhead.controllers import TemplatedBranchView
 

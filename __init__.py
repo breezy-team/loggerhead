@@ -18,8 +18,8 @@
 # This file allows loggerhead to be treated as a plugin for bzr.
 #
 # XXX: Because loggerhead already contains a loggerhead directory, much of the
-# code is going to appear loaded at bzrlib.plugins.loggerhead.loggerhead.
-# This seems like the easiest thing, because bzrlib wants the top-level plugin
+# code is going to appear loaded at breezy.plugins.loggerhead.loggerhead.
+# This seems like the easiest thing, because breezy wants the top-level plugin
 # directory to be the module, but when it's used as a library people expect
 # the source directory to contain a directory called loggerhead.  -- mbp
 # 20090123
@@ -37,14 +37,11 @@ from info import (
     bzr_compatible_versions,
     )
 
-if __name__ == 'bzrlib.plugins.loggerhead':
-    import bzrlib
-    from bzrlib.api import require_any_api
-    from bzrlib import commands
+if __name__ == 'breezy.plugins.loggerhead':
+    import breezy
+    from breezy import commands
 
-    require_any_api(bzrlib, bzr_compatible_versions)
-
-    from bzrlib.transport import transport_server_registry
+    from breezy.transport import transport_server_registry
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
@@ -105,7 +102,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         takes_args = ["filename"]
 
         def run(self, filename):
-            from bzrlib.plugins.loggerhead.loggerhead import load_test
+            from breezy.plugins.loggerhead.loggerhead import load_test
             script = load_test.run_script(filename)
             for thread_id in sorted(script._threads):
                 worker = script._threads[thread_id][0]
@@ -118,5 +115,5 @@ if __name__ == 'bzrlib.plugins.loggerhead':
     def load_tests(standard_tests, module, loader):
         _ensure_loggerhead_path()
         standard_tests.addTests(loader.loadTestsFromModuleNames(
-            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
+            ['breezy.plugins.loggerhead.loggerhead.tests']))
         return standard_tests

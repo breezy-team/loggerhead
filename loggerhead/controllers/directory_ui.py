@@ -20,7 +20,7 @@ import datetime
 import logging
 import stat
 
-from bzrlib import branch, errors
+from breezy import branch, errors
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView

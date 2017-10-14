@@ -23,9 +23,9 @@ from paste.httpexceptions import HTTPExceptionHandler
 from loggerhead.apps.transport import BranchesFromTransportRoot
 from loggerhead.apps.error import ErrorHandlerApp
 from loggerhead.config import LoggerheadConfig
-from bzrlib import config as bzrconfig
+from breezy import config as bzrconfig
 from paste.deploy.config import PrefixMiddleware
-from bzrlib.plugin import load_plugins
+from breezy.plugin import load_plugins
 
 class NotConfiguredError(Exception):
     pass
