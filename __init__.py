@@ -58,7 +58,7 @@ if __name__ == 'breezy.plugins.loggerhead':
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
 
-    def serve_http(transport, host=None, port=None, inet=None):
+    def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
         # TODO: if we supported inet to pass requests in and respond to them,
         #       then it would be easier to test the full stack, but it probably
         #       means routing around paste.httpserver.serve which probably
