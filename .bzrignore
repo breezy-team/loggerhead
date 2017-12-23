@@ -10,3 +10,4 @@ loggerhead-memprofile
 tags
 .project
 .pydevproject
+.testrepository
