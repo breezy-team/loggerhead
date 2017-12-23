@@ -108,18 +108,19 @@ class _RevListToTimestamps(object):
 
 class FileChangeReporter(object):
 
-    def __init__(self, old_inv, new_inv):
+    def __init__(self, old_tree, new_tree):
         self.added = []
         self.modified = []
         self.renamed = []
         self.removed = []
         self.text_changes = []
-        self.old_inv = old_inv
-        self.new_inv = new_inv
+        self.old_tree = old_tree
+        self.new_tree = new_tree
 
-    def revid(self, inv, file_id):
+    def revid(self, tree, file_id):
         try:
-            return inv[file_id].revision
+            path = tree.id2path(file_id)
+            return tree.get_file_revision(path, file_id)
         except breezy.errors.NoSuchId:
             return 'null:'
 
@@ -132,8 +133,8 @@ class FileChangeReporter(object):
                 filename = rich_filename(paths[1], kind[1])
             self.text_changes.append(util.Container(
                 filename=filename, file_id=file_id,
-                old_revision=self.revid(self.old_inv, file_id),
-                new_revision=self.revid(self.new_inv, file_id)))
+                old_revision=self.revid(self.old_tree, file_id),
+                new_revision=self.revid(self.new_tree, file_id)))
         if versioned == 'added':
             self.added.append(util.Container(
                 filename=rich_filename(paths[1], kind), kind=kind[1]))
@@ -783,7 +784,7 @@ iso style "yyyy-mm-dd")
         else:
             old_tree, new_tree = repo.revision_trees([old_revid, new_revid])
 
-        reporter = FileChangeReporter(old_tree.inventory, new_tree.inventory)
+        reporter = FileChangeReporter(old_tree, new_tree)
 
         breezy.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
