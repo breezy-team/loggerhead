@@ -44,33 +44,33 @@ class InventoryUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.inventory'
     supports_json = True
 
-    def get_filelist(self, inv, path, sort_type, revno_url):
+    def get_filelist(self, tree, path, sort_type, revno_url):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
 
-        @param inv: The inventory.
-        @param path: The path of a directory within the inventory.
+        @param tree: The tree
+        @param path: The path of a directory within the tree.
         @param sort_type: How to sort the results... XXX.
         """
-        file_id = inv.path2id(path)
-        dir_ie = inv[file_id]
         file_list = []
 
-        if dir_ie.kind != 'directory':
+        if tree.kind(path) != 'directory':
             raise HTTPMovedPermanently(self._branch.context_url(['/view', revno_url, path]))
 
         revid_set = set()
 
-        for filename, entry in dir_ie.children.iteritems():
+        child_entries = list(tree.iter_child_entries(path))
+
+        for entry in child_entries:
             revid_set.add(entry.revision)
 
         change_dict = {}
         for change in self._history.get_changes(list(revid_set)):
             change_dict[change.revid] = change
 
-        for filename, entry in dir_ie.children.iteritems():
-            pathname = filename
+        for entry in child_entries:
+            pathname = entry.name
             if entry.kind == 'directory':
                 pathname += '/'
             if path == '':
@@ -85,7 +85,7 @@ class InventoryUI(TemplatedBranchView):
             # including the revision id and having a separate request to get
             # back the revision info.
             file = util.Container(
-                filename=filename, executable=entry.executable,
+                filename=entry.name, executable=entry.executable,
                 kind=entry.kind, absolutepath=absolutepath,
                 file_id=entry.file_id, size=entry.text_size, revid=revid,
                 change=change_dict[revid])
@@ -144,7 +144,7 @@ class InventoryUI(TemplatedBranchView):
             else:
                 revno_url = history.get_revno(revid)
             history.add_branch_nicks(change)
-            filelist = self.get_filelist(rev_tree.inventory, path, sort_type, revno_url)
+            filelist = self.get_filelist(rev_tree, path, sort_type, revno_url)
 
         else:
             start_revid = None
