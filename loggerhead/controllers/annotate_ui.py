@@ -26,6 +26,7 @@ class AnnotateUI(ViewUI):
     def annotate_file(self, info):
         file_id = info['file_id']
         revid = info['change'].revid
+        path = self._history.get_path(revid, file_id)
         
         tree = self.tree_for(file_id, revid)
         
@@ -37,7 +38,7 @@ class AnnotateUI(ViewUI):
         revisions = {}
 
         lineno = 0
-        for (line_revid, text), lineno in zip(tree.annotate_iter(file_id), itertools.count(1)):
+        for (line_revid, text), lineno in zip(tree.annotate_iter(path, file_id), itertools.count(1)):
             if line_revid != last_line_revid:
                 last_line_revid = line_revid
 

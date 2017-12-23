@@ -112,8 +112,8 @@ if __name__ == 'breezy.plugins.loggerhead':
 
     commands.register_command(cmd_load_test_loggerhead)
 
-    def load_tests(standard_tests, module, loader):
+    def load_tests(loader, basic_tests, pattern):
         _ensure_loggerhead_path()
-        standard_tests.addTests(loader.loadTestsFromModuleNames(
-            ['breezy.plugins.loggerhead.loggerhead.tests']))
-        return standard_tests
+        basic_tests.addTest(loader.loadTestsFromModuleNames(
+            ['%s.loggerhead.tests' % __name__]))
+        return basic_tests

@@ -32,12 +32,3 @@ try:
 except pkg_resources.DistributionNotFound:
     # No paste.deploy is OK, but an old paste.deploy is bad.
     pass
-
-try:
-    from breezy.branch import Branch
-    branch = Branch.open('./');
-
-    __revision__ = branch.revno()
-    
-except:
-    pass

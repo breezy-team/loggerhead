@@ -40,6 +40,7 @@ import breezy.branch
 import breezy.delta
 import breezy.errors
 import breezy.foreign
+import breezy.osutils
 import breezy.revision
 
 from loggerhead import search
@@ -565,16 +566,13 @@ iso style "yyyy-mm-dd")
             # search index.
             return None, None, []
 
-    def get_inventory(self, revid):
-        if revid not in self._inventory_cache:
-            self._inventory_cache[revid] = (
-                self._branch.repository.get_inventory(revid))
-        return self._inventory_cache[revid]
+    def revision_tree(self, revid):
+        return self._branch.repository.revision_tree(revid)
 
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
-        path = self.get_inventory(revid).id2path(file_id)
+        path = self.revision_tree(revid).id2path(file_id)
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return path
@@ -582,7 +580,7 @@ iso style "yyyy-mm-dd")
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
-        return self.get_inventory(revid).path2id(path)
+        return self.revision_tree(revid).path2id(path)
 
     def get_merge_point_list(self, revid):
         """
@@ -754,13 +752,12 @@ iso style "yyyy-mm-dd")
 
     def get_file(self, file_id, revid):
         """Returns (path, filename, file contents)"""
-        inv = self.get_inventory(revid)
-        inv_entry = inv[file_id]
-        rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
+        rev_tree = self._branch.repository.revision_tree(revid)
+        path = rev_tree.id2path(file_id)
+        display_path = path
+        if not display_path.startswith('/'):
             path = '/' + path
-        return path, inv_entry.name, rev_tree.get_file_text(file_id)
+        return display_path, breezy.osutils.basename(path), rev_tree.get_file_text(path, file_id)
 
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """

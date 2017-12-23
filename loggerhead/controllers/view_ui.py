@@ -47,14 +47,16 @@ class ViewUI(TemplatedBranchView):
     template_path = 'loggerhead.templates.view'
     
     def tree_for(self, file_id, revid):
-        file_revid = self._history.get_inventory(revid)[file_id].revision
+        rev_tree = self._history.revision_tree(revid)
+        file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id), file_id)
         return self._history._branch.repository.revision_tree(file_revid)
 
     def text_lines(self, file_id, revid):
-        file_name = os.path.basename(self._history.get_path(revid, file_id))
+        path = self._history.get_path(revid, file_id)
+        file_name = os.path.basename(path)
         
         tree = self.tree_for(file_id, revid)
-        file_text = tree.get_file_text(file_id)
+        file_text = tree.get_file_text(path, file_id)
         encoding = 'utf-8'
         try:
             file_text = file_text.decode(encoding)
@@ -119,20 +121,15 @@ class ViewUI(TemplatedBranchView):
                 self._branch.is_root,
                 'files'))
 
-        # Create breadcrumb trail for the path within the branch
-        try:
-            inv = history.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
-        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
+        tree = history.revision_tree(revid)
 
-        try:
-            file = inv[file_id]
-        except NoSuchId:
+        # Create breadcrumb trail for the path within the branch
+        branch_breadcrumbs = util.branch_breadcrumbs(path, tree, 'files')
+
+        if not tree.has_id(file_id):
             raise HTTPNotFound()
 
-        if file.kind == "directory":
+        if tree.kind(path, file_id) == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         # no navbar for revisions

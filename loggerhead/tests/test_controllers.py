@@ -55,8 +55,8 @@ class TestInventoryUI(BasicTests):
     def test_get_filelist(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        inv = bzrbranch.repository.get_inventory(bzrbranch.last_revision())
-        self.assertEqual(1, len(inv_ui.get_filelist(inv, '', 'filename', 'head')))
+        revtree = bzrbranch.repository.revision_tree(bzrbranch.last_revision())
+        self.assertEqual(1, len(inv_ui.get_filelist(revtree, '', 'filename', 'head')))
 
     def test_smoke(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
@@ -223,21 +223,21 @@ class TestFileDiffUI(BasicTests):
     def make_branch_app_for_filediff_ui(self):
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-1-id', None, [
+        rev1 = builder.build_snapshot(None, [
             ('add', ('', 'root-id', 'directory', '')),
             ('add', ('filename', 'f-id', 'file', 'content\n'))],
             message="First commit.")
-        builder.build_snapshot('rev-2-id', None, [
-            ('modify', ('f-id', 'new content\n'))])
+        rev2 = builder.build_snapshot(None, [
+             ('modify', ('f-id', 'new content\n'))])
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        return self.make_branch_app(branch)
+        return self.make_branch_app(branch), (rev1, rev2)
 
     def test_get_values_smoke(self):
-        branch_app = self.make_branch_app_for_filediff_ui()
+        branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id',
+               'PATH_INFO': '/+filediff/%s/%s/f-id' % (rev2, rev1),
                'REQUEST_METHOD': 'GET'}
         filediff_ui = branch_app.lookup_app(env)
         filediff_ui.parse_args(env)
@@ -247,9 +247,9 @@ class TestFileDiffUI(BasicTests):
         self.assertEqual('new content', chunks[0].diff[1].line)
 
     def test_json_render_smoke(self):
-        branch_app = self.make_branch_app_for_filediff_ui()
+        branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id',
+               'PATH_INFO': '/+json/+filediff/%s/%s/f-id' % (rev2, rev1),
                'REQUEST_METHOD': 'GET'}
         filediff_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(filediff_ui, env)
@@ -260,19 +260,19 @@ class TestRevLogUI(BasicTests):
     def make_branch_app_for_revlog_ui(self):
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-id', None, [
+        revid = builder.build_snapshot(None, [
             ('add', ('', 'root-id', 'directory', '')),
             ('add', ('filename', 'f-id', 'file', 'content\n'))],
             message="First commit.")
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        return self.make_branch_app(branch)
+        return self.make_branch_app(branch), revid
 
     def test_get_values_smoke(self):
-        branch_app = self.make_branch_app_for_revlog_ui()
+        branch_app, revid = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+revlog/rev-id',
+               'PATH_INFO': '/+revlog/%s' % revid,
                'REQUEST_METHOD': 'GET'}
         revlog_ui = branch_app.lookup_app(env)
         revlog_ui.parse_args(env)
@@ -281,8 +281,8 @@ class TestRevLogUI(BasicTests):
         self.assertEqual(values['entry'].comment, "First commit.")
 
     def test_json_render_smoke(self):
-        branch_app = self.make_branch_app_for_revlog_ui()
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id',
+        branch_app, revid = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/%s' % revid,
                'REQUEST_METHOD': 'GET'}
         revlog_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revlog_ui, env)

@@ -456,7 +456,7 @@ def directory_breadcrumbs(path, is_root, view):
     return breadcrumbs
 
 
-def branch_breadcrumbs(path, inv, view):
+def branch_breadcrumbs(path, tree, view):
     """
     Generate breadcrumb information from the branch path given
 
@@ -464,7 +464,7 @@ def branch_breadcrumbs(path, inv, view):
 
     Arguments:
     path -- The path to convert into breadcrumbs
-    inv -- Inventory to get file information from
+    tree -- Tree to get file information from
     view -- The type of view we are showing (files, changes etc)
     """
     dir_parts = path.strip('/').split('/')
