@@ -18,8 +18,8 @@
 # This file allows loggerhead to be treated as a plugin for bzr.
 #
 # XXX: Because loggerhead already contains a loggerhead directory, much of the
-# code is going to appear loaded at bzrlib.plugins.loggerhead.loggerhead.
-# This seems like the easiest thing, because bzrlib wants the top-level plugin
+# code is going to appear loaded at breezy.plugins.loggerhead.loggerhead.
+# This seems like the easiest thing, because breezy wants the top-level plugin
 # directory to be the module, but when it's used as a library people expect
 # the source directory to contain a directory called loggerhead.  -- mbp
 # 20090123
@@ -37,14 +37,11 @@ from info import (
     bzr_compatible_versions,
     )
 
-if __name__ == 'bzrlib.plugins.loggerhead':
-    import bzrlib
-    from bzrlib.api import require_any_api
-    from bzrlib import commands
+if __name__ == 'breezy.plugins.loggerhead':
+    import breezy
+    from breezy import commands
 
-    require_any_api(bzrlib, bzr_compatible_versions)
-
-    from bzrlib.transport import transport_server_registry
+    from breezy.transport import transport_server_registry
 
     DEFAULT_HOST = '0.0.0.0'
     DEFAULT_PORT = 8080
@@ -61,7 +58,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
             import os.path, sys
             sys.path.append(os.path.dirname(__file__))
 
-    def serve_http(transport, host=None, port=None, inet=None):
+    def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
         # TODO: if we supported inet to pass requests in and respond to them,
         #       then it would be easier to test the full stack, but it probably
         #       means routing around paste.httpserver.serve which probably
@@ -105,7 +102,7 @@ if __name__ == 'bzrlib.plugins.loggerhead':
         takes_args = ["filename"]
 
         def run(self, filename):
-            from bzrlib.plugins.loggerhead.loggerhead import load_test
+            from breezy.plugins.loggerhead.loggerhead import load_test
             script = load_test.run_script(filename)
             for thread_id in sorted(script._threads):
                 worker = script._threads[thread_id][0]
@@ -115,8 +112,8 @@ if __name__ == 'bzrlib.plugins.loggerhead':
 
     commands.register_command(cmd_load_test_loggerhead)
 
-    def load_tests(standard_tests, module, loader):
+    def load_tests(loader, basic_tests, pattern):
         _ensure_loggerhead_path()
-        standard_tests.addTests(loader.loadTestsFromModuleNames(
-            ['bzrlib.plugins.loggerhead.loggerhead.tests']))
-        return standard_tests
+        basic_tests.addTest(loader.loadTestsFromModuleNames(
+            ['%s.loggerhead.tests' % __name__]))
+        return basic_tests

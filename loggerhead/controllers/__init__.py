@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 
-import bzrlib.errors
+import breezy.errors
 import simplejson
 import time
 
@@ -135,7 +135,7 @@ class TemplatedBranchView(object):
         if len(self.args) > 0 and self.args != ['']:
             try:
                 revid = h.fix_revid(self.args[0])
-            except bzrlib.errors.NoSuchRevision:
+            except breezy.errors.NoSuchRevision:
                 raise HTTPNotFound;
         else:
             revid = h.last_revid

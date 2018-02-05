@@ -24,9 +24,9 @@ def import_search():
     if _mod_index is not None:
         return
     try:
-        from bzrlib.plugins.search import errors
-        from bzrlib.plugins.search import index as _mod_index
-        from bzrlib.plugins.search.index import FileTextHit, RevisionHit
+        from breezy.plugins.search import errors
+        from breezy.plugins.search import index as _mod_index
+        from breezy.plugins.search.index import FileTextHit, RevisionHit
     except ImportError:
         _mod_index = None
 

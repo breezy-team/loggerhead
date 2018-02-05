@@ -17,8 +17,8 @@ import time
 import threading
 import Queue
 
-from bzrlib import tests
-from bzrlib.tests import http_server
+from breezy import tests
+from breezy.tests import http_server
 
 from loggerhead import load_test
 

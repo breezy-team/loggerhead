@@ -35,12 +35,13 @@ import textwrap
 import threading
 import tarfile
 
-from bzrlib import tag
-import bzrlib.branch
-import bzrlib.delta
-import bzrlib.errors
-import bzrlib.foreign
-import bzrlib.revision
+from breezy import tag
+import breezy.branch
+import breezy.delta
+import breezy.errors
+import breezy.foreign
+import breezy.osutils
+import breezy.revision
 
 from loggerhead import search
 from loggerhead import util
@@ -49,7 +50,7 @@ from loggerhead.wholehistory import compute_whole_history_data
 
 def is_branch(folder):
     try:
-        bzrlib.branch.Branch.open(folder)
+        breezy.branch.Branch.open(folder)
         return True
     except:
         return False
@@ -108,19 +109,20 @@ class _RevListToTimestamps(object):
 
 class FileChangeReporter(object):
 
-    def __init__(self, old_inv, new_inv):
+    def __init__(self, old_tree, new_tree):
         self.added = []
         self.modified = []
         self.renamed = []
         self.removed = []
         self.text_changes = []
-        self.old_inv = old_inv
-        self.new_inv = new_inv
+        self.old_tree = old_tree
+        self.new_tree = new_tree
 
-    def revid(self, inv, file_id):
+    def revid(self, tree, file_id):
         try:
-            return inv[file_id].revision
-        except bzrlib.errors.NoSuchId:
+            path = tree.id2path(file_id)
+            return tree.get_file_revision(path, file_id)
+        except breezy.errors.NoSuchId:
             return 'null:'
 
     def report(self, file_id, paths, versioned, renamed, modified,
@@ -132,8 +134,8 @@ class FileChangeReporter(object):
                 filename = rich_filename(paths[1], kind[1])
             self.text_changes.append(util.Container(
                 filename=filename, file_id=file_id,
-                old_revision=self.revid(self.old_inv, file_id),
-                new_revision=self.revid(self.new_inv, file_id)))
+                old_revision=self.revid(self.old_tree, file_id),
+                new_revision=self.revid(self.new_tree, file_id)))
         if versioned == 'added':
             self.added.append(util.Container(
                 filename=rich_filename(paths[1], kind), kind=kind[1]))
@@ -299,7 +301,7 @@ class History(object):
 
     @property
     def has_revisions(self):
-        return not bzrlib.revision.is_null(self.last_revid)
+        return not breezy.revision.is_null(self.last_revid)
 
     def get_config(self):
         return self._branch.get_config()
@@ -320,7 +322,7 @@ class History(object):
         if revid_list is None:
             # Just yield the mainline, starting at start_revid
             revid = start_revid
-            is_null = bzrlib.revision.is_null
+            is_null = breezy.revision.is_null
             while not is_null(revid):
                 yield revid
                 parents = self._rev_info[self._rev_indices[revid]][2]
@@ -341,7 +343,7 @@ class History(object):
                 i += 1
             return r
         while revid_set:
-            if bzrlib.revision.is_null(revid):
+            if breezy.revision.is_null(revid):
                 return
             rev_introduced = introduced_revisions(revid)
             matching = rev_introduced.intersection(revid_set)
@@ -360,7 +362,7 @@ class History(object):
         possible_keys = [(file_id, revid) for revid in self._rev_indices]
         get_parent_map = self._branch.repository.texts.get_parent_map
         # We chunk the requests as this works better with GraphIndex.
-        # See _filter_revisions_touching_file_id in bzrlib/log.py
+        # See _filter_revisions_touching_file_id in breezy/log.py
         # for more information.
         revids = []
         chunk_size = 1000
@@ -454,7 +456,7 @@ iso style "yyyy-mm-dd")
             if self.revno_re.match(revid):
                 revid = self._revno_revid[revid]
         except KeyError:
-            raise bzrlib.errors.NoSuchRevision(self._branch_nick, revid)
+            raise breezy.errors.NoSuchRevision(self._branch_nick, revid)
         return revid
 
     def get_file_view(self, revid, file_id):
@@ -564,16 +566,13 @@ iso style "yyyy-mm-dd")
             # search index.
             return None, None, []
 
-    def get_inventory(self, revid):
-        if revid not in self._inventory_cache:
-            self._inventory_cache[revid] = (
-                self._branch.repository.get_inventory(revid))
-        return self._inventory_cache[revid]
+    def revision_tree(self, revid):
+        return self._branch.repository.revision_tree(revid)
 
     def get_path(self, revid, file_id):
         if (file_id is None) or (file_id == ''):
             return ''
-        path = self.get_inventory(revid).id2path(file_id)
+        path = self.revision_tree(revid).id2path(file_id)
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
         return path
@@ -581,7 +580,7 @@ iso style "yyyy-mm-dd")
     def get_file_id(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
-        return self.get_inventory(revid).path2id(path)
+        return self.revision_tree(revid).path2id(path)
 
     def get_merge_point_list(self, revid):
         """
@@ -591,27 +590,17 @@ iso style "yyyy-mm-dd")
             return []
 
         merge_point = []
-        while True:
+        nexts = [revid]
+        while nexts:
+            revid = nexts.pop()
             children = self._rev_info[self._rev_indices[revid]][1]
-            nexts = []
             for child in children:
                 child_parents = self._rev_info[self._rev_indices[child]][2]
                 if child_parents[0] == revid:
                     nexts.append(child)
                 else:
                     merge_point.append(child)
-
-            if len(nexts) == 0:
-                # only merge
-                return merge_point
-
-            while len(nexts) > 1:
-                # branch
-                next = nexts.pop()
-                merge_point_next = self.get_merge_point_list(next)
-                merge_point.extend(merge_point_next)
-
-            revid = nexts[0]
+        return merge_point
 
     def simplify_merge_point_list(self, revids):
         """if a revision is already merged, don't show further merge points"""
@@ -684,7 +673,7 @@ iso style "yyyy-mm-dd")
 
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
-        revid_list = filter(lambda revid: not bzrlib.revision.is_null(revid),
+        revid_list = filter(lambda revid: not breezy.revision.is_null(revid),
                             revid_list)
         parent_map = self._branch.repository.get_graph().get_parent_map(
                          revid_list)
@@ -698,7 +687,7 @@ iso style "yyyy-mm-dd")
 
     def _change_from_revision(self, revision):
         """
-        Given a bzrlib Revision, return a processed "change" for use in
+        Given a breezy Revision, return a processed "change" for use in
         templates.
         """
         message, short_message = clean_message(revision.message)
@@ -732,15 +721,15 @@ iso style "yyyy-mm-dd")
             'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
             'tags': revtags,
         }
-        if isinstance(revision, bzrlib.foreign.ForeignRevision):
+        if isinstance(revision, breezy.foreign.ForeignRevision):
             foreign_revid, mapping = (
                 revision.foreign_revid, revision.mapping)
         elif ":" in revision.revision_id:
             try:
                 foreign_revid, mapping = \
-                    bzrlib.foreign.foreign_vcs_registry.parse_revision_id(
+                    breezy.foreign.foreign_vcs_registry.parse_revision_id(
                         revision.revision_id)
-            except bzrlib.errors.InvalidRevisionId:
+            except breezy.errors.InvalidRevisionId:
                 foreign_revid = None
                 mapping = None
         else:
@@ -754,7 +743,7 @@ iso style "yyyy-mm-dd")
         if entry.parents:
             old_revid = entry.parents[0].revid
         else:
-            old_revid = bzrlib.revision.NULL_REVISION
+            old_revid = breezy.revision.NULL_REVISION
         return self.file_changes_for_revision_ids(old_revid, entry.revid)
 
     def add_changes(self, entry):
@@ -763,13 +752,12 @@ iso style "yyyy-mm-dd")
 
     def get_file(self, file_id, revid):
         """Returns (path, filename, file contents)"""
-        inv = self.get_inventory(revid)
-        inv_entry = inv[file_id]
-        rev_tree = self._branch.repository.revision_tree(inv_entry.revision)
-        path = inv.id2path(file_id)
-        if not path.startswith('/'):
+        rev_tree = self._branch.repository.revision_tree(revid)
+        path = rev_tree.id2path(file_id)
+        display_path = path
+        if not display_path.startswith('/'):
             path = '/' + path
-        return path, inv_entry.name, rev_tree.get_file_text(file_id)
+        return display_path, breezy.osutils.basename(path), rev_tree.get_file_text(path, file_id)
 
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
@@ -785,17 +773,17 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename, file_id)),
         """
         repo = self._branch.repository
-        if (bzrlib.revision.is_null(old_revid) or
-            bzrlib.revision.is_null(new_revid) or
+        if (breezy.revision.is_null(old_revid) or
+            breezy.revision.is_null(new_revid) or
             old_revid == new_revid):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
             old_tree, new_tree = repo.revision_trees([old_revid, new_revid])
 
-        reporter = FileChangeReporter(old_tree.inventory, new_tree.inventory)
+        reporter = FileChangeReporter(old_tree, new_tree)
 
-        bzrlib.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
+        breezy.delta.report_changes(new_tree.iter_changes(old_tree), reporter)
 
         return util.Container(
             added=sorted(reporter.added, key=lambda x: x.filename),

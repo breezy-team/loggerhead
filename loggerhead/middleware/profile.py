@@ -2,7 +2,7 @@
 
 import threading
 
-from bzrlib.lsprof import profile
+from breezy.lsprof import profile
 
 
 class LSProfMiddleware(object):

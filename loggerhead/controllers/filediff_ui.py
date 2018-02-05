@@ -1,9 +1,9 @@
 from StringIO import StringIO
 import urllib
 
-from bzrlib import diff
-from bzrlib import errors
-from bzrlib import osutils
+from breezy import diff
+from breezy import errors
+from breezy import osutils
 
 from loggerhead import util
 from loggerhead.controllers import TemplatedBranchView
@@ -53,7 +53,10 @@ def _process_diff(difftext):
     return chunks
 
 
-def diff_chunks_for_file(repository, file_id, compare_revid, revid):
+def diff_chunks_for_file(repository, file_id, compare_revid, revid,
+                         context_lines=None):
+    if context_lines is None:
+        context_lines = 3
     lines = {}
     args = []
     for r in (compare_revid, revid):
@@ -65,7 +68,7 @@ def diff_chunks_for_file(repository, file_id, compare_revid, revid):
         lines[r] = osutils.split_lines(''.join(bytes_iter))
     buffer = StringIO()
     try:
-        diff.internal_diff('', lines[compare_revid], '', lines[revid], buffer)
+        diff.internal_diff('', lines[compare_revid], '', lines[revid], buffer, context_lines=context_lines)
     except errors.BinaryFile:
         difftext = ''
     else:
@@ -84,8 +87,14 @@ class FileDiffUI(TemplatedBranchView):
         compare_revid = urllib.unquote(self.args[1])
         file_id = urllib.unquote(self.args[2])
 
+        try:
+            context_lines = int(kwargs['context'])
+        except (KeyError, ValueError):
+            context_lines = None
+
         chunks = diff_chunks_for_file(
-            self._history._branch.repository, file_id, compare_revid, revid)
+            self._history._branch.repository, file_id, compare_revid, revid,
+            context_lines=context_lines)
 
         return {
             'chunks': chunks,

@@ -20,13 +20,13 @@
 import logging
 import time
 
-from bzrlib.revision import is_null, NULL_REVISION
-from bzrlib.tsort import merge_sort
+from breezy.revision import is_null, NULL_REVISION
+from breezy.tsort import merge_sort
 
 
 def _strip_NULL_ghosts(revision_graph):
     """
-    Copied over from bzrlib meant as a temporary workaround for
+    Copied over from breezy meant as a temporary workaround for
     deprecated methods.
     """
     # Filter ghosts, and null:

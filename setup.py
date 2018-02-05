@@ -37,9 +37,10 @@ setup(
     packages = ["loggerhead",
                 "loggerhead/apps",
                 "loggerhead/controllers",
+                "loggerhead/middleware",
                 "loggerhead/templates",
-                "bzrlib.plugins.loggerhead"],
-    package_dir={'bzrlib.plugins.loggerhead':'.'},
+                "breezy.plugins.loggerhead"],
+    package_dir={'breezy.plugins.loggerhead':'.'},
     package_data = {"loggerhead": ["templates/*.pt",
                                    "static/css/*.css",
                                    "static/javascript/*.js",
@@ -69,6 +70,7 @@ setup(
     data_files = [
         ('share/man/man1', ['serve-branches.1']),
         ('share/doc/loggerhead', ['apache-loggerhead.conf',
+                                  'loggerheadd',
                                   'bazaar.conf']),
         ],
     )

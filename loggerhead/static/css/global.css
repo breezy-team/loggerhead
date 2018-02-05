@@ -131,11 +131,13 @@ ul#menuTabs li a {
 ul#menuTabs li a:hover {
     background-color: #f3f3f3;
     text-decoration: none;
+    border-radius: 5px;
     }
 ul#menuTabs li a#on {
     font-weight: bold;
     color: #fff;
     background-color: #747474;
+    border-radius: 5px;
     }
 
 /* Sub-menu Tabs */

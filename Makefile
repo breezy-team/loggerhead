@@ -8,4 +8,4 @@ clean:
 	rm -rf dist/
 
 check:
-	BZR_PLUGINS_AT=loggerhead@$$(pwd) bzr selftest -s bp.loggerhead
+	BRZ_PLUGINS_AT=loggerhead@$$(pwd) brz selftest -s bp.loggerhead
