@@ -18,11 +18,11 @@
 
 import threading
 
-from bzrlib import branch, errors, lru_cache, urlutils
-from bzrlib.config import LocationConfig
-from bzrlib.smart import request
-from bzrlib.transport import get_transport
-from bzrlib.transport.http import wsgi
+from breezy import branch, errors, lru_cache, urlutils
+from breezy.config import LocationConfig
+from breezy.bzr.smart import request
+from breezy.transport import get_transport
+from breezy.transport.http import wsgi
 
 from paste.request import path_info_pop
 from paste import httpexceptions
@@ -33,7 +33,7 @@ from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
-# TODO: Use bzrlib.ui.bool_from_string(), added in bzr 1.18
+# TODO: Use breezy.ui.bool_from_string(), added in bzr 1.18
 _bools = {
     'yes': True, 'no': False,
     'on': True, 'off': False,

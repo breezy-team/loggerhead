@@ -21,12 +21,12 @@ import re
 import simplejson
 from cStringIO import StringIO
 
-from bzrlib.tests import TestCaseWithTransport
+from breezy.tests import TestCaseWithTransport
 try:
-    from bzrlib.util.configobj.configobj import ConfigObj
+    from breezy.util.configobj.configobj import ConfigObj
 except ImportError:
     from configobj import ConfigObj
-from bzrlib import config
+from breezy import config
 
 from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps.http_head import HeadMiddleware

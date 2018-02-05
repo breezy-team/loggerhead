@@ -21,7 +21,7 @@ import logging
 import os
 import sys
 
-from bzrlib.plugin import load_plugins
+from breezy.plugin import load_plugins
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError

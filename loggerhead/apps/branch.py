@@ -20,10 +20,10 @@ import logging
 import urllib
 import sys
 
-import bzrlib.branch
-import bzrlib.errors
-from bzrlib.hooks import Hooks
-import bzrlib.lru_cache
+import breezy.branch
+import breezy.errors
+from breezy.hooks import Hooks
+import breezy.lru_cache
 
 from paste import request
 from paste import httpexceptions
@@ -63,7 +63,7 @@ class BranchWSGIApp(object):
         self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
         if graph_cache is None:
-            graph_cache = bzrlib.lru_cache.LRUCache(10)
+            graph_cache = breezy.lru_cache.LRUCache(10)
         self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
@@ -169,7 +169,7 @@ class BranchWSGIApp(object):
                 try:
                     util.local_path_from_url(self.branch.base)
                     self.served_url = self.url([])
-                except bzrlib.errors.InvalidURL:
+                except breezy.errors.InvalidURL:
                     self.served_url = None
         for hook in self.hooks['controller']:
             controller = hook(self, environ)
@@ -210,7 +210,7 @@ class BranchWSGIAppHooks(Hooks):
     def __init__(self):
         """Create the default hooks.
         """
-        Hooks.__init__(self, "bzrlib.plugins.loggerhead.apps.branch",
+        Hooks.__init__(self, "breezy.plugins.loggerhead.apps.branch",
             "BranchWSGIApp.hooks")
         self.add_hook('controller',
             "Invoked when looking for the controller to use for a "

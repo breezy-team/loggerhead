@@ -21,7 +21,7 @@ import logging
 import mimetypes
 import urllib
 
-from bzrlib.errors import (
+from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )

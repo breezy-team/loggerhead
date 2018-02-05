@@ -35,7 +35,7 @@ try:
 except ImportError:
     from elementtree import ElementTree as ET
 
-from bzrlib import urlutils
+from breezy import urlutils
 
 from simpletal.simpleTALUtils import HTMLStructureCleaner
 
@@ -333,7 +333,7 @@ def human_size(size, min_divisor=0):
     size = int(size)
     if (size == 0) and (min_divisor == 0):
         return 'Empty'
-    if (size < 512) and (min_divisor == 0):
+    if (size < 1024) and (min_divisor == 0):
         return str(size) + ' bytes'
 
     if (size >= P95_GIG) or (min_divisor >= GIG):
@@ -456,7 +456,7 @@ def directory_breadcrumbs(path, is_root, view):
     return breadcrumbs
 
 
-def branch_breadcrumbs(path, inv, view):
+def branch_breadcrumbs(path, tree, view):
     """
     Generate breadcrumb information from the branch path given
 
@@ -464,7 +464,7 @@ def branch_breadcrumbs(path, inv, view):
 
     Arguments:
     path -- The path to convert into breadcrumbs
-    inv -- Inventory to get file information from
+    tree -- Tree to get file information from
     view -- The type of view we are showing (files, changes etc)
     """
     dir_parts = path.strip('/').split('/')

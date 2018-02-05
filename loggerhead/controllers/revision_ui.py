@@ -121,9 +121,14 @@ class RevisionUI(TemplatedBranchView):
             items = [x for x in file_changes.text_changes if x.filename == path]
             if len(items) > 0:
                 item = items[0]
+                try:
+                    context_lines = int(self.kwargs['context'])
+                except (KeyError, ValueError):
+                    context_lines = None
                 diff_chunks = diff_chunks_for_file(
                     self._history._branch.repository, item.file_id,
-                    item.old_revision, item.new_revision)
+                    item.old_revision, item.new_revision,
+                    context_lines=context_lines)
             else:
                 diff_chunks = None
         else:

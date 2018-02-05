@@ -11,6 +11,22 @@ NEXT
       summaries). Previously they were using the file icon.
       (Cruz Bishop, #1053340).
 
+    - Format files under one kilobyte as "x bytes". (Cruz Bishop, #990217)
+
+    - Make the number of lines of context in embedded diffs on revision
+      pages configurable via a ``context`` query argument. (Paul Nixon)
+
+    - Add ``loggerhead/middleware`` and a few other files to the sdist.
+      (Toshio Kuratomi)
+
+    - Widen the line number boxes just a little bit. (Cruz Bishop, #310255)
+
+    - Use breaking word-wrap on the entire information box. (Cruz Bishop,
+      #258368)
+
+    - Add some more minor UI changes to do with rounded corners. (Cruz
+      Bishop)
+
 1.18.2 [12Sep2012]
 ------------------
 

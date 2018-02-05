@@ -6,7 +6,8 @@
     color: #666;
     background: #fcfcfc url(../images/bg_infobox.gif) repeat-y top right;
     border: 1px solid #b7b7b7;
-    border-radius: 5px; 
+    border-radius: 13px / 7px; 
+    word-wrap: break-word;
     }
 ul#list-files {
     float: right;
@@ -30,7 +31,6 @@ ul#list-files li.desc {
     margin: 0 0 5px 0;
     font-size:  77%;
     color: #666;
-    word-wrap: break-word;
     }
 /*Diff Boxes*/
 .diffBox {
@@ -39,7 +39,7 @@ ul#list-files li.desc {
     background: #eef6fa;
     border: 1px solid #d2d2d2;
     margin: 10px 0 0 0;
-    border-radius: 5px 5px 5px 0px;
+    border-radius: 5px 5px 8px 0px / 17px 17px 5px 0px;
     }
 .diffBox img {
     vertical-align: middle;
@@ -55,7 +55,7 @@ ul#list-files li.desc {
     border-bottom: 1px solid #d5d5d5;
     }
 .lineNumber {
-    width: 2%;
+    width: 2.5%;
     border-width: 0 1px;
     border-style: solid;
     border-color: #d5d5d5;
@@ -74,7 +74,7 @@ ul#list-files li.desc {
     font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
     }
 .unified .code {
-    width: 89%;
+    width: 87%;
     }
 .sbs .code {
     width: 43%;
