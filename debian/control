@@ -2,14 +2,10 @@ Source: loggerhead
 Section: devel
 Priority: optional
 Maintainer: Debian Bazaar Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
-Uploaders: Roland Mas <lolando@debian.org>,
-           Vincent Ladeuil <v.ladeuil+lp@free.fr>,
-           Andrew Starr-Bochicchio <asb@debian.org>,
-           Jelmer Vernooĳ <jelmer@debian.org>
+Uploaders: Jelmer Vernooĳ <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: bzr (<< 2.8.0),
-                     bzr (>= 1.17~),
-                     python-bzrlib.tests | bzr (<< 2.4.0~beta1-2),
+Build-Depends-Indep: brz (>= 3.0.0~),
+                     python-breezy.tests,
                      python-fixtures,
                      python-sphinx,
                      python-subunit,
@@ -29,19 +25,18 @@ Package: loggerhead
 Architecture: all
 Depends: adduser,
          libjs-yui3-min,
-         python-bzrlib (<< 2.8.0),
-         python-bzrlib (>= 1.17~),
+         python-breezy (>= 3.0.0~),
          python-paste (>= 1.6),
          python-pkg-resources,
          python-simplejson,
          python-simpletal,
          ${misc:Depends},
          ${python:Depends}
-Suggests: bzr, loggerhead-doc, python-pastedeploy (>= 1.3.0)
-Enhances: bzr
-Recommends: bzr-search, python-pygments
-Description: Web viewer for Bazaar
- This is a web viewer for projects in the Bazaar version control system.
+Suggests: brz, loggerhead-doc, python-pastedeploy (>= 1.3.0)
+Enhances: brz
+Recommends: python-pygments
+Description: Web viewer for Breezy
+ This is a web viewer for projects in the Breezy version control system.
  It can be used to navigate a branch history, annotate files, view patches and
  perform searches.
 
@@ -51,8 +46,8 @@ Section: doc
 Depends: libjs-jquery, libjs-underscore, ${misc:Depends}
 Suggests: loggerhead
 Enhances: loggerhead
-Description: Web viewer for Bazaar (documentation)
- This is a web viewer for projects in the Bazaar version control system.
+Description: Web viewer for Breezy (documentation)
+ This is a web viewer for projects in the Breezy version control system.
  It can be used to navigate a branch history, annotate files, view patches and
  perform searches.
  .

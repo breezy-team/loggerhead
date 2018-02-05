@@ -1,6 +1,6 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: loggerhead
-Upstream-Contact: Michael Hudson-Doyle <mwh@canonical.com >
+Upstream-Contact: Michael Hudson-Doyle <mwh@canonical.com>
 Source: http://launchpad.net/loggerhead
 Files-Excluded: loggerhead/static/javascript/yui/*
 
@@ -11,10 +11,11 @@ Copyright: 2005, Matt Mackall <mpm@selenic.com>
            2006, Goffredo Baroncelli <kreijack@inwind.it>
            2005-2008, Canonical Ltd
            2008, Robert Collins
+           2018, Jelmer Vernooĳ
 License: GPL-2+
 
 Files: debian/*
-Copyright: 2008, Jelmer Vernooij <jelmer@samba.org>
+Copyright: 2008-2018, Jelmer Vernooĳ <jelmer@debian.org>
            2009-2012, Roland Mas <lolando@debian.org>
 License: GPL-2+
 
