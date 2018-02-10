@@ -36,9 +36,12 @@ config = LoggerheadConfig()
 prefix = config.get_option('user_prefix') or ''
 # Note we could use LoggerheadConfig here if it didn't fail when a
 # config option is not also a commandline option
-root_dir = bzrconfig.GlobalConfig().get_user_option('http_root_dir')
+root_dir = os.getenv('LOGGERHEAD_ROOT_DIR')
 if not root_dir:
-    raise NotConfiguredError('You must have a ~/.bazaar/bazaar.conf file for'
+    root_dir = bzrconfig.GlobalConfig().get_user_option('http_root_dir')
+if not root_dir:
+    raise NotConfiguredError('You must set LOGGERHEAD_ROOT_DIR or have '
+            'a ~/.config/breezy/breezy.conf file for'
             ' %(user)s with http_root_dir set to the base directory you want'
             ' to serve bazaar repositories from' %
             {'user': pwd.getpwuid(os.geteuid()).pw_name})
