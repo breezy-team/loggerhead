@@ -14,6 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import absolute_import
+
 import tarfile
 import tempfile
 
@@ -27,10 +29,10 @@ from testtools.matchers import (
     Mismatch,
     )
 
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.tests.test_simple import (
+from ..apps.branch import BranchWSGIApp
+from ..controllers.annotate_ui import AnnotateUI
+from ..controllers.inventory_ui import InventoryUI
+from .test_simple import (
     BasicTests,
     consume_app,
     TestWithSimpleTree,

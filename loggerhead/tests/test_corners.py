@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+
 import os
 
-from loggerhead.tests.test_simple import BasicTests
+from .test_simple import BasicTests
 
 
 class TestCornerCases(BasicTests):

@@ -15,6 +15,8 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from __future__ import absolute_import
+
 import cgi
 import logging
 import re
@@ -28,12 +30,12 @@ except ImportError:
     from configobj import ConfigObj
 from breezy import config
 
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps.http_head import HeadMiddleware
+from ..apps.branch import BranchWSGIApp
+from ..apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
-from loggerhead.tests.fixtures import (
+from .fixtures import (
     SampleBranch,
     )
 
