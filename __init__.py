@@ -99,6 +99,7 @@ if __name__ == 'breezy.plugins.loggerhead':
         for a description of the file format.
         """
 
+        hidden = True
         takes_args = ["filename"]
 
         def run(self, filename):
