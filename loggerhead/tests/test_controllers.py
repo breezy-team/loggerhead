@@ -226,11 +226,11 @@ class TestFileDiffUI(BasicTests):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         rev1 = builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', '')),
-            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            ('add', ('', b'root-id', 'directory', '')),
+            ('add', ('filename', b'f-id', 'file', b'content\n'))],
             message="First commit.")
         rev2 = builder.build_snapshot(None, [
-             ('modify', ('f-id', 'new content\n'))])
+             ('modify', (b'filename', b'new content\n'))])
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
@@ -263,8 +263,8 @@ class TestRevLogUI(BasicTests):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         revid = builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', '')),
-            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+            ('add', ('', b'root-id', 'directory', '')),
+            ('add', ('filename', b'f-id', 'file', b'content\n'))],
             message="First commit.")
         builder.finish_series()
         branch = builder.get_branch()

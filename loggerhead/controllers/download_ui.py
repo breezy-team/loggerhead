@@ -29,7 +29,6 @@ from paste import httpexceptions
 from paste.request import path_info_pop
 
 from loggerhead.controllers import TemplatedBranchView
-from loggerhead.exporter import export_archive
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -102,12 +101,13 @@ class DownloadTarballUI(DownloadUI):
         # TODO: Perhaps set the tarball suggested mtime to the revision
         # mtime.
         root = self._branch.friendly_name or 'branch'
-        encoded_filename = self.encode_filename(
-            root + version_part + '.' + archive_format)
+        filename = root + version_part + '.' + archive_format
+        encoded_filename = self.encode_filename(filename)
         headers = [
             ('Content-Type', 'application/octet-stream'),
             ('Content-Disposition',
                 "attachment; filename*=utf-8''%s" % (encoded_filename,)),
             ]
         start_response('200 OK', headers)
-        return export_archive(history, root, revid, archive_format)
+        tree = history._branch.repository.revision_tree(revid)
+        return tree.archive(root=root, format=archive_format, name=filename)
