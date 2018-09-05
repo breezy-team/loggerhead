@@ -1,0 +1,22 @@
+language: python
+addons:
+  apt:
+    update: true
+sudo: false
+cache: pip
+git:
+  depth: false
+
+python:
+  - 2.7
+
+script:
+  - make check
+
+install:
+  - sudo apt install python-all subunit python-testtools adduser libjs-yui3-min
+  - travis_retry pip install -U setuptools
+  - travis_retry pip install -U pip coverage codecov flake8 testtools configobj cython testscenarios six docutils python-subunit dulwich bzr+lp:brz pygments simplejson SimpleTAL paste
+
+after_success:
+  - codecov
