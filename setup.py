@@ -71,6 +71,6 @@ setup(
         ('share/man/man1', ['serve-branches.1']),
         ('share/doc/loggerhead', ['apache-loggerhead.conf',
                                   'loggerheadd',
-                                  'bazaar.conf']),
+                                  'breezy.conf']),
         ],
     )
