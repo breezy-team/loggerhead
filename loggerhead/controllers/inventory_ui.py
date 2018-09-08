@@ -25,6 +25,7 @@ import urllib
 from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
 from breezy import errors
+from breezy import osutils
 from breezy.revision import is_null as is_null_rev
 
 from loggerhead import util
@@ -60,35 +61,29 @@ class InventoryUI(TemplatedBranchView):
 
         revid_set = set()
 
-        child_entries = list(tree.iter_child_entries(path))
+        child_entries = []
 
-        for entry in child_entries:
-            revid_set.add(entry.revision)
+        for entry in tree.iter_child_entries(path):
+            child_path = osutils.pathjoin(path, entry.name)
+            child_revision = tree.get_file_revision(child_path, entry.file_id)
+            revid_set.add(child_revision)
+            child_entries.append((child_path, entry, child_revision))
 
         change_dict = {}
         for change in self._history.get_changes(list(revid_set)):
             change_dict[change.revid] = change
 
-        for entry in child_entries:
-            revid = entry.revision
-            file_timestamp = change_dict[revid].timestamp
+        for child_path, entry, child_revision in child_entries:
             pathname = entry.name
             contents_changed_rev = None
-            if path == '':
-                absolutepath = pathname
-            else:
-                absolutepath = path + '/' + pathname
             if entry.kind == 'directory':
-                # determine the last time something in the folder was changed
                 pathname += '/'
-                sub_revid_set = set()
-                for sub_entry in tree.iter_child_entries(absolutepath):
-                    sub_revid_set.add(sub_entry.revision)
-                for change in self._history.get_changes(list(sub_revid_set)):
-                    change_dict[change.revid] = change
-                    if(change.timestamp > file_timestamp):
-                        revid = change.revid
-                        file_timestamp = change.timestamp
+                size = None
+            else:
+                size = entry.text_size
+
+            file_timestamp = change_dict[child_revision].timestamp
+
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
             # pulling this out as a separate changes dict, or possibly just
@@ -96,9 +91,9 @@ class InventoryUI(TemplatedBranchView):
             # back the revision info.
             file = util.Container(
                 filename=entry.name, executable=entry.executable,
-                kind=entry.kind, absolutepath=absolutepath,
-                file_id=entry.file_id, size=entry.text_size, revid=revid,
-                change=change_dict[revid], contents_changed=contents_changed_rev)
+                kind=entry.kind, absolutepath=child_path,
+                file_id=entry.file_id, size=size, revid=child_revision,
+                change=change_dict[child_revision], contents_changed_rev=contents_changed_rev)
             file_list.append(file)
 
         if sort_type == 'filename':
