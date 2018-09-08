@@ -73,12 +73,13 @@ def date_time(value):
 
 
 def _approximatedate(date):
-    delta = datetime.datetime.now() - date
-    if abs(delta) > datetime.timedelta(1, 0, 0):
-        # far in the past or future, display the date
-        return date_day(date)
+    if date is None:
+        return 'Never'
+    delta = datetime.datetime.utcnow() - date
     future = delta < datetime.timedelta(0, 0, 0)
     delta = abs(delta)
+    years = delta.days / 365
+    months = delta.days / 30 # This is approximate.
     days = delta.days
     hours = delta.seconds / 3600
     minutes = (delta.seconds - (3600*hours)) / 60
@@ -86,7 +87,13 @@ def _approximatedate(date):
     result = ''
     if future:
         result += 'in '
-    if days != 0:
+    if years != 0:
+        amount = years
+        unit = 'year'
+    elif months != 0:
+        amount = months
+        unit = 'month'
+    elif days != 0:
         amount = days
         unit = 'day'
     elif hours != 0:
@@ -103,7 +110,7 @@ def _approximatedate(date):
     result += '%s %s' % (amount, unit)
     if not future:
         result += ' ago'
-        return result
+    return result
 
 
 def _wrap_with_date_time_title(date, formatted_date):

@@ -230,11 +230,11 @@ td.tagcell {
     }
 th.datecell,
 td.date {
-    width: 180px;
+    width: 100px;
     }
 th.timedate,
 td.timedate2 {
-    width: 80px;
+    width: 60px;
     }
 th.downloadcell,
 td.downr {

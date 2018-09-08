@@ -94,6 +94,20 @@ class BranchWSGIApp(object):
         return History(
             self.branch, self.graph_cache,
             revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
+    
+    # Before the addition of this method, clicking to sort by date from 
+    # within a branch caused a jump up to the top of that branch.
+    def sort_url(self, *args, **kw):
+        if isinstance(args[0], list):
+            args = args[0]
+        qs = []
+        for k, v in kw.iteritems():
+            if v is not None:
+                qs.append('%s=%s' % (k, urllib.quote(v)))
+        qs = '&'.join(qs)
+        path_info = self._path_info.strip('/').split('?')[0]
+        path_info += '?' + qs
+        return self._url_base + '/' + path_info
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
@@ -156,6 +170,7 @@ class BranchWSGIApp(object):
         if not self.branch.get_config().get_user_option_as_bool('http_serve', default=True):
             raise httpexceptions.HTTPNotFound()
         self._url_base = environ['SCRIPT_NAME']
+        self._path_info = environ['PATH_INFO']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:
             self._static_url_base = self._url_base

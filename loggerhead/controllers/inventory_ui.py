@@ -75,11 +75,14 @@ class InventoryUI(TemplatedBranchView):
 
         for child_path, entry, child_revision in child_entries:
             pathname = entry.name
+            contents_changed_rev = None
             if entry.kind == 'directory':
                 pathname += '/'
                 size = None
             else:
                 size = entry.text_size
+
+            file_timestamp = change_dict[child_revision].timestamp
 
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
@@ -90,7 +93,7 @@ class InventoryUI(TemplatedBranchView):
                 filename=entry.name, executable=entry.executable,
                 kind=entry.kind, absolutepath=child_path,
                 file_id=entry.file_id, size=size, revid=child_revision,
-                change=change_dict[child_revision])
+                change=change_dict[child_revision], contents_changed_rev=contents_changed_rev)
             file_list.append(file)
 
         if sort_type == 'filename':
@@ -98,10 +101,11 @@ class InventoryUI(TemplatedBranchView):
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
-            file_list.sort(key=lambda x: x.change.date)
-
-        # Always sort directories first.
-        file_list.sort(key=lambda x: x.kind != 'directory')
+            file_list.sort(key=lambda x: x.change.date, reverse=True)
+        
+        if sort_type != 'date':
+        # Don't always sort directories first.
+            file_list.sort(key=lambda x: x.kind != 'directory')
 
         return file_list
 

@@ -5,8 +5,7 @@
     }
 .viewRev {
     border-right: none;
-    white-space: nowrap;
-    width: 1px;
+    width: 20%;
     padding: .3em .6em;
     }
 .viewComm,
