@@ -14,16 +14,16 @@ Build-Depends-Indep: bzr (<< 2.8.0),
                      python-sphinx,
                      python-subunit,
                      python-testtools
-Build-Depends: debhelper (>= 7.0.50~),
+Build-Depends: debhelper (>= 9),
                python (>= 2.6.6-3),
                python-paste (>= 1.6),
                python-pkg-resources,
                python-simplejson,
                python-simpletal
 Standards-Version: 3.9.8
-X-Python-Version: >= 2.4
-Vcs-Bzr: http://anonscm.debian.org/bzr/pkg-bazaar/loggerhead/unstable/
-Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-bazaar/loggerhead/unstable/files
+X-Python-Version: >= 2.7
+Vcs-Bzr: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
+Vcs-Browser: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 
 Package: loggerhead
 Architecture: all
