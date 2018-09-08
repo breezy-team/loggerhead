@@ -21,6 +21,7 @@ import threading
 from breezy import branch, errors, lru_cache, urlutils
 from breezy.config import LocationConfig
 from breezy.bzr.smart import request
+import breezy.ui
 from breezy.transport import get_transport
 from breezy.transport.http import wsgi
 
@@ -96,15 +97,8 @@ class BranchesFromTransportServer(object):
                 return urlparser.make_static(None, path)
 
     def check_serveable(self, config):
-        value = config.get_user_option('http_serve')
-        if value is None:
-            return
-        else:
-            serveable = breezy.ui.bool_from_string(value)
-            if serveable is None:
-                serveable = True
-            if not serveable:
-                raise httpexceptions.HTTPNotFound()
+        if not config.get_user_option_as_bool('http_serve', default=True):
+            raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO']

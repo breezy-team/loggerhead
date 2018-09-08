@@ -38,9 +38,10 @@ class DirEntry(object):
             try:
                 self.last_revision = branch.repository.get_revision(branch.last_revision())
                 self.last_change_time = datetime.datetime.utcfromtimestamp(self.last_revision.timestamp)
-            except:
+            except errors.NoSuchRevision:
                 self.last_revision = None
                 self.last_change_time = None
+
 
 class DirectoryUI(TemplatedBranchView):
     """
@@ -72,15 +73,17 @@ class DirectoryUI(TemplatedBranchView):
         for d in listing:
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
-                if b.get_config().get_user_option('http_serve') == 'False':
-                    continue
             except:
+                # TODO(jelmer): don't catch all exceptions here
                 try:
                     if not stat.S_ISDIR(self.transport.stat(d).st_mode):
                         continue
                 except errors.NoSuchFile:
                     continue
                 b = None
+            else:
+                if not b.get_config().get_user_option_as_bool('http_serve', default=True):
+                    continue
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
         # Create breadcrumb trail
