@@ -70,15 +70,25 @@ class InventoryUI(TemplatedBranchView):
             change_dict[change.revid] = change
 
         for entry in child_entries:
+            revid = entry.revision
+            file_timestamp = change_dict[revid].timestamp
             pathname = entry.name
-            if entry.kind == 'directory':
-                pathname += '/'
+            contents_changed_rev = None
             if path == '':
                 absolutepath = pathname
             else:
                 absolutepath = path + '/' + pathname
-            revid = entry.revision
-
+            if entry.kind == 'directory':
+                # determine the last time something in the folder was changed
+                pathname += '/'
+                sub_revid_set = set()
+                for sub_entry in tree.iter_child_entries(absolutepath):
+                    sub_revid_set.add(sub_entry.revision)
+                for change in self._history.get_changes(list(sub_revid_set)):
+                    change_dict[change.revid] = change
+                    if(change.timestamp > file_timestamp):
+                        revid = change.revid
+                        file_timestamp = change.timestamp
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
             # pulling this out as a separate changes dict, or possibly just
@@ -88,7 +98,7 @@ class InventoryUI(TemplatedBranchView):
                 filename=entry.name, executable=entry.executable,
                 kind=entry.kind, absolutepath=absolutepath,
                 file_id=entry.file_id, size=entry.text_size, revid=revid,
-                change=change_dict[revid])
+                change=change_dict[revid], contents_changed=contents_changed_rev)
             file_list.append(file)
 
         if sort_type == 'filename':
@@ -96,10 +106,11 @@ class InventoryUI(TemplatedBranchView):
         elif sort_type == 'size':
             file_list.sort(key=lambda x: x.size)
         elif sort_type == 'date':
-            file_list.sort(key=lambda x: x.change.date)
-
-        # Always sort directories first.
-        file_list.sort(key=lambda x: x.kind != 'directory')
+            file_list.sort(key=lambda x: x.change.date, reverse=True)
+        
+        if sort_type != 'date':
+        # Don't always sort directories first.
+            file_list.sort(key=lambda x: x.kind != 'directory')
 
         return file_list
 

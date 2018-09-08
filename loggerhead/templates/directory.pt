@@ -17,16 +17,16 @@
       <div >
         <table id="logentries">
           <tr class="logheader">
-            <th class="summarycell" colspan="2">Filename</th>
-            <th class="datecell">Latest Rev</th>
+            <th class="datecell">Filename</th>
+            <th class="timedate">Latest Rev</th>
             <th class="datecell">Last Changed</th>
+            <th class="datecell">Committer</th>
+            <th class="summarycell">Comment</th>
           </tr>
 
           <tr class="blueRow0" tal:condition="python:name != '/'">
-            <td class="icocell">
+            <td class="summcell" colspan="5">
                 <a href="../"><img tal:attributes="src python:static_url('/static/images/ico_folder_up.gif')" /></a>
-            </td>
-            <td class="summcell" colspan="3">
                 <a href="../">..</a>
             </td>
           </tr>
@@ -34,32 +34,31 @@
 
             <tal:branch-row tal:condition="dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
-                <td class="icocell">
+                <td class="date">
                     <a tal:attributes="href string:${dir/dirname}/files">
                         <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" alt="Branch" />
                     </a>
-                </td>
-                <td class="autcell">
                   <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
                 <td class="date">
                   <a tal:attributes="href string:${dir/dirname}/revision/${dir/branch/revno};
                                      title string:Show revision ${dir/branch/revno}"
                      tal:content="dir/branch/revno"></a>
                 </td>
-                <td class="date" tal:content="python:util.date_time(dir.last_change)"></td>
+                <td class="date" tal:content="python:util._approximatedate(dir.last_change_time)"></td>
+                <td class="date" tal:content="python:util.hide_email(dir.last_revision.committer) if dir.last_revision is not None else 'Nobody'"></td>
+                <td class="autcell" tal:content="python:dir.last_revision.message[:50] if dir.last_revision is not None else ''"></td>
               </tr>
+
             </tal:branch-row>
             <tal:non-branch-row tal:condition="not:dir/branch">
               <tr tal:attributes="class string:blueRow${dir/parity}">
-                <td class="icocell">
+                <td class="date">
                     <a tal:attributes="href string:${dir/dirname}/">
                         <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" alt="Folder" />
                     </a>
-                </td>
-                <td class="autcell">
                   <a tal:attributes="href string:${dir/dirname}/" tal:content="dir/dirname" /></td>
                 <td class="date"></td>
-                <td class="date" tal:content="dir/last_change"></td>
+                <td class="date" colspan="4" tal:content="dir/last_change"></td>
               </tr>
             </tal:non-branch-row>
           </tal:block>
