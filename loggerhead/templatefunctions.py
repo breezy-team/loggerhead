@@ -165,7 +165,7 @@ def generator_string():
         python_version = breezy._format_version_tuple(sys.version_info)
         versions.append(('Python', python_version))
 
-        versions.append(('Bazaar', breezy.__version__))
+        versions.append(('Breezy', breezy.__version__))
 
         Paste = pkg_resources.get_distribution('Paste')
         versions.append(('Paste', Paste.version))
