@@ -33,13 +33,6 @@ from loggerhead.apps.branch import BranchWSGIApp
 from loggerhead.apps import favicon_app, robots_app, static_app
 from loggerhead.controllers.directory_ui import DirectoryUI
 
-# TODO: Use breezy.ui.bool_from_string(), added in bzr 1.18
-_bools = {
-    'yes': True, 'no': False,
-    'on': True, 'off': False,
-    '1': True, '0': False,
-    'true': True, 'false': False,
-    }
 
 class BranchesFromTransportServer(object):
 
@@ -106,8 +99,12 @@ class BranchesFromTransportServer(object):
         value = config.get_user_option('http_serve')
         if value is None:
             return
-        elif not _bools.get(value.lower(), True):
-            raise httpexceptions.HTTPNotFound()
+        else:
+            serveable = breezy.ui.bool_from_string(value)
+            if serveable is None:
+                serveable = True
+            if not serveable:
+                raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):
         path = environ['PATH_INFO']
