@@ -19,6 +19,7 @@
 import logging
 import urllib
 import sys
+import wsgiref.util
 
 import breezy.branch
 import breezy.errors
@@ -164,7 +165,7 @@ class BranchWSGIApp(object):
             if public_branch is not None:
                 self.served_url = public_branch
             else:
-                self.served_url = self.url([])
+                self.served_url = wsgiref.util.application_uri(environ)
         for hook in self.hooks['controller']:
             controller = hook(self, environ)
             if controller is not None:
