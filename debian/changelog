@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr479+dfsg-3) UNRELEASED; urgency=medium
+loggerhead (1.19~bzr479+dfsg-3) unstable; urgency=medium
 
   * Bump debhelper to version 9.
   * Update Vcs-Bzr headers.
