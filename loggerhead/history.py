@@ -52,7 +52,7 @@ def is_branch(folder):
     try:
         breezy.branch.Branch.open(folder)
         return True
-    except:
+    except breezy.errors.NotBranchError:
         return False
 
 
