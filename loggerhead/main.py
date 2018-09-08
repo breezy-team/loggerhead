@@ -22,6 +22,7 @@ import os
 import sys
 
 from breezy.plugin import load_plugins
+from breezy.transport import location_to_url
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
@@ -35,7 +36,7 @@ from loggerhead.util import Reloader
 from loggerhead.apps.error import ErrorHandlerApp
 
 
-def get_config_and_path(args):
+def get_config_and_base(args):
     config = LoggerheadConfig(args)
 
     if config.get_option('show_version'):
@@ -49,6 +50,8 @@ def get_config_and_path(args):
         base = config.get_arg(0)
     else:
         base = '.'
+
+    base = location_to_url(base)
 
     if not config.get_option('allow_writes'):
         base = 'readonly+' + base
@@ -92,7 +95,7 @@ def setup_logging(config, init_logging=True, log_file=None):
     return logger
 
 
-def make_app_for_config_and_path(config, base):
+def make_app_for_config_and_base(config, base):
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
         print "--trunk-dir is only valid with --user-dirs"
         sys.exit(1)
@@ -141,6 +144,9 @@ def make_app_for_config_and_path(config, base):
                     raise exc
                 return app(environ, start_response)
             return wrapped
+        logging.warning(
+                'PasteDeploy not available; unable to support '
+                'access through a reverse proxy.')
         app = check_not_proxied(app)
     else:
         app = PrefixMiddleware(app, prefix=prefix)
@@ -155,9 +161,9 @@ def make_app_for_config_and_path(config, base):
 def main(args):
     load_plugins()
 
-    config, path = get_config_and_path(args)
+    config, base = get_config_and_base(args)
 
-    app = make_app_for_config_and_path(config, path)
+    app = make_app_for_config_and_base(config, base)
 
     if not config.get_option('user_port'):
         port = '8080'
