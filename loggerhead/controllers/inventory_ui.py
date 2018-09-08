@@ -25,6 +25,7 @@ import urllib
 from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
 from breezy import errors
+from breezy import osutils
 from breezy.revision import is_null as is_null_rev
 
 from loggerhead import util
@@ -60,24 +61,25 @@ class InventoryUI(TemplatedBranchView):
 
         revid_set = set()
 
-        child_entries = list(tree.iter_child_entries(path))
+        child_entries = []
 
-        for entry in child_entries:
-            revid_set.add(entry.revision)
+        for entry in tree.iter_child_entries(path):
+            child_path = osutils.pathjoin(path, entry.name)
+            child_revision = tree.get_file_revision(child_path, entry.file_id)
+            revid_set.add(child_revision)
+            child_entries.append((child_path, entry, child_revision))
 
         change_dict = {}
         for change in self._history.get_changes(list(revid_set)):
             change_dict[change.revid] = change
 
-        for entry in child_entries:
+        for child_path, entry, child_revision in child_entries:
             pathname = entry.name
             if entry.kind == 'directory':
                 pathname += '/'
-            if path == '':
-                absolutepath = pathname
+                size = None
             else:
-                absolutepath = path + '/' + pathname
-            revid = entry.revision
+                size = entry.text_size
 
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
@@ -86,9 +88,9 @@ class InventoryUI(TemplatedBranchView):
             # back the revision info.
             file = util.Container(
                 filename=entry.name, executable=entry.executable,
-                kind=entry.kind, absolutepath=absolutepath,
-                file_id=entry.file_id, size=entry.text_size, revid=revid,
-                change=change_dict[revid])
+                kind=entry.kind, absolutepath=child_path,
+                file_id=entry.file_id, size=size, revid=child_revision,
+                change=change_dict[child_revision])
             file_list.append(file)
 
         if sort_type == 'filename':
