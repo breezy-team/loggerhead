@@ -107,12 +107,6 @@ class TestWithSimpleTree(BasicTests):
         self.failUnless("To get this branch, use:" in res)
         self.failUnless("lp:loggerhead" in res)
 
-    def test_no_empty_download_location(self):
-        """With no served_url, no instructions how to get it"""
-        app = self.setUpLoggerhead()
-        res = app.get('/changes')
-        self.failIf("To get this branch, use:" in res)
-
     def test_changes_search(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes', params={'q': 'foo'})
