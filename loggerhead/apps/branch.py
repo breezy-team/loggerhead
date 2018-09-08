@@ -164,13 +164,7 @@ class BranchWSGIApp(object):
             if public_branch is not None:
                 self.served_url = public_branch
             else:
-                # Loggerhead only supports serving .bzr/ on local branches, so
-                # we shouldn't suggest something that won't work.
-                try:
-                    util.local_path_from_url(self.branch.base)
-                    self.served_url = self.url([])
-                except breezy.errors.InvalidURL:
-                    self.served_url = None
+                self.served_url = self.url([])
         for hook in self.hooks['controller']:
             controller = hook(self, environ)
             if controller is not None:
