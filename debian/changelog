@@ -1,6 +1,8 @@
 loggerhead-breezy (1.20~bzr536+dfsg-1) UNRELEASED; urgency=medium
 
-  * Fork loggerhead package, merging in changes to work with Breezy.
+  * Fork loggerhead package, renaming it to "loggerhead-breezy".
+    Closes: #911486
+   + Merging in upstream snapshot from new upstream.
    + Move to Python 3.
    + Update various upstream references from "loggerhead" to
      "loggerhead-breezy".
