@@ -28,7 +28,7 @@ class TestCornerCases(BasicTests):
         self.addFileAndCommit('myfilename', msg)
 
         # Make a commit that changes the execute bit of 'myfilename'.
-        os.chmod('myfilename', 0755)
+        os.chmod('myfilename', 0o755)
         newrevid = self.tree.commit(message='make something executable')
 
         # Check that it didn't break things.

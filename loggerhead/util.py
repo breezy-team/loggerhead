@@ -19,6 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
+from __future__ import print_function
+
 import base64
 import datetime
 import logging
@@ -612,7 +614,7 @@ class Reloader(object):
     @classmethod
     def restart_with_reloader(cls):
         """Based on restart_with_monitor from paste.script.serve."""
-        print 'Starting subprocess with file monitor'
+        print('Starting subprocess with file monitor')
         while True:
             args = [sys.executable] + sys.argv
             new_environ = os.environ.copy()
@@ -625,7 +627,7 @@ class Reloader(object):
                     exit_code = proc.wait()
                     proc = None
                 except KeyboardInterrupt:
-                    print '^C caught in monitor process'
+                    print('^C caught in monitor process')
                     return 1
             finally:
                 if (proc is not None
@@ -640,7 +642,7 @@ class Reloader(object):
             # a monitor, any exit code will restart
             if exit_code != 3:
                 return exit_code
-            print '-'*20, 'Restarting', '-'*20
+            print('-'*20, 'Restarting', '-'*20)
 
 
 def convert_file_errors(application):
@@ -648,7 +650,7 @@ def convert_file_errors(application):
     def new_application(environ, start_response):
         try:
             return application(environ, start_response)
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
             import errno
             from paste import httpexceptions
             if e.errno == errno.ENOENT:
