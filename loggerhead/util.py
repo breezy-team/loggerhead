@@ -39,7 +39,7 @@ except ImportError:
 
 from breezy import urlutils
 
-from simpletal.simpleTALUtils import HTMLStructureCleaner
+import bleach
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -278,8 +278,6 @@ def fill_div(s):
             s = s.decode('iso-8859-15')
         return s
 
-HSC = HTMLStructureCleaner()
-
 def fixed_width(s):
     """
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
@@ -298,7 +296,7 @@ def fixed_width(s):
 
     s = html_escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
 
-    return HSC.clean(s).replace('\n', '<br/>')
+    return bleach.clean(s).replace('\n', '<br/>')
 
 
 def fake_permissions(kind, executable):
