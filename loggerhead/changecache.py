@@ -118,6 +118,10 @@ class RevInfoDiskCache(object):
         self.cursor = self.connection.cursor()
 
     def get(self, key, revid):
+        if not isinstance(key, bytes):
+            raise TypeError(key)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         self.cursor.execute(
             "select revid, data from data where key = ?", (dbapi2.Binary(key),))
         row = self.cursor.fetchone()
@@ -129,13 +133,17 @@ class RevInfoDiskCache(object):
             return marshal.loads(zlib.decompress(row[1]))
 
     def set(self, key, revid, data):
+        if not isinstance(key, bytes):
+            raise TypeError(key)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         try:
             self.cursor.execute(
                 'delete from data where key = ?', (dbapi2.Binary(key), ))
             blob = zlib.compress(marshal.dumps(data))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
-                map(dbapi2.Binary, [key, revid, blob]))
+                list(map(dbapi2.Binary, [key, revid, blob])))
             self.connection.commit()
         except dbapi2.IntegrityError:
             # If another thread or process attempted to set the same key, we

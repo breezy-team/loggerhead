@@ -94,7 +94,8 @@ class BranchWSGIApp(object):
                 revinfo_disk_cache = RevInfoDiskCache(cache_path)
         return History(
             self.branch, self.graph_cache,
-            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
+            revinfo_disk_cache=revinfo_disk_cache,
+            cache_key=(self.friendly_name.encode('utf-8') if self.friendly_name else None))
 
     # Before the addition of this method, clicking to sort by date from 
     # within a branch caused a jump up to the top of that branch.
@@ -102,7 +103,7 @@ class BranchWSGIApp(object):
         if isinstance(args[0], list):
             args = args[0]
         qs = []
-        for k, v in kw.iteritems():
+        for k, v in viewitems(kw):
             if v is not None:
                 qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)
