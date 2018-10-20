@@ -32,10 +32,7 @@ starts a web server to browse the contents of a branch.
 
 import sys
 
-from .info import (
-    bzr_plugin_version as version_info,
-    bzr_compatible_versions,
-    )
+version_info = (1, 20, 0) # Keep in sync with loggerhead/__init__.py
 
 import breezy
 from breezy import commands
