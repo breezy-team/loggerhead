@@ -1,10 +1,11 @@
 loggerhead-breezy (1.20~bzr536+dfsg-1) UNRELEASED; urgency=medium
 
-  * Merge new upstream snapshot, updated for Breezy.
-  * New upstream snapshot.
-  * Drop patch request-method: applied upstream.
-  * Refresh patch port-to-yui3.5.
-  * New upstream snapshot.
+  * Fork loggerhead package, merging in changes to work with Breezy.
+   + Move to Python 3.
+   + Update various upstream references from "loggerhead" to
+     "loggerhead-breezy".
+   + Drop patch request-method: applied upstream.
+   + Refresh patch port-to-yui3.5.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 17:40:15 +0000
 
