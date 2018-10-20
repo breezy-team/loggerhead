@@ -32,7 +32,7 @@ starts a web server to browse the contents of a branch.
 
 import sys
 
-from info import (
+from .info import (
     bzr_plugin_version as version_info,
     bzr_compatible_versions,
     )
