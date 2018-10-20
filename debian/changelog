@@ -1,8 +1,9 @@
-loggerhead (1.19~bzr497-1) UNRELEASED; urgency=medium
+loggerhead (1.19~bzr534-1) UNRELEASED; urgency=medium
 
   * Merge new upstream snapshot, updated for Breezy.
+  * New upstream snapshot.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Mon, 05 Feb 2018 18:26:12 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 16:19:32 +0000
 
 loggerhead (1.19~bzr479+dfsg-2) unstable; urgency=medium
 

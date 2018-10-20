@@ -65,7 +65,10 @@ this.
 
 import threading
 import time
-import Queue
+try:
+    from queue import Queue, Empty
+except ImportError:  # Python < 3
+    from Queue import Queue, Empty
 
 import simplejson
 
@@ -74,6 +77,7 @@ from breezy import (
     transport,
     urlutils,
     )
+from breezy.sixish import viewvalues
 
 # This code will be doing multi-threaded requests against breezy.transport
 # code. We want to make sure to load everything ahead of time, so we don't get
@@ -96,7 +100,7 @@ class RequestWorker(object):
 
     def __init__(self, identifier, blocking_time=1.0, _queue_size=1):
         self.identifier = identifier
-        self.queue = Queue.Queue(_queue_size)
+        self.queue = Queue(_queue_size)
         self.start_time = self.end_time = None
         self.stats = []
         self.blocking_time = blocking_time
@@ -118,7 +122,7 @@ class RequestWorker(object):
         while not stop_event.isSet():
             try:
                 self.step_next()
-            except Queue.Empty:
+            except Empty:
                 pass
 
     def process(self, url):
@@ -189,7 +193,7 @@ class ActionScript(object):
 
     def finish_queues(self):
         """Wait for all queues of all children to finish."""
-        for h, t in self._threads.itervalues():
+        for h, t in viewvalues(self._threads):
             h.queue.join()
 
     def stop_and_join(self):
@@ -198,7 +202,7 @@ class ActionScript(object):
         This will stop even if workers still have work items.
         """
         self.stop_event.set()
-        for h, t in self._threads.itervalues():
+        for h, t in viewvalues(self._threads):
             # Signal the queue that it should stop blocking, we don't have to
             # wait for the queue to empty, because we may see stop_event before
             # we see the <noop>

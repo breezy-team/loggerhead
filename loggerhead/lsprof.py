@@ -6,7 +6,10 @@
 # instead of just the Stats object
 
 import sys
-import thread
+try:
+    from threading import get_ident
+except ImportError: # python < 3
+    from thread import get_ident
 import threading
 from _lsprof import Profiler, profiler_entry
 
@@ -19,7 +22,7 @@ def _thread_profile(f, *args, **kwds):
     # we lose the first profile point for a new thread in order to trampoline
     # a new Profile object into place
     global _g_threadmap
-    thr = thread.get_ident()
+    thr = get_ident()
     _g_threadmap[thr] = p = Profiler()
     # this overrides our sys.setprofile hook:
     p.enable(subcalls=True, builtins=True)

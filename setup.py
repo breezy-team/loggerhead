@@ -18,7 +18,7 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-from distutils.core import setup
+from setuptools import setup
 
 import loggerhead
 
@@ -71,6 +71,8 @@ setup(
         ('share/man/man1', ['serve-branches.1']),
         ('share/doc/loggerhead', ['apache-loggerhead.conf',
                                   'loggerheadd',
-                                  'bazaar.conf']),
+                                  'breezy.conf']),
         ],
+    install_requires=['simplejson', 'paste', 'bleach'],
+    testsuite='loggerhead.tests.test_suite',
     )

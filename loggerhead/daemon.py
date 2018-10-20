@@ -16,7 +16,7 @@ def daemonize(pidfile, home):
 
     try:
         pid = os.fork()
-    except OSError, e:
+    except OSError as e:
         raise Exception("%s [%d]" % (e.strerror, e.errno))
 
     if pid == 0:      # The first child.
@@ -24,7 +24,7 @@ def daemonize(pidfile, home):
 
         try:
             pid = os.fork()     # Fork a second child.
-        except OSError, e:
+        except OSError as e:
             raise Exception("%s [%d]" % (e.strerror, e.errno))
 
         if pid == 0:  # The second child.

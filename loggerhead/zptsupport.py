@@ -19,7 +19,9 @@ import logging
 import os
 import pkg_resources
 import re
-import StringIO
+from io import StringIO
+
+from breezy.sixish import viewitems
 
 from simpletal import simpleTAL, simpleTALES
 
@@ -30,7 +32,8 @@ def zpt(tfile):
     tinstance = _zpt_cache.get(tfile)
     stat = os.stat(tfile)
     if tinstance is None or tinstance.stat != stat:
-        text = open(tfile).read()
+        with open(tfile) as tf:
+            text = tf.read()
         text = re.sub(r'\s*\n\s*', '\n', text)
         text = re.sub(r'[ \t]+', ' ', text)
         tinstance = _zpt_cache[tfile] = TemplateWrapper(
@@ -47,17 +50,17 @@ class TemplateWrapper(object):
 
     def expand(self, **info):
         context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in info.iteritems():
+        for k, v in viewitems(info):
             context.addGlobal(k, v)
-        s = StringIO.StringIO()
+        s = StringIO()
         self.template.expandInline(context, s)
         return s.getvalue()
 
     def expand_into(self, f, **info):
         context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in info.iteritems():
+        for k, v in viewitems(info):
             context.addGlobal(k, v)
-        self.template.expand(context, f, 'utf-8')
+        self.template.expand(context, f, outputEncoding='utf-8')
 
     @property
     def macros(self):

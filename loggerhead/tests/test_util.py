@@ -16,7 +16,7 @@
 
 from breezy import tests
 
-from loggerhead.util import html_escape, html_format
+from ..util import html_escape, html_format
 
 
 class TestHTMLEscaping(tests.TestCase):

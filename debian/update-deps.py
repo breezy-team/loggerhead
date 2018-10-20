@@ -36,14 +36,11 @@ update_deps(source, "Build-Depends-Indep", "bzr")
 binary1 = Deb822(f)
 binary2 = Deb822(f)
 
-update_deps(binary1, "Depends", "python-bzrlib")
+update_deps(binary1, "Depends", "python-breezy")
 
-f = open("debian/control", "w+")
-try:
+with open("debian/control", "w+") as f:
     source.dump(f)
     f.write("\n")
     binary1.dump(f)
     f.write("\n")
     binary2.dump(f)
-finally:
-    f.close()
