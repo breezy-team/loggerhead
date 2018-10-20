@@ -21,7 +21,7 @@ import cgi
 import logging
 import re
 import simplejson
-from cStringIO import StringIO
+from io import BytesIO
 
 from breezy.tests import TestCaseWithTransport
 try:
@@ -252,7 +252,7 @@ class TestHeadMiddleware(BasicTests):
 
 
 def consume_app(app, env):
-    body = StringIO()
+    body = BytesIO()
     start = []
     def start_response(status, headers, exc_info=None):
         start.append((status, headers, exc_info))

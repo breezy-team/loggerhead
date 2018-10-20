@@ -40,7 +40,7 @@ class BufferingWriter(object):
         self.buf_limit = buf_limit
 
     def flush(self):
-        self.writefunc(''.join(self.buf))
+        self.writefunc(b''.join(self.buf))
         self.buf = []
         self.buflen = 0
 

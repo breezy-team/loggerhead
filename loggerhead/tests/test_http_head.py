@@ -16,7 +16,7 @@
 
 """Tests for the HeadMiddleware app."""
 
-from cStringIO import StringIO
+from io import BytesIO
 
 from breezy import tests
 
@@ -51,7 +51,7 @@ def writer_app(environ, start_response):
 class TestHeadMiddleware(tests.TestCase):
 
     def _trap_start_response(self, status, response_headers, exc_info=None):
-        self._write_buffer = StringIO()
+        self._write_buffer = BytesIO()
         self._start_response_passed = (status, response_headers, exc_info)
         return self._write_buffer.write
 
