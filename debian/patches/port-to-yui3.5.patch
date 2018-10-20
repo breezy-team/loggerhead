@@ -1,34 +1,76 @@
-Index: unstable/loggerhead/templates/macros.pt
-===================================================================
---- unstable.orig/loggerhead/templates/macros.pt
-+++ unstable/loggerhead/templates/macros.pt
-@@ -23,22 +23,6 @@
-     <script type="text/javascript"
-             tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
-     <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
--    <script type="text/javascript"
-             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-     <metal:block metal:define-slot="header_extras" />
-   </head>
-Index: unstable/loggerhead/static/javascript/custom.js
-===================================================================
---- unstable.orig/loggerhead/static/javascript/custom.js
-+++ unstable/loggerhead/static/javascript/custom.js
+=== modified file 'loggerhead/apps/branch.py'
+--- old/loggerhead/apps/branch.py	2018-10-20 16:21:28 +0000
++++ new/loggerhead/apps/branch.py	2018-10-20 16:28:00 +0000
+@@ -137,7 +137,7 @@
+ 
+     def yui_url(self, path):
+         if self.use_cdn:
+-            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
++            base = 'http://yui.yahooapis.com/3.5.1/build/'
+         else:
+             base = self.static_url('/static/javascript/yui/build/')
+         return base + path
+
+=== modified file 'loggerhead/static/javascript/changelog.js'
+--- old/loggerhead/static/javascript/changelog.js	2009-03-31 21:11:38 +0000
++++ new/loggerhead/static/javascript/changelog.js	2018-10-20 16:28:00 +0000
+@@ -1,3 +1,4 @@
++LH.use('node', 'event', function (Y) {
+ function toggle_expand_all(action)
+ {
+   var revlogs = Y.all('.revision_log');
+@@ -8,14 +9,14 @@
+       var collapsable = item.collapsable;
+       if(action == 'close')
+       {
+-        Y.get('#expand_all').setStyle('display','block');
+-        Y.get('#collapse_all').setStyle('display','none');
++        Y.one('#expand_all').setStyle('display','block');
++        Y.one('#collapse_all').setStyle('display','none');
+         collapsable.close();
+       }
+       else if(action == 'open')
+       {
+-        Y.get('#expand_all').setStyle('display','none');
+-        Y.get('#collapse_all').setStyle('display','block');
++        Y.one('#expand_all').setStyle('display','none');
++        Y.one('#collapse_all').setStyle('display','block');
+         collapsable.open();
+       }
+     });
+@@ -54,17 +55,17 @@
+       function(item, i)
+       {
+         var revid = revids[item.get('id').replace('log-', '')];
+-        var collapsable = new Collapsable(
++        var collapsable = new LH.Collapsable(
+           {
+-            expand_icon: item.query('.expand_icon'),
+-            open_node: item.query('.long_description'),
+-            close_node: item.query('.short_description'),
++            expand_icon: item.one('.expand_icon'),
++            open_node: item.one('.long_description'),
++            close_node: item.one('.short_description'),
+             source: global_path + '+revlog/' + revid,
+-            loading: item.query('.loading'),
++            loading: item.one('.loading'),
+             is_open: false
+           });
+ 
+-        item.query('.expand_revisioninfo a').on(
++        item.one('.expand_revisioninfo a').on(
+           'click',
+           function(e) {
+             e.preventDefault();
+@@ -74,3 +75,4 @@
+       });
+ 
+   });
++});
+
+=== modified file 'loggerhead/static/javascript/custom.js'
+--- old/loggerhead/static/javascript/custom.js	2011-10-26 16:06:54 +0000
++++ new/loggerhead/static/javascript/custom.js	2018-10-20 16:28:00 +0000
 @@ -1,13 +1,14 @@
 -Y = YUI().use("base", "node", "io-base", "anim");
 -
@@ -222,10 +264,10 @@ Index: unstable/loggerhead/static/javascript/custom.js
      }
  });
 +});
-Index: unstable/loggerhead/static/javascript/diff.js
-===================================================================
---- unstable.orig/loggerhead/static/javascript/diff.js
-+++ unstable/loggerhead/static/javascript/diff.js
+
+=== modified file 'loggerhead/static/javascript/diff.js'
+--- old/loggerhead/static/javascript/diff.js	2012-07-31 20:25:42 +0000
++++ new/loggerhead/static/javascript/diff.js	2018-10-20 16:28:54 +0000
 @@ -1,5 +1,7 @@
  var unified = true;
  
@@ -277,15 +319,16 @@ Index: unstable/loggerhead/static/javascript/diff.js
    if (!collapsable.is_open) {
      collapsable.open(
        function () {
-@@ -180,21 +182,22 @@
-         var source_url = null;
-         if (!specific_path)
-           source_url = global_path + '+filediff/' + link_data[item.get('id')];
+@@ -199,22 +201,23 @@
+       function(item, i)
+       {
+         var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + numlines;
 -        item.query('.the-link').on(
 +        item.one('.the-link').on(
            'click',
            function(e) {
              e.preventDefault();
+             item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + document.getElementById('contextLines').value;
              collapsable.toggle();
            });
 -        var collapsable = new Collapsable(
@@ -302,82 +345,40 @@ Index: unstable/loggerhead/static/javascript/diff.js
 -            node_process: node_process
 +            loading: item.one('.loading'),
 +            node_process: node_process,
-+	    Y: Y
++            Y: Y
            });
         item.collapsable=collapsable;
         });
-@@ -202,3 +205,4 @@
+@@ -223,3 +226,4 @@
        zoom_to_diff(window.location.hash.substring(1));
      }
    });
 +});
-Index: unstable/loggerhead/static/javascript/changelog.js
-===================================================================
---- unstable.orig/loggerhead/static/javascript/changelog.js
-+++ unstable/loggerhead/static/javascript/changelog.js
-@@ -1,3 +1,4 @@
-+LH.use('node', 'event', function (Y) {
- function toggle_expand_all(action)
- {
-   var revlogs = Y.all('.revision_log');
-@@ -8,14 +9,14 @@
-       var collapsable = item.collapsable;
-       if(action == 'close')
-       {
--        Y.get('#expand_all').setStyle('display','block');
--        Y.get('#collapse_all').setStyle('display','none');
-+        Y.one('#expand_all').setStyle('display','block');
-+        Y.one('#collapse_all').setStyle('display','none');
-         collapsable.close();
-       }
-       else if(action == 'open')
-       {
--        Y.get('#expand_all').setStyle('display','none');
--        Y.get('#collapse_all').setStyle('display','block');
-+        Y.one('#expand_all').setStyle('display','none');
-+        Y.one('#collapse_all').setStyle('display','block');
-         collapsable.open();
-       }
-     });
-@@ -54,17 +55,17 @@
-       function(item, i)
-       {
-         var revid = revids[item.get('id').replace('log-', '')];
--        var collapsable = new Collapsable(
-+        var collapsable = new LH.Collapsable(
-           {
--            expand_icon: item.query('.expand_icon'),
--            open_node: item.query('.long_description'),
--            close_node: item.query('.short_description'),
-+            expand_icon: item.one('.expand_icon'),
-+            open_node: item.one('.long_description'),
-+            close_node: item.one('.short_description'),
-             source: global_path + '+revlog/' + revid,
--            loading: item.query('.loading'),
-+            loading: item.one('.loading'),
-             is_open: false
-           });
- 
--        item.query('.expand_revisioninfo a').on(
-+        item.one('.expand_revisioninfo a').on(
-           'click',
-           function(e) {
-             e.preventDefault();
-@@ -74,3 +75,4 @@
-       });
- 
-   });
-+});
-Index: unstable/loggerhead/apps/branch.py
-===================================================================
---- unstable.orig/loggerhead/apps/branch.py
-+++ unstable/loggerhead/apps/branch.py
-@@ -121,7 +121,7 @@
- 
-     def yui_url(self, path):
-         if self.use_cdn:
--            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
-+            base = 'http://yui.yahooapis.com/3.5.1/build/'
-         else:
-             base = self.static_url('/static/javascript/yui/build/')
-         return base + path
+
+=== modified file 'loggerhead/templates/macros.pt'
+--- old/loggerhead/templates/macros.pt	2018-10-20 16:21:28 +0000
++++ new/loggerhead/templates/macros.pt	2018-10-20 16:28:00 +0000
+@@ -23,22 +23,6 @@
+     <script type="text/javascript"
+             tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
+-    <script type="text/javascript"
+             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
+     <metal:block metal:define-slot="header_extras" />
+   </head>
+
