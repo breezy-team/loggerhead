@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from cStringIO import StringIO
+from io import BytesIO
 import time
 
 from paste.request import path_info_pop, parse_querystring
@@ -71,7 +71,7 @@ class DiffUI(TemplatedBranchView):
         revtree1 = repo.revision_tree(revid_to)
         revtree2 = repo.revision_tree(revid_from)
 
-        diff_content_stream = StringIO()
+        diff_content_stream = BytesIO()
         show_diff_trees(revtree1, revtree2, diff_content_stream,
                         old_label='', new_label='', context=numlines)
 

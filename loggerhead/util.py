@@ -32,6 +32,10 @@ import sys
 import os
 import subprocess
 
+from breezy.sixish import (
+    viewitems,
+    )
+
 try:
     from xml.etree import ElementTree as ET
 except ImportError:
@@ -135,14 +139,14 @@ class Container(object):
     def __init__(self, _dict=None, **kw):
         self._properties = {}
         if _dict is not None:
-            for key, value in _dict.iteritems():
+            for key, value in viewitems(_dict):
                 setattr(self, key, value)
-        for key, value in kw.iteritems():
+        for key, value in viewitems(kw):
             setattr(self, key, value)
 
     def __repr__(self):
         out = '{ '
-        for key, value in self.__dict__.iteritems():
+        for key, value in viewitems(self.__dict__):
             if key.startswith('_') or (getattr(self.__dict__[key],
                                        '__call__', None) is not None):
                 continue
@@ -555,7 +559,7 @@ _valid = (
 
 
 def set_context(map):
-    t_context.map = dict((k, v) for (k, v) in map.iteritems() if k in _valid)
+    t_context.map = dict((k, v) for (k, v) in viewitems(map) if k in _valid)
 
 
 def get_context(**overrides):
@@ -574,7 +578,7 @@ def get_context(**overrides):
         map['remember'] = t_context.map.get('remember', None)
     else:
         map.update(t_context.map)
-    overrides = dict((k, v) for (k, v) in overrides.iteritems() if k in _valid)
+    overrides = dict((k, v) for (k, v) in viewitems(overrides) if k in _valid)
     map.update(overrides)
     return map
 

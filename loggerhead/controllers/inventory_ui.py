@@ -24,8 +24,11 @@ import urllib
 
 from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
-from breezy import errors
-from breezy import osutils
+from breezy import (
+    errors,
+    osutils,
+    urlutils,
+    )
 from breezy.revision import is_null as is_null_rev
 
 from .. import util
@@ -36,7 +39,7 @@ from ..controllers import TemplatedBranchView
 def dirname(path):
     if path is not None:
         path = path.rstrip('/')
-        path = urllib.quote(posixpath.dirname(path).encode('utf-8'))
+        path = urlutils.escape(posixpath.dirname(path))
     return path
 
 

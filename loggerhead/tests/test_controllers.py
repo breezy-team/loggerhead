@@ -113,10 +113,10 @@ class TestRevisionUI(BasicTests):
         tree = self.make_branch_and_tree('.')
         self.build_tree_contents(shape1)
         tree.smart_add([])
-        tree.commit('msg 1', rev_id='rev-1')
+        tree.commit('msg 1', rev_id=b'rev-1')
         self.build_tree_contents(shape2)
         tree.smart_add([])
-        tree.commit('msg 2', rev_id='rev-2')
+        tree.commit('msg 2', rev_id=b'rev-2')
         branch = tree.branch
         self.addCleanup(branch.lock_read().unlock)
         return self.make_branch_app(branch)
@@ -134,7 +134,7 @@ class TestRevisionUI(BasicTests):
 
     def test_add_template_values(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n')], [('file', 'new content\n')])
+                [('file', b'content\n')], [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/1/non-existent-file',
                'QUERY_STRING':'start_revid=1',
@@ -150,8 +150,8 @@ class TestRevisionUI(BasicTests):
 
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n'), ('other-file', 'other\n')],
-                [('file', 'new content\n')])
+                [('file', b'content\n'), ('other-file', b'other\n')],
+                [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/head:',
                'REQUEST_METHOD': 'GET',
@@ -169,8 +169,8 @@ class TestRevisionUI(BasicTests):
 
     def test_json_render_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n'), ('other-file', 'other\n')],
-                [('file', 'new content\n')])
+                [('file', b'content\n'), ('other-file', b'other\n')],
+                [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:',
                 'REQUEST_METHOD': 'GET',
                 'wsgi.url_scheme': 'http',
@@ -195,8 +195,8 @@ class TestAnnotateUI(BasicTests):
         return AnnotateUI(branch_app, branch_app.get_history)
 
     def test_annotate_file(self):
-        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
         ann_ui.args = ['rev2']
@@ -209,8 +209,8 @@ class TestAnnotateUI(BasicTests):
 
     def test_annotate_empty_comment(self):
         # Testing empty comment handling without breaking
-        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev2']
         ann_ui.get_values(
             'filename', kwargs={'file_id': 'file_id'}, headers={})
@@ -218,8 +218,8 @@ class TestAnnotateUI(BasicTests):
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation
         # must be present.
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
         annotate_info = ann_ui.get_values('filename',
             kwargs={'file_id': 'file_id'}, headers={})
@@ -227,15 +227,15 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(0, len(annotated))
 
     def test_annotate_nonexistent_file(self):
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
     def test_annotate_nonexistent_rev(self):
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['norev']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})

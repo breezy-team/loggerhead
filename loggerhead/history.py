@@ -366,7 +366,7 @@ class History(object):
         # for more information.
         revids = []
         chunk_size = 1000
-        for start in xrange(0, len(possible_keys), chunk_size):
+        for start in range(0, len(possible_keys), chunk_size):
             next_keys = possible_keys[start:start + chunk_size]
             revids += [k[1] for k in get_parent_map(next_keys)]
         del possible_keys, next_keys
@@ -725,7 +725,7 @@ iso style "yyyy-mm-dd")
         if isinstance(revision, breezy.foreign.ForeignRevision):
             foreign_revid, mapping = (
                 revision.foreign_revid, revision.mapping)
-        elif ":" in revision.revision_id:
+        elif b":" in revision.revision_id:
             try:
                 foreign_revid, mapping = \
                     breezy.foreign.foreign_vcs_registry.parse_revision_id(

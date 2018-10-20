@@ -33,7 +33,7 @@ class TestCornerCases(BasicTests):
 
         # Check that it didn't break things.
         app = self.setUpLoggerhead()
-        res = app.get('/revision/'+newrevid)
+        res = app.get('/revision/'+newrevid.decode('utf-8'))
         res.mustcontain('executable')
 
     def test_revision_escapes_commit_message(self):

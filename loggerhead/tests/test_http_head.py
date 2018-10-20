@@ -23,10 +23,10 @@ from breezy import tests
 from ..apps import http_head
 
 
-content = ["<html>",
-           "<head><title>Listed</title></head>",
-           "<body>Content</body>",
-           "</html>",
+content = [b"<html>",
+           b"<head><title>Listed</title></head>",
+           b"<body>Content</body>",
+           b"</html>",
           ]
 headers = {'X-Ignored-Header': 'Value'}
 
@@ -64,7 +64,7 @@ class TestHeadMiddleware(tests.TestCase):
         app = http_head.HeadMiddleware(app)
         self._consume_app(app, 'GET')
         self.assertEqual(('200 OK', headers, None), self._start_response_passed)
-        self.assertEqualDiff(''.join(content), self._write_buffer.getvalue())
+        self.assertEqualDiff(b''.join(content), self._write_buffer.getvalue())
 
     def _verify_head_no_body(self, app):
         app = http_head.HeadMiddleware(app)

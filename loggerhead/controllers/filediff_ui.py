@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import BytesIO
 import urllib
 
 from breezy import diff
@@ -67,7 +67,7 @@ def diff_chunks_for_file(repository, file_id, compare_revid, revid,
             args.append((file_id, r, r))
     for r, bytes_iter in repository.iter_files_bytes(args):
         lines[r] = osutils.split_lines(b''.join(bytes_iter))
-    buffer = StringIO()
+    buffer = BytesIO()
     try:
         diff.internal_diff('', lines[compare_revid], '', lines[revid], buffer, context_lines=context_lines)
     except errors.BinaryFile:

@@ -25,6 +25,7 @@ from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )
+from breezy import urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
 
@@ -37,7 +38,7 @@ class DownloadUI (TemplatedBranchView):
 
     def encode_filename(self, filename):
 
-        return urllib.quote(filename.encode('utf-8'))
+        return urlutils.escape(filename)
 
     def get_args(self, environ):
         args = []

@@ -41,7 +41,7 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         rev1 = builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', None))])
+            ('add', ('', b'root-id', 'directory', None))])
         rev2 = builder.build_snapshot([rev1], [])
         rev3 = builder.build_snapshot([rev2], [])
         builder.finish_series()
@@ -54,7 +54,7 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         revs = []
         builder.start_series()
         revs.append(builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', None))]))
+            ('add', ('', b'root-id', 'directory', None))]))
         for r in "BCDEFGHIJKLMNOPQRSTUVWXYZ":
             revs.append(builder.build_snapshot(None, []))
         builder.finish_series()
@@ -72,7 +72,7 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         rev1 = builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', None))])
+            ('add', ('', b'root-id', 'directory', None))])
         rev2 = builder.build_snapshot([rev1], [])
         rev3 = builder.build_snapshot([rev1, rev2], [])
         builder.finish_series()
@@ -94,7 +94,7 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         rev_a = builder.build_snapshot(None, [
-            ('add', ('', 'root-id', 'directory', None))])
+            ('add', ('', b'root-id', 'directory', None))])
         rev_b = builder.build_snapshot([rev_a], [])
         rev_c = builder.build_snapshot([rev_a], [])
         rev_d = builder.build_snapshot([rev_c], [])
@@ -167,10 +167,10 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         accessed = track_rev_info_accesses(history)
         result = history.get_revids_from(None, revs[-1])
         self.assertEqual(set(), accessed)
-        self.assertEqual(revs[-1], result.next())
+        self.assertEqual(revs[-1], next(result))
         # We already know revs[-1] because we passed it in.
         self.assertEqual(set(), accessed)
-        self.assertEqual(revs[-2], result.next())
+        self.assertEqual(revs[-2], next(result))
         self.assertEqual(set([history._rev_indices[revs[-1]]]), accessed)
 
     def test_get_revids_doesnt_over_produce_for_merges(self):
@@ -180,15 +180,15 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         accessed = track_rev_info_accesses(history)
         result = history.get_revids_from([revs[-3], revs[-5]], revs[-1])
         self.assertEqual(set(), accessed)
-        self.assertEqual(revs[-3], result.next())
+        self.assertEqual(revs[-3], next(result))
         # We access 'W' because we are checking that W wasn't merged into X.
         # The important bit is that we aren't getting the whole ancestry.
         self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:4]]),
                          accessed)
-        self.assertEqual(revs[-5], result.next())
+        self.assertEqual(revs[-5], next(result))
         self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
                          accessed)
-        self.assertRaises(StopIteration, result.next)
+        self.assertRaises(StopIteration, next, result)
         self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
                          accessed)
 

@@ -82,7 +82,10 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = unicode('/'.join(args[1:]), 'utf-8')
+            path = '/'.join(args[1:])
+            if isinstance(path, bytes):
+                # Python 2
+                path = path.decode('utf-8')
         self.args = args
         self.kwargs = kwargs
         return path
@@ -110,7 +113,7 @@ class TemplatedBranchView(object):
             headers['Content-Type'] = 'application/json'
         elif 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
-        writer = start_response("200 OK", headers.items())
+        writer = start_response("200 OK", list(headers.items()))
         if environ.get('REQUEST_METHOD') == 'HEAD':
             # No content for a HEAD request
             return []
