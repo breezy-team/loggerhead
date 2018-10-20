@@ -26,7 +26,10 @@ once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
 """
 
-import cPickle
+try:
+    import cPickle as pickle
+except ImportError: # Python >= 3
+    import pickle
 import marshal
 import os
 import tempfile
@@ -73,10 +76,10 @@ class FakeShelf(object):
         con.close()
 
     def _serialize(self, obj):
-        return dbapi2.Binary(cPickle.dumps(obj, protocol=2))
+        return dbapi2.Binary(pickle.dumps(obj, protocol=2))
 
     def _unserialize(self, data):
-        return cPickle.loads(str(data))
+        return pickle.loads(str(data))
 
     def get(self, revid):
         self.cursor.execute(

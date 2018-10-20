@@ -15,7 +15,10 @@
 import socket
 import time
 import threading
-import Queue
+try:
+    from queue import Empty
+except ImportError:  # Python < 3
+    from Queue import Empty
 
 from breezy import tests
 from breezy.tests import http_server
@@ -90,7 +93,7 @@ class TestRequestWorkerInfrastructure(tests.TestCase):
     def test_step_next_will_timeout(self):
         # We don't want step_next to block forever
         rt = NoopRequestWorker('id', blocking_time=0.001)
-        self.assertRaises(Queue.Empty, rt.step_next)
+        self.assertRaises(Empty, rt.step_next)
 
     def test_run_stops_for_stop_event(self):
         rt = NoopRequestWorker('id', blocking_time=0.001, _queue_size=2)
