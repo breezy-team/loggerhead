@@ -22,8 +22,8 @@ else
     SUDO="sudo -H -u $LHUSER"
 fi
 
-# If serve-branches is not in your path, you will need to specify the full path:
-SERVE_BRANCHES_CMD=serve-branches
+# If loggerhead-serve is not in your path, you will need to specify the full path:
+SERVE_BRANCHES_CMD=loggerhead-serve
 
 LOG_FOLDER=/var/log/loggerhead
 LOG_FILE=$LOG_FOLDER/loggerheadd.log
@@ -33,7 +33,7 @@ PORT=8080
 #please specify the base directory to serve:
 BZRROOT=/bzrroot
 
-# You can add additional options to serve-branches here:
+# You can add additional options to loggerhead-serve here:
 START_CMD="$SERVE_BRANCHES_CMD --prefix=$URL_PREFIX --log-folder=$LOG_FOLDER --port=$PORT $BZRROOT"
 
 

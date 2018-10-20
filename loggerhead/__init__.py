@@ -22,9 +22,9 @@ We also check the versions of some dependencies.
 
 import pkg_resources
 
-__version__ = '1.18.2'  # Keep in sync with ../info.py.
+__version__ = '1.20.0'  # Keep in sync with ../__init__.py.
 __revision__ = None
-required_breezy = (1, 17)
+required_breezy = (3, 0)
 
 pkg_resources.get_distribution('Paste>=1.6')
 try:

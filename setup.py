@@ -31,7 +31,7 @@ setup(
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
     scripts = [
-        "serve-branches",
+        "loggerhead-serve",
         "loggerhead.wsgi",
         ],
     packages = ["loggerhead",
@@ -68,7 +68,7 @@ setup(
                                    "static/javascript/yui/build/yui-base/*",
                                    "static/images/*"]},
     data_files = [
-        ('share/man/man1', ['serve-branches.1']),
+        ('share/man/man1', ['loggerhead-serve.1']),
         ('share/doc/loggerhead', ['apache-loggerhead.conf',
                                   'loggerheadd',
                                   'breezy.conf']),
