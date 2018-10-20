@@ -76,7 +76,7 @@ Options
 
 .. cmdoption:: --allow-writes
    
-    Allow writing to the Bazaar server.
+    Allow writing to the Breezy server.
     
     Setting this option keeps Loggerhead from adding a 'readonly+' prefix
     to the base URL of the branch.  The only effect of suppressing this prefix

@@ -24,8 +24,11 @@ from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )
+from breezy import (
+    osutils,
+    urlutils,
+    )
 import breezy.textfile
-import breezy.osutils
 
 from paste.httpexceptions import (
     HTTPBadRequest,
@@ -34,19 +37,23 @@ from paste.httpexceptions import (
     HTTPServerError,
     )
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 try:
-    from loggerhead.highlight import highlight
+    from ..highlight import highlight
 except ImportError:
     highlight = None
-from loggerhead import util
+from .. import util
 
 
 class ViewUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.view'
-    
+    template_name = 'view'
+
     def tree_for(self, file_id, revid):
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         rev_tree = self._history.revision_tree(revid)
         file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id), file_id)
         return self._history._branch.repository.revision_tree(file_revid)
@@ -54,20 +61,23 @@ class ViewUI(TemplatedBranchView):
     def text_lines(self, file_id, revid):
         path = self._history.get_path(revid, file_id)
         file_name = os.path.basename(path)
-        
+
         tree = self.tree_for(file_id, revid)
         file_text = tree.get_file_text(path, file_id)
+
         encoding = 'utf-8'
         try:
-            file_text = file_text.decode(encoding)
+            file_text.decode(encoding)
         except UnicodeDecodeError:
-            encoding = 'iso-8859-15'
-            file_text = file_text.decode(encoding)
+            'iso-8859-15'
+            file_text.decode(encoding)
 
-        file_lines = breezy.osutils.split_lines(file_text)
+        file_lines = osutils.split_lines(file_text)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
-        
+
+        file_text = file_text.decode('utf-8')
+
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
             # highlight strips off extra newlines at the end of the file.
@@ -75,7 +85,7 @@ class ViewUI(TemplatedBranchView):
             hl_lines.extend([u''] * extra_lines)
         else:
             hl_lines = map(util.html_escape, file_lines)
-        
+
         return hl_lines;
 
     def file_contents(self, file_id, revid):
@@ -91,8 +101,9 @@ class ViewUI(TemplatedBranchView):
         history = self._history
         branch = history._branch
         revid = self.get_revid()
-        revid = history.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
+        if file_id is not None:
+            file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(file_id))
         if (file_id is None) and (path is None):
             raise HTTPBadRequest('No file_id or filename '
                                  'provided to view')

@@ -42,17 +42,21 @@ import breezy.errors
 import breezy.foreign
 import breezy.osutils
 import breezy.revision
+from breezy.sixish import (
+    text_type,
+    viewvalues,
+    )
 
-from loggerhead import search
-from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
+from . import search
+from . import util
+from .wholehistory import compute_whole_history_data
 
 
 def is_branch(folder):
     try:
         breezy.branch.Branch.open(folder)
         return True
-    except:
+    except breezy.errors.NotBranchError:
         return False
 
 
@@ -366,7 +370,7 @@ class History(object):
         # for more information.
         revids = []
         chunk_size = 1000
-        for start in xrange(0, len(possible_keys), chunk_size):
+        for start in range(0, len(possible_keys), chunk_size):
             next_keys = possible_keys[start:start + chunk_size]
             revids += [k[1] for k in get_parent_map(next_keys)]
         del possible_keys, next_keys
@@ -407,8 +411,6 @@ iso style "yyyy-mm-dd")
         # ignore the passed-in revid_list
         revid = self.fix_revid(query)
         if revid is not None:
-            if isinstance(revid, unicode):
-                revid = revid.encode('utf-8')
             changes = self.get_changes([revid])
             if (changes is not None) and (len(changes) > 0):
                 return [revid]
@@ -450,6 +452,8 @@ iso style "yyyy-mm-dd")
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
+        if not isinstance(revid, (str, text_type)):
+            raise TypeError(revid)
         if revid == 'head:':
             return self.last_revid
         try:
@@ -457,6 +461,8 @@ iso style "yyyy-mm-dd")
                 revid = self._revno_revid[revid]
         except KeyError:
             raise breezy.errors.NoSuchRevision(self._branch_nick, revid)
+        if not isinstance(revid, bytes):
+            revid = revid.encode('utf-8')
         return revid
 
     def get_file_view(self, revid, file_id):
@@ -617,7 +623,7 @@ iso style "yyyy-mm-dd")
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [revid for (_, revid) in d.itervalues()]
+        return [revid for (_, revid) in viewvalues(d)]
 
     def add_branch_nicks(self, change):
         """
@@ -630,7 +636,7 @@ iso style "yyyy-mm-dd")
         for p in change.merge_points:
             fetch_set.add(p.revid)
         p_changes = self.get_changes(list(fetch_set))
-        p_change_dict = dict([(c.revid, c) for c in p_changes])
+        p_change_dict = {c.revid: c for c in p_changes}
         for p in change.parents:
             if p.revid in p_change_dict:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
@@ -647,6 +653,9 @@ iso style "yyyy-mm-dd")
 
         Revisions not present and NULL_REVISION will be ignored.
         """
+        for revid in revid_list:
+            if not isinstance(revid, bytes):
+                raise TypeError(revid_list)
         changes = self.get_changes_uncached(revid_list)
         if len(changes) == 0:
             return changes
@@ -673,8 +682,8 @@ iso style "yyyy-mm-dd")
 
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
-        revid_list = filter(lambda revid: not breezy.revision.is_null(revid),
-                            revid_list)
+        revid_list = list(filter(lambda revid: not breezy.revision.is_null(revid),
+                            revid_list))
         parent_map = self._branch.repository.get_graph().get_parent_map(
                          revid_list)
         # We need to return the answer in the same order as the input,
@@ -711,6 +720,7 @@ iso style "yyyy-mm-dd")
             'revid': revision.revision_id,
             'date': datetime.datetime.fromtimestamp(revision.timestamp),
             'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
+            'timestamp': revision.timestamp,
             'committer': revision.committer,
             'authors': revision.get_apparent_authors(),
             'branch_nick': revision.properties.get('branch-nick', None),
@@ -724,7 +734,7 @@ iso style "yyyy-mm-dd")
         if isinstance(revision, breezy.foreign.ForeignRevision):
             foreign_revid, mapping = (
                 revision.foreign_revid, revision.mapping)
-        elif ":" in revision.revision_id:
+        elif b":" in revision.revision_id:
             try:
                 foreign_revid, mapping = \
                     breezy.foreign.foreign_vcs_registry.parse_revision_id(
@@ -752,6 +762,10 @@ iso style "yyyy-mm-dd")
 
     def get_file(self, file_id, revid):
         """Returns (path, filename, file contents)"""
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         rev_tree = self._branch.repository.revision_tree(revid)
         path = rev_tree.id2path(file_id)
         display_path = path
