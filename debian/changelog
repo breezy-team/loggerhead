@@ -1,4 +1,4 @@
-loggerhead-breezy (1.20~bzr536+dfsg-1) UNRELEASED; urgency=medium
+loggerhead-breezy (1.20~bzr536+dfsg-1) unstable; urgency=medium
 
   * Fork loggerhead package, renaming it to "loggerhead-breezy".
     Closes: #911486
