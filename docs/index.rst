@@ -53,12 +53,12 @@ Running the Standalone Loggerhead Server
 ----------------------------------------
 
 After installing all the dependencies, you should be able to run
-:command:`serve-branches` with the branch you want to serve on the
+:command:`loggerhead-serve` with the branch you want to serve on the
 command line:
 
 .. code-block:: sh
 
-    ./serve-branches ~/path/to/branch
+    ./loggerhead-serve ~/path/to/branch
 
 By default, the script listens on port 8080, so head to
 http://localhost:8080/ in your browser to see the branch.
@@ -70,7 +70,7 @@ You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
-See :doc:`serve-branches` for all command line options.
+See :doc:`loggerhead-serve` for all command line options.
 
 Running Loggerhead as a Daemon
 ------------------------------
@@ -84,7 +84,7 @@ To run Loggerhead as a linux daemon:
    $ sudo cp ./loggerheadd /etc/init.d
 
 2) Edit the file to configure where your Loggerhead is installed, and which
-   serve-branches options you would like.
+   loggerhead-serve options you would like.
 
 .. code-block:: sh
 
@@ -144,7 +144,7 @@ configuration is one way to do this:
         ProxyPassReverse http://127.0.0.1:8080/branches/
     </Location>
 
-If Paste Deploy is installed, the :command:`serve-branches` script can be
+If Paste Deploy is installed, the :command:`loggerhead-serve` script can be
 run behind a proxy at the root of a site, but if you're running it at
 some path into the site, you'll need to specify it using
 ``--prefix=/some_path``.
@@ -221,7 +221,7 @@ Command-Line Reference
 .. toctree::
    :maxdepth: 2
 
-   serve-branches
+   loggerhead-serve
 
 
 Support
