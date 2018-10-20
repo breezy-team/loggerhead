@@ -10,9 +10,9 @@ Build-Depends: debhelper (>= 11),
                python3-paste (>= 1.6),
                python3-pkg-resources,
                python3-simplejson,
-               python3-simpletal
+               python3-simpletal,
+               dh-python
 Standards-Version: 3.9.8
-X-Python3-Version: >= 3.4
 Vcs-Bzr: https://code.breezy-vcs.org/loggerhead/unstable
 Vcs-Browser: https://code.breezy-vcs.org/loggerhead/unstable
 
