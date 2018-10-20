@@ -4,7 +4,7 @@ PKD   = $(abspath $(dir $(MAKEFILE_LIST)))
 PKG   = $(word 2,$(shell dpkg-parsechangelog -l$(PKD)/changelog | grep ^Source))
 UVER  = $(shell dpkg-parsechangelog -l$(PKD)/changelog | perl -ne 'print $$1 if m{^Version:\s+(?:\d+:)?(\d.*)(?:\-\d+.*)};')
 REV   = $(shell echo $(VER) | perl -ne 'print "$$1" if m/(?:git|svn|hg|bzr)(\d+)/;')
-UURL = lp:loggerhead
+UURL = https://code.breezy-vcs.org/loggerhead/trunk
 DTYPE = +dfsg
 VER  ?= $(subst $(DTYPE),,$(UVER))
 
