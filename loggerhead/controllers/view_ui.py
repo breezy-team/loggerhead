@@ -61,16 +61,19 @@ class ViewUI(TemplatedBranchView):
 
         tree = self.tree_for(file_id, revid)
         file_text = tree.get_file_text(path, file_id)
+
         encoding = 'utf-8'
         try:
-            file_text = file_text.decode(encoding)
+            file_text.decode(encoding)
         except UnicodeDecodeError:
-            encoding = 'iso-8859-15'
-            file_text = file_text.decode(encoding)
+            'iso-8859-15'
+            file_text.decode(encoding)
 
         file_lines = breezy.osutils.split_lines(file_text)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
+
+        file_text = file_text.decode('utf-8')
 
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)

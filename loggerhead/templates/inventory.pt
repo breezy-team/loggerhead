@@ -157,7 +157,7 @@
                                      </a>
               </td>
               <td class="expcell">
-                 <a tal:attributes="href python:url(['/download', file.revid, file.file_id, file.filename]);
+                 <a tal:attributes="href python:url(['/download', file.revid.decode('utf-8'), file.file_id.decode('utf-8'), file.filename]);
                                     title string:Download ${file/filename} at revision ${file/change/revno}">
                    <img tal:attributes="src python:branch.static_url('/static/images/ico_file_download.gif')" alt="Download File" />
                  </a>

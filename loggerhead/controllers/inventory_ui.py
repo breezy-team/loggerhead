@@ -102,10 +102,14 @@ class InventoryUI(TemplatedBranchView):
         if sort_type == 'filename':
             file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
         elif sort_type == 'size':
-            file_list.sort(key=lambda x: x.size)
+            def size_key(x):
+                if x.size is None:
+                    return -1
+                return x.size
+            file_list.sort(key=size_key)
         elif sort_type == 'date':
             file_list.sort(key=lambda x: x.change.date, reverse=True)
-        
+
         if sort_type != 'date':
         # Don't always sort directories first.
             file_list.sort(key=lambda x: x.kind != 'directory')

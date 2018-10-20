@@ -33,6 +33,7 @@ import os
 import subprocess
 
 from breezy.sixish import (
+    text_type,
     viewitems,
     )
 
@@ -84,10 +85,10 @@ def _approximatedate(date):
     delta = datetime.datetime.utcnow() - date
     future = delta < datetime.timedelta(0, 0, 0)
     delta = abs(delta)
-    years = delta.days / 365
-    months = delta.days / 30 # This is approximate.
+    years = delta.days // 365
+    months = delta.days // 30 # This is approximate.
     days = delta.days
-    hours = delta.seconds / 3600
+    hours = delta.seconds // 3600
     minutes = (delta.seconds - (3600*hours)) / 60
     seconds = delta.seconds % 60
     result = ''
@@ -113,7 +114,7 @@ def _approximatedate(date):
         unit = 'second'
     if amount != 1:
         unit += 's'
-    result += '%s %s' % (amount, unit)
+    result += '%s %s' % (int(amount), unit)
     if not future:
         result += ' ago'
     return result
@@ -275,19 +276,24 @@ def fill_div(s):
         return s
     elif not s.strip():
         return '&nbsp;'
-    else:
+    elif isinstance(s, bytes):
         try:
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
         return s
+    elif isinstance(s, text_type):
+        return s
+    else:
+        return repr(s)
+
 
 def fixed_width(s):
     """
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
     chop up the string.
     """
-    if not isinstance(s, unicode):
+    if not isinstance(s, text_type):
         # this kinda sucks.  file contents are just binary data, and no
         # encoding metadata is stored, so we need to guess.  this is probably
         # okay for most code, but for people using things like KOI-8, this

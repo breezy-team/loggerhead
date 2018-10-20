@@ -22,7 +22,7 @@ import simplejson
 
 from paste.httpexceptions import HTTPServerError
 
-from breezy import urlutils
+from breezy import osutils, urlutils
 
 from .. import util
 from ..controllers import TemplatedBranchView
@@ -36,6 +36,8 @@ class ChangeLogUI(TemplatedBranchView):
         history = self._history
         revid = self.get_revid()
         filter_file_id = kwargs.get('filter_file_id', None)
+        if filter_file_id is not None:
+            filter_file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(filter_file_id))
         query = kwargs.get('q', None)
         start_revid = history.fix_revid(kwargs.get('start_revid', None))
         orig_start_revid = start_revid

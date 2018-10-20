@@ -270,7 +270,7 @@ class TestFileDiffUI(BasicTests):
         values = filediff_ui.get_values('', {}, {})
         chunks = values['chunks']
         self.assertEqual('insert', chunks[0].diff[1].type)
-        self.assertEqual(b'new content', chunks[0].diff[1].line)
+        self.assertEqual('new content', chunks[0].diff[1].line)
 
     def test_json_render_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()

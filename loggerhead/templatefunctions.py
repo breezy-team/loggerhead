@@ -15,11 +15,11 @@
 #
 
 import os
-import urllib
 
 import pkg_resources
 
 import breezy
+from breezy import urlutils
 
 from . import (
     __version__,
@@ -55,18 +55,18 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
             if currently_showing and filename == currently_showing:
                 return html_format(
                     '<b><a href="#%s">%s</a></b>',
-                    urllib.quote(filename.encode('utf-8')), filename)
+                    urlutils.quote(filename), filename)
             else:
                 return revision_link(
                     url, entry.revno, filename,
-                    '#' + urllib.quote(filename.encode('utf-8')))
+                    '#' + urlutils.quote(filename))
     else:
         def file_link(filename):
             return html_format(
                 '<a href="%s%s" title="View changes to %s in revision %s">'
                 '%s</a>',
                 url(['/revision', entry.revno]),
-                '#' + urllib.quote(filename.encode('utf-8')),
+                '#' + urlutils.quote(filename),
                 filename, entry.revno, filename)
     return _pt('revisionfilechanges').expand(
         entry=entry, file_changes=file_changes, file_link=file_link, **templatefunctions)

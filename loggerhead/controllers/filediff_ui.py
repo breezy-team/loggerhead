@@ -14,6 +14,8 @@ from ..controllers import TemplatedBranchView
 def _process_diff(difftext):
     chunks = []
     chunk = None
+    def decode_line(line):
+        return line.decode('utf-8', 'replace')
     for line in difftext.splitlines():
         if len(line) == 0:
             continue
@@ -33,18 +35,18 @@ def _process_diff(difftext):
             chunk.diff.append(util.Container(old_lineno=old_lineno,
                                              new_lineno=new_lineno,
                                              type='context',
-                                             line=line[1:]))
+                                             line=decode_line(line[1:])))
             old_lineno += 1
             new_lineno += 1
         elif line.startswith(b'+'):
             chunk.diff.append(util.Container(old_lineno=None,
                                              new_lineno=new_lineno,
-                                             type='insert', line=line[1:]))
+                                             type='insert', line=decode_line(line[1:])))
             new_lineno += 1
         elif line.startswith(b'-'):
             chunk.diff.append(util.Container(old_lineno=old_lineno,
                                              new_lineno=None,
-                                             type='delete', line=line[1:]))
+                                             type='delete', line=decode_line(line[1:])))
             old_lineno += 1
         else:
             chunk.diff.append(util.Container(old_lineno=None,
