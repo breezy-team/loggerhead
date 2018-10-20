@@ -1,6 +1,6 @@
 === modified file 'setup.py'
---- old/setup.py	2018-10-20 16:21:28 +0000
-+++ new/setup.py	2018-10-20 16:26:39 +0000
+--- old/setup.py	2018-10-20 17:40:30 +0000
++++ new/setup.py	2018-10-20 17:40:58 +0000
 @@ -41,32 +41,7 @@
                  "loggerhead/templates",
                  "breezy.plugins.loggerhead"],
@@ -33,6 +33,6 @@
 -                                   "static/images/*"]},
 +    package_data = {"loggerhead": ["templates/*.pt"]},
      data_files = [
-         ('share/man/man1', ['serve-branches.1']),
+         ('share/man/man1', ['loggerhead-serve.1']),
          ('share/doc/loggerhead', ['apache-loggerhead.conf',
 
