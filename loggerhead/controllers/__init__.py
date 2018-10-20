@@ -144,4 +144,6 @@ class TemplatedBranchView(object):
                 raise HTTPNotFound;
         else:
             revid = h.last_revid
+        if revid is not None and not isinstance(revid, bytes):
+            raise TypeError(revid)
         return revid

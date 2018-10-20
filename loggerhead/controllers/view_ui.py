@@ -91,7 +91,6 @@ class ViewUI(TemplatedBranchView):
         history = self._history
         branch = history._branch
         revid = self.get_revid()
-        revid = history.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
         if (file_id is None) and (path is None):
             raise HTTPBadRequest('No file_id or filename '

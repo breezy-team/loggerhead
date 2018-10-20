@@ -190,8 +190,9 @@ class TestHiddenBranch(BasicTests):
         self.createBranch()
         locations = config.locations_config_filename()
         config.ensure_config_dir_exists()
-        open(locations, 'wb').write('[%s]\nhttp_serve = False'
-                                    % (self.tree.branch.base,))
+        with open(locations, 'w') as f:
+            f.write('[%s]\nhttp_serve = False' % (
+                self.tree.branch.base,))
 
     def test_no_access(self):
         app = self.setUpLoggerhead()
@@ -248,7 +249,7 @@ class TestHeadMiddleware(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes', extra_environ={'REQUEST_METHOD': 'HEAD'})
         self.assertEqual('text/html', res.header('Content-Type'))
-        self.assertEqualDiff('', res.body)
+        self.assertEqualDiff(b'', res.body)
 
 
 def consume_app(app, env):

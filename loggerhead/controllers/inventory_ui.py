@@ -146,7 +146,7 @@ class InventoryUI(TemplatedBranchView):
             updir = dirname(path)
 
         if not is_null_rev(revid):
-            change = history.get_changes([ revid ])[0]
+            change = history.get_changes([revid])[0]
             # If we're looking at the tip, use head: in the URL instead
             if revid == branch.last_revision():
                 revno_url = 'head:'

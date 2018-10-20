@@ -42,6 +42,7 @@ import breezy.errors
 import breezy.foreign
 import breezy.osutils
 import breezy.revision
+from breezy.sixish import text_type
 
 from . import search
 from . import util
@@ -407,8 +408,6 @@ iso style "yyyy-mm-dd")
         # ignore the passed-in revid_list
         revid = self.fix_revid(query)
         if revid is not None:
-            if isinstance(revid, unicode):
-                revid = revid.encode('utf-8')
             changes = self.get_changes([revid])
             if (changes is not None) and (len(changes) > 0):
                 return [revid]
@@ -450,6 +449,8 @@ iso style "yyyy-mm-dd")
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
+        if not isinstance(revid, (str, text_type)):
+            raise TypeError(revid)
         if revid == 'head:':
             return self.last_revid
         try:
@@ -457,6 +458,8 @@ iso style "yyyy-mm-dd")
                 revid = self._revno_revid[revid]
         except KeyError:
             raise breezy.errors.NoSuchRevision(self._branch_nick, revid)
+        if not isinstance(revid, bytes):
+            revid = revid.encode('utf-8')
         return revid
 
     def get_file_view(self, revid, file_id):
@@ -630,7 +633,7 @@ iso style "yyyy-mm-dd")
         for p in change.merge_points:
             fetch_set.add(p.revid)
         p_changes = self.get_changes(list(fetch_set))
-        p_change_dict = dict([(c.revid, c) for c in p_changes])
+        p_change_dict = {c.revid: c for c in p_changes}
         for p in change.parents:
             if p.revid in p_change_dict:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
@@ -647,6 +650,9 @@ iso style "yyyy-mm-dd")
 
         Revisions not present and NULL_REVISION will be ignored.
         """
+        for revid in revid_list:
+            if not isinstance(revid, bytes):
+                raise TypeError(revid_list)
         changes = self.get_changes_uncached(revid_list)
         if len(changes) == 0:
             return changes

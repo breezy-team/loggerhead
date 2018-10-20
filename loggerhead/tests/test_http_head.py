@@ -70,7 +70,7 @@ class TestHeadMiddleware(tests.TestCase):
         app = http_head.HeadMiddleware(app)
         self._consume_app(app, 'HEAD')
         self.assertEqual(('200 OK', headers, None), self._start_response_passed)
-        self.assertEqualDiff('', self._write_buffer.getvalue())
+        self.assertEqualDiff(b'', self._write_buffer.getvalue())
 
     def test_get_passthrough_yielding(self):
         self._verify_get_passthrough(yielding_app)

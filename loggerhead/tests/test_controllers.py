@@ -251,7 +251,7 @@ class TestFileDiffUI(BasicTests):
             ('add', ('filename', b'f-id', 'file', b'content\n'))],
             message="First commit.")
         rev2 = builder.build_snapshot(None, [
-             ('modify', (b'filename', b'new content\n'))])
+             ('modify', ('filename', b'new content\n'))])
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
