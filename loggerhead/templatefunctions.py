@@ -21,9 +21,12 @@ import pkg_resources
 
 import breezy
 
-import loggerhead
-from loggerhead.zptsupport import zpt
-from loggerhead.util import html_format
+from . import (
+    __version__,
+    __revision__,
+    )
+from .zptsupport import zpt
+from .util import html_format
 
 
 templatefunctions = {}
@@ -71,7 +74,7 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
 
 @templatefunc
 def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None, merged_in=None):
-    from loggerhead import util
+    from . import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
         file_changes=file_changes, currently_showing=currently_showing,
@@ -142,11 +145,11 @@ def revision_link(url, revno, path, frag=''):
 
 @templatefunc
 def loggerhead_version():
-    return loggerhead.__version__
-    
+    return __version__
+
 @templatefunc
 def loggerhead_revision():
-    return loggerhead.__revision__
+    return __revision__
 
 _cached_generator_string = None
 
@@ -159,7 +162,7 @@ def generator_string():
         # TODO: Errors -- e.g. from a missing/invalid __version__ attribute, or
         # ValueError accessing Distribution.version -- should be non-fatal.
 
-        versions.append(('Loggerhead', loggerhead.__version__))
+        versions.append(('Loggerhead', __version__))
 
         import sys
         python_version = breezy._format_version_tuple(sys.version_info)

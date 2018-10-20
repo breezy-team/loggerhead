@@ -24,13 +24,13 @@ import simplejson
 
 from paste.httpexceptions import HTTPServerError
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 class ChangeLogUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.changelog'
+    template_name = 'changelog'
 
     def get_values(self, path, kwargs, headers):
         history = self._history

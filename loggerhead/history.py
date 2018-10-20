@@ -43,9 +43,9 @@ import breezy.foreign
 import breezy.osutils
 import breezy.revision
 
-from loggerhead import search
-from loggerhead import util
-from loggerhead.wholehistory import compute_whole_history_data
+from . import search
+from . import util
+from .wholehistory import compute_whole_history_data
 
 
 def is_branch(folder):

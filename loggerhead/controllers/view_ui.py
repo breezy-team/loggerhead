@@ -34,18 +34,18 @@ from paste.httpexceptions import (
     HTTPServerError,
     )
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 try:
-    from loggerhead.highlight import highlight
+    from ..highlight import highlight
 except ImportError:
     highlight = None
-from loggerhead import util
+from .. import util
 
 
 class ViewUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.view'
-    
+    template_name = 'view'
+
     def tree_for(self, file_id, revid):
         rev_tree = self._history.revision_tree(revid)
         file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id), file_id)
@@ -54,7 +54,7 @@ class ViewUI(TemplatedBranchView):
     def text_lines(self, file_id, revid):
         path = self._history.get_path(revid, file_id)
         file_name = os.path.basename(path)
-        
+
         tree = self.tree_for(file_id, revid)
         file_text = tree.get_file_text(path, file_id)
         encoding = 'utf-8'

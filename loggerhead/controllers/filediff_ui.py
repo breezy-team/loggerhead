@@ -5,8 +5,9 @@ from breezy import diff
 from breezy import errors
 from breezy import osutils
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
+
 
 def _process_diff(difftext):
     chunks = []
@@ -79,7 +80,7 @@ def diff_chunks_for_file(repository, file_id, compare_revid, revid,
 
 class FileDiffUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.filediff'
+    template_name = 'filediff'
     supports_json = True
 
     def get_values(self, path, kwargs, headers):

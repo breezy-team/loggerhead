@@ -26,7 +26,7 @@ from breezy.foreign import (
 from datetime import datetime
 from breezy import tag, tests
 
-from loggerhead import history as _mod_history
+from .. import history as _mod_history
 
 
 class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):

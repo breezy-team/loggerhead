@@ -28,8 +28,8 @@ from breezy import errors
 from breezy import osutils
 from breezy.revision import is_null as is_null_rev
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 
@@ -42,7 +42,7 @@ def dirname(path):
 
 class InventoryUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.inventory'
+    template_name = 'inventory'
     supports_json = True
 
     def get_filelist(self, tree, path, sort_type, revno_url):

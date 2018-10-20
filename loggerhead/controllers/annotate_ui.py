@@ -18,8 +18,8 @@
 
 import itertools
 
-from loggerhead.controllers.view_ui import ViewUI
-from loggerhead import util
+from ..controllers.view_ui import ViewUI
+from .. import util
 
 class AnnotateUI(ViewUI):
 
@@ -27,9 +27,9 @@ class AnnotateUI(ViewUI):
         file_id = info['file_id']
         revid = info['change'].revid
         path = self._history.get_path(revid, file_id)
-        
+
         tree = self.tree_for(file_id, revid)
-        
+
         change_cache = {}
         last_line_revid = None
         last_lineno = None
@@ -71,9 +71,9 @@ class AnnotateUI(ViewUI):
         revisions[last_lineno].revspan = lineno - last_lineno + 1
 
         return revisions
-            
+
     def get_values(self, path, kwargs, headers):
         values = super(AnnotateUI, self).get_values(path, kwargs, headers)
         values['annotated'] = self.annotate_file(values)
-        
+
         return values

@@ -22,9 +22,9 @@ import urllib
 
 from paste.httpexceptions import HTTPServerError
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
-from loggerhead.controllers.filediff_ui import diff_chunks_for_file
+from .. import util
+from ..controllers import TemplatedBranchView
+from ..controllers.filediff_ui import diff_chunks_for_file
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
@@ -35,7 +35,7 @@ def dq(p):
 
 class RevisionUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.revision'
+    template_name = 'revision'
     supports_json = True
 
     def get_values(self, path, kwargs, headers):

@@ -24,9 +24,10 @@ import time
 from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
 from paste.request import path_info_pop, parse_querystring
 
-from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from loggerhead.zptsupport import load_template
+from .. import templates
+from .. import util
+from ..templatefunctions import templatefunctions
+from ..zptsupport import load_template
 
 
 class BufferingWriter(object):
@@ -53,7 +54,7 @@ class BufferingWriter(object):
 
 class TemplatedBranchView(object):
 
-    template_path = None
+    template_name = None
     supports_json = False
 
     def __init__(self, branch, history_callable):
@@ -120,7 +121,8 @@ class TemplatedBranchView(object):
                 default=util.convert_to_json_ready))
         else:
             self.add_template_values(values)
-            template = load_template(self.template_path)
+            template = load_template(
+                    '%s.%s' % (templates.__name__, self.template_name))
             template.expand_into(w, **values)
         w.flush()
         self.log.info(

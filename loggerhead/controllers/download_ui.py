@@ -28,7 +28,7 @@ from breezy.errors import (
 from paste import httpexceptions
 from paste.request import path_info_pop
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 

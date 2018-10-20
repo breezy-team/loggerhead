@@ -20,7 +20,7 @@ import Queue
 from breezy import tests
 from breezy.tests import http_server
 
-from loggerhead import load_test
+from .. import load_test
 
 
 empty_script = """{

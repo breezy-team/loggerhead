@@ -1,4 +1,4 @@
-from loggerhead.zptsupport import load_template
+from ..zptsupport import load_template
 
 RENDERED = u"<html>\n<head>\n<title>%s</title>\n</head>\n\
 <body>\n<div>Hello, %s</div>\n</body>\n</html>"

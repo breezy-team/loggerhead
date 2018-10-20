@@ -24,7 +24,7 @@ from paste.request import path_info_pop, parse_querystring
 from breezy.diff import show_diff_trees
 from breezy.revision import NULL_REVISION
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 
 
 class DiffUI(TemplatedBranchView):

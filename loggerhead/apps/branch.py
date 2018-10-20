@@ -29,20 +29,20 @@ import breezy.lru_cache
 from paste import request
 from paste import httpexceptions
 
-from loggerhead.apps import static_app
-from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.view_ui import ViewUI
-from loggerhead.controllers.atom_ui import AtomUI
-from loggerhead.controllers.changelog_ui import ChangeLogUI
-from loggerhead.controllers.diff_ui import DiffUI
-from loggerhead.controllers.download_ui import DownloadUI, DownloadTarballUI
-from loggerhead.controllers.filediff_ui import FileDiffUI
-from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.controllers.revlog_ui import RevLogUI
-from loggerhead.controllers.search_ui import SearchUI
-from loggerhead.history import History
-from loggerhead import util
+from ..apps import static_app
+from ..controllers.annotate_ui import AnnotateUI
+from ..controllers.view_ui import ViewUI
+from ..controllers.atom_ui import AtomUI
+from ..controllers.changelog_ui import ChangeLogUI
+from ..controllers.diff_ui import DiffUI
+from ..controllers.download_ui import DownloadUI, DownloadTarballUI
+from ..controllers.filediff_ui import FileDiffUI
+from ..controllers.inventory_ui import InventoryUI
+from ..controllers.revision_ui import RevisionUI
+from ..controllers.revlog_ui import RevLogUI
+from ..controllers.search_ui import SearchUI
+from ..history import History
+from .. import util
 
 
 _DEFAULT = object()
@@ -85,7 +85,7 @@ class BranchWSGIApp(object):
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
             try:
-                from loggerhead.changecache import RevInfoDiskCache
+                from ..changecache import RevInfoDiskCache
             except ImportError:
                 self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
@@ -94,7 +94,7 @@ class BranchWSGIApp(object):
         return History(
             self.branch, self.graph_cache,
             revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
-    
+
     # Before the addition of this method, clicking to sort by date from 
     # within a branch caused a jump up to the top of that branch.
     def sort_url(self, *args, **kw):

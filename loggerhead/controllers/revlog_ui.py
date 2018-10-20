@@ -1,11 +1,11 @@
 import urllib
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 
 
 class RevLogUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.revlog'
+    template_name = 'revlog'
     supports_json = True
 
     def get_values(self, path, kwargs, headers):

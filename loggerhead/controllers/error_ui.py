@@ -19,13 +19,13 @@
 from StringIO import StringIO
 import traceback
 
-from loggerhead.controllers import TemplatedBranchView
-from loggerhead import util
+from ..controllers import TemplatedBranchView
+from .. import util
 
 
 class ErrorUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.error'
+    template_name = 'error'
 
     def __init__(self, branch, exc_info):
         super(ErrorUI, self).__init__(branch, lambda: None)

@@ -29,10 +29,10 @@ from paste.request import path_info_pop
 from paste import httpexceptions
 from paste import urlparser
 
-from loggerhead import util
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, robots_app, static_app
-from loggerhead.controllers.directory_ui import DirectoryUI
+from .. import util
+from ..apps.branch import BranchWSGIApp
+from ..apps import favicon_app, robots_app, static_app
+from ..controllers.directory_ui import DirectoryUI
 
 
 class BranchesFromTransportServer(object):

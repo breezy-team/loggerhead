@@ -17,12 +17,12 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 
 
 class AtomUI (TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.atom'
+    template_name = 'atom'
 
     def get_values(self, path, kwargs, headers):
         history = self._history

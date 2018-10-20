@@ -28,12 +28,12 @@ from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
-from loggerhead import __version__
-from loggerhead.apps.transport import (
+from .loggerhead import __version__
+from .loggerhead.apps.transport import (
     BranchesFromTransportRoot, UserBranchesFromTransportRoot)
-from loggerhead.config import LoggerheadConfig
-from loggerhead.util import Reloader
-from loggerhead.apps.error import ErrorHandlerApp
+from .loggerhead.config import LoggerheadConfig
+from .loggerhead.util import Reloader
+from .loggerhead.apps.error import ErrorHandlerApp
 
 
 def get_config_and_base(args):

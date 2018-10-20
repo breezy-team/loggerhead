@@ -504,7 +504,7 @@ def decorator(unbound):
 def lsprof(f):
 
     def _f(*a, **kw):
-        from loggerhead.lsprof import profile
+        from .loggerhead.lsprof import profile
         import cPickle
         z = time.time()
         ret, stats = profile(f, *a, **kw)

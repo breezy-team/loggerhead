@@ -23,8 +23,8 @@ import urllib
 
 from breezy import branch, errors
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 class DirEntry(object):
@@ -47,7 +47,7 @@ class DirectoryUI(TemplatedBranchView):
     """
     """
 
-    template_path = 'loggerhead.templates.directory'
+    template_name = 'directory'
 
     def __init__(self, static_url_base, transport, name):
 

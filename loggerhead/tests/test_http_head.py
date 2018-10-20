@@ -20,7 +20,7 @@ from cStringIO import StringIO
 
 from breezy import tests
 
-from loggerhead.apps import http_head
+from ..apps import http_head
 
 
 content = ["<html>",
