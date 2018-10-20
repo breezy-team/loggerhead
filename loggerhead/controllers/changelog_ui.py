@@ -18,11 +18,11 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import urllib
-
 import simplejson
 
 from paste.httpexceptions import HTTPServerError
+
+from breezy import urlutils
 
 from .. import util
 from ..controllers import TemplatedBranchView
@@ -67,7 +67,7 @@ class ChangeLogUI(TemplatedBranchView):
             data = {}
             for i, c in enumerate(changes):
                 c.index = i
-                data[str(i)] = urllib.quote(urllib.quote(c.revid, safe=''))
+                data[str(i)] = urlutils.quote(urlutils.quote_from_bytes(c.revid, safe=''))
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')

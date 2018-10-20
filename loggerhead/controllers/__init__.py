@@ -21,6 +21,8 @@ import breezy.errors
 import simplejson
 import time
 
+from breezy import osutils
+
 from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
 from paste.request import path_info_pop, parse_querystring
 
@@ -121,7 +123,7 @@ class TemplatedBranchView(object):
         w = BufferingWriter(writer, 8192)
         if environ.get('loggerhead.as_json'):
             w.write(simplejson.dumps(values,
-                default=util.convert_to_json_ready))
+                default=util.convert_to_json_ready).encode('utf-8'))
         else:
             self.add_template_values(values)
             template = load_template(
@@ -142,6 +144,7 @@ class TemplatedBranchView(object):
                 revid = h.fix_revid(self.args[0])
             except breezy.errors.NoSuchRevision:
                 raise HTTPNotFound;
+            assert isinstance(revid, bytes)
         else:
             revid = h.last_revid
         if revid is not None and not isinstance(revid, bytes):

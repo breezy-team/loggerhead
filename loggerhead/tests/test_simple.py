@@ -140,7 +140,7 @@ class TestWithSimpleTree(BasicTests):
         res.mustcontain('myfilename')
         res = app.get('/files/1/')
         res.mustcontain('myfilename')
-        res = app.get('/files/1/?file_id=' + self.tree.path2id(''))
+        res = app.get('/files/1/?file_id=' + self.tree.path2id('').decode('utf-8'))
         res.mustcontain('myfilename')
 
     def test_inventory_bad_rev_404(self):

@@ -1,6 +1,6 @@
 import urllib
 
-from breezy import urlutils
+from breezy import osutils, urlutils
 
 from ..controllers import TemplatedBranchView
 
@@ -13,7 +13,7 @@ class RevLogUI(TemplatedBranchView):
     def get_values(self, path, kwargs, headers):
         history = self._history
 
-        revid = urlutils.unquote(self.args[0])
+        revid = urlutils.unquote_to_bytes(osutils.safe_utf8(self.args[0]))
 
         change = history.get_changes([revid])[0]
         file_changes = history.get_file_changes(change)

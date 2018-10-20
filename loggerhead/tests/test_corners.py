@@ -40,7 +40,7 @@ class TestCornerCases(BasicTests):
         """XXX."""
         self.createBranch()
 
-        msg = '<b>hi</b>'
+        msg = b'<b>hi</b>'
         self.addFileAndCommit('myfilename', msg)
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')

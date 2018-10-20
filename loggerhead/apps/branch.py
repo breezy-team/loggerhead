@@ -17,7 +17,6 @@
 """The WSGI application for serving a Bazaar branch."""
 
 import logging
-import urllib
 import sys
 import wsgiref.util
 
@@ -25,6 +24,8 @@ import breezy.branch
 import breezy.errors
 from breezy.hooks import Hooks
 import breezy.lru_cache
+from breezy.sixish import viewitems
+from breezy import urlutils
 
 from paste import request
 from paste import httpexceptions
@@ -103,7 +104,7 @@ class BranchWSGIApp(object):
         qs = []
         for k, v in kw.iteritems():
             if v is not None:
-                qs.append('%s=%s' % (k, urllib.quote(v)))
+                qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)
         path_info = self._path_info.strip('/').split('?')[0]
         path_info += '?' + qs
@@ -113,12 +114,11 @@ class BranchWSGIApp(object):
         if isinstance(args[0], list):
             args = args[0]
         qs = []
-        for k, v in kw.iteritems():
+        for k, v in viewitems(kw):
             if v is not None:
-                qs.append('%s=%s' % (k, urllib.quote(v)))
+                qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)
-        path_info = urllib.quote(
-            unicode('/'.join(args)).encode('utf-8'), safe='/~:')
+        path_info = urlutils.quote('/'.join(args), safe='/~:')
         if qs:
             path_info += '?' + qs
         return self._url_base + path_info

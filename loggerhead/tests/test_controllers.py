@@ -80,7 +80,7 @@ class TestInventoryUI(BasicTests):
                'SERVER_PORT': '80'})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
-        self.assertEqual('', content)
+        self.assertEqual(b'', content)
 
     def test_get_values_smoke(self):
         branch = self.make_bzrbranch_for_tree_shape(['a-file'])
@@ -260,7 +260,7 @@ class TestFileDiffUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/%s/%s/f-id' % (rev2, rev1),
+               'PATH_INFO': '/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -270,7 +270,7 @@ class TestFileDiffUI(BasicTests):
         values = filediff_ui.get_values('', {}, {})
         chunks = values['chunks']
         self.assertEqual('insert', chunks[0].diff[1].type)
-        self.assertEqual('new content', chunks[0].diff[1].line)
+        self.assertEqual(b'new content', chunks[0].diff[1].line)
 
     def test_json_render_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
@@ -301,7 +301,7 @@ class TestRevLogUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app, revid = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+revlog/%s' % revid,
+               'PATH_INFO': '/+revlog/%s' % revid.decode('utf-8'),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -314,7 +314,7 @@ class TestRevLogUI(BasicTests):
 
     def test_json_render_smoke(self):
         branch_app, revid = self.make_branch_app_for_revlog_ui()
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/%s' % revid,
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/%s' % revid.decode('utf-8'),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',

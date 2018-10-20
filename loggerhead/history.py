@@ -42,7 +42,10 @@ import breezy.errors
 import breezy.foreign
 import breezy.osutils
 import breezy.revision
-from breezy.sixish import text_type
+from breezy.sixish import (
+    text_type,
+    viewvalues,
+    )
 
 from . import search
 from . import util
@@ -620,7 +623,7 @@ iso style "yyyy-mm-dd")
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [revid for (_, revid) in d.itervalues()]
+        return [revid for (_, revid) in viewvalues(d)]
 
     def add_branch_nicks(self, change):
         """
@@ -679,8 +682,8 @@ iso style "yyyy-mm-dd")
 
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
-        revid_list = filter(lambda revid: not breezy.revision.is_null(revid),
-                            revid_list)
+        revid_list = list(filter(lambda revid: not breezy.revision.is_null(revid),
+                            revid_list))
         parent_map = self._branch.repository.get_graph().get_parent_map(
                          revid_list)
         # We need to return the answer in the same order as the input,

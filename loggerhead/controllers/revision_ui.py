@@ -18,9 +18,10 @@
 #
 
 import simplejson
-import urllib
 
 from paste.httpexceptions import HTTPServerError
+
+from breezy import urlutils
 
 from .. import util
 from ..controllers import TemplatedBranchView
@@ -30,7 +31,7 @@ from ..controllers.filediff_ui import diff_chunks_for_file
 DEFAULT_LINE_COUNT_LIMIT = 3000
 
 def dq(p):
-    return urllib.quote(urllib.quote(p, safe=''))
+    return urlutils.quote(urlutils.quote(p, safe=''))
 
 
 class RevisionUI(TemplatedBranchView):
@@ -88,7 +89,7 @@ class RevisionUI(TemplatedBranchView):
             merged_in = None
 
         return {
-            'revid': revid,
+            'revid': revid.decode('utf-8'),
             'change': change,
             'file_changes': file_changes,
             'merged_in': merged_in,

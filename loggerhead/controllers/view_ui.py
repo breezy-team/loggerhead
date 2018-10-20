@@ -67,7 +67,7 @@ class ViewUI(TemplatedBranchView):
         file_lines = breezy.osutils.split_lines(file_text)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
-        
+
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
             # highlight strips off extra newlines at the end of the file.
@@ -75,7 +75,7 @@ class ViewUI(TemplatedBranchView):
             hl_lines.extend([u''] * extra_lines)
         else:
             hl_lines = map(util.html_escape, file_lines)
-        
+
         return hl_lines;
 
     def file_contents(self, file_id, revid):
