@@ -2,6 +2,7 @@ loggerhead-breezy (1.19~bzr534-1) UNRELEASED; urgency=medium
 
   * Merge new upstream snapshot, updated for Breezy.
   * New upstream snapshot.
+  * Drop patch request-method: applied upstream.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 16:19:32 +0000
 

@@ -1,3 +1,2 @@
 port-to-yui3.5.patch
 dont-ship-static.patch
-request-method.patch
