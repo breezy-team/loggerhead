@@ -26,6 +26,10 @@ class AnnotateUI(ViewUI):
     def annotate_file(self, info):
         file_id = info['file_id']
         revid = info['change'].revid
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         path = self._history.get_path(revid, file_id)
 
         tree = self.tree_for(file_id, revid)

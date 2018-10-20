@@ -24,8 +24,11 @@ from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )
+from breezy import (
+    osutils,
+    urlutils,
+    )
 import breezy.textfile
-import breezy.osutils
 
 from paste.httpexceptions import (
     HTTPBadRequest,
@@ -69,7 +72,7 @@ class ViewUI(TemplatedBranchView):
             'iso-8859-15'
             file_text.decode(encoding)
 
-        file_lines = breezy.osutils.split_lines(file_text)
+        file_lines = osutils.split_lines(file_text)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
 
@@ -99,6 +102,8 @@ class ViewUI(TemplatedBranchView):
         branch = history._branch
         revid = self.get_revid()
         file_id = kwargs.get('file_id', None)
+        if file_id is not None:
+            file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(file_id))
         if (file_id is None) and (path is None):
             raise HTTPBadRequest('No file_id or filename '
                                  'provided to view')

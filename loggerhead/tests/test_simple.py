@@ -123,10 +123,10 @@ class TestWithSimpleTree(BasicTests):
         # '<span class='pyg-n'>with</span><span class='pyg-o'>&lt;</span>'
         # '<span class='pyg-n'>htmlspecialchars</span>
         # So we pre-filter the body, to make sure remove spans of that type.
-        body_no_span = re.sub(r'<span class="pyg-.">', '', res.body)
-        body_no_span = body_no_span.replace('</span>', '')
+        body_no_span = re.sub(b'<span class="pyg-.">', b'', res.body)
+        body_no_span = body_no_span.replace(b'</span>', b'')
         for line in self.filecontents.splitlines():
-            escaped = cgi.escape(line)
+            escaped = cgi.escape(line).encode('utf-8')
             self.assertTrue(escaped in body_no_span,
                             "did not find %r in %r" % (escaped, body_no_span))
 
