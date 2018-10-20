@@ -47,6 +47,10 @@ class ViewUI(TemplatedBranchView):
     template_name = 'view'
 
     def tree_for(self, file_id, revid):
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         rev_tree = self._history.revision_tree(revid)
         file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id), file_id)
         return self._history._branch.repository.revision_tree(file_revid)

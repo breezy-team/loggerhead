@@ -762,6 +762,10 @@ iso style "yyyy-mm-dd")
 
     def get_file(self, file_id, revid):
         """Returns (path, filename, file contents)"""
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
         rev_tree = self._branch.repository.revision_tree(revid)
         path = rev_tree.id2path(file_id)
         display_path = path

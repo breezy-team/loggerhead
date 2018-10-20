@@ -67,7 +67,7 @@ class TestInventoryUI(BasicTests):
             {'SCRIPT_NAME': '/files', 'PATH_INFO': ''})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
-        self.assertContainsRe(content, 'filename')
+        self.assertContainsRe(content, b'filename')
 
     def test_no_content_for_HEAD(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
@@ -275,7 +275,7 @@ class TestFileDiffUI(BasicTests):
     def test_json_render_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/%s/%s/f-id' % (rev2, rev1),
+               'PATH_INFO': '/+json/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -389,7 +389,7 @@ class TestDownloadUI(TestWithSimpleTree):
         app = self.setUpLoggerhead()
         response = app.get('/download/1/myfilename-id/myfilename')
         self.assertEqual(
-            'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
         self.assertThat(
             response,
             MatchesDownloadHeaders('myfilename', 'application/octet-stream'))

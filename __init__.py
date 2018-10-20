@@ -102,6 +102,6 @@ class cmd_load_test_loggerhead(commands.Command):
 commands.register_command(cmd_load_test_loggerhead)
 
 def load_tests(loader, basic_tests, pattern):
-    basic_tests.addTest(loader.loadTestsFromModuleNames(
-        ['%s.loggerhead.tests' % __name__]))
+    from .loggerhead.tests import test_suite
+    basic_tests.addTest(test_suite())
     return basic_tests

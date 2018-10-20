@@ -25,7 +25,7 @@ from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )
-from breezy import urlutils
+from breezy import osutils, urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
 
@@ -57,7 +57,7 @@ class DownloadUI (TemplatedBranchView):
             raise httpexceptions.HTTPMovedPermanently(
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
-        file_id = args[1]
+        file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(args[1]))
         try:
             path, filename, content = h.get_file(file_id, revid)
         except (NoSuchId, NoSuchRevision):

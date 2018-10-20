@@ -18,8 +18,10 @@
 from __future__ import absolute_import
 
 
-def load_tests(loader, basic_tests, pattern):
-    basic_tests.addTests(loader.loadTestsFromModuleNames([
+def test_suite():
+    import unittest
+    loader = unittest.TestLoader()
+    return loader.loadTestsFromNames([
         (__name__ + '.' + x) for x in [
             'test_controllers',
             'test_corners',
@@ -30,5 +32,4 @@ def load_tests(loader, basic_tests, pattern):
             'test_revision_ui',
             'test_templating',
             'test_util',
-        ]]))
-    return basic_tests
+        ]])
