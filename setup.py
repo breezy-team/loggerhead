@@ -18,7 +18,7 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-from distutils.core import setup
+from setuptools import setup
 
 import loggerhead
 
@@ -73,4 +73,5 @@ setup(
                                   'loggerheadd',
                                   'breezy.conf']),
         ],
+    testsuite='loggerhead.tests',
     )
