@@ -9,7 +9,7 @@ DTYPE = +dfsg
 VER  ?= $(subst $(DTYPE),,$(UVER))
 
 %:
-	dh --with python3 --buildsystem=pybuild $*
+	dh $* --with python3 --buildsystem=pybuild
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 CONCURRENCY = BZR_CONCURRENCY=$(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
@@ -26,7 +26,7 @@ override_dh_auto_clean:
 	cd docs/ && $(MAKE) clean
 
 override_dh_auto_build:
-	dh_auto_build --with python2 --buildsystem=python_distutils
+	dh_auto_build
 	cd docs/ && $(MAKE) html
 	cd docs/_build/html/_static/ && rm jquery.js underscore.js
 

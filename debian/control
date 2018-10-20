@@ -4,8 +4,8 @@ Priority: optional
 Maintainer: Debian Breezy Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Jelmer Vernooĳ <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: brz (>= 3.0.0~), python3-breezy.tests, python3-fixtures, python3-sphinx, python3-subunit, python3-testtools, bzr (>= 1.17~), bzr (<< 2.6.0)
-Build-Depends: debhelper (>= 7.0.50~),
+Build-Depends-Indep: brz (>= 3.0.0~), python3-breezy.tests, python3-fixtures, python3-sphinx, python3-subunit, python3-testtools, python3-setuptools
+Build-Depends: debhelper (>= 11),
                python3-all,
                python3-paste (>= 1.6),
                python3-pkg-resources,
@@ -13,13 +13,13 @@ Build-Depends: debhelper (>= 7.0.50~),
                python3-simpletal
 Standards-Version: 3.9.8
 X-Python3-Version: >= 3.4
-Vcs-Bzr: http://anonscm.debian.org/bzr/pkg-bazaar/loggerhead/unstable/
-Vcs-Browser: http://bzr.debian.org/loggerhead/pkg-bazaar/loggerhead/unstable/files
+Vcs-Bzr: https://code.breezy-vcs.org/loggerhead/unstable
+Vcs-Browser: https://code.breezy-vcs.org/loggerhead/unstable
 
 Package: loggerhead-breezy
 Architecture: all
-Depends: adduser, libjs-yui3-min, python3-breezy (>= 3.0.0~), python3-paste (>= 1.6), python3-pkg-resources, python3-simplejson, python3-simpletal, ${misc:Depends}, ${python:Depends}
-Suggests: brz, loggerhead-doc, python-pastedeploy (>= 1.3.0)
+Depends: adduser, libjs-yui3-min, python3-breezy (>= 3.0.0~), python3-paste (>= 1.6), python3-pkg-resources, python3-simplejson, python3-simpletal, ${misc:Depends}, ${python3:Depends}
+Suggests: brz, loggerhead-breezy-doc, python3-pastedeploy (>= 1.3.0)
 Enhances: brz
 Recommends: python3-pygments
 Description: Web viewer for Breezy
