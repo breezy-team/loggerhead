@@ -45,6 +45,12 @@ HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
         (DEFAULT_PORT,))
 
 
+def load_loggerhead():
+    try:
+        from . import loggerhead
+    except ImportError:
+        import loggerhead
+
 def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
     # TODO: if we supported inet to pass requests in and respond to them,
     #       then it would be easier to test the full stack, but it probably
@@ -53,6 +59,7 @@ def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
     from paste.httpexceptions import HTTPExceptionHandler
     from paste.httpserver import serve
 
+    load_loggerhead()
     from .loggerhead.apps.http_head import HeadMiddleware
     from .loggerhead.apps.transport import BranchesFromTransportRoot
     from .loggerhead.config import LoggerheadConfig
@@ -88,6 +95,7 @@ class cmd_load_test_loggerhead(commands.Command):
     takes_args = ["filename"]
 
     def run(self, filename):
+        load_loggerhead()
         from .loggerhead.loggerhead import load_test
         script = load_test.run_script(filename)
         for thread_id in sorted(script._threads):
@@ -99,6 +107,7 @@ class cmd_load_test_loggerhead(commands.Command):
 commands.register_command(cmd_load_test_loggerhead)
 
 def load_tests(loader, basic_tests, pattern):
+    load_loggerhead()
     from .loggerhead.tests import test_suite
     basic_tests.addTest(test_suite())
     return basic_tests
