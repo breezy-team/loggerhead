@@ -45,8 +45,8 @@ if not root_dir:
             ' %(user)s with http_root_dir set to the base directory you want'
             ' to serve bazaar repositories from' %
             {'user': pwd.getpwuid(os.geteuid()).pw_name})
-prefix = prefix.encode('utf-8', 'ignore')
-root_dir = root_dir.encode('utf-8', 'ignore')
+prefix = prefix
+root_dir = root_dir
 app = BranchesFromTransportRoot(root_dir, config)
 app = PrefixMiddleware(app, prefix=prefix)
 app = HTTPExceptionHandler(app)
