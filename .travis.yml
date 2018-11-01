@@ -19,6 +19,7 @@ matrix:
       env: TAL_VERSION=5.2
 
 script:
+  - python loggerhead/tests/test_controllers.py
   - python -m coverage run -p -m unittest loggerhead.tests.test_suite
 
 install:
