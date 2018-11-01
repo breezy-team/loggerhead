@@ -68,7 +68,7 @@ class InventoryUI(TemplatedBranchView):
 
         for entry in tree.iter_child_entries(path):
             child_path = osutils.pathjoin(path, entry.name)
-            child_revision = tree.get_file_revision(child_path, entry.file_id)
+            child_revision = tree.get_file_revision(child_path)
             revid_set.add(child_revision)
             child_entries.append((child_path, entry, child_revision))
 
