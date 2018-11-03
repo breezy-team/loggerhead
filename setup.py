@@ -32,7 +32,6 @@ setup(
     maintainer_email = "michael.hudson@canonical.com",
     scripts = [
         "loggerhead-serve",
-        "loggerhead.wsgi",
         ],
     packages = ["loggerhead",
                 "loggerhead/apps",
