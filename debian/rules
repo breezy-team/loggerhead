@@ -17,7 +17,7 @@ endif
 
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 override_dh_auto_test:
-	$(CONCURRENCY) BRZ_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/brz selftest \
+	PYTHONPATH=$(CURDIR) $(CONCURRENCY) BRZ_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/brz selftest \
 	    --parallel=fork -v -s bp.loggerhead
 endif
 
