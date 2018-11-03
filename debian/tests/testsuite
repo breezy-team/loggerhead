@@ -1,0 +1,2 @@
+#!/bin/sh -e
+/usr/bin/brz selftest --parallel=fork -v -s bp.loggerhead
