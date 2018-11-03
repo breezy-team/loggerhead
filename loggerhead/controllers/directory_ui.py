@@ -19,9 +19,8 @@
 import datetime
 import logging
 import stat
-import urllib
 
-from breezy import branch, errors
+from breezy import branch, errors, urlutils
 
 from .. import util
 from ..controllers import TemplatedBranchView
@@ -30,7 +29,7 @@ from ..controllers import TemplatedBranchView
 class DirEntry(object):
 
     def __init__(self, dirname, parity, branch):
-        self.dirname = urllib.unquote(dirname)
+        self.dirname = urlutils.unquote(dirname)
         self.parity = parity
         self.branch = branch
         if branch is not None:
