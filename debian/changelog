@@ -11,6 +11,7 @@ loggerhead-breezy (1.20~bzr544+dfsg-1) UNRELEASED; urgency=medium
   * Use secure URI in debian/watch.
   * Trim trailing whitespace.
   * Use secure copyright file specification URI.
+  * Bump standards version to 4.2.1 (no changes).
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 17:40:15 +0000
 
