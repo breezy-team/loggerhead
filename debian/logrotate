@@ -1,4 +1,4 @@
-/var/log/loggerhead/serve-branches.log {
+/var/log/loggerhead/loggerhead-serve.log {
     daily
     rotate 7
     size 10M
