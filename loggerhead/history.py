@@ -125,9 +125,10 @@ class FileChangeReporter(object):
     def revid(self, tree, file_id):
         try:
             path = tree.id2path(file_id)
-            return tree.get_file_revision(path, file_id)
         except breezy.errors.NoSuchId:
-            return 'null:'
+            return b'null:'
+        else:
+            return tree.get_file_revision(path)
 
     def report(self, file_id, paths, versioned, renamed, modified,
                exe_change, kind):

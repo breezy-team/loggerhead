@@ -140,7 +140,7 @@ class ViewUI(TemplatedBranchView):
         if not tree.has_id(file_id):
             raise HTTPNotFound()
 
-        if tree.kind(path, file_id) == "directory":
+        if tree.kind(path) == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         # no navbar for revisions
