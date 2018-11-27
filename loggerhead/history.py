@@ -772,7 +772,8 @@ iso style "yyyy-mm-dd")
         display_path = path
         if not display_path.startswith('/'):
             path = '/' + path
-        return display_path, breezy.osutils.basename(path), rev_tree.get_file_text(path, file_id)
+        return (display_path, breezy.osutils.basename(path),
+                rev_tree.get_file_text(path))
 
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
@@ -789,8 +790,8 @@ iso style "yyyy-mm-dd")
         """
         repo = self._branch.repository
         if (breezy.revision.is_null(old_revid) or
-            breezy.revision.is_null(new_revid) or
-            old_revid == new_revid):
+                breezy.revision.is_null(new_revid) or
+                old_revid == new_revid):
             old_tree, new_tree = map(
                 repo.revision_tree, [old_revid, new_revid])
         else:
