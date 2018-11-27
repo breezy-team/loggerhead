@@ -1,7 +1,9 @@
 === modified file 'loggerhead/apps/__init__.py'
---- old/loggerhead/apps/__init__.py	2018-10-20 11:09:30 +0000
-+++ new/loggerhead/apps/__init__.py	2018-11-27 20:18:10 +0000
-@@ -6,8 +6,7 @@
+Index: breezy-unstable/loggerhead/apps/__init__.py
+===================================================================
+--- breezy-unstable.orig/loggerhead/apps/__init__.py
++++ breezy-unstable/loggerhead/apps/__init__.py
+@@ -6,8 +6,7 @@ from paste import urlparser, fileapp
  
  from ..util import convert_file_errors
  
@@ -11,4 +13,3 @@
  
  # Static things can be cached for half a day, we could probably make this
  # longer, except for just before rollout times.
-

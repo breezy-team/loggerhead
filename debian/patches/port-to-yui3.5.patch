@@ -1,7 +1,9 @@
 === modified file 'loggerhead/apps/branch.py'
---- old/loggerhead/apps/branch.py	2018-10-20 16:21:28 +0000
-+++ new/loggerhead/apps/branch.py	2018-10-20 16:28:00 +0000
-@@ -137,7 +137,7 @@
+Index: breezy-unstable/loggerhead/apps/branch.py
+===================================================================
+--- breezy-unstable.orig/loggerhead/apps/branch.py
++++ breezy-unstable/loggerhead/apps/branch.py
+@@ -137,7 +137,7 @@ class BranchWSGIApp(object):
  
      def yui_url(self, path):
          if self.use_cdn:
@@ -10,16 +12,16 @@
          else:
              base = self.static_url('/static/javascript/yui/build/')
          return base + path
-
-=== modified file 'loggerhead/static/javascript/changelog.js'
---- old/loggerhead/static/javascript/changelog.js	2009-03-31 21:11:38 +0000
-+++ new/loggerhead/static/javascript/changelog.js	2018-10-20 16:28:00 +0000
+Index: breezy-unstable/loggerhead/static/javascript/changelog.js
+===================================================================
+--- breezy-unstable.orig/loggerhead/static/javascript/changelog.js
++++ breezy-unstable/loggerhead/static/javascript/changelog.js
 @@ -1,3 +1,4 @@
 +LH.use('node', 'event', function (Y) {
  function toggle_expand_all(action)
  {
    var revlogs = Y.all('.revision_log');
-@@ -8,14 +9,14 @@
+@@ -8,14 +9,14 @@ function toggle_expand_all(action)
        var collapsable = item.collapsable;
        if(action == 'close')
        {
@@ -38,7 +40,7 @@
          collapsable.open();
        }
      });
-@@ -54,17 +55,17 @@
+@@ -54,17 +55,17 @@ Y.on(
        function(item, i)
        {
          var revid = revids[item.get('id').replace('log-', '')];
@@ -62,15 +64,15 @@
            'click',
            function(e) {
              e.preventDefault();
-@@ -74,3 +75,4 @@
+@@ -74,3 +75,4 @@ Y.on(
        });
  
    });
 +});
-
-=== modified file 'loggerhead/static/javascript/custom.js'
---- old/loggerhead/static/javascript/custom.js	2011-10-26 16:06:54 +0000
-+++ new/loggerhead/static/javascript/custom.js	2018-10-20 16:28:00 +0000
+Index: breezy-unstable/loggerhead/static/javascript/custom.js
+===================================================================
+--- breezy-unstable.orig/loggerhead/static/javascript/custom.js
++++ breezy-unstable/loggerhead/static/javascript/custom.js
 @@ -1,13 +1,14 @@
 -Y = YUI().use("base", "node", "io-base", "anim");
 -
@@ -89,7 +91,7 @@
      if (!Y.Lang.isNull(search_box))
      {
        function get_suggestions() {
-@@ -29,11 +30,11 @@
+@@ -29,11 +30,11 @@ Y.on(
          var region = search_box.get('region');
          var current_query = search_box.get('value');
  
@@ -106,7 +108,7 @@
        }
        search_box.on(
          "keyup",
-@@ -41,7 +42,7 @@
+@@ -41,7 +42,7 @@ Y.on(
          {
            if(search_box.get('value') == '')
            {
@@ -115,7 +117,7 @@
            }
            else
            {
-@@ -53,29 +54,30 @@
+@@ -53,29 +54,30 @@ Y.on(
            }
          });
      }
@@ -155,7 +157,7 @@
  {
    this.is_open = config.is_open;
    this.open_node = config.open_node;
-@@ -100,7 +102,7 @@
+@@ -100,7 +102,7 @@ function get_height(node) {
    return height;
  }
  
@@ -164,7 +166,7 @@
  {
    if (this.anim) this.anim.stop();
  
-@@ -120,7 +122,7 @@
+@@ -120,7 +122,7 @@ Collapsable.prototype._animate = functio
    this.anim.on('end', this.animComplete, this, callback);
  }
  
@@ -173,7 +175,7 @@
  {
    var l = res.responseText.split('\n');
    l.splice(0, 1);
-@@ -137,7 +139,7 @@
+@@ -137,7 +139,7 @@ Collapsable.prototype._load_finished = f
    this._animate(args[0]);
  };
  
@@ -182,7 +184,7 @@
  {
    if (this.container == null) {
      this.container = Y.Node.create('<div></div>');
-@@ -184,7 +186,7 @@
+@@ -184,7 +186,7 @@ Collapsable.prototype._ensure_container
   * 8. Start a new animation to show the rest of the new content.
   */
  
@@ -191,7 +193,7 @@
  {
    this.expand_icon.set('src', expanded_icon_path);
  
-@@ -221,7 +223,7 @@
+@@ -221,7 +223,7 @@ Collapsable.prototype.open = function(ca
  
  };
  
@@ -200,7 +202,7 @@
  {
    this.anim = null;
    if (this._loading) return;
-@@ -229,7 +231,7 @@
+@@ -229,7 +231,7 @@ Collapsable.prototype.animComplete = fun
    this.is_open = true;
  };
  
@@ -209,7 +211,7 @@
  {
    this._ensure_container();
  
-@@ -258,7 +260,7 @@
+@@ -258,7 +260,7 @@ Collapsable.prototype.close = function()
    anim.run();
  };
  
@@ -218,7 +220,7 @@
    this.open_node.setStyle('display', 'none');
    if (this.close_node) {
      this.close_node.setStyle('display', 'block');
-@@ -268,7 +270,7 @@
+@@ -268,7 +270,7 @@ Collapsable.prototype.closeComplete = fu
    this.is_open = false;
  };
  
@@ -227,7 +229,7 @@
  {
    if (this.is_open)
    {
-@@ -305,7 +307,7 @@
+@@ -305,7 +307,7 @@ function setup_privacy_notification(conf
          }
      }
      var id_selector = "#" + target_id;
@@ -236,7 +238,7 @@
      notification_node = Y.Node.create('<div></div>')
          .addClass('global-notification');
      if (hidden) {
-@@ -324,13 +326,13 @@
+@@ -324,13 +326,13 @@ function display_privacy_notification()
       this is because we have no way to use feature flags in
       css directly. This should be removed if the feature
       is accepted. */
@@ -252,7 +254,7 @@
      if (global_notification.hasClass('hidden')) {
          global_notification.addClass('transparent');
          global_notification.removeClass('hidden');
-@@ -360,9 +362,10 @@
+@@ -360,9 +362,10 @@ function display_privacy_notification()
  };
  
  Y.on('domready', function() {
@@ -264,10 +266,10 @@
      }
  });
 +});
-
-=== modified file 'loggerhead/static/javascript/diff.js'
---- old/loggerhead/static/javascript/diff.js	2012-07-31 20:25:42 +0000
-+++ new/loggerhead/static/javascript/diff.js	2018-10-20 16:28:54 +0000
+Index: breezy-unstable/loggerhead/static/javascript/diff.js
+===================================================================
+--- breezy-unstable.orig/loggerhead/static/javascript/diff.js
++++ breezy-unstable/loggerhead/static/javascript/diff.js
 @@ -1,5 +1,7 @@
  var unified = true;
  
@@ -276,7 +278,7 @@
  function make_unified(chunk) {
    var pending_added = [];
    function flush_adds(before) {
-@@ -91,12 +93,12 @@
+@@ -91,12 +93,12 @@ function toggle_unified_sbs(event) {
    if (unified) {
      pts && pts.each(make_sbs);
      unified = false;
@@ -291,7 +293,7 @@
    }
  }
  
-@@ -112,14 +114,14 @@
+@@ -112,14 +114,14 @@ function toggle_expand_all_revisionview(
        var collapsable = item.collapsable;
        if(action == 'close')
        {
@@ -310,7 +312,7 @@
          collapsable.open();
        }
      });
-@@ -150,7 +152,7 @@
+@@ -150,7 +152,7 @@ function node_process(node) {
  }
  
  function zoom_to_diff (path) {
@@ -319,7 +321,7 @@
    if (!collapsable.is_open) {
      collapsable.open(
        function () {
-@@ -199,22 +201,23 @@
+@@ -199,22 +201,23 @@ Y.on(
        function(item, i)
        {
          var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + numlines;
@@ -349,15 +351,15 @@
            });
         item.collapsable=collapsable;
         });
-@@ -223,3 +226,4 @@
+@@ -223,3 +226,4 @@ Y.on(
        zoom_to_diff(window.location.hash.substring(1));
      }
    });
 +});
-
-=== modified file 'loggerhead/templates/macros.pt'
---- old/loggerhead/templates/macros.pt	2018-10-20 16:21:28 +0000
-+++ new/loggerhead/templates/macros.pt	2018-10-20 16:28:00 +0000
+Index: breezy-unstable/loggerhead/templates/macros.pt
+===================================================================
+--- breezy-unstable.orig/loggerhead/templates/macros.pt
++++ breezy-unstable/loggerhead/templates/macros.pt
 @@ -23,22 +23,6 @@
      <script type="text/javascript"
              tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
@@ -381,4 +383,3 @@
              tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
      <metal:block metal:define-slot="header_extras" />
    </head>
-
