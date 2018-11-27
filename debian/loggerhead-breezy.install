@@ -1,8 +1,8 @@
 /usr/bin/
 /usr/lib/
 /usr/share/man/
-loggerhead.wsgi /usr/share/loggerhead/
-loggerhead/static/css /usr/share/loggerhead/static/
-loggerhead/static/downloads /usr/share/loggerhead/static/
-loggerhead/static/images /usr/share/loggerhead/static/
-loggerhead/static/javascript/*.js /usr/share/loggerhead/static/javascript
+loggerhead.wsgi /usr/share/loggerhead-breezy/
+loggerhead/static/css /usr/share/loggerhead-breezy/static/
+loggerhead/static/downloads /usr/share/loggerhead-breezy/static/
+loggerhead/static/images /usr/share/loggerhead-breezy/static/
+loggerhead/static/javascript/*.js /usr/share/loggerhead-breezy/static/javascript

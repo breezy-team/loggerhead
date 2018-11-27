@@ -1,3 +1,10 @@
+loggerhead-breezy (1.20~bzr544+dfsg-2) UNRELEASED; urgency=medium
+
+  * Move files that conflict with loggerhead proper files to
+    /usr/share/loggerhead-breezy. Closes: #914690
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Tue, 27 Nov 2018 20:05:12 +0000
+
 loggerhead-breezy (1.20~bzr544+dfsg-1) unstable; urgency=medium
 
   * Fork loggerhead package, renaming it to "loggerhead-breezy".

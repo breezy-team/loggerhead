@@ -1,10 +1,10 @@
-Document: loggerhead
-Title: Loggerhead: A web viewer for bzr branches
-Abstract: Loggerhead is a web viewer for projects in Bazaar.
+Document: loggerhead-breezy
+Title: Loggerhead: A web viewer for bzr/git branches
+Abstract: Loggerhead is a web viewer for projects in Breezy.
  It can be used to navigate a branch history, annotate files,
  view patches, perform searches, etc.
 Section: Project Management
 
 Format: HTML
-Index: /usr/share/doc/loggerhead/html/index.html
-Files: /usr/share/doc/loggerhead/html/*.html
+Index: /usr/share/doc/loggerhead-breezy/html/index.html
+Files: /usr/share/doc/loggerhead-breezy/html/*.html
