@@ -55,7 +55,7 @@ class ViewUI(TemplatedBranchView):
         if not isinstance(revid, bytes):
             raise TypeError(revid)
         rev_tree = self._history.revision_tree(revid)
-        file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id), file_id)
+        file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id))
         return self._history._branch.repository.revision_tree(file_revid)
 
     def text_lines(self, file_id, revid):
@@ -63,7 +63,7 @@ class ViewUI(TemplatedBranchView):
         file_name = os.path.basename(path)
 
         tree = self.tree_for(file_id, revid)
-        file_text = tree.get_file_text(path, file_id)
+        file_text = tree.get_file_text(path)
 
         encoding = 'utf-8'
         try:
