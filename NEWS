@@ -27,6 +27,9 @@ NEXT
     - Add some more minor UI changes to do with rounded corners. (Cruz
       Bishop)
 
+    - Set line-height on <pre> elements in file views, fixing misaligned
+      line numbers in some browsers. (Colin Watson)
+
 1.18.2 [12Sep2012]
 ------------------
 
