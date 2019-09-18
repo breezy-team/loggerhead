@@ -13,7 +13,7 @@ Build-Depends: python3-all,
                python3-simpletal,
                dh-python,
                debhelper-compat (= 12)
-Standards-Version: 4.2.1
+Standards-Version: 4.4.0
 Vcs-Bzr: https://code.breezy-vcs.org/loggerhead/unstable
 Vcs-Browser: https://code.breezy-vcs.org/loggerhead/unstable
 
