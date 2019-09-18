@@ -5,14 +5,14 @@ Maintainer: Debian Breezy Maintainers <pkg-bazaar-maint@lists.alioth.debian.org>
 Uploaders: Jelmer Vernooĳ <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
 Build-Depends-Indep: brz (>= 3.0.0~), python3-breezy.tests, python3-fixtures, python3-sphinx, python3-subunit, python3-testtools, python3-setuptools, python3-bleach
-Build-Depends: debhelper (>= 11),
-               python3-all,
+Build-Depends: python3-all,
                python3-dulwich,
                python3-paste (>= 1.6),
                python3-pkg-resources,
                python3-simplejson,
                python3-simpletal,
-               dh-python
+               dh-python,
+               debhelper-compat (= 12)
 Standards-Version: 4.2.1
 Vcs-Bzr: https://code.breezy-vcs.org/loggerhead/unstable
 Vcs-Browser: https://code.breezy-vcs.org/loggerhead/unstable
