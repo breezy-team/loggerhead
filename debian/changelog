@@ -1,3 +1,9 @@
+loggerhead-breezy (1.20+bzr553-1) UNRELEASED; urgency=medium
+
+  * New upstream snapshot.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 18 Sep 2019 17:04:40 +0000
+
 loggerhead-breezy (1.20~bzr551+dfsg-1) unstable; urgency=medium
 
   * Move files that conflict with loggerhead proper files to
