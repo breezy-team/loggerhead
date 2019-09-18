@@ -3,6 +3,7 @@ loggerhead-breezy (1.20+bzr553-1) UNRELEASED; urgency=medium
   * New upstream snapshot.
   * Use set -e rather than passing -e on the shebang-line.
   * Bump debhelper from old 11 to 12.
+  * Remove obsolete fields Name from debian/upstream/metadata.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 18 Sep 2019 17:04:40 +0000
 
