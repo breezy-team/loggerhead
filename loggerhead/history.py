@@ -772,7 +772,7 @@ iso style "yyyy-mm-dd")
         display_path = path
         if not display_path.startswith('/'):
             path = '/' + path
-        return display_path, breezy.osutils.basename(path), rev_tree.get_file_text(path, file_id)
+        return display_path, breezy.osutils.basename(path), rev_tree.get_file_text(path)
 
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
