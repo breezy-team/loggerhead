@@ -69,14 +69,14 @@ class ViewUI(TemplatedBranchView):
         try:
             file_text.decode(encoding)
         except UnicodeDecodeError:
-            'iso-8859-15'
+            encoding = 'iso-8859-15'
             file_text.decode(encoding)
 
         file_lines = osutils.split_lines(file_text)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
 
-        file_text = file_text.decode('utf-8')
+        file_text = file_text.decode(encoding)
 
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
@@ -86,7 +86,7 @@ class ViewUI(TemplatedBranchView):
         else:
             hl_lines = map(util.html_escape, file_lines)
 
-        return hl_lines;
+        return hl_lines
 
     def file_contents(self, file_id, revid):
         try:

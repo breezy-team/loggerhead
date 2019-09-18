@@ -1,7 +1,7 @@
 Loggerhead:  A web viewer for ``bzr`` branches
 ==============================================
 
-Loggerhead is a web viewer for projects in . It can be used to navigate 
+Loggerhead is a web viewer for projects in Breezy. It can be used to navigate
 a branch history, annotate files, view patches, perform searches, etc.
 Loggerhead is heavily based on `bazaar-webserve
 <https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
