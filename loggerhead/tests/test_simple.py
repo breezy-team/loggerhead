@@ -188,8 +188,15 @@ class TestHiddenBranch(BasicTests):
     def setUp(self):
         BasicTests.setUp(self)
         self.createBranch()
-        locations = config.locations_config_filename()
-        config.ensure_config_dir_exists()
+        try:
+            locations = config.locations_config_filename()
+        except AttributeError:
+            from breezy import bedding
+            locations = bedding.locations_config_path()
+            ensure_config_dir_exists = bedding.ensure_config_dir_exists
+        else:
+            ensure_config_dir_exists = config.ensure_config_dir_exists
+        ensure_config_dir_exists()
         with open(locations, 'w') as f:
             f.write('[%s]\nhttp_serve = False' % (
                 self.tree.branch.base,))
