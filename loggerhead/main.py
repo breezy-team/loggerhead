@@ -21,25 +21,26 @@ import logging
 import os
 import sys
 
-from bzrlib.plugin import load_plugins
+from breezy.plugin import load_plugins
+from breezy.transport import location_to_url
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
-from loggerhead import __version__
-from loggerhead.apps.transport import (
+from . import __version__
+from .apps.transport import (
     BranchesFromTransportRoot, UserBranchesFromTransportRoot)
-from loggerhead.config import LoggerheadConfig
-from loggerhead.util import Reloader
-from loggerhead.apps.error import ErrorHandlerApp
+from .config import LoggerheadConfig
+from .util import Reloader
+from .apps.error import ErrorHandlerApp
 
 
-def get_config_and_path(args):
+def get_config_and_base(args):
     config = LoggerheadConfig(args)
 
     if config.get_option('show_version'):
-        print "loggerhead %s" % (__version__,)
+        print("loggerhead %s" % (__version__,))
         sys.exit(0)
 
     if config.arg_count > 1:
@@ -49,6 +50,8 @@ def get_config_and_path(args):
         base = config.get_arg(0)
     else:
         base = '.'
+
+    base = location_to_url(base)
 
     if not config.get_option('allow_writes'):
         base = 'readonly+' + base
@@ -70,9 +73,9 @@ def setup_logging(config, init_logging=True, log_file=None):
     else:
         if config.get_option('log_folder'):
             logfile_path = os.path.join(
-                config.get_option('log_folder'), 'serve-branches.log')
+                config.get_option('log_folder'), 'loggerhead-serve.log')
         else:
-            logfile_path = 'serve-branches.log'
+            logfile_path = 'loggerhead-serve.log'
         handler = logging.FileHandler(logfile_path, 'a')
         formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
                                       ' %(message)s')
@@ -92,9 +95,9 @@ def setup_logging(config, init_logging=True, log_file=None):
     return logger
 
 
-def make_app_for_config_and_path(config, base):
+def make_app_for_config_and_base(config, base):
     if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
-        print "--trunk-dir is only valid with --user-dirs"
+        print("--trunk-dir is only valid with --user-dirs")
         sys.exit(1)
 
     if config.get_option('reload'):
@@ -105,7 +108,7 @@ def make_app_for_config_and_path(config, base):
 
     if config.get_option('user_dirs'):
         if not config.get_option('trunk_dir'):
-            print "You didn't specify a directory for the trunk directories."
+            print("You didn't specify a directory for the trunk directories.")
             sys.exit(1)
         app = UserBranchesFromTransportRoot(base, config)
     else:
@@ -141,6 +144,9 @@ def make_app_for_config_and_path(config, base):
                     raise exc
                 return app(environ, start_response)
             return wrapped
+        logging.warning(
+                'PasteDeploy not available; unable to support '
+                'access through a reverse proxy.')
         app = check_not_proxied(app)
     else:
         app = PrefixMiddleware(app, prefix=prefix)
@@ -155,9 +161,9 @@ def make_app_for_config_and_path(config, base):
 def main(args):
     load_plugins()
 
-    config, path = get_config_and_path(args)
+    config, base = get_config_and_base(args)
 
-    app = make_app_for_config_and_path(config, path)
+    app = make_app_for_config_and_base(config, base)
 
     if not config.get_option('user_port'):
         port = '8080'
@@ -184,6 +190,6 @@ def main(args):
         elif protocol == 'ajp':
             from flup.server.ajp import WSGIServer
         else:
-            print 'Unknown protocol: %s.' % (protocol)
+            print('Unknown protocol: %s.' % (protocol))
             sys.exit(1)
         WSGIServer(app, bindAddress=(host, int(port))).run()

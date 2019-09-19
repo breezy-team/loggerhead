@@ -18,24 +18,26 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import urllib
-
 import simplejson
 
 from paste.httpexceptions import HTTPServerError
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from breezy import osutils, urlutils
+
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 class ChangeLogUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.changelog'
+    template_name = 'changelog'
 
     def get_values(self, path, kwargs, headers):
         history = self._history
         revid = self.get_revid()
         filter_file_id = kwargs.get('filter_file_id', None)
+        if filter_file_id is not None:
+            filter_file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(filter_file_id))
         query = kwargs.get('q', None)
         start_revid = history.fix_revid(kwargs.get('start_revid', None))
         orig_start_revid = start_revid
@@ -67,7 +69,7 @@ class ChangeLogUI(TemplatedBranchView):
             data = {}
             for i, c in enumerate(changes):
                 c.index = i
-                data[str(i)] = urllib.quote(urllib.quote(c.revid, safe=''))
+                data[str(i)] = urlutils.quote(urlutils.quote_from_bytes(c.revid, safe=''))
         except:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')

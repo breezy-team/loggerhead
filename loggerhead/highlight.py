@@ -16,7 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import bzrlib.osutils
+import breezy.osutils
 import cgi
 
 from pygments import highlight as _highlight_func
@@ -37,7 +37,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
 
     if len(text) > MAX_HIGHLIGHT_SIZE:
-        return map(cgi.escape,  bzrlib.osutils.split_lines(text))
+        return map(cgi.escape,  breezy.osutils.split_lines(text))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
@@ -50,6 +50,6 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
             lexer = TextLexer(encoding=encoding)
 
     hl_lines = _highlight_func(text, lexer, formatter)
-    hl_lines = bzrlib.osutils.split_lines(hl_lines)
+    hl_lines = breezy.osutils.split_lines(hl_lines)
 
     return hl_lines

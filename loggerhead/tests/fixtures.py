@@ -37,7 +37,7 @@ class SampleBranch(Fixture):
         self.testcase.build_tree_contents(
             (filename, self.filecontents) for filename in filenames)
         for filename in filenames:
-            self.tree.add(filename, '%s-id' % filename)
+            self.tree.add(filename, ('%s-id' % filename).encode('utf-8'))
         self.fileid = self.tree.path2id('myfilename')
         self.msg = 'a very exciting commit message <'
         self.revid = self.tree.commit(message=self.msg)

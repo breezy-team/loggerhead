@@ -1,8 +1,14 @@
 What's changed in loggerhead?
 =============================
 
-NEXT
+1.20.0
 ----
+
+    - Port to Breezy (https://www.breezy-vcs.org/). (Jelmer Vernooĳ)
+
+    - Port to Python 3. (Jelmer Vernooĳ)
+
+    - Serve-branches has been renamed to 'loggerhead-serve'. (Jelmer Vernooĳ)
 
     - Fixed weird icon in file lists (e.g. revision summaries) when a file or
       directory with a blank name was listed. (Cruz Bishop, #387337).

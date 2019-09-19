@@ -18,7 +18,7 @@
 
 """Loggerhead is a web viewer for projects in bazaar"""
 
-from distutils.core import setup
+from setuptools import setup
 
 import loggerhead
 
@@ -31,16 +31,15 @@ setup(
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
     scripts = [
-        "serve-branches",
-        "loggerhead.wsgi",
+        "loggerhead-serve",
         ],
     packages = ["loggerhead",
                 "loggerhead/apps",
                 "loggerhead/controllers",
                 "loggerhead/middleware",
                 "loggerhead/templates",
-                "bzrlib.plugins.loggerhead"],
-    package_dir={'bzrlib.plugins.loggerhead':'.'},
+                "breezy.plugins.loggerhead"],
+    package_dir={'breezy.plugins.loggerhead':'.'},
     package_data = {"loggerhead": ["templates/*.pt",
                                    "static/css/*.css",
                                    "static/javascript/*.js",
@@ -68,9 +67,11 @@ setup(
                                    "static/javascript/yui/build/yui-base/*",
                                    "static/images/*"]},
     data_files = [
-        ('share/man/man1', ['serve-branches.1']),
+        ('share/man/man1', ['loggerhead-serve.1']),
         ('share/doc/loggerhead', ['apache-loggerhead.conf',
                                   'loggerheadd',
-                                  'bazaar.conf']),
+                                  'breezy.conf']),
         ],
+    install_requires=['simplejson', 'paste', 'bleach'],
+    testsuite='loggerhead.tests.test_suite',
     )

@@ -1,6 +1,8 @@
+from __future__ import absolute_import
+
 import os
 
-from loggerhead.tests.test_simple import BasicTests
+from .test_simple import BasicTests
 
 
 class TestCornerCases(BasicTests):
@@ -26,19 +28,19 @@ class TestCornerCases(BasicTests):
         self.addFileAndCommit('myfilename', msg)
 
         # Make a commit that changes the execute bit of 'myfilename'.
-        os.chmod('myfilename', 0755)
+        os.chmod('myfilename', 0o755)
         newrevid = self.tree.commit(message='make something executable')
 
         # Check that it didn't break things.
         app = self.setUpLoggerhead()
-        res = app.get('/revision/'+newrevid)
-        res.mustcontain('executable')
+        res = app.get('/revision/'+newrevid.decode('utf-8'))
+        res.mustcontain(b'executable')
 
     def test_revision_escapes_commit_message(self):
         """XXX."""
         self.createBranch()
 
-        msg = '<b>hi</b>'
+        msg = b'<b>hi</b>'
         self.addFileAndCommit('myfilename', msg)
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')

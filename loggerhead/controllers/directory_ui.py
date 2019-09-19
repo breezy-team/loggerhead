@@ -20,33 +20,33 @@ import datetime
 import logging
 import stat
 
-from bzrlib import branch, errors
+from breezy import branch, errors, urlutils
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 class DirEntry(object):
 
     def __init__(self, dirname, parity, branch):
-        self.dirname = dirname
+        self.dirname = urlutils.unquote(dirname)
         self.parity = parity
         self.branch = branch
         if branch is not None:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_change = datetime.datetime.utcfromtimestamp(
-                    branch.repository.get_revision(
-                        branch.last_revision()).timestamp)
-            except:
-                self.last_change = None
+                self.last_revision = branch.repository.get_revision(branch.last_revision())
+                self.last_change_time = datetime.datetime.utcfromtimestamp(self.last_revision.timestamp)
+            except errors.NoSuchRevision:
+                self.last_revision = None
+                self.last_change_time = None
 
 
 class DirectoryUI(TemplatedBranchView):
     """
     """
 
-    template_path = 'loggerhead.templates.directory'
+    template_name = 'directory'
 
     def __init__(self, static_url_base, transport, name):
 
@@ -72,15 +72,17 @@ class DirectoryUI(TemplatedBranchView):
         for d in listing:
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
-                if b.get_config().get_user_option('http_serve') == 'False':
-                    continue
             except:
+                # TODO(jelmer): don't catch all exceptions here
                 try:
                     if not stat.S_ISDIR(self.transport.stat(d).st_mode):
                         continue
                 except errors.NoSuchFile:
                     continue
                 b = None
+            else:
+                if not b.get_config().get_user_option_as_bool('http_serve', default=True):
+                    continue
             dirs.append(DirEntry(d, parity, b))
             parity = 1 - parity
         # Create breadcrumb trail

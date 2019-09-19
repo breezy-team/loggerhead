@@ -15,8 +15,13 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 
-def load_tests(standard_tests, module, loader):
-    standard_tests.addTests(loader.loadTestsFromModuleNames([
+from __future__ import absolute_import
+
+
+def test_suite():
+    import unittest
+    loader = unittest.TestLoader()
+    return loader.loadTestsFromNames([
         (__name__ + '.' + x) for x in [
             'test_controllers',
             'test_corners',
@@ -27,5 +32,4 @@ def load_tests(standard_tests, module, loader):
             'test_revision_ui',
             'test_templating',
             'test_util',
-        ]]))
-    return standard_tests
+        ]])

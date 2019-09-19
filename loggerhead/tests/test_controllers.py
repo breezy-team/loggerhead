@@ -14,6 +14,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from __future__ import absolute_import
+
 import tarfile
 import tempfile
 
@@ -27,10 +29,10 @@ from testtools.matchers import (
     Mismatch,
     )
 
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.tests.test_simple import (
+from ..apps.branch import BranchWSGIApp
+from ..controllers.annotate_ui import AnnotateUI
+from ..controllers.inventory_ui import InventoryUI
+from .test_simple import (
     BasicTests,
     consume_app,
     TestWithSimpleTree,
@@ -55,8 +57,8 @@ class TestInventoryUI(BasicTests):
     def test_get_filelist(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
-        inv = bzrbranch.repository.get_inventory(bzrbranch.last_revision())
-        self.assertEqual(1, len(inv_ui.get_filelist(inv, '', 'filename', 'head')))
+        revtree = bzrbranch.repository.revision_tree(bzrbranch.last_revision())
+        self.assertEqual(1, len(inv_ui.get_filelist(revtree, '', 'filename', 'head')))
 
     def test_smoke(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
@@ -65,23 +67,29 @@ class TestInventoryUI(BasicTests):
             {'SCRIPT_NAME': '/files', 'PATH_INFO': ''})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
-        self.assertContainsRe(content, 'filename')
+        self.assertContainsRe(content, b'filename')
 
     def test_no_content_for_HEAD(self):
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
             ['filename'])
         start, content = consume_app(inv_ui,
             {'SCRIPT_NAME': '/files', 'PATH_INFO': '',
-             'REQUEST_METHOD': 'HEAD'})
+             'REQUEST_METHOD': 'HEAD',
+             'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'})
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
-        self.assertEqual('', content)
+        self.assertEqual(b'', content)
 
     def test_get_values_smoke(self):
         branch = self.make_bzrbranch_for_tree_shape(['a-file'])
         branch_app = self.make_branch_app(branch)
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/files',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         inv_ui = branch_app.lookup_app(env)
         inv_ui.parse_args(env)
         values = inv_ui.get_values('', {}, {})
@@ -91,7 +99,10 @@ class TestInventoryUI(BasicTests):
         branch = self.make_bzrbranch_for_tree_shape(['a-file'])
         branch_app = self.make_branch_app(branch)
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/files',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         inv_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(inv_ui, env)
 
@@ -102,10 +113,10 @@ class TestRevisionUI(BasicTests):
         tree = self.make_branch_and_tree('.')
         self.build_tree_contents(shape1)
         tree.smart_add([])
-        tree.commit('msg 1', rev_id='rev-1')
+        tree.commit('msg 1', rev_id=b'rev-1')
         self.build_tree_contents(shape2)
         tree.smart_add([])
-        tree.commit('msg 2', rev_id='rev-2')
+        tree.commit('msg 2', rev_id=b'rev-2')
         branch = tree.branch
         self.addCleanup(branch.lock_read().unlock)
         return self.make_branch_app(branch)
@@ -113,18 +124,24 @@ class TestRevisionUI(BasicTests):
     def test_get_values(self):
         branch_app = self.make_branch_app_for_revision_ui([], [])
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/revision/2',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         rev_ui = branch_app.lookup_app(env)
         rev_ui.parse_args(env)
         self.assertIsInstance(rev_ui.get_values('', {}, []), dict)
 
     def test_add_template_values(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n')], [('file', 'new content\n')])
+                [('file', b'content\n')], [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/1/non-existent-file',
                'QUERY_STRING':'start_revid=1',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         revision_ui = branch_app.lookup_app(env)
         path = revision_ui.parse_args(env)
         values = revision_ui.get_values(path, revision_ui.kwargs, {})
@@ -133,11 +150,14 @@ class TestRevisionUI(BasicTests):
 
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n'), ('other-file', 'other\n')],
-                [('file', 'new content\n')])
+                [('file', b'content\n'), ('other-file', b'other\n')],
+                [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/head:',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         revision_ui = branch_app.lookup_app(env)
         revision_ui.parse_args(env)
         values = revision_ui.get_values('', {}, {})
@@ -149,10 +169,13 @@ class TestRevisionUI(BasicTests):
 
     def test_json_render_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [('file', 'content\n'), ('other-file', 'other\n')],
-                [('file', 'new content\n')])
+                [('file', b'content\n'), ('other-file', b'other\n')],
+                [('file', b'new content\n')])
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/revision/head:',
-                'REQUEST_METHOD': 'GET'}
+                'REQUEST_METHOD': 'GET',
+                'wsgi.url_scheme': 'http',
+                'SERVER_NAME': 'localhost',
+                'SERVER_PORT': '80'}
         revision_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revision_ui, env)
 
@@ -172,8 +195,8 @@ class TestAnnotateUI(BasicTests):
         return AnnotateUI(branch_app, branch_app.get_history)
 
     def test_annotate_file(self):
-        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
         ann_ui.args = ['rev2']
@@ -186,8 +209,8 @@ class TestAnnotateUI(BasicTests):
 
     def test_annotate_empty_comment(self):
         # Testing empty comment handling without breaking
-        history = [('rev1', 'old\nold\n', '.'), ('rev2', 'new\nold\n', '')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev2']
         ann_ui.get_values(
             'filename', kwargs={'file_id': 'file_id'}, headers={})
@@ -195,8 +218,8 @@ class TestAnnotateUI(BasicTests):
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation
         # must be present.
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
         annotate_info = ann_ui.get_values('filename',
             kwargs={'file_id': 'file_id'}, headers={})
@@ -204,15 +227,15 @@ class TestAnnotateUI(BasicTests):
         self.assertEqual(0, len(annotated))
 
     def test_annotate_nonexistent_file(self):
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
     def test_annotate_nonexistent_rev(self):
-        history = [('rev1', '', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history('file_id', history)
+        history = [(b'rev1', b'', '.')]
+        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['norev']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
@@ -223,22 +246,25 @@ class TestFileDiffUI(BasicTests):
     def make_branch_app_for_filediff_ui(self):
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-1-id', None, [
-            ('add', ('', 'root-id', 'directory', '')),
-            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+        rev1 = builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', '')),
+            ('add', ('filename', b'f-id', 'file', b'content\n'))],
             message="First commit.")
-        builder.build_snapshot('rev-2-id', None, [
-            ('modify', ('f-id', 'new content\n'))])
+        rev2 = builder.build_snapshot(None, [
+             ('modify', ('filename', b'new content\n'))])
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        return self.make_branch_app(branch)
+        return self.make_branch_app(branch), (rev1, rev2)
 
     def test_get_values_smoke(self):
-        branch_app = self.make_branch_app_for_filediff_ui()
+        branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/rev-2-id/rev-1-id/f-id',
-               'REQUEST_METHOD': 'GET'}
+               'PATH_INFO': '/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         filediff_ui = branch_app.lookup_app(env)
         filediff_ui.parse_args(env)
         values = filediff_ui.get_values('', {}, {})
@@ -247,10 +273,13 @@ class TestFileDiffUI(BasicTests):
         self.assertEqual('new content', chunks[0].diff[1].line)
 
     def test_json_render_smoke(self):
-        branch_app = self.make_branch_app_for_filediff_ui()
+        branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/rev-2-id/rev-1-id/f-id',
-               'REQUEST_METHOD': 'GET'}
+               'PATH_INFO': '/+json/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         filediff_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(filediff_ui, env)
 
@@ -260,20 +289,23 @@ class TestRevLogUI(BasicTests):
     def make_branch_app_for_revlog_ui(self):
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-id', None, [
-            ('add', ('', 'root-id', 'directory', '')),
-            ('add', ('filename', 'f-id', 'file', 'content\n'))],
+        revid = builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', '')),
+            ('add', ('filename', b'f-id', 'file', b'content\n'))],
             message="First commit.")
         builder.finish_series()
         branch = builder.get_branch()
         self.addCleanup(branch.lock_read().unlock)
-        return self.make_branch_app(branch)
+        return self.make_branch_app(branch), revid
 
     def test_get_values_smoke(self):
-        branch_app = self.make_branch_app_for_revlog_ui()
+        branch_app, revid = self.make_branch_app_for_revlog_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+revlog/rev-id',
-               'REQUEST_METHOD': 'GET'}
+               'PATH_INFO': '/+revlog/%s' % revid.decode('utf-8'),
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         revlog_ui = branch_app.lookup_app(env)
         revlog_ui.parse_args(env)
         values = revlog_ui.get_values('', {}, {})
@@ -281,9 +313,12 @@ class TestRevLogUI(BasicTests):
         self.assertEqual(values['entry'].comment, "First commit.")
 
     def test_json_render_smoke(self):
-        branch_app = self.make_branch_app_for_revlog_ui()
-        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/rev-id',
-               'REQUEST_METHOD': 'GET'}
+        branch_app, revid = self.make_branch_app_for_revlog_ui()
+        env = {'SCRIPT_NAME': '', 'PATH_INFO': '/+json/+revlog/%s' % revid.decode('utf-8'),
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         revlog_ui = branch_app.lookup_app(env)
         self.assertOkJsonResponse(revlog_ui, env)
 
@@ -295,7 +330,10 @@ class TestControllerHooks(BasicTests):
         # A hook that returns None doesn't influence the searching for
         # a controller.
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         myhook = lambda app, environ: None
         branch = self.make_branch('.')
         self.addCleanup(branch.lock_read().unlock)
@@ -308,7 +346,10 @@ class TestControllerHooks(BasicTests):
     def test_working_hook(self):
         # A hook can provide an app to use for a particular request.
         env = {'SCRIPT_NAME': '', 'PATH_INFO': '/custom',
-               'REQUEST_METHOD': 'GET'}
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
         myhook = lambda app, environ: "I am hooked"
         branch = self.make_branch('.')
         self.addCleanup(branch.lock_read().unlock)
@@ -348,7 +389,7 @@ class TestDownloadUI(TestWithSimpleTree):
         app = self.setUpLoggerhead()
         response = app.get('/download/1/myfilename-id/myfilename')
         self.assertEqual(
-            'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
         self.assertThat(
             response,
             MatchesDownloadHeaders('myfilename', 'application/octet-stream'))

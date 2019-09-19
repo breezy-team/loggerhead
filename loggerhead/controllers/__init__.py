@@ -17,16 +17,19 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 
-import bzrlib.errors
+import breezy.errors
 import simplejson
 import time
+
+from breezy import osutils
 
 from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
 from paste.request import path_info_pop, parse_querystring
 
-from loggerhead import util
-from loggerhead.templatefunctions import templatefunctions
-from loggerhead.zptsupport import load_template
+from .. import templates
+from .. import util
+from ..templatefunctions import templatefunctions
+from ..zptsupport import load_template
 
 
 class BufferingWriter(object):
@@ -39,7 +42,7 @@ class BufferingWriter(object):
         self.buf_limit = buf_limit
 
     def flush(self):
-        self.writefunc(''.join(self.buf))
+        self.writefunc(b''.join(self.buf))
         self.buf = []
         self.buflen = 0
 
@@ -53,7 +56,7 @@ class BufferingWriter(object):
 
 class TemplatedBranchView(object):
 
-    template_path = None
+    template_name = None
     supports_json = False
 
     def __init__(self, branch, history_callable):
@@ -81,7 +84,10 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = unicode('/'.join(args[1:]), 'utf-8')
+            path = '/'.join(args[1:])
+            if isinstance(path, bytes):
+                # Python 2
+                path = path.decode('utf-8')
         self.args = args
         self.kwargs = kwargs
         return path
@@ -109,7 +115,7 @@ class TemplatedBranchView(object):
             headers['Content-Type'] = 'application/json'
         elif 'Content-Type' not in headers:
             headers['Content-Type'] = 'text/html'
-        writer = start_response("200 OK", headers.items())
+        writer = start_response("200 OK", list(headers.items()))
         if environ.get('REQUEST_METHOD') == 'HEAD':
             # No content for a HEAD request
             return []
@@ -117,10 +123,11 @@ class TemplatedBranchView(object):
         w = BufferingWriter(writer, 8192)
         if environ.get('loggerhead.as_json'):
             w.write(simplejson.dumps(values,
-                default=util.convert_to_json_ready))
+                default=util.convert_to_json_ready).encode('utf-8'))
         else:
             self.add_template_values(values)
-            template = load_template(self.template_path)
+            template = load_template(
+                    '%s.%s' % (templates.__name__, self.template_name))
             template.expand_into(w, **values)
         w.flush()
         self.log.info(
@@ -135,8 +142,11 @@ class TemplatedBranchView(object):
         if len(self.args) > 0 and self.args != ['']:
             try:
                 revid = h.fix_revid(self.args[0])
-            except bzrlib.errors.NoSuchRevision:
+            except breezy.errors.NoSuchRevision:
                 raise HTTPNotFound;
+            assert isinstance(revid, bytes)
         else:
             revid = h.last_revid
+        if revid is not None and not isinstance(revid, bytes):
+            raise TypeError(revid)
         return revid

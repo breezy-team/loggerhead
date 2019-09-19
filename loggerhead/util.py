@@ -19,6 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
+from __future__ import print_function
+
 import base64
 import datetime
 import logging
@@ -30,14 +32,19 @@ import sys
 import os
 import subprocess
 
+from breezy.sixish import (
+    text_type,
+    viewitems,
+    )
+
 try:
     from xml.etree import ElementTree as ET
 except ImportError:
     from elementtree import ElementTree as ET
 
-from bzrlib import urlutils
+from breezy import urlutils
 
-from simpletal.simpleTALUtils import HTMLStructureCleaner
+import bleach
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -73,20 +80,27 @@ def date_time(value):
 
 
 def _approximatedate(date):
-    delta = datetime.datetime.now() - date
-    if abs(delta) > datetime.timedelta(1, 0, 0):
-        # far in the past or future, display the date
-        return date_day(date)
+    if date is None:
+        return 'Never'
+    delta = datetime.datetime.utcnow() - date
     future = delta < datetime.timedelta(0, 0, 0)
     delta = abs(delta)
+    years = delta.days // 365
+    months = delta.days // 30 # This is approximate.
     days = delta.days
-    hours = delta.seconds / 3600
+    hours = delta.seconds // 3600
     minutes = (delta.seconds - (3600*hours)) / 60
     seconds = delta.seconds % 60
     result = ''
     if future:
         result += 'in '
-    if days != 0:
+    if years != 0:
+        amount = years
+        unit = 'year'
+    elif months != 0:
+        amount = months
+        unit = 'month'
+    elif days != 0:
         amount = days
         unit = 'day'
     elif hours != 0:
@@ -100,10 +114,10 @@ def _approximatedate(date):
         unit = 'second'
     if amount != 1:
         unit += 's'
-    result += '%s %s' % (amount, unit)
+    result += '%s %s' % (int(amount), unit)
     if not future:
         result += ' ago'
-        return result
+    return result
 
 
 def _wrap_with_date_time_title(date, formatted_date):
@@ -126,14 +140,14 @@ class Container(object):
     def __init__(self, _dict=None, **kw):
         self._properties = {}
         if _dict is not None:
-            for key, value in _dict.iteritems():
+            for key, value in viewitems(_dict):
                 setattr(self, key, value)
-        for key, value in kw.iteritems():
+        for key, value in viewitems(kw):
             setattr(self, key, value)
 
     def __repr__(self):
         out = '{ '
-        for key, value in self.__dict__.iteritems():
+        for key, value in viewitems(self.__dict__):
             if key.startswith('_') or (getattr(self.__dict__[key],
                                        '__call__', None) is not None):
                 continue
@@ -262,21 +276,24 @@ def fill_div(s):
         return s
     elif not s.strip():
         return '&nbsp;'
-    else:
+    elif isinstance(s, bytes):
         try:
             s = s.decode('utf-8')
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
         return s
+    elif isinstance(s, text_type):
+        return s
+    else:
+        return repr(s)
 
-HSC = HTMLStructureCleaner()
 
 def fixed_width(s):
     """
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
     chop up the string.
     """
-    if not isinstance(s, unicode):
+    if not isinstance(s, text_type):
         # this kinda sucks.  file contents are just binary data, and no
         # encoding metadata is stored, so we need to guess.  this is probably
         # okay for most code, but for people using things like KOI-8, this
@@ -289,7 +306,7 @@ def fixed_width(s):
 
     s = html_escape(s).expandtabs().replace(' ', NONBREAKING_SPACE)
 
-    return HSC.clean(s).replace('\n', '<br/>')
+    return bleach.clean(s).replace('\n', '<br/>')
 
 
 def fake_permissions(kind, executable):
@@ -456,7 +473,7 @@ def directory_breadcrumbs(path, is_root, view):
     return breadcrumbs
 
 
-def branch_breadcrumbs(path, inv, view):
+def branch_breadcrumbs(path, tree, view):
     """
     Generate breadcrumb information from the branch path given
 
@@ -464,7 +481,7 @@ def branch_breadcrumbs(path, inv, view):
 
     Arguments:
     path -- The path to convert into breadcrumbs
-    inv -- Inventory to get file information from
+    tree -- Tree to get file information from
     view -- The type of view we are showing (files, changes etc)
     """
     dir_parts = path.strip('/').split('/')
@@ -497,7 +514,7 @@ def decorator(unbound):
 def lsprof(f):
 
     def _f(*a, **kw):
-        from loggerhead.lsprof import profile
+        from .loggerhead.lsprof import profile
         import cPickle
         z = time.time()
         ret, stats = profile(f, *a, **kw)
@@ -548,7 +565,7 @@ _valid = (
 
 
 def set_context(map):
-    t_context.map = dict((k, v) for (k, v) in map.iteritems() if k in _valid)
+    t_context.map = dict((k, v) for (k, v) in viewitems(map) if k in _valid)
 
 
 def get_context(**overrides):
@@ -567,7 +584,7 @@ def get_context(**overrides):
         map['remember'] = t_context.map.get('remember', None)
     else:
         map.update(t_context.map)
-    overrides = dict((k, v) for (k, v) in overrides.iteritems() if k in _valid)
+    overrides = dict((k, v) for (k, v) in viewitems(overrides) if k in _valid)
     map.update(overrides)
     return map
 
@@ -605,7 +622,7 @@ class Reloader(object):
     @classmethod
     def restart_with_reloader(cls):
         """Based on restart_with_monitor from paste.script.serve."""
-        print 'Starting subprocess with file monitor'
+        print('Starting subprocess with file monitor')
         while True:
             args = [sys.executable] + sys.argv
             new_environ = os.environ.copy()
@@ -618,7 +635,7 @@ class Reloader(object):
                     exit_code = proc.wait()
                     proc = None
                 except KeyboardInterrupt:
-                    print '^C caught in monitor process'
+                    print('^C caught in monitor process')
                     return 1
             finally:
                 if (proc is not None
@@ -633,7 +650,7 @@ class Reloader(object):
             # a monitor, any exit code will restart
             if exit_code != 3:
                 return exit_code
-            print '-'*20, 'Restarting', '-'*20
+            print('-'*20, 'Restarting', '-'*20)
 
 
 def convert_file_errors(application):
@@ -641,7 +658,7 @@ def convert_file_errors(application):
     def new_application(environ, start_response):
         try:
             return application(environ, start_response)
-        except (IOError, OSError), e:
+        except (IOError, OSError) as e:
             import errno
             from paste import httpexceptions
             if e.errno == errno.ENOENT:

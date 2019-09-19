@@ -17,31 +17,33 @@
 """The WSGI application for serving a Bazaar branch."""
 
 import logging
-import urllib
 import sys
+import wsgiref.util
 
-import bzrlib.branch
-import bzrlib.errors
-from bzrlib.hooks import Hooks
-import bzrlib.lru_cache
+import breezy.branch
+import breezy.errors
+from breezy.hooks import Hooks
+import breezy.lru_cache
+from breezy.sixish import viewitems
+from breezy import urlutils
 
 from paste import request
 from paste import httpexceptions
 
-from loggerhead.apps import static_app
-from loggerhead.controllers.annotate_ui import AnnotateUI
-from loggerhead.controllers.view_ui import ViewUI
-from loggerhead.controllers.atom_ui import AtomUI
-from loggerhead.controllers.changelog_ui import ChangeLogUI
-from loggerhead.controllers.diff_ui import DiffUI
-from loggerhead.controllers.download_ui import DownloadUI, DownloadTarballUI
-from loggerhead.controllers.filediff_ui import FileDiffUI
-from loggerhead.controllers.inventory_ui import InventoryUI
-from loggerhead.controllers.revision_ui import RevisionUI
-from loggerhead.controllers.revlog_ui import RevLogUI
-from loggerhead.controllers.search_ui import SearchUI
-from loggerhead.history import History
-from loggerhead import util
+from ..apps import static_app
+from ..controllers.annotate_ui import AnnotateUI
+from ..controllers.view_ui import ViewUI
+from ..controllers.atom_ui import AtomUI
+from ..controllers.changelog_ui import ChangeLogUI
+from ..controllers.diff_ui import DiffUI
+from ..controllers.download_ui import DownloadUI, DownloadTarballUI
+from ..controllers.filediff_ui import FileDiffUI
+from ..controllers.inventory_ui import InventoryUI
+from ..controllers.revision_ui import RevisionUI
+from ..controllers.revlog_ui import RevLogUI
+from ..controllers.search_ui import SearchUI
+from ..history import History
+from .. import util
 
 
 _DEFAULT = object()
@@ -63,7 +65,7 @@ class BranchWSGIApp(object):
         self.branch_link = branch_link  # Currently only used in Launchpad
         self.log = logging.getLogger('loggerhead.%s' % (friendly_name,))
         if graph_cache is None:
-            graph_cache = bzrlib.lru_cache.LRUCache(10)
+            graph_cache = breezy.lru_cache.LRUCache(10)
         self.graph_cache = graph_cache
         self.is_root = is_root
         self.served_url = served_url
@@ -84,7 +86,7 @@ class BranchWSGIApp(object):
             # Only import the cache if we're going to use it.
             # This makes sqlite optional
             try:
-                from loggerhead.changecache import RevInfoDiskCache
+                from ..changecache import RevInfoDiskCache
             except ImportError:
                 self.log.debug("Couldn't load python-sqlite,"
                                " continuing without using a cache")
@@ -92,18 +94,32 @@ class BranchWSGIApp(object):
                 revinfo_disk_cache = RevInfoDiskCache(cache_path)
         return History(
             self.branch, self.graph_cache,
-            revinfo_disk_cache=revinfo_disk_cache, cache_key=self.friendly_name)
+            revinfo_disk_cache=revinfo_disk_cache,
+            cache_key=(self.friendly_name.encode('utf-8') if self.friendly_name else None))
+
+    # Before the addition of this method, clicking to sort by date from 
+    # within a branch caused a jump up to the top of that branch.
+    def sort_url(self, *args, **kw):
+        if isinstance(args[0], list):
+            args = args[0]
+        qs = []
+        for k, v in viewitems(kw):
+            if v is not None:
+                qs.append('%s=%s' % (k, urlutils.quote(v)))
+        qs = '&'.join(qs)
+        path_info = self._path_info.strip('/').split('?')[0]
+        path_info += '?' + qs
+        return self._url_base + '/' + path_info
 
     def url(self, *args, **kw):
         if isinstance(args[0], list):
             args = args[0]
         qs = []
-        for k, v in kw.iteritems():
+        for k, v in viewitems(kw):
             if v is not None:
-                qs.append('%s=%s' % (k, urllib.quote(v)))
+                qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)
-        path_info = urllib.quote(
-            unicode('/'.join(args)).encode('utf-8'), safe='/~:')
+        path_info = urlutils.quote('/'.join(args), safe='/~:')
         if qs:
             path_info += '?' + qs
         return self._url_base + path_info
@@ -147,14 +163,15 @@ class BranchWSGIApp(object):
         return change.date
 
     def public_branch_url(self):
-        return self.branch.get_config().get_user_option('public_branch')
+        return self.branch.get_public_branch()
 
     def lookup_app(self, environ):
         # Check again if the branch is blocked from being served, this is
         # mostly for tests. It's already checked in apps/transport.py
-        if self.branch.get_config().get_user_option('http_serve') == 'False':
+        if not self.branch.get_config().get_user_option_as_bool('http_serve', default=True):
             raise httpexceptions.HTTPNotFound()
         self._url_base = environ['SCRIPT_NAME']
+        self._path_info = environ['PATH_INFO']
         self._static_url_base = environ.get('loggerhead.static.url')
         if self._static_url_base is None:
             self._static_url_base = self._url_base
@@ -164,13 +181,7 @@ class BranchWSGIApp(object):
             if public_branch is not None:
                 self.served_url = public_branch
             else:
-                # Loggerhead only supports serving .bzr/ on local branches, so
-                # we shouldn't suggest something that won't work.
-                try:
-                    util.local_path_from_url(self.branch.base)
-                    self.served_url = self.url([])
-                except bzrlib.errors.InvalidURL:
-                    self.served_url = None
+                self.served_url = wsgiref.util.application_uri(environ)
         for hook in self.hooks['controller']:
             controller = hook(self, environ)
             if controller is not None:
@@ -190,8 +201,7 @@ class BranchWSGIApp(object):
         raise httpexceptions.HTTPNotFound()
 
     def app(self, environ, start_response):
-        self.branch.lock_read()
-        try:
+        with self.branch.lock_read():
             try:
                 c = self.lookup_app(environ)
                 return c(environ, start_response)
@@ -199,8 +209,6 @@ class BranchWSGIApp(object):
                 environ['exc_info'] = sys.exc_info()
                 environ['branch'] = self
                 raise
-        finally:
-            self.branch.unlock()
 
 
 class BranchWSGIAppHooks(Hooks):
@@ -210,7 +218,7 @@ class BranchWSGIAppHooks(Hooks):
     def __init__(self):
         """Create the default hooks.
         """
-        Hooks.__init__(self, "bzrlib.plugins.loggerhead.apps.branch",
+        Hooks.__init__(self, "breezy.plugins.loggerhead.apps.branch",
             "BranchWSGIApp.hooks")
         self.add_hook('controller',
             "Invoked when looking for the controller to use for a "

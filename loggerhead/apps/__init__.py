@@ -4,7 +4,7 @@ import os
 
 from paste import urlparser, fileapp
 
-from loggerhead.util import convert_file_errors
+from ..util import convert_file_errors
 
 static = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), 'static')

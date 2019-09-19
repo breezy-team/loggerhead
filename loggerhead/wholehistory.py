@@ -20,19 +20,23 @@
 import logging
 import time
 
-from bzrlib.revision import is_null, NULL_REVISION
-from bzrlib.tsort import merge_sort
+from breezy.revision import is_null, NULL_REVISION
+from breezy.sixish import (
+    viewitems,
+    viewkeys,
+    )
+from breezy.tsort import merge_sort
 
 
 def _strip_NULL_ghosts(revision_graph):
     """
-    Copied over from bzrlib meant as a temporary workaround for
+    Copied over from breezy meant as a temporary workaround for
     deprecated methods.
     """
     # Filter ghosts, and null:
     if NULL_REVISION in revision_graph:
         del revision_graph[NULL_REVISION]
-    for key, parents in revision_graph.iteritems():
+    for key, parents in viewitems(revision_graph):
         revision_graph[key] = tuple(parent for parent in parents if parent
             in revision_graph)
     return revision_graph
@@ -72,7 +76,7 @@ def compute_whole_history_data(branch):
         _rev_indices[revid] = len(_rev_info)
         _rev_info.append([(seq, revid, merge_depth, revno_str, end_of_merge), (), parents])
 
-    for revid in _revision_graph.iterkeys():
+    for revid in viewkeys(_revision_graph):
         if _rev_info[_rev_indices[revid]][0][2] == 0:
             continue
         for parent in _revision_graph[revid]:

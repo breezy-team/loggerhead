@@ -3,7 +3,7 @@ include HACKING
 include NEWS
 include README.txt
 include apache-loggerhead.conf
-include bazaar.conf
+include breezy.conf
 include loggerhead.conf.example
 include loggerheadd
 include Makefile

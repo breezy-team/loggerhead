@@ -14,9 +14,9 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from bzrlib import tests
+from breezy import tests
 
-from loggerhead.util import html_escape, html_format
+from ..util import html_escape, html_format
 
 
 class TestHTMLEscaping(tests.TestCase):

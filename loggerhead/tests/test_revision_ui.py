@@ -15,8 +15,9 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from __future__ import absolute_import
 
-from loggerhead.tests.test_simple import BasicTests
+from .test_simple import BasicTests
 
 
 class TestRevisionUI(BasicTests):
@@ -43,4 +44,4 @@ class TestRevisionUI(BasicTests):
         # and the Authors are connected. However, that requires asserting the
         # exact HTML connections, which I wanted to avoid.
         res.mustcontain('Committer', 'Joe Example')
-        self.assertFalse('Author(s)' in res.body)
+        self.assertFalse(b'Author(s)' in res.body)

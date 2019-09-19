@@ -24,60 +24,68 @@ import urllib
 
 from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
 
-from bzrlib import errors
-from bzrlib.revision import is_null as is_null_rev
+from breezy import (
+    errors,
+    osutils,
+    urlutils,
+    )
+from breezy.revision import is_null as is_null_rev
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
+from .. import util
+from ..controllers import TemplatedBranchView
 
 
 
 def dirname(path):
     if path is not None:
         path = path.rstrip('/')
-        path = urllib.quote(posixpath.dirname(path).encode('utf-8'))
+        path = urlutils.escape(posixpath.dirname(path))
     return path
 
 
 class InventoryUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.inventory'
+    template_name = 'inventory'
     supports_json = True
 
-    def get_filelist(self, inv, path, sort_type, revno_url):
+    def get_filelist(self, tree, path, sort_type, revno_url):
         """
         return the list of all files (and their attributes) within a given
         path subtree.
 
-        @param inv: The inventory.
-        @param path: The path of a directory within the inventory.
+        @param tree: The tree
+        @param path: The path of a directory within the tree.
         @param sort_type: How to sort the results... XXX.
         """
-        file_id = inv.path2id(path)
-        dir_ie = inv[file_id]
         file_list = []
 
-        if dir_ie.kind != 'directory':
+        if tree.kind(path) != 'directory':
             raise HTTPMovedPermanently(self._branch.context_url(['/view', revno_url, path]))
 
         revid_set = set()
 
-        for filename, entry in dir_ie.children.iteritems():
-            revid_set.add(entry.revision)
+        child_entries = []
+
+        for entry in tree.iter_child_entries(path):
+            child_path = osutils.pathjoin(path, entry.name)
+            child_revision = tree.get_file_revision(child_path)
+            revid_set.add(child_revision)
+            child_entries.append((child_path, entry, child_revision))
 
         change_dict = {}
         for change in self._history.get_changes(list(revid_set)):
             change_dict[change.revid] = change
 
-        for filename, entry in dir_ie.children.iteritems():
-            pathname = filename
+        for child_path, entry, child_revision in child_entries:
+            pathname = entry.name
+            contents_changed_rev = None
             if entry.kind == 'directory':
                 pathname += '/'
-            if path == '':
-                absolutepath = pathname
+                size = None
             else:
-                absolutepath = path + '/' + pathname
-            revid = entry.revision
+                size = entry.text_size
+
+            file_timestamp = change_dict[child_revision].timestamp
 
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
@@ -85,21 +93,26 @@ class InventoryUI(TemplatedBranchView):
             # including the revision id and having a separate request to get
             # back the revision info.
             file = util.Container(
-                filename=filename, executable=entry.executable,
-                kind=entry.kind, absolutepath=absolutepath,
-                file_id=entry.file_id, size=entry.text_size, revid=revid,
-                change=change_dict[revid])
+                filename=entry.name, executable=entry.executable,
+                kind=entry.kind, absolutepath=child_path,
+                file_id=entry.file_id, size=size, revid=child_revision,
+                change=change_dict[child_revision], contents_changed_rev=contents_changed_rev)
             file_list.append(file)
 
         if sort_type == 'filename':
             file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
         elif sort_type == 'size':
-            file_list.sort(key=lambda x: x.size)
+            def size_key(x):
+                if x.size is None:
+                    return -1
+                return x.size
+            file_list.sort(key=size_key)
         elif sort_type == 'date':
-            file_list.sort(key=lambda x: x.change.date)
+            file_list.sort(key=lambda x: x.change.date, reverse=True)
 
-        # Always sort directories first.
-        file_list.sort(key=lambda x: x.kind != 'directory')
+        if sort_type != 'date':
+        # Don't always sort directories first.
+            file_list.sort(key=lambda x: x.kind != 'directory')
 
         return file_list
 
@@ -137,14 +150,14 @@ class InventoryUI(TemplatedBranchView):
             updir = dirname(path)
 
         if not is_null_rev(revid):
-            change = history.get_changes([ revid ])[0]
+            change = history.get_changes([revid])[0]
             # If we're looking at the tip, use head: in the URL instead
             if revid == branch.last_revision():
                 revno_url = 'head:'
             else:
                 revno_url = history.get_revno(revid)
             history.add_branch_nicks(change)
-            filelist = self.get_filelist(rev_tree.inventory, path, sort_type, revno_url)
+            filelist = self.get_filelist(rev_tree, path, sort_type, revno_url)
 
         else:
             start_revid = None

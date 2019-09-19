@@ -17,7 +17,7 @@ from optparse import OptionParser
 import sys
 import tempfile
 
-from bzrlib import config
+from breezy import config
 
 _temporary_sql_dir = None
 
@@ -120,7 +120,7 @@ class LoggerheadConfig(object):
 
     def get_option(self, option):
         """Get the value for the config option, either
-        from ~/.bazaar/bazaar.conf or from the command line.
+        from ~/.config/breezy/breezy.conf or from the command line.
         All loggerhead-specific settings start with 'http_'
         """
         global_config = config.GlobalConfig().get_user_option('http_'+option)

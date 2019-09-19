@@ -16,8 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from loggerhead.controllers import TemplatedBranchView
-from loggerhead import search
+from ..controllers import TemplatedBranchView
+from .. import search
 
 
 class SearchUI(TemplatedBranchView):
@@ -26,7 +26,7 @@ class SearchUI(TemplatedBranchView):
     Class to output progressive search result terms.
     """
 
-    template_path = 'loggerhead.templates.search'
+    template_name = 'search'
 
     def get_values(self, path, kwargs, response):
         """

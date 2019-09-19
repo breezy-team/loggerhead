@@ -1,7 +1,7 @@
 Loggerhead:  A web viewer for ``bzr`` branches
 ==============================================
 
-Loggerhead is a web viewer for projects in Bazaar. It can be used to navigate 
+Loggerhead is a web viewer for projects in Breezy. It can be used to navigate
 a branch history, annotate files, view patches, perform searches, etc.
 Loggerhead is heavily based on `bazaar-webserve
 <https://launchpad.net/bzr-webserve>`_, which was, in turn, loosely
@@ -53,12 +53,12 @@ Running the Standalone Loggerhead Server
 ----------------------------------------
 
 After installing all the dependencies, you should be able to run
-:command:`serve-branches` with the branch you want to serve on the
+:command:`loggerhead-serve` with the branch you want to serve on the
 command line:
 
 .. code-block:: sh
 
-    ./serve-branches ~/path/to/branch
+    ./loggerhead-serve ~/path/to/branch
 
 By default, the script listens on port 8080, so head to
 http://localhost:8080/ in your browser to see the branch.
@@ -70,7 +70,7 @@ You may update the Bazaar branches being viewed at any time.
 Loggerhead will notice and refresh, and Bazaar uses its own branch
 locking to prevent corruption.
 
-See :doc:`serve-branches` for all command line options.
+See :doc:`loggerhead-serve` for all command line options.
 
 Running Loggerhead as a Daemon
 ------------------------------
@@ -84,7 +84,7 @@ To run Loggerhead as a linux daemon:
    $ sudo cp ./loggerheadd /etc/init.d
 
 2) Edit the file to configure where your Loggerhead is installed, and which
-   serve-branches options you would like.
+   loggerhead-serve options you would like.
 
 .. code-block:: sh
 
@@ -101,16 +101,16 @@ To run Loggerhead as a linux daemon:
    $ sudo chkconfig --add loggerheadd
 
 
-Using Loggerhead as a Bazaar Plugin
-------------------------------------
+Using Loggerhead as a Breezy Plugin
+-----------------------------------
 
-This branch contains experimental support for using Loggerhead as a Bazaar
+This branch contains experimental support for using Loggerhead as a Breezy
 plugin.  To use it, place the top-level Loggerhead directory (the one
-containing COPYING.txt) at ``~/.bazaar/plugins/loggerhead``.  E.g.:
+containing COPYING.txt) at ``~/.config/breezy/plugins/loggerhead``.  E.g.:
 
 .. code-block:: sh
 
-   $ bzr branch lp:loggerhead ~/.bazaar/plugins/loggerhead
+   $ bzr branch lp:loggerhead ~/.config/breezy/plugins/loggerhead
    $ cd ~/myproject
    $ bzr serve --http
 
@@ -118,7 +118,7 @@ containing COPYING.txt) at ``~/.bazaar/plugins/loggerhead``.  E.g.:
 Using a Config File
 -------------------
 
-To hide branches from being displayed, add to ``~/.bazaar/locations.conf``,
+To hide branches from being displayed, add to ``~/.config/breezy/locations.conf``,
 under the branch's section:
 
 .. code-block:: ini
@@ -132,7 +132,7 @@ More configuration options to come soon.
 Serving Loggerhead behind Apache
 --------------------------------
 
-If you want to view Bazaar branches from your existing Apache
+If you want to view Breezy branches from your existing Apache
 installation, you'll need to configure Apache to proxy certain
 requests to Loggerhead.  Adding lines like this to your Apache
 configuration is one way to do this:
@@ -144,7 +144,7 @@ configuration is one way to do this:
         ProxyPassReverse http://127.0.0.1:8080/branches/
     </Location>
 
-If Paste Deploy is installed, the :command:`serve-branches` script can be
+If Paste Deploy is installed, the :command:`loggerhead-serve` script can be
 run behind a proxy at the root of a site, but if you're running it at
 some path into the site, you'll need to specify it using
 ``--prefix=/some_path``.
@@ -154,8 +154,8 @@ Serving Loggerhead with mod_wsgi
 
 A second method for using Loggerhead with apache is to have apache itself
 execute Loggerhead via mod_wsgi.  You need to add configuration for apache and
-for bazaar to make this work.  Example config files are in the Loggerhead doc
-directory as apache-loggerhead.conf and bazaar.conf.  You can copy them into
+for breezy to make this work.  Example config files are in the Loggerhead doc
+directory as apache-loggerhead.conf and breezy.conf.  You can copy them into
 place and use them as a starting point following these directions:
 
 1) Install mod_wsgi.  On Ubuntu and other Debian derived distros::
@@ -166,19 +166,20 @@ place and use them as a starting point following these directions:
 
     su -c yum install mod_wsgi
 
-2) Copy the bazaar.conf file where apache will find it (May be done for you if
+2) Copy the breezy.conf file where apache will find it (May be done for you if
    you installed Loggerhead from a distribution package)::
 
     # install -d -o apache -g apache -m 0755 /etc/loggerhead
-    # cp -p /usr/share/doc/loggerhead*/bazaar.conf /etc/loggerhead/
-    # ln -s /etc/loggerhead /var/www/.bazaar
+    # cp -p /usr/share/doc/loggerhead*/breezy.conf /etc/loggerhead/
+    # mkdir -p /var/www/.config
+    # ln -s /etc/loggerhead /var/www/.config/breezy
 
 3) Create the cache directory (May be done for you if you installed Loggerhead
    from a distribution package)::
 
     # install -d -o apache -g apache -m 0700 /var/cache/loggerhead/
 
-4) Edit /etc/loggerhead/bazaar.conf.  You need to set http_root_dir to the filesystem
+4) Edit /etc/loggerhead/breezy.conf.  You need to set http_root_dir to the filesystem
    path that you will find your bzr branches under.  Note that normal
    directories under that path will also be visible in Loggerhead.
 
@@ -188,7 +189,7 @@ place and use them as a starting point following these directions:
 
 6) Edit /etc/httpd/conf.d/loggerhead.conf to point to the url you desire to
    serve Loggerhead on.  This should match with the setting for
-   http_user_prefix in bazaar.conf
+   http_user_prefix in breezy.conf
 
 7) Restart apache and you should be able to start browsing
 
@@ -220,7 +221,7 @@ Command-Line Reference
 .. toctree::
    :maxdepth: 2
 
-   serve-branches
+   loggerhead-serve
 
 
 Support
