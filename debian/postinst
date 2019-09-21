@@ -1,5 +1,7 @@
-#!/bin/sh -e
+#!/bin/sh
 #DEBHELPER#
+
+set -e
 
 adduser --system --group --home / loggerhead > /dev/null 2>&1
 chown loggerhead /var/log/loggerhead

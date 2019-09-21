@@ -5,6 +5,7 @@ loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
   * Use secure copyright file specification URI.
   * Remove unnecessary X-Python{,3}-Version field in debian/control.
   * Use secure URI in debian/watch.
+  * Use set -e rather than passing -e on the shebang-line.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Sep 2019 21:34:07 +0000
 
