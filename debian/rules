@@ -14,7 +14,7 @@ get-orig-source: $(PKG)_$(VER)$(DTYPE).orig.tar.xz $(info I: $(PKG)_$(VER)$(DTYP
 	@
 
 %:
-	dh $* --with=python2 --buildsystem=python_distutils
+	dh $* --with=python2 --buildsystem=pybuild
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 CONCURRENCY = BZR_CONCURRENCY=$(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))

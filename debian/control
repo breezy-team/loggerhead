@@ -14,12 +14,12 @@ Build-Depends-Indep: bzr (<< 2.8.0),
                      python-sphinx,
                      python-subunit,
                      python-testtools
-Build-Depends: debhelper (>= 9),
-               python (>= 2.6.6-3),
+Build-Depends: python (>= 2.6.6-3),
                python-paste (>= 1.6),
                python-pkg-resources,
                python-simplejson,
-               python-simpletal
+               python-simpletal,
+               debhelper-compat (= 12)
 Standards-Version: 3.9.8
 Vcs-Bzr: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 Vcs-Browser: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
