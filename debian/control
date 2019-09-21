@@ -21,7 +21,6 @@ Build-Depends: debhelper (>= 9),
                python-simplejson,
                python-simpletal
 Standards-Version: 3.9.8
-X-Python-Version: >= 2.7
 Vcs-Bzr: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 Vcs-Browser: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 
