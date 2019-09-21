@@ -2,6 +2,7 @@ loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
   * Trim trailing whitespace.
+  * Use secure copyright file specification URI.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Sep 2019 21:34:07 +0000
 
