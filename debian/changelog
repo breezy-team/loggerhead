@@ -1,3 +1,9 @@
+loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
+
+  * New upstream snapshot.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Sep 2019 21:34:07 +0000
+
 loggerhead (1.19~bzr479+dfsg-3) unstable; urgency=medium
 
   * Bump debhelper to version 9.

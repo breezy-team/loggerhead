@@ -18,24 +18,25 @@
 #
 
 import simplejson
-import urllib
 
 from paste.httpexceptions import HTTPServerError
 
-from loggerhead import util
-from loggerhead.controllers import TemplatedBranchView
-from loggerhead.controllers.filediff_ui import diff_chunks_for_file
+from breezy import urlutils
+
+from .. import util
+from ..controllers import TemplatedBranchView
+from ..controllers.filediff_ui import diff_chunks_for_file
 
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
 
 def dq(p):
-    return urllib.quote(urllib.quote(p, safe=''))
+    return urlutils.quote(urlutils.quote(p, safe=''))
 
 
 class RevisionUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.revision'
+    template_name = 'revision'
     supports_json = True
 
     def get_values(self, path, kwargs, headers):
@@ -88,7 +89,7 @@ class RevisionUI(TemplatedBranchView):
             merged_in = None
 
         return {
-            'revid': revid,
+            'revid': revid.decode('utf-8'),
             'change': change,
             'file_changes': file_changes,
             'merged_in': merged_in,
@@ -121,9 +122,14 @@ class RevisionUI(TemplatedBranchView):
             items = [x for x in file_changes.text_changes if x.filename == path]
             if len(items) > 0:
                 item = items[0]
+                try:
+                    context_lines = int(self.kwargs['context'])
+                except (KeyError, ValueError):
+                    context_lines = None
                 diff_chunks = diff_chunks_for_file(
                     self._history._branch.repository, item.file_id,
-                    item.old_revision, item.new_revision)
+                    item.old_revision, item.new_revision,
+                    context_lines=context_lines)
             else:
                 diff_chunks = None
         else:

@@ -1,0 +1,14 @@
+./dist
+./loggerhead.egg-info
+./loggerhead.pid
+./logs
+build
+*.log
+_trial_temp
+loggerhead-memprofile
+./docs/_build/
+tags
+.project
+.pydevproject
+.testrepository
+MANIFEST

@@ -1,8 +1,14 @@
 What's changed in loggerhead?
 =============================
 
-NEXT
+1.20.0
 ----
+
+    - Port to Breezy (https://www.breezy-vcs.org/). (Jelmer Vernooĳ)
+
+    - Port to Python 3. (Jelmer Vernooĳ)
+
+    - Serve-branches has been renamed to 'loggerhead-serve'. (Jelmer Vernooĳ)
 
     - Fixed weird icon in file lists (e.g. revision summaries) when a file or
       directory with a blank name was listed. (Cruz Bishop, #387337).
@@ -10,6 +16,25 @@ NEXT
     - Add directory icons for directories in file lists (e.g. revision
       summaries). Previously they were using the file icon.
       (Cruz Bishop, #1053340).
+
+    - Format files under one kilobyte as "x bytes". (Cruz Bishop, #990217)
+
+    - Make the number of lines of context in embedded diffs on revision
+      pages configurable via a ``context`` query argument. (Paul Nixon)
+
+    - Add ``loggerhead/middleware`` and a few other files to the sdist.
+      (Toshio Kuratomi)
+
+    - Widen the line number boxes just a little bit. (Cruz Bishop, #310255)
+
+    - Use breaking word-wrap on the entire information box. (Cruz Bishop,
+      #258368)
+
+    - Add some more minor UI changes to do with rounded corners. (Cruz
+      Bishop)
+
+    - Set line-height on <pre> elements in file views, fixing misaligned
+      line numbers in some browsers. (Colin Watson)
 
 1.18.2 [12Sep2012]
 ------------------

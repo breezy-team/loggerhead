@@ -5,8 +5,7 @@
     }
 .viewRev {
     border-right: none;
-    white-space: nowrap;
-    width: 1px;
+    width: 20%;
     padding: .3em .6em;
     }
 .viewComm,
@@ -28,6 +27,7 @@
 .viewLine pre,
 .viewCont pre {
     font-family: 'UbuntuBeta Mono', 'Ubuntu Mono', monospace;
+    line-height: 1.1;
     }
 .viewLine pre {
     text-align: right;

@@ -1,17 +1,19 @@
 import urllib
 
-from loggerhead.controllers import TemplatedBranchView
+from breezy import osutils, urlutils
+
+from ..controllers import TemplatedBranchView
 
 
 class RevLogUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.revlog'
+    template_name = 'revlog'
     supports_json = True
 
     def get_values(self, path, kwargs, headers):
         history = self._history
 
-        revid = urllib.unquote(self.args[0])
+        revid = urlutils.unquote_to_bytes(osutils.safe_utf8(self.args[0]))
 
         change = history.get_changes([revid])[0]
         file_changes = history.get_file_changes(change)

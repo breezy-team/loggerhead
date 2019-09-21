@@ -18,28 +18,22 @@
 
 import threading
 
-from bzrlib import branch, errors, lru_cache, urlutils
-from bzrlib.config import LocationConfig
-from bzrlib.smart import request
-from bzrlib.transport import get_transport
-from bzrlib.transport.http import wsgi
+from breezy import branch, errors, lru_cache, urlutils
+from breezy.config import LocationConfig
+from breezy.bzr.smart import request
+import breezy.ui
+from breezy.transport import get_transport
+from breezy.transport.http import wsgi
 
 from paste.request import path_info_pop
 from paste import httpexceptions
 from paste import urlparser
 
-from loggerhead import util
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps import favicon_app, robots_app, static_app
-from loggerhead.controllers.directory_ui import DirectoryUI
+from .. import util
+from ..apps.branch import BranchWSGIApp
+from ..apps import favicon_app, robots_app, static_app
+from ..controllers.directory_ui import DirectoryUI
 
-# TODO: Use bzrlib.ui.bool_from_string(), added in bzr 1.18
-_bools = {
-    'yes': True, 'no': False,
-    'on': True, 'off': False,
-    '1': True, '0': False,
-    'true': True, 'false': False,
-    }
 
 class BranchesFromTransportServer(object):
 
@@ -103,10 +97,7 @@ class BranchesFromTransportServer(object):
                 return urlparser.make_static(None, path)
 
     def check_serveable(self, config):
-        value = config.get_user_option('http_serve')
-        if value is None:
-            return
-        elif not _bools.get(value.lower(), True):
+        if not config.get_user_option_as_bool('http_serve', default=True):
             raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):

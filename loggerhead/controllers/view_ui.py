@@ -19,13 +19,16 @@
 
 import os
 
-from bzrlib.errors import (
+from breezy.errors import (
     BinaryFile,
     NoSuchId,
     NoSuchRevision,
     )
-import bzrlib.textfile
-import bzrlib.osutils
+from breezy import (
+    osutils,
+    urlutils,
+    )
+import breezy.textfile
 
 from paste.httpexceptions import (
     HTTPBadRequest,
@@ -34,38 +37,47 @@ from paste.httpexceptions import (
     HTTPServerError,
     )
 
-from loggerhead.controllers import TemplatedBranchView
+from ..controllers import TemplatedBranchView
 try:
-    from loggerhead.highlight import highlight
+    from ..highlight import highlight
 except ImportError:
     highlight = None
-from loggerhead import util
+from .. import util
 
 
 class ViewUI(TemplatedBranchView):
 
-    template_path = 'loggerhead.templates.view'
-    
+    template_name = 'view'
+
     def tree_for(self, file_id, revid):
-        file_revid = self._history.get_inventory(revid)[file_id].revision
+        if not isinstance(file_id, bytes):
+            raise TypeError(file_id)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
+        rev_tree = self._history.revision_tree(revid)
+        file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id))
         return self._history._branch.repository.revision_tree(file_revid)
 
     def text_lines(self, file_id, revid):
-        file_name = os.path.basename(self._history.get_path(revid, file_id))
-        
+        path = self._history.get_path(revid, file_id)
+        file_name = os.path.basename(path)
+
         tree = self.tree_for(file_id, revid)
-        file_text = tree.get_file_text(file_id)
+        file_text = tree.get_file_text(path)
+
         encoding = 'utf-8'
         try:
-            file_text = file_text.decode(encoding)
+            file_text.decode(encoding)
         except UnicodeDecodeError:
             encoding = 'iso-8859-15'
-            file_text = file_text.decode(encoding)
+            file_text.decode(encoding)
 
-        file_lines = bzrlib.osutils.split_lines(file_text)
-        # This can throw bzrlib.errors.BinaryFile (which our caller catches).
-        bzrlib.textfile.check_text_lines(file_lines)
-        
+        file_lines = osutils.split_lines(file_text)
+        # This can throw breezy.errors.BinaryFile (which our caller catches).
+        breezy.textfile.check_text_lines(file_lines)
+
+        file_text = file_text.decode(encoding)
+
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
             # highlight strips off extra newlines at the end of the file.
@@ -73,8 +85,8 @@ class ViewUI(TemplatedBranchView):
             hl_lines.extend([u''] * extra_lines)
         else:
             hl_lines = map(util.html_escape, file_lines)
-        
-        return hl_lines;
+
+        return hl_lines
 
     def file_contents(self, file_id, revid):
         try:
@@ -89,8 +101,9 @@ class ViewUI(TemplatedBranchView):
         history = self._history
         branch = history._branch
         revid = self.get_revid()
-        revid = history.fix_revid(revid)
         file_id = kwargs.get('file_id', None)
+        if file_id is not None:
+            file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(file_id))
         if (file_id is None) and (path is None):
             raise HTTPBadRequest('No file_id or filename '
                                  'provided to view')
@@ -119,20 +132,15 @@ class ViewUI(TemplatedBranchView):
                 self._branch.is_root,
                 'files'))
 
-        # Create breadcrumb trail for the path within the branch
-        try:
-            inv = history.get_inventory(revid)
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
-        branch_breadcrumbs = util.branch_breadcrumbs(path, inv, 'files')
+        tree = history.revision_tree(revid)
 
-        try:
-            file = inv[file_id]
-        except NoSuchId:
+        # Create breadcrumb trail for the path within the branch
+        branch_breadcrumbs = util.branch_breadcrumbs(path, tree, 'files')
+
+        if not tree.has_id(file_id):
             raise HTTPNotFound()
 
-        if file.kind == "directory":
+        if tree.kind(path) == "directory":
             raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         # no navbar for revisions

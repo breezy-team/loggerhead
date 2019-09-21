@@ -21,15 +21,15 @@ import logging
 import mimetypes
 import urllib
 
-from bzrlib.errors import (
+from breezy.errors import (
     NoSuchId,
     NoSuchRevision,
     )
+from breezy import osutils, urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
 
-from loggerhead.controllers import TemplatedBranchView
-from loggerhead.exporter import export_archive
+from ..controllers import TemplatedBranchView
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -38,7 +38,7 @@ class DownloadUI (TemplatedBranchView):
 
     def encode_filename(self, filename):
 
-        return urllib.quote(filename.encode('utf-8'))
+        return urlutils.escape(filename)
 
     def get_args(self, environ):
         args = []
@@ -57,7 +57,7 @@ class DownloadUI (TemplatedBranchView):
             raise httpexceptions.HTTPMovedPermanently(
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
-        file_id = args[1]
+        file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(args[1]))
         try:
             path, filename, content = h.get_file(file_id, revid)
         except (NoSuchId, NoSuchRevision):
@@ -102,12 +102,13 @@ class DownloadTarballUI(DownloadUI):
         # TODO: Perhaps set the tarball suggested mtime to the revision
         # mtime.
         root = self._branch.friendly_name or 'branch'
-        encoded_filename = self.encode_filename(
-            root + version_part + '.' + archive_format)
+        filename = root + version_part + '.' + archive_format
+        encoded_filename = self.encode_filename(filename)
         headers = [
             ('Content-Type', 'application/octet-stream'),
             ('Content-Disposition',
                 "attachment; filename*=utf-8''%s" % (encoded_filename,)),
             ]
         start_response('200 OK', headers)
-        return export_archive(history, root, revid, archive_format)
+        tree = history._branch.repository.revision_tree(revid)
+        return tree.archive(root=root, format=archive_format, name=filename)

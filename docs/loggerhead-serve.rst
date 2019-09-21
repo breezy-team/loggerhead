@@ -1,17 +1,17 @@
-:command:`serve-branches`
+:command:`loggerhead-serve`
 =========================
 
-The :command:`serve-branches` script runs a standalone Loggerhead server in
+The :command:`loggerhead-serve` script runs a standalone Loggerhead server in
 the foreground.
 
-.. program:: serve-branches
+.. program:: loggerhead-serve
 
 Usage
 -----
 
 .. code-block:: sh
 
-   serve-branches [OPTIONS] <target directory>
+   loggerhead-serve [OPTIONS] <target directory>
 
 Options
 -------
@@ -76,7 +76,7 @@ Options
 
 .. cmdoption:: --allow-writes
    
-    Allow writing to the Bazaar server.
+    Allow writing to the Breezy server.
     
     Setting this option keeps Loggerhead from adding a 'readonly+' prefix
     to the base URL of the branch.  The only effect of suppressing this prefix

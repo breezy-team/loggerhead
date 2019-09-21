@@ -23,9 +23,10 @@ from paste.httpexceptions import HTTPExceptionHandler
 from loggerhead.apps.transport import BranchesFromTransportRoot
 from loggerhead.apps.error import ErrorHandlerApp
 from loggerhead.config import LoggerheadConfig
-from bzrlib import config as bzrconfig
+from breezy import config as bzrconfig
+from breezy.sixish import PY3
 from paste.deploy.config import PrefixMiddleware
-from bzrlib.plugin import load_plugins
+from breezy.plugin import load_plugins
 
 class NotConfiguredError(Exception):
     pass
@@ -36,14 +37,18 @@ config = LoggerheadConfig()
 prefix = config.get_option('user_prefix') or ''
 # Note we could use LoggerheadConfig here if it didn't fail when a
 # config option is not also a commandline option
-root_dir = bzrconfig.GlobalConfig().get_user_option('http_root_dir')
+root_dir = os.getenv('LOGGERHEAD_ROOT_DIR')
 if not root_dir:
-    raise NotConfiguredError('You must have a ~/.bazaar/bazaar.conf file for'
+    root_dir = bzrconfig.GlobalConfig().get_user_option('http_root_dir')
+if not root_dir:
+    raise NotConfiguredError('You must set LOGGERHEAD_ROOT_DIR or have '
+            'a ~/.config/breezy/breezy.conf file for'
             ' %(user)s with http_root_dir set to the base directory you want'
             ' to serve bazaar repositories from' %
             {'user': pwd.getpwuid(os.geteuid()).pw_name})
-prefix = prefix.encode('utf-8', 'ignore')
-root_dir = root_dir.encode('utf-8', 'ignore')
+if not PY3:
+    prefix = prefix.encode('utf-8', 'ignore')
+    root_dir = root_dir.encode('utf-8', 'ignore')
 app = BranchesFromTransportRoot(root_dir, config)
 app = PrefixMiddleware(app, prefix=prefix)
 app = HTTPExceptionHandler(app)

@@ -17,16 +17,16 @@
 
 """Direct tests of the loggerhead/history.py module"""
 
-from bzrlib.foreign import (
+from breezy.foreign import (
     ForeignRevision,
     ForeignVcs,
     VcsMapping,
     )
 
 from datetime import datetime
-from bzrlib import tag, tests
+from breezy import tag, tests
 
-from loggerhead import history as _mod_history
+from .. import history as _mod_history
 
 
 class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
@@ -40,26 +40,27 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         # rev-1
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-1', None, [
-            ('add', ('', 'root-id', 'directory', None))])
-        builder.build_snapshot('rev-2', ['rev-1'], [])
-        builder.build_snapshot('rev-3', ['rev-2'], [])
+        rev1 = builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', None))])
+        rev2 = builder.build_snapshot([rev1], [])
+        rev3 = builder.build_snapshot([rev2], [])
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return _mod_history.History(b, {})
+        return _mod_history.History(b, {}), [rev1, rev2, rev3]
 
     def make_long_linear_ancestry(self):
         builder = self.make_branch_builder('branch')
+        revs = []
         builder.start_series()
-        builder.build_snapshot('A', None, [
-            ('add', ('', 'root-id', 'directory', None))])
+        revs.append(builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', None))]))
         for r in "BCDEFGHIJKLMNOPQRSTUVWXYZ":
-            builder.build_snapshot(r, None, [])
+            revs.append(builder.build_snapshot(None, []))
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return _mod_history.History(b, {})
+        return _mod_history.History(b, {}), revs
 
     def make_merged_ancestry(self):
         # Time goes up
@@ -70,14 +71,14 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         # rev-1
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('rev-1', None, [
-            ('add', ('', 'root-id', 'directory', None))])
-        builder.build_snapshot('rev-2', ['rev-1'], [])
-        builder.build_snapshot('rev-3', ['rev-1', 'rev-2'], [])
+        rev1 = builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', None))])
+        rev2 = builder.build_snapshot([rev1], [])
+        rev3 = builder.build_snapshot([rev1, rev2], [])
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return _mod_history.History(b, {})
+        return _mod_history.History(b, {}), [rev1, rev2, rev3]
 
     def make_deep_merged_ancestry(self):
         # Time goes up
@@ -92,17 +93,18 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         # A
         builder = self.make_branch_builder('branch')
         builder.start_series()
-        builder.build_snapshot('A', None, [
-            ('add', ('', 'root-id', 'directory', None))])
-        builder.build_snapshot('B', ['A'], [])
-        builder.build_snapshot('C', ['A'], [])
-        builder.build_snapshot('D', ['C'], [])
-        builder.build_snapshot('E', ['C', 'D'], [])
-        builder.build_snapshot('F', ['B', 'E'], [])
+        rev_a = builder.build_snapshot(None, [
+            ('add', ('', b'root-id', 'directory', None))])
+        rev_b = builder.build_snapshot([rev_a], [])
+        rev_c = builder.build_snapshot([rev_a], [])
+        rev_d = builder.build_snapshot([rev_c], [])
+        rev_e = builder.build_snapshot([rev_c, rev_d], [])
+        rev_f = builder.build_snapshot([rev_b, rev_e], [])
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return _mod_history.History(b, {})
+        return (_mod_history.History(b, {}),
+                [rev_a, rev_b, rev_c, rev_d, rev_e, rev_f])
 
     def assertRevidsFrom(self, expected, history, search_revs, tip_rev):
         self.assertEqual(expected,
@@ -136,59 +138,58 @@ def track_rev_info_accesses(h):
 class TestHistoryGetRevidsFrom(TestCaseWithExamples):
 
     def test_get_revids_from_simple_mainline(self):
-        history = self.make_linear_ancestry()
-        self.assertRevidsFrom(['rev-3', 'rev-2', 'rev-1'],
-                              history, None, 'rev-3')
+        history, revs = self.make_linear_ancestry()
+        self.assertRevidsFrom(list(reversed(revs)), history, None, revs[2])
 
     def test_get_revids_from_merged_mainline(self):
-        history = self.make_merged_ancestry()
-        self.assertRevidsFrom(['rev-3', 'rev-1'],
-                              history, None, 'rev-3')
+        history, revs = self.make_merged_ancestry()
+        self.assertRevidsFrom([revs[2], revs[0]],
+                              history, None, revs[2])
 
     def test_get_revids_given_one_rev(self):
-        history = self.make_merged_ancestry()
+        history, revs = self.make_merged_ancestry()
         # rev-3 was the first mainline revision to see rev-2.
-        self.assertRevidsFrom(['rev-3'], history, ['rev-2'], 'rev-3')
+        self.assertRevidsFrom([revs[2]], history, [revs[1]], revs[2])
 
     def test_get_revids_deep_ancestry(self):
-        history = self.make_deep_merged_ancestry()
-        self.assertRevidsFrom(['F'], history, ['F'], 'F')
-        self.assertRevidsFrom(['F'], history, ['E'], 'F')
-        self.assertRevidsFrom(['F'], history, ['D'], 'F')
-        self.assertRevidsFrom(['F'], history, ['C'], 'F')
-        self.assertRevidsFrom(['B'], history, ['B'], 'F')
-        self.assertRevidsFrom(['A'], history, ['A'], 'F')
+        history, revs = self.make_deep_merged_ancestry()
+        self.assertRevidsFrom([revs[-1]], history, [revs[-1]], revs[-1])
+        self.assertRevidsFrom([revs[-1]], history, [revs[-2]], revs[-1])
+        self.assertRevidsFrom([revs[-1]], history, [revs[-3]], revs[-1])
+        self.assertRevidsFrom([revs[-1]], history, [revs[-4]], revs[-1])
+        self.assertRevidsFrom([revs[1]], history, [revs[-5]], revs[-1])
+        self.assertRevidsFrom([revs[0]], history, [revs[-6]], revs[-1])
 
     def test_get_revids_doesnt_over_produce_simple_mainline(self):
         # get_revids_from shouldn't walk the whole ancestry just to get the
         # answers for the first few revisions.
-        history = self.make_long_linear_ancestry()
+        history, revs = self.make_long_linear_ancestry()
         accessed = track_rev_info_accesses(history)
-        result = history.get_revids_from(None, 'Z')
+        result = history.get_revids_from(None, revs[-1])
         self.assertEqual(set(), accessed)
-        self.assertEqual('Z', result.next())
-        # We already know 'Z' because we passed it in.
+        self.assertEqual(revs[-1], next(result))
+        # We already know revs[-1] because we passed it in.
         self.assertEqual(set(), accessed)
-        self.assertEqual('Y', result.next())
-        self.assertEqual(set([history._rev_indices['Z']]), accessed)
+        self.assertEqual(revs[-2], next(result))
+        self.assertEqual(set([history._rev_indices[revs[-1]]]), accessed)
 
     def test_get_revids_doesnt_over_produce_for_merges(self):
         # get_revids_from shouldn't walk the whole ancestry just to get the
         # answers for the first few revisions.
-        history = self.make_long_linear_ancestry()
+        history, revs = self.make_long_linear_ancestry()
         accessed = track_rev_info_accesses(history)
-        result = history.get_revids_from(['X', 'V'], 'Z')
+        result = history.get_revids_from([revs[-3], revs[-5]], revs[-1])
         self.assertEqual(set(), accessed)
-        self.assertEqual('X', result.next())
+        self.assertEqual(revs[-3], next(result))
         # We access 'W' because we are checking that W wasn't merged into X.
         # The important bit is that we aren't getting the whole ancestry.
-        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXW']),
+        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:4]]),
                          accessed)
-        self.assertEqual('V', result.next())
-        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+        self.assertEqual(revs[-5], next(result))
+        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
                          accessed)
-        self.assertRaises(StopIteration, result.next)
-        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+        self.assertRaises(StopIteration, next, result)
+        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
                          accessed)
 
 
@@ -291,32 +292,32 @@ class TestHistoryGetView(TestCaseWithExamples):
     def test_get_view_limited_history(self):
         # get_view should only load enough history to serve the result, not all
         # history.
-        history = self.make_long_linear_ancestry()
+        history, revs = self.make_long_linear_ancestry()
         accessed = track_rev_info_accesses(history)
-        revid, start_revid, revid_list = history.get_view('Z', 'Z', None,
+        revid, start_revid, revid_list = history.get_view(revs[-1], revs[-1], None,
                                                       extra_rev_count=5)
-        self.assertEqual(['Z', 'Y', 'X', 'W', 'V', 'U'], revid_list)
-        self.assertEqual('Z', revid)
-        self.assertEqual('Z', start_revid)
-        self.assertEqual(set([history._rev_indices[x] for x in 'ZYXWVU']),
+        self.assertEqual(list(reversed(revs))[:6], revid_list)
+        self.assertEqual(revs[-1], revid)
+        self.assertEqual(revs[-1], start_revid)
+        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
                          accessed)
 
 
 class TestHistoryGetChangedUncached(TestCaseWithExamples):
 
     def test_native(self):
-        history = self.make_linear_ancestry()
-        changes = history.get_changes_uncached(['rev-1', 'rev-2'])
+        history, revs = self.make_linear_ancestry()
+        changes = history.get_changes_uncached([revs[0], revs[1]])
         self.assertEquals(2, len(changes))
-        self.assertEquals('rev-1', changes[0].revid)
-        self.assertEquals('rev-2', changes[1].revid)
+        self.assertEquals(revs[0], changes[0].revid)
+        self.assertEquals(revs[1], changes[1].revid)
         self.assertIs(None, getattr(changes[0], 'foreign_vcs', None))
         self.assertIs(None, getattr(changes[0], 'foreign_revid', None))
 
     def test_foreign(self):
         # Test with a mocked foreign revision, as it's not possible
         # to rely on any foreign plugins being installed.
-        history = self.make_linear_ancestry()
+        history, revs = self.make_linear_ancestry()
         foreign_vcs = ForeignVcs(None, "vcs")
         foreign_vcs.show_foreign_revid = repr
         foreign_rev = ForeignRevision(("uuid", 1234), VcsMapping(foreign_vcs),

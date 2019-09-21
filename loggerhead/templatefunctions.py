@@ -15,15 +15,18 @@
 #
 
 import os
-import urllib
 
 import pkg_resources
 
-import bzrlib
+import breezy
+from breezy import urlutils
 
-import loggerhead
-from loggerhead.zptsupport import zpt
-from loggerhead.util import html_format
+from . import (
+    __version__,
+    __revision__,
+    )
+from .zptsupport import zpt
+from .util import html_format
 
 
 templatefunctions = {}
@@ -52,18 +55,18 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
             if currently_showing and filename == currently_showing:
                 return html_format(
                     '<b><a href="#%s">%s</a></b>',
-                    urllib.quote(filename.encode('utf-8')), filename)
+                    urlutils.quote(filename), filename)
             else:
                 return revision_link(
                     url, entry.revno, filename,
-                    '#' + urllib.quote(filename.encode('utf-8')))
+                    '#' + urlutils.quote(filename))
     else:
         def file_link(filename):
             return html_format(
                 '<a href="%s%s" title="View changes to %s in revision %s">'
                 '%s</a>',
                 url(['/revision', entry.revno]),
-                '#' + urllib.quote(filename.encode('utf-8')),
+                '#' + urlutils.quote(filename),
                 filename, entry.revno, filename)
     return _pt('revisionfilechanges').expand(
         entry=entry, file_changes=file_changes, file_link=file_link, **templatefunctions)
@@ -71,7 +74,7 @@ def file_change_summary(url, entry, file_changes, style='normal', currently_show
 
 @templatefunc
 def revisioninfo(url, branch, entry, file_changes=None, currently_showing=None, merged_in=None):
-    from loggerhead import util
+    from . import util
     return _pt('revisioninfo').expand(
         url=url, change=entry, branch=branch, util=util,
         file_changes=file_changes, currently_showing=currently_showing,
@@ -142,11 +145,11 @@ def revision_link(url, revno, path, frag=''):
 
 @templatefunc
 def loggerhead_version():
-    return loggerhead.__version__
-    
+    return __version__
+
 @templatefunc
 def loggerhead_revision():
-    return loggerhead.__revision__
+    return __revision__
 
 _cached_generator_string = None
 
@@ -159,13 +162,13 @@ def generator_string():
         # TODO: Errors -- e.g. from a missing/invalid __version__ attribute, or
         # ValueError accessing Distribution.version -- should be non-fatal.
 
-        versions.append(('Loggerhead', loggerhead.__version__))
+        versions.append(('Loggerhead', __version__))
 
         import sys
-        python_version = bzrlib._format_version_tuple(sys.version_info)
+        python_version = breezy._format_version_tuple(sys.version_info)
         versions.append(('Python', python_version))
 
-        versions.append(('Bazaar', bzrlib.__version__))
+        versions.append(('Breezy', breezy.__version__))
 
         Paste = pkg_resources.get_distribution('Paste')
         versions.append(('Paste', Paste.version))
@@ -188,11 +191,11 @@ def generator_string():
             versions.append(('Pygments', pygments.__version__))
 
         try:
-            from bzrlib.plugins import search
+            from breezy.plugins import search
         except ImportError:
             pass
         else:
-            bzr_search_version = bzrlib._format_version_tuple(
+            bzr_search_version = breezy._format_version_tuple(
                 search.version_info)
             versions.append(('bzr-search', bzr_search_version))
 

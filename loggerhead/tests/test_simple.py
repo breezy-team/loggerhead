@@ -15,25 +15,27 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
+from __future__ import absolute_import
+
 import cgi
 import logging
 import re
 import simplejson
-from cStringIO import StringIO
+from io import BytesIO
 
-from bzrlib.tests import TestCaseWithTransport
+from breezy.tests import TestCaseWithTransport
 try:
-    from bzrlib.util.configobj.configobj import ConfigObj
+    from breezy.util.configobj.configobj import ConfigObj
 except ImportError:
     from configobj import ConfigObj
-from bzrlib import config
+from breezy import config
 
-from loggerhead.apps.branch import BranchWSGIApp
-from loggerhead.apps.http_head import HeadMiddleware
+from ..apps.branch import BranchWSGIApp
+from ..apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
-from loggerhead.tests.fixtures import (
+from .fixtures import (
     SampleBranch,
     )
 
@@ -105,12 +107,6 @@ class TestWithSimpleTree(BasicTests):
         self.failUnless("To get this branch, use:" in res)
         self.failUnless("lp:loggerhead" in res)
 
-    def test_no_empty_download_location(self):
-        """With no served_url, no instructions how to get it"""
-        app = self.setUpLoggerhead()
-        res = app.get('/changes')
-        self.failIf("To get this branch, use:" in res)
-
     def test_changes_search(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes', params={'q': 'foo'})
@@ -127,10 +123,10 @@ class TestWithSimpleTree(BasicTests):
         # '<span class='pyg-n'>with</span><span class='pyg-o'>&lt;</span>'
         # '<span class='pyg-n'>htmlspecialchars</span>
         # So we pre-filter the body, to make sure remove spans of that type.
-        body_no_span = re.sub(r'<span class="pyg-.">', '', res.body)
-        body_no_span = body_no_span.replace('</span>', '')
+        body_no_span = re.sub(b'<span class="pyg-.">', b'', res.body)
+        body_no_span = body_no_span.replace(b'</span>', b'')
         for line in self.filecontents.splitlines():
-            escaped = cgi.escape(line)
+            escaped = cgi.escape(line).encode('utf-8')
             self.assertTrue(escaped in body_no_span,
                             "did not find %r in %r" % (escaped, body_no_span))
 
@@ -144,7 +140,7 @@ class TestWithSimpleTree(BasicTests):
         res.mustcontain('myfilename')
         res = app.get('/files/1/')
         res.mustcontain('myfilename')
-        res = app.get('/files/1/?file_id=' + self.tree.path2id(''))
+        res = app.get('/files/1/?file_id=' + self.tree.path2id('').decode('utf-8'))
         res.mustcontain('myfilename')
 
     def test_inventory_bad_rev_404(self):
@@ -192,10 +188,18 @@ class TestHiddenBranch(BasicTests):
     def setUp(self):
         BasicTests.setUp(self)
         self.createBranch()
-        locations = config.locations_config_filename()
-        config.ensure_config_dir_exists()
-        open(locations, 'wb').write('[%s]\nhttp_serve = False'
-                                    % (self.tree.branch.base,))
+        try:
+            locations = config.locations_config_filename()
+        except AttributeError:
+            from breezy import bedding
+            locations = bedding.locations_config_path()
+            ensure_config_dir_exists = bedding.ensure_config_dir_exists
+        else:
+            ensure_config_dir_exists = config.ensure_config_dir_exists
+        ensure_config_dir_exists()
+        with open(locations, 'w') as f:
+            f.write('[%s]\nhttp_serve = False' % (
+                self.tree.branch.base,))
 
     def test_no_access(self):
         app = self.setUpLoggerhead()
@@ -252,11 +256,11 @@ class TestHeadMiddleware(BasicTests):
         app = self.setUpLoggerhead()
         res = app.get('/changes', extra_environ={'REQUEST_METHOD': 'HEAD'})
         self.assertEqual('text/html', res.header('Content-Type'))
-        self.assertEqualDiff('', res.body)
+        self.assertEqualDiff(b'', res.body)
 
 
 def consume_app(app, env):
-    body = StringIO()
+    body = BytesIO()
     start = []
     def start_response(status, headers, exc_info=None):
         start.append((status, headers, exc_info))
