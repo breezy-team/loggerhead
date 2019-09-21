@@ -1,6 +1,7 @@
 loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
+  * Trim trailing whitespace.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Sep 2019 21:34:07 +0000
 
@@ -192,7 +193,7 @@ loggerhead (1.17+bzr400-1) unstable; urgency=low
  -- Jelmer Vernooij <jelmer@debian.org>  Mon, 18 Jan 2010 18:33:40 +1300
 
 loggerhead (1.17-1) unstable; urgency=low
-  
+
   * New upstream release.  Loggerhead no longer flattens branch
     hierarchies (closes: #507001).
 
@@ -252,4 +253,3 @@ loggerhead (1.6-1) unstable; urgency=low
   * Initial release. (Closes: #492477)
 
  -- Jelmer Vernooij <jelmer@samba.org>  Fri, 25 Jul 2008 22:43:49 +0200
-
