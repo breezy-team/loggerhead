@@ -1,0 +1,12 @@
+Index: breezy-unstable/setup.py
+===================================================================
+--- breezy-unstable.orig/setup.py
++++ breezy-unstable/setup.py
+@@ -38,6 +38,7 @@ setup(
+                 "loggerhead/controllers",
+                 "loggerhead/middleware",
+                 "loggerhead/templates",
++                "loggerhead/tests",
+                 "breezy.plugins.loggerhead"],
+     package_dir={'breezy.plugins.loggerhead':'.'},
+     package_data = {"loggerhead": ["templates/*.pt"]},

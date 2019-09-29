@@ -11,6 +11,7 @@ Copyright: 2005, Matt Mackall <mpm@selenic.com>
            2006, Goffredo Baroncelli <kreijack@inwind.it>
            2005-2008, Canonical Ltd
            2008, Robert Collins
+           2018-2019, Jelmer Vernooĳ
 License: GPL-2+
 
 Files: debian/*

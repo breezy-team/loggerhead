@@ -1,15 +1,18 @@
-loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
+loggerhead (1.20+bzr553-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
+  * Use set -e rather than passing -e on the shebang-line.
+  * Bump debhelper from old 11 to 12.
+  * Remove obsolete fields Name from debian/upstream/metadata.
+  * Bump standards version to 4.4.0.
+  * Use secure URI in debian/watch.
   * Trim trailing whitespace.
   * Use secure copyright file specification URI.
+  * Bump standards version to 4.2.1 (no changes).
+  * Add autokgtest test that runs the testsuite.
   * Remove unnecessary X-Python{,3}-Version field in debian/control.
-  * Use secure URI in debian/watch.
-  * Use set -e rather than passing -e on the shebang-line.
-  * Bump debhelper from old 9 to 12.
-  * Remove obsolete fields Name, Contact from debian/upstream/metadata.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 21 Sep 2019 21:34:07 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 17:40:15 +0000
 
 loggerhead (1.19~bzr479+dfsg-3) unstable; urgency=medium
 

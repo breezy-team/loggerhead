@@ -8,13 +8,8 @@ UURL = lp:loggerhead
 DTYPE = +dfsg
 VER  ?= $(subst $(DTYPE),,$(UVER))
 
-## http://wiki.debian.org/onlyjob/get-orig-source
-.PHONY: get-orig-source
-get-orig-source: $(PKG)_$(VER)$(DTYPE).orig.tar.xz $(info I: $(PKG)_$(VER)$(DTYPE))
-	@
-
 %:
-	dh $* --with=python2 --buildsystem=pybuild
+	dh $* --with python3 --buildsystem=pybuild
 
 ifneq (,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 CONCURRENCY = BZR_CONCURRENCY=$(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
@@ -22,7 +17,7 @@ endif
 
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 override_dh_auto_test:
-	$(CONCURRENCY) BZR_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/bzr selftest \
+	PYTHONPATH=$(CURDIR) $(CONCURRENCY) BRZ_PLUGINS_AT=loggerhead@$(CURDIR) /usr/bin/brz selftest \
 	    --parallel=fork -v -s bp.loggerhead
 endif
 

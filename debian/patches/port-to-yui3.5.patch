@@ -1,34 +1,78 @@
-Index: unstable/loggerhead/templates/macros.pt
+=== modified file 'loggerhead/apps/branch.py'
+Index: breezy-unstable/loggerhead/apps/branch.py
 ===================================================================
---- unstable.orig/loggerhead/templates/macros.pt
-+++ unstable/loggerhead/templates/macros.pt
-@@ -23,22 +23,6 @@
-     <script type="text/javascript"
-             tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
-     <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
--    <script type="text/javascript"
--            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
--    <script type="text/javascript"
-             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
-     <metal:block metal:define-slot="header_extras" />
-   </head>
-Index: unstable/loggerhead/static/javascript/custom.js
+--- breezy-unstable.orig/loggerhead/apps/branch.py
++++ breezy-unstable/loggerhead/apps/branch.py
+@@ -137,7 +137,7 @@ class BranchWSGIApp(object):
+ 
+     def yui_url(self, path):
+         if self.use_cdn:
+-            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
++            base = 'http://yui.yahooapis.com/3.5.1/build/'
+         else:
+             base = self.static_url('/static/javascript/yui/build/')
+         return base + path
+Index: breezy-unstable/loggerhead/static/javascript/changelog.js
 ===================================================================
---- unstable.orig/loggerhead/static/javascript/custom.js
-+++ unstable/loggerhead/static/javascript/custom.js
+--- breezy-unstable.orig/loggerhead/static/javascript/changelog.js
++++ breezy-unstable/loggerhead/static/javascript/changelog.js
+@@ -1,3 +1,4 @@
++LH.use('node', 'event', function (Y) {
+ function toggle_expand_all(action)
+ {
+   var revlogs = Y.all('.revision_log');
+@@ -8,14 +9,14 @@ function toggle_expand_all(action)
+       var collapsable = item.collapsable;
+       if(action == 'close')
+       {
+-        Y.get('#expand_all').setStyle('display','block');
+-        Y.get('#collapse_all').setStyle('display','none');
++        Y.one('#expand_all').setStyle('display','block');
++        Y.one('#collapse_all').setStyle('display','none');
+         collapsable.close();
+       }
+       else if(action == 'open')
+       {
+-        Y.get('#expand_all').setStyle('display','none');
+-        Y.get('#collapse_all').setStyle('display','block');
++        Y.one('#expand_all').setStyle('display','none');
++        Y.one('#collapse_all').setStyle('display','block');
+         collapsable.open();
+       }
+     });
+@@ -54,17 +55,17 @@ Y.on(
+       function(item, i)
+       {
+         var revid = revids[item.get('id').replace('log-', '')];
+-        var collapsable = new Collapsable(
++        var collapsable = new LH.Collapsable(
+           {
+-            expand_icon: item.query('.expand_icon'),
+-            open_node: item.query('.long_description'),
+-            close_node: item.query('.short_description'),
++            expand_icon: item.one('.expand_icon'),
++            open_node: item.one('.long_description'),
++            close_node: item.one('.short_description'),
+             source: global_path + '+revlog/' + revid,
+-            loading: item.query('.loading'),
++            loading: item.one('.loading'),
+             is_open: false
+           });
+ 
+-        item.query('.expand_revisioninfo a').on(
++        item.one('.expand_revisioninfo a').on(
+           'click',
+           function(e) {
+             e.preventDefault();
+@@ -74,3 +75,4 @@ Y.on(
+       });
+ 
+   });
++});
+Index: breezy-unstable/loggerhead/static/javascript/custom.js
+===================================================================
+--- breezy-unstable.orig/loggerhead/static/javascript/custom.js
++++ breezy-unstable/loggerhead/static/javascript/custom.js
 @@ -1,13 +1,14 @@
 -Y = YUI().use("base", "node", "io-base", "anim");
 -
@@ -47,7 +91,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
      if (!Y.Lang.isNull(search_box))
      {
        function get_suggestions() {
-@@ -29,11 +30,11 @@
+@@ -29,11 +30,11 @@ Y.on(
          var region = search_box.get('region');
          var current_query = search_box.get('value');
  
@@ -64,7 +108,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
        }
        search_box.on(
          "keyup",
-@@ -41,7 +42,7 @@
+@@ -41,7 +42,7 @@ Y.on(
          {
            if(search_box.get('value') == '')
            {
@@ -73,7 +117,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
            }
            else
            {
-@@ -53,29 +54,30 @@
+@@ -53,29 +54,30 @@ Y.on(
            }
          });
      }
@@ -113,7 +157,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    this.is_open = config.is_open;
    this.open_node = config.open_node;
-@@ -100,7 +102,7 @@
+@@ -100,7 +102,7 @@ function get_height(node) {
    return height;
  }
  
@@ -122,7 +166,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    if (this.anim) this.anim.stop();
  
-@@ -120,7 +122,7 @@
+@@ -120,7 +122,7 @@ Collapsable.prototype._animate = functio
    this.anim.on('end', this.animComplete, this, callback);
  }
  
@@ -131,7 +175,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    var l = res.responseText.split('\n');
    l.splice(0, 1);
-@@ -137,7 +139,7 @@
+@@ -137,7 +139,7 @@ Collapsable.prototype._load_finished = f
    this._animate(args[0]);
  };
  
@@ -140,7 +184,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    if (this.container == null) {
      this.container = Y.Node.create('<div></div>');
-@@ -184,7 +186,7 @@
+@@ -184,7 +186,7 @@ Collapsable.prototype._ensure_container
   * 8. Start a new animation to show the rest of the new content.
   */
  
@@ -149,7 +193,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    this.expand_icon.set('src', expanded_icon_path);
  
-@@ -221,7 +223,7 @@
+@@ -221,7 +223,7 @@ Collapsable.prototype.open = function(ca
  
  };
  
@@ -158,7 +202,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    this.anim = null;
    if (this._loading) return;
-@@ -229,7 +231,7 @@
+@@ -229,7 +231,7 @@ Collapsable.prototype.animComplete = fun
    this.is_open = true;
  };
  
@@ -167,7 +211,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    this._ensure_container();
  
-@@ -258,7 +260,7 @@
+@@ -258,7 +260,7 @@ Collapsable.prototype.close = function()
    anim.run();
  };
  
@@ -176,7 +220,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
    this.open_node.setStyle('display', 'none');
    if (this.close_node) {
      this.close_node.setStyle('display', 'block');
-@@ -268,7 +270,7 @@
+@@ -268,7 +270,7 @@ Collapsable.prototype.closeComplete = fu
    this.is_open = false;
  };
  
@@ -185,7 +229,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
  {
    if (this.is_open)
    {
-@@ -305,7 +307,7 @@
+@@ -305,7 +307,7 @@ function setup_privacy_notification(conf
          }
      }
      var id_selector = "#" + target_id;
@@ -194,7 +238,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
      notification_node = Y.Node.create('<div></div>')
          .addClass('global-notification');
      if (hidden) {
-@@ -324,13 +326,13 @@
+@@ -324,13 +326,13 @@ function display_privacy_notification()
       this is because we have no way to use feature flags in
       css directly. This should be removed if the feature
       is accepted. */
@@ -210,7 +254,7 @@ Index: unstable/loggerhead/static/javascript/custom.js
      if (global_notification.hasClass('hidden')) {
          global_notification.addClass('transparent');
          global_notification.removeClass('hidden');
-@@ -360,9 +362,10 @@
+@@ -360,9 +362,10 @@ function display_privacy_notification()
  };
  
  Y.on('domready', function() {
@@ -222,10 +266,10 @@ Index: unstable/loggerhead/static/javascript/custom.js
      }
  });
 +});
-Index: unstable/loggerhead/static/javascript/diff.js
+Index: breezy-unstable/loggerhead/static/javascript/diff.js
 ===================================================================
---- unstable.orig/loggerhead/static/javascript/diff.js
-+++ unstable/loggerhead/static/javascript/diff.js
+--- breezy-unstable.orig/loggerhead/static/javascript/diff.js
++++ breezy-unstable/loggerhead/static/javascript/diff.js
 @@ -1,5 +1,7 @@
  var unified = true;
  
@@ -234,7 +278,7 @@ Index: unstable/loggerhead/static/javascript/diff.js
  function make_unified(chunk) {
    var pending_added = [];
    function flush_adds(before) {
-@@ -91,12 +93,12 @@
+@@ -91,12 +93,12 @@ function toggle_unified_sbs(event) {
    if (unified) {
      pts && pts.each(make_sbs);
      unified = false;
@@ -249,7 +293,7 @@ Index: unstable/loggerhead/static/javascript/diff.js
    }
  }
  
-@@ -112,14 +114,14 @@
+@@ -112,14 +114,14 @@ function toggle_expand_all_revisionview(
        var collapsable = item.collapsable;
        if(action == 'close')
        {
@@ -268,7 +312,7 @@ Index: unstable/loggerhead/static/javascript/diff.js
          collapsable.open();
        }
      });
-@@ -150,7 +152,7 @@
+@@ -150,7 +152,7 @@ function node_process(node) {
  }
  
  function zoom_to_diff (path) {
@@ -277,15 +321,16 @@ Index: unstable/loggerhead/static/javascript/diff.js
    if (!collapsable.is_open) {
      collapsable.open(
        function () {
-@@ -180,21 +182,22 @@
-         var source_url = null;
-         if (!specific_path)
-           source_url = global_path + '+filediff/' + link_data[item.get('id')];
+@@ -199,22 +201,23 @@ Y.on(
+       function(item, i)
+       {
+         var source_url = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + numlines;
 -        item.query('.the-link').on(
 +        item.one('.the-link').on(
            'click',
            function(e) {
              e.preventDefault();
+             item.collapsable.source = global_path + '+filediff/' + link_data[item.get('id')] + '?context=' + document.getElementById('contextLines').value;
              collapsable.toggle();
            });
 -        var collapsable = new Collapsable(
@@ -302,82 +347,39 @@ Index: unstable/loggerhead/static/javascript/diff.js
 -            node_process: node_process
 +            loading: item.one('.loading'),
 +            node_process: node_process,
-+	    Y: Y
++            Y: Y
            });
         item.collapsable=collapsable;
         });
-@@ -202,3 +205,4 @@
+@@ -223,3 +226,4 @@ Y.on(
        zoom_to_diff(window.location.hash.substring(1));
      }
    });
 +});
-Index: unstable/loggerhead/static/javascript/changelog.js
+Index: breezy-unstable/loggerhead/templates/macros.pt
 ===================================================================
---- unstable.orig/loggerhead/static/javascript/changelog.js
-+++ unstable/loggerhead/static/javascript/changelog.js
-@@ -1,3 +1,4 @@
-+LH.use('node', 'event', function (Y) {
- function toggle_expand_all(action)
- {
-   var revlogs = Y.all('.revision_log');
-@@ -8,14 +9,14 @@
-       var collapsable = item.collapsable;
-       if(action == 'close')
-       {
--        Y.get('#expand_all').setStyle('display','block');
--        Y.get('#collapse_all').setStyle('display','none');
-+        Y.one('#expand_all').setStyle('display','block');
-+        Y.one('#collapse_all').setStyle('display','none');
-         collapsable.close();
-       }
-       else if(action == 'open')
-       {
--        Y.get('#expand_all').setStyle('display','none');
--        Y.get('#collapse_all').setStyle('display','block');
-+        Y.one('#expand_all').setStyle('display','none');
-+        Y.one('#collapse_all').setStyle('display','block');
-         collapsable.open();
-       }
-     });
-@@ -54,17 +55,17 @@
-       function(item, i)
-       {
-         var revid = revids[item.get('id').replace('log-', '')];
--        var collapsable = new Collapsable(
-+        var collapsable = new LH.Collapsable(
-           {
--            expand_icon: item.query('.expand_icon'),
--            open_node: item.query('.long_description'),
--            close_node: item.query('.short_description'),
-+            expand_icon: item.one('.expand_icon'),
-+            open_node: item.one('.long_description'),
-+            close_node: item.one('.short_description'),
-             source: global_path + '+revlog/' + revid,
--            loading: item.query('.loading'),
-+            loading: item.one('.loading'),
-             is_open: false
-           });
- 
--        item.query('.expand_revisioninfo a').on(
-+        item.one('.expand_revisioninfo a').on(
-           'click',
-           function(e) {
-             e.preventDefault();
-@@ -74,3 +75,4 @@
-       });
- 
-   });
-+});
-Index: unstable/loggerhead/apps/branch.py
-===================================================================
---- unstable.orig/loggerhead/apps/branch.py
-+++ unstable/loggerhead/apps/branch.py
-@@ -121,7 +121,7 @@
- 
-     def yui_url(self, path):
-         if self.use_cdn:
--            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
-+            base = 'http://yui.yahooapis.com/3.5.1/build/'
-         else:
-             base = self.static_url('/static/javascript/yui/build/')
-         return base + path
+--- breezy-unstable.orig/loggerhead/templates/macros.pt
++++ breezy-unstable/loggerhead/templates/macros.pt
+@@ -23,22 +23,6 @@
+     <script type="text/javascript"
+             tal:attributes="src python:branch.yui_url('yui/yui-min.js')"></script>
+     <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('oop/oop-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('event/event-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('attribute/attribute-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('base/base-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('dom/dom-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('node/node-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('anim/anim-min.js')"></script>
+-    <script type="text/javascript"
+-            tal:attributes="src python:branch.yui_url('io/io-base-min.js')"></script>
+-    <script type="text/javascript"
+             tal:attributes="src python:branch.static_url('/static/javascript/custom.js')"></script>
+     <metal:block metal:define-slot="header_extras" />
+   </head>

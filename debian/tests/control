@@ -1,0 +1,3 @@
+Tests: testsuite
+Depends: @, brz, python3-breezy.tests, python3-subunit
+Restrictions: allow-stderr

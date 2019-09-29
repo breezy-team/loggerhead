@@ -1,11 +1,12 @@
-Index: unstable/setup.py
+=== modified file 'setup.py'
+Index: breezy-unstable/setup.py
 ===================================================================
---- unstable.orig/setup.py
-+++ unstable/setup.py
-@@ -40,32 +40,7 @@
+--- breezy-unstable.orig/setup.py
++++ breezy-unstable/setup.py
+@@ -40,32 +40,7 @@ setup(
                  "loggerhead/templates",
-                 "bzrlib.plugins.loggerhead"],
-     package_dir={'bzrlib.plugins.loggerhead':'.'},
+                 "breezy.plugins.loggerhead"],
+     package_dir={'breezy.plugins.loggerhead':'.'},
 -    package_data = {"loggerhead": ["templates/*.pt",
 -                                   "static/css/*.css",
 -                                   "static/javascript/*.js",
@@ -34,5 +35,5 @@ Index: unstable/setup.py
 -                                   "static/images/*"]},
 +    package_data = {"loggerhead": ["templates/*.pt"]},
      data_files = [
-         ('share/man/man1', ['serve-branches.1']),
+         ('share/man/man1', ['loggerhead-serve.1']),
          ('share/doc/loggerhead', ['apache-loggerhead.conf',

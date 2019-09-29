@@ -13,24 +13,24 @@
 #
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-DESC="Loggerhead Bazaar Branch Browser"
+DESC="Loggerhead Breezy Branch Browser"
 NAME=loggerhead
 PIDFILE=/var/run/$NAME.pid
 SCRIPTNAME=/etc/init.d/$NAME
 
 # Gracefully exit if the package has been removed.
-[ -x /usr/bin/serve-branches ] || exit 0
+[ -x /usr/bin/loggerhead-serve ] || exit 0
 
 # Check if configuration file is present
-[ ! -f /etc/serve-branches.conf ] && exit 0
+[ ! -f /etc/loggerhead-serve.conf ] && exit 0
 
-. /etc/serve-branches.conf
+. /etc/loggerhead-serve.conf
 
 #
 #	Function that starts the daemon/service.
 #
 d_start() {
-    start-stop-daemon -p $PIDFILE -S --startas /usr/bin/serve-branches --chuid loggerhead --make-pidfile --background --chdir $served_branches -- --prefix=$prefix --port=$port --log-folder /var/log/loggerhead 2>/dev/null
+    start-stop-daemon -p $PIDFILE -S --startas /usr/bin/loggerhead-serve --chuid loggerhead --make-pidfile --background --chdir $served_branches -- --prefix=$prefix --port=$port --log-folder /var/log/loggerhead 2>/dev/null
 }
 
 #
