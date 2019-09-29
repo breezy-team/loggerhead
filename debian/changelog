@@ -1,4 +1,4 @@
-loggerhead (1.20+bzr553-1) UNRELEASED; urgency=medium
+loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
   * Use set -e rather than passing -e on the shebang-line.
