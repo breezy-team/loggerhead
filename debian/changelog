@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
+loggerhead (1.19~bzr494-1) unstable; urgency=medium
 
   * New upstream snapshot. Closes: #941008
   * Use set -e rather than passing -e on the shebang-line.
@@ -12,7 +12,7 @@ loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
   * Add autokgtest test that runs the testsuite.
   * Remove unnecessary X-Python{,3}-Version field in debian/control.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 20 Oct 2018 17:40:15 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 29 Sep 2019 18:28:06 +0000
 
 loggerhead (1.19~bzr479+dfsg-3) unstable; urgency=medium
 
