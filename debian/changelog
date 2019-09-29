@@ -1,6 +1,6 @@
 loggerhead (1.19~bzr494-1) UNRELEASED; urgency=medium
 
-  * New upstream snapshot.
+  * New upstream snapshot. Closes: #941008
   * Use set -e rather than passing -e on the shebang-line.
   * Bump debhelper from old 11 to 12.
   * Remove obsolete fields Name from debian/upstream/metadata.
