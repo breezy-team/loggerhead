@@ -21,6 +21,7 @@ import os
 
 from breezy.errors import (
     BinaryFile,
+    NoSuchFile,
     NoSuchId,
     NoSuchRevision,
     )
@@ -34,7 +35,6 @@ from paste.httpexceptions import (
     HTTPBadRequest,
     HTTPMovedPermanently,
     HTTPNotFound,
-    HTTPServerError,
     )
 
 from ..controllers import TemplatedBranchView
@@ -137,19 +137,20 @@ class ViewUI(TemplatedBranchView):
         # Create breadcrumb trail for the path within the branch
         branch_breadcrumbs = util.branch_breadcrumbs(path, tree, 'files')
 
-        if not tree.has_id(file_id):
+        try:
+            if tree.kind(path) == "directory":
+                raise HTTPMovedPermanently(
+                    self._branch.context_url(['/files', revno_url, path]))
+        except NoSuchFile:
             raise HTTPNotFound()
-
-        if tree.kind(path) == "directory":
-            raise HTTPMovedPermanently(self._branch.context_url(['/files', revno_url, path]))
 
         # no navbar for revisions
         navigation = util.Container()
 
         return {
-            # In AnnotateUI, "annotated" is a dictionary mapping lines to changes.
-            # We exploit the fact that bool({}) is False when checking whether
-            # we're in "annotated" mode.
+            # In AnnotateUI, "annotated" is a dictionary mapping lines to
+            # changes.  We exploit the fact that bool({}) is False when
+            # checking whether we're in "annotated" mode.
             'annotated': {},
             'revno_url': revno_url,
             'file_id': file_id,

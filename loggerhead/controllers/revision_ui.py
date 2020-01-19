@@ -30,6 +30,7 @@ from ..controllers.filediff_ui import diff_chunks_for_file
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
 
+
 def dq(p):
     return urlutils.quote(urlutils.quote(p, safe=''))
 
@@ -55,7 +56,7 @@ class RevisionUI(TemplatedBranchView):
                                                         start_revid,
                                                         filter_file_id,
                                                         query)
-        except:
+        except BaseException:
             self.log.exception('Exception fetching changes')
             raise HTTPServerError('Could not fetch changes')
         # XXX: Some concern about namespace collisions. These are only stored
@@ -114,12 +115,12 @@ class RevisionUI(TemplatedBranchView):
         if path in ('', '/'):
             path = None
 
-
         file_changes = values['file_changes']
         link_data = {}
         path_to_id = {}
         if path:
-            items = [x for x in file_changes.text_changes if x.filename == path]
+            items = [x for x in file_changes.text_changes
+                     if x.filename == path]
             if len(items) > 0:
                 item = items[0]
                 try:
@@ -137,7 +138,8 @@ class RevisionUI(TemplatedBranchView):
             for i, item in enumerate(file_changes.text_changes):
                 item.index = i
                 link_data['diff-' + str(i)] = '%s/%s/%s' % (
-                    dq(item.new_revision), dq(item.old_revision), dq(item.file_id))
+                    dq(item.new_revision), dq(item.old_revision),
+                    dq(item.filename))
                 path_to_id[item.filename] = 'diff-' + str(i)
 
         # Directory Breadcrumbs
