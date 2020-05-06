@@ -33,8 +33,8 @@ import logging
 import re
 import textwrap
 import threading
-import tarfile
 
+from breezy import version_info as breezy_version
 from breezy import tag
 import breezy.branch
 import breezy.delta
@@ -111,6 +111,7 @@ class _RevListToTimestamps(object):
     def __len__(self):
         return len(self.revid_list)
 
+
 class FileChangeReporter(object):
 
     def __init__(self, old_tree, new_tree):
@@ -122,25 +123,38 @@ class FileChangeReporter(object):
         self.old_tree = old_tree
         self.new_tree = new_tree
 
-    def revid(self, tree, file_id):
+    def revid(self, tree, path):
+        if path is None:
+            return breezy.revision.NULL_REVISION
         try:
-            path = tree.id2path(file_id)
-        except breezy.errors.NoSuchId:
-            return b'null:'
-        else:
             return tree.get_file_revision(path)
+        except breezy.errors.NoSuchFile:
+            return breezy.revision.NULL_REVISION
 
-    def report(self, file_id, paths, versioned, renamed, modified,
-               exe_change, kind):
+    if breezy_version >= (3, 1):
+        def report(self, paths, versioned, renamed, copied, modified,
+                   exe_change, kind):
+            return self._report(
+                    paths, versioned, renamed, copied,
+                    modified, exe_change, kind)
+    else:
+        def report(self, file_id, paths, versioned, renamed, modified,
+                   exe_change, kind):
+            return self._report(
+                    paths, versioned, renamed, None,
+                    modified, exe_change, kind)
+
+    def _report(self, paths, versioned, renamed, copied, modified,
+                exe_change, kind):
         if modified not in ('unchanged', 'kind changed'):
             if versioned == 'removed':
                 filename = rich_filename(paths[0], kind[0])
             else:
                 filename = rich_filename(paths[1], kind[1])
             self.text_changes.append(util.Container(
-                filename=filename, file_id=file_id,
-                old_revision=self.revid(self.old_tree, file_id),
-                new_revision=self.revid(self.new_tree, file_id)))
+                filename=filename,
+                old_revision=self.revid(self.old_tree, paths[0]),
+                new_revision=self.revid(self.new_tree, paths[1])))
         if versioned == 'added':
             self.added.append(util.Container(
                 filename=rich_filename(paths[1], kind), kind=kind[1]))
@@ -157,9 +171,11 @@ class FileChangeReporter(object):
                 filename=rich_filename(paths[1], kind),
                 text_modified=modified == 'modified', exe_change=exe_change))
 
+
 # The lru_cache is not thread-safe, so we need a lock around it for
 # all threads.
 rev_info_memory_cache_lock = threading.RLock()
+
 
 class RevInfoMemoryCache(object):
     """A store that validates values against the revids they were stored with.
