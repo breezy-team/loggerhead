@@ -3,9 +3,19 @@ from io import BytesIO
 from breezy import (
     diff,
     errors,
-    osutils,
     urlutils,
     )
+try:
+    from breezy.tree import find_previous_path
+except ImportError:  # breezy < 3.1
+    def find_previous_path(from_tree, to_tree, path):
+        file_id = from_tree.path2id(path)
+        if file_id is None:
+            raise errors.NoSuchFile(path)
+        try:
+            return to_tree.id2path(file_id)
+        except errors.NoSuchId:
+            return None
 
 from .. import util
 from ..controllers import TemplatedBranchView
@@ -14,6 +24,7 @@ from ..controllers import TemplatedBranchView
 def _process_diff(difftext):
     chunks = []
     chunk = None
+
     def decode_line(line):
         return line.decode('utf-8', 'replace')
     for line in difftext.splitlines():
@@ -39,41 +50,52 @@ def _process_diff(difftext):
             old_lineno += 1
             new_lineno += 1
         elif line.startswith(b'+'):
-            chunk.diff.append(util.Container(old_lineno=None,
-                                             new_lineno=new_lineno,
-                                             type='insert', line=decode_line(line[1:])))
+            chunk.diff.append(util.Container(
+                old_lineno=None,
+                new_lineno=new_lineno,
+                type='insert', line=decode_line(line[1:])))
             new_lineno += 1
         elif line.startswith(b'-'):
-            chunk.diff.append(util.Container(old_lineno=old_lineno,
-                                             new_lineno=None,
-                                             type='delete', line=decode_line(line[1:])))
+            chunk.diff.append(util.Container(
+                old_lineno=old_lineno,
+                new_lineno=None,
+                type='delete', line=decode_line(line[1:])))
             old_lineno += 1
         else:
-            chunk.diff.append(util.Container(old_lineno=None,
-                                             new_lineno=None,
-                                             type='unknown',
-                                             line=repr(line)))
+            chunk.diff.append(util.Container(
+                old_lineno=None,
+                new_lineno=None,
+                type='unknown',
+                line=repr(line)))
     if chunk is not None:
         chunks.append(chunk)
     return chunks
 
 
-def diff_chunks_for_file(repository, file_id, compare_revid, revid,
+def diff_chunks_for_file(repository, filename, compare_revid, revid,
                          context_lines=None):
     if context_lines is None:
         context_lines = 3
     lines = {}
-    args = []
-    for r in (compare_revid, revid):
-        if r == b'null:':
-            lines[r] = []
+    compare_tree = repository.revision_tree(compare_revid)
+    tree = repository.revision_tree(revid)
+    try:
+        lines[revid] = tree.get_file_lines(filename)
+    except errors.NoSuchFile:
+        lines[revid] = []
+        lines[compare_revid] = compare_tree.get_file_lines(filename)
+    else:
+        compare_filename = find_previous_path(tree, compare_tree, filename)
+        if compare_filename is not None:
+            lines[compare_revid] = compare_tree.get_file_lines(compare_filename)
         else:
-            args.append((file_id, r, r))
-    for r, bytes_iter in repository.iter_files_bytes(args):
-        lines[r] = osutils.split_lines(b''.join(bytes_iter))
+            lines[compare_revid] = []
+
     buffer = BytesIO()
     try:
-        diff.internal_diff('', lines[compare_revid], '', lines[revid], buffer, context_lines=context_lines)
+        diff.internal_diff(
+            '', lines[compare_revid], '', lines[revid], buffer,
+            context_lines=context_lines)
     except errors.BinaryFile:
         difftext = b''
     else:
@@ -90,7 +112,7 @@ class FileDiffUI(TemplatedBranchView):
     def get_values(self, path, kwargs, headers):
         revid = urlutils.unquote_to_bytes(self.args[0])
         compare_revid = urlutils.unquote_to_bytes(self.args[1])
-        file_id = urlutils.unquote_to_bytes(self.args[2])
+        filename = urlutils.unquote(self.args[2])
 
         try:
             context_lines = int(kwargs['context'])
@@ -98,7 +120,7 @@ class FileDiffUI(TemplatedBranchView):
             context_lines = None
 
         chunks = diff_chunks_for_file(
-            self._history._branch.repository, file_id, compare_revid, revid,
+            self._history._branch.repository, filename, compare_revid, revid,
             context_lines=context_lines)
 
         return {

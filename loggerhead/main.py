@@ -22,7 +22,10 @@ import os
 import sys
 
 from breezy.plugin import load_plugins
-from breezy.transport import location_to_url
+try:
+    from breezy.location import location_to_url
+except ImportError:   # Breezy < 3.1
+    from breezy.transport import location_to_url
 
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError

@@ -23,10 +23,16 @@ from setuptools import setup
 import loggerhead
 
 
+with open("README.rst") as readme:
+    long_description = readme.read()
+
+
 setup(
     name = "loggerhead",
     version = loggerhead.__version__,
     description = "Loggerhead is a web viewer for projects in bazaar",
+    long_description=long_description,
+    long_description_content_type="text/x-rst",
     license = "GNU GPL v2 or later",
     maintainer = "Michael Hudson",
     maintainer_email = "michael.hudson@canonical.com",
