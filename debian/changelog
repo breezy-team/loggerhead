@@ -4,6 +4,7 @@ loggerhead (1.19~bzr496-1) UNRELEASED; urgency=medium
   * Add patch html-escape.patch.
   * Update standards version to 4.4.1, no changes needed.
   * Add Rules-Requires-Root: no.
+  * Bump standards to version 4.5.0.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 06 May 2020 18:13:42 +0000
 
