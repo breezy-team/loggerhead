@@ -247,8 +247,8 @@ class TestFileDiffUI(BasicTests):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         rev1 = builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', '')),
-            ('add', ('filename', b'f-id', 'file', b'content\n'))],
+            ('add', ('', None, 'directory', '')),
+            ('add', ('filename', None, 'file', b'content\n'))],
             message="First commit.")
         rev2 = builder.build_snapshot(None, [
              ('modify', ('filename', b'new content\n'))])
@@ -260,7 +260,7 @@ class TestFileDiffUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'PATH_INFO': '/+filediff/%s/%s/filename' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -275,7 +275,7 @@ class TestFileDiffUI(BasicTests):
     def test_json_render_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/%s/%s/f-id' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'PATH_INFO': '/+json/+filediff/%s/%s/filename' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -290,8 +290,8 @@ class TestRevLogUI(BasicTests):
         builder = self.make_branch_builder('branch')
         builder.start_series()
         revid = builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', '')),
-            ('add', ('filename', b'f-id', 'file', b'content\n'))],
+            ('add', ('', None, 'directory', '')),
+            ('add', ('filename', None, 'file', b'content\n'))],
             message="First commit.")
         builder.finish_series()
         branch = builder.get_branch()
