@@ -1,4 +1,4 @@
-loggerhead (1.19~bzr496-1) UNRELEASED; urgency=medium
+loggerhead (1.19~bzr496-1) unstable; urgency=medium
 
   * New upstream snapshot.
   * Add patch html-escape.patch.
@@ -6,7 +6,7 @@ loggerhead (1.19~bzr496-1) UNRELEASED; urgency=medium
   * Add Rules-Requires-Root: no.
   * Bump standards to version 4.5.0.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 06 May 2020 18:13:42 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 06 May 2020 19:01:32 +0000
 
 loggerhead (1.19~bzr494-1) unstable; urgency=medium
 
