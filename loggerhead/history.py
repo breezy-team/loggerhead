@@ -42,10 +42,6 @@ import breezy.errors
 import breezy.foreign
 import breezy.osutils
 import breezy.revision
-from breezy.sixish import (
-    text_type,
-    viewvalues,
-    )
 
 from . import search
 from . import util
@@ -469,7 +465,7 @@ iso style "yyyy-mm-dd")
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
-        if not isinstance(revid, (str, text_type)):
+        if not isinstance(revid, (str, util.text_type)):
             raise TypeError(revid)
         if revid == 'head:':
             return self.last_revid
@@ -640,7 +636,7 @@ iso style "yyyy-mm-dd")
             else:
                 d[revnos] = (revnolast, revid)
 
-        return [revid for (_, revid) in viewvalues(d)]
+        return [revid for (_, revid) in d.values()]
 
     def add_branch_nicks(self, change):
         """
