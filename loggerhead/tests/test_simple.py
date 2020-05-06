@@ -17,7 +17,10 @@
 
 from __future__ import absolute_import
 
-import cgi
+try:
+    from html import escape
+except ImportError:
+    from cgi import escape
 import logging
 import re
 import simplejson
@@ -94,12 +97,12 @@ class TestWithSimpleTree(BasicTests):
     def test_changes(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes')
-        res.mustcontain(cgi.escape(self.msg))
+        res.mustcontain(escape(self.msg))
 
     def test_changes_for_file(self):
         app = self.setUpLoggerhead()
         res = app.get('/changes?filter_file_id=myfilename-id')
-        res.mustcontain(cgi.escape(self.msg))
+        res.mustcontain(escape(self.msg))
 
     def test_changes_branch_from(self):
         app = self.setUpLoggerhead(served_url="lp:loggerhead")
@@ -126,7 +129,7 @@ class TestWithSimpleTree(BasicTests):
         body_no_span = re.sub(b'<span class="pyg-.">', b'', res.body)
         body_no_span = body_no_span.replace(b'</span>', b'')
         for line in self.filecontents.splitlines():
-            escaped = cgi.escape(line).encode('utf-8')
+            escaped = escape(line).encode('utf-8')
             self.assertTrue(escaped in body_no_span,
                             "did not find %r in %r" % (escaped, body_no_span))
 
