@@ -1,6 +1,7 @@
 loggerhead (1.19~bzr496-1) UNRELEASED; urgency=medium
 
   * New upstream snapshot.
+  * Add patch html-escape.patch.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 06 May 2020 18:13:42 +0000
 

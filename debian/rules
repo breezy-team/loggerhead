@@ -28,7 +28,6 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	dh_auto_build
 	cd docs/ && $(MAKE) html
-	cd docs/_build/html/_static/ && rm jquery.js underscore.js
 
 $(PKG)_$(VER)$(DTYPE).orig.tar.xz:
 	$(if $(wildcard $(PKG)-$(VER)),$(error $(PKG)-$(VER) exist, aborting..))
