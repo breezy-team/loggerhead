@@ -24,7 +24,6 @@ import breezy.branch
 import breezy.errors
 from breezy.hooks import Hooks
 import breezy.lru_cache
-from breezy.sixish import viewitems
 from breezy import urlutils
 
 from paste import request
@@ -103,7 +102,7 @@ class BranchWSGIApp(object):
         if isinstance(args[0], list):
             args = args[0]
         qs = []
-        for k, v in viewitems(kw):
+        for k, v in kw.items():
             if v is not None:
                 qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)
@@ -115,7 +114,7 @@ class BranchWSGIApp(object):
         if isinstance(args[0], list):
             args = args[0]
         qs = []
-        for k, v in viewitems(kw):
+        for k, v in kw.items():
             if v is not None:
                 qs.append('%s=%s' % (k, urlutils.quote(v)))
         qs = '&'.join(qs)

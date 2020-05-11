@@ -32,11 +32,6 @@ import sys
 import os
 import subprocess
 
-from breezy.sixish import (
-    text_type,
-    viewitems,
-    )
-
 try:
     from xml.etree import ElementTree as ET
 except ImportError:
@@ -140,14 +135,14 @@ class Container(object):
     def __init__(self, _dict=None, **kw):
         self._properties = {}
         if _dict is not None:
-            for key, value in viewitems(_dict):
+            for key, value in _dict.items():
                 setattr(self, key, value)
-        for key, value in viewitems(kw):
+        for key, value in kw.items():
             setattr(self, key, value)
 
     def __repr__(self):
         out = '{ '
-        for key, value in viewitems(self.__dict__):
+        for key, value in self.__dict__.items():
             if key.startswith('_') or (getattr(self.__dict__[key],
                                        '__call__', None) is not None):
                 continue
@@ -565,7 +560,7 @@ _valid = (
 
 
 def set_context(map):
-    t_context.map = dict((k, v) for (k, v) in viewitems(map) if k in _valid)
+    t_context.map = dict((k, v) for (k, v) in map.items() if k in _valid)
 
 
 def get_context(**overrides):
@@ -584,7 +579,7 @@ def get_context(**overrides):
         map['remember'] = t_context.map.get('remember', None)
     else:
         map.update(t_context.map)
-    overrides = dict((k, v) for (k, v) in viewitems(overrides) if k in _valid)
+    overrides = dict((k, v) for (k, v) in overrides.items() if k in _valid)
     map.update(overrides)
     return map
 
@@ -678,3 +673,9 @@ def convert_to_json_ready(obj):
     elif isinstance(obj, datetime.datetime):
         return tuple(obj.utctimetuple())
     raise TypeError(repr(obj) + " is not JSON serializable")
+
+
+if sys.version_info[0] > 2:
+    text_type = str
+else:
+    text_type = unicode  # noqa: F821
