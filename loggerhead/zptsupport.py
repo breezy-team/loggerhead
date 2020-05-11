@@ -21,8 +21,6 @@ import pkg_resources
 import re
 from io import StringIO
 
-from breezy.sixish import viewitems
-
 from simpletal import simpleTAL, simpleTALES
 
 _zpt_cache = {}
@@ -50,7 +48,7 @@ class TemplateWrapper(object):
 
     def expand(self, **info):
         context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in viewitems(info):
+        for k, v in info.items():
             context.addGlobal(k, v)
         s = StringIO()
         self.template.expandInline(context, s)
@@ -58,7 +56,7 @@ class TemplateWrapper(object):
 
     def expand_into(self, f, **info):
         context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in viewitems(info):
+        for k, v in info.items():
             context.addGlobal(k, v)
         self.template.expand(context, f, outputEncoding='utf-8')
 
