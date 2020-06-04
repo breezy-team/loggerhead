@@ -134,12 +134,13 @@ class BranchWSGIApp(object):
     def static_url(self, path):
         return self._static_url_base + path
 
-    def yui_url(self, path):
+    def js_library_url(self, path):
         if self.use_cdn:
-            base = 'http://yui.yahooapis.com/3.0.0pr2/build/'
+            if path == 'jquery.min.js':
+                return 'https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'
+            raise KeyError('unknown js library %s' % path)
         else:
-            base = self.static_url('/static/javascript/yui/build/')
-        return base + path
+            return self.static_url('/static/javascript/' + path)
 
     controllers_dict = {
         '+filediff': FileDiffUI,
