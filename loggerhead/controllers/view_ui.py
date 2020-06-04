@@ -49,20 +49,19 @@ class ViewUI(TemplatedBranchView):
 
     template_name = 'view'
 
-    def tree_for(self, file_id, revid):
-        if not isinstance(file_id, bytes):
-            raise TypeError(file_id)
+    def tree_for(self, path, revid):
+        if not isinstance(path, str):
+            raise TypeError(path)
         if not isinstance(revid, bytes):
             raise TypeError(revid)
         rev_tree = self._history.revision_tree(revid)
-        file_revid = rev_tree.get_file_revision(rev_tree.id2path(file_id))
+        file_revid = rev_tree.get_file_revision(path)
         return self._history._branch.repository.revision_tree(file_revid)
 
-    def text_lines(self, file_id, revid):
-        path = self._history.get_path(revid, file_id)
+    def text_lines(self, path, revid):
         file_name = os.path.basename(path)
 
-        tree = self.tree_for(file_id, revid)
+        tree = self.tree_for(path, revid)
         file_text = tree.get_file_text(path)
 
         encoding = 'utf-8'
@@ -88,9 +87,9 @@ class ViewUI(TemplatedBranchView):
 
         return hl_lines
 
-    def file_contents(self, file_id, revid):
+    def file_contents(self, path, revid):
         try:
-            file_lines = self.text_lines(file_id, revid)
+            file_lines = self.text_lines(path, revid)
         except BinaryFile:
             # bail out; this isn't displayable text
             return ['(This is a binary file.)']
@@ -158,7 +157,7 @@ class ViewUI(TemplatedBranchView):
             'filename': filename,
             'navigation': navigation,
             'change': change,
-            'contents':  self.file_contents(file_id, revid),
+            'contents':  self.file_contents(path, revid),
             'fileview_active': True,
             'directory_breadcrumbs': directory_breadcrumbs,
             'branch_breadcrumbs': branch_breadcrumbs,
