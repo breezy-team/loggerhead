@@ -20,7 +20,7 @@ script:
   - python -m coverage run -p -m unittest loggerhead.tests.test_suite
 
 install:
-  - sudo apt install python-all subunit python-testtools adduser libjs-yui3-min
+  - sudo apt install subunit adduser libjs-yui3-min
   - travis_retry pip install -U setuptools
   - travis_retry pip install -U pip coverage codecov flake8 testtools configobj cython testscenarios six docutils python-subunit dulwich bzr+lp:brz pygments simplejson paste http://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-$TAL_VERSION.tar.gz bleach
 
