@@ -1,4 +1,2 @@
-port-to-yui3.5.patch
-dont-ship-static.patch
 paths.patch
 static-path.patch

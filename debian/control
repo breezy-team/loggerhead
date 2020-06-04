@@ -23,7 +23,7 @@ Rules-Requires-Root: no
 
 Package: loggerhead
 Architecture: all
-Depends: adduser, libjs-yui3-min, python3-breezy (>= 3.0.0~), python3-paste (>= 1.6), python3-pkg-resources, python3-simplejson, python3-simpletal, ${misc:Depends}, ${python3:Depends}, python3-bleach, python3-dulwich
+Depends: adduser, libjs-jquery, python3-breezy (>= 3.0.0~), python3-paste (>= 1.6), python3-pkg-resources, python3-simplejson, python3-simpletal, ${misc:Depends}, ${python3:Depends}, python3-bleach, python3-dulwich
 Suggests: brz, loggerhead-breezy-doc, python3-pastedeploy (>= 1.3.0)
 Enhances: brz
 Recommends: python3-pygments
