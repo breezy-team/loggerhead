@@ -72,7 +72,7 @@ Options
 
 .. cmdoption:: --use-cdn
    
-    Serve YUI javascript libraries from Yahoo!'s CDN.
+    Serve jQuery javascript libraries from Googles CDN.
 
 .. cmdoption:: --allow-writes
    

@@ -2,7 +2,7 @@ Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: loggerhead
 Upstream-Contact: Michael Hudson-Doyle <mwh@canonical.com>
 Source: http://launchpad.net/loggerhead
-Files-Excluded: loggerhead/static/javascript/yui/*
+Files-Excluded: loggerhead/static/javascript/jquery.min.js
 
 Files: *
 Copyright: 2005, Matt Mackall <mpm@selenic.com>

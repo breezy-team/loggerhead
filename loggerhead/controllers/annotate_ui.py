@@ -32,7 +32,7 @@ class AnnotateUI(ViewUI):
             raise TypeError(revid)
         path = self._history.get_path(revid, file_id)
 
-        tree = self.tree_for(file_id, revid)
+        tree = self.tree_for(path, revid)
 
         change_cache = {}
         last_line_revid = None

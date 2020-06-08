@@ -64,7 +64,7 @@
             </li>
             <li id="last">
                 <a tal:attributes="href python:url(['/download',
-                                    revno_url, file_id, filename])"
+                                    revno_url, file_path])"
                 >download file</a>
             </li>
         </ul>
