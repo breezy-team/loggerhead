@@ -71,7 +71,7 @@ start_loggerhead(){
         $SUDO mkdir -p $LOG_FOLDER
     fi
     echo "" > $LOG_FILE
-    $SUDO python $START_CMD > $LOG_FILE 2>&1 &
+    $SUDO python3 $START_CMD > $LOG_FILE 2>&1 &
 
     #wait a little while of some logging to appear
     log=""

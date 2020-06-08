@@ -1,5 +1,5 @@
 
-PYTHON ?= python
+PYTHON ?= python3
 
 dist:
 	$(PYTHON) ./setup.py sdist
