@@ -387,7 +387,7 @@ class TestDownloadUI(TestWithSimpleTree):
 
     def test_download(self):
         app = self.setUpLoggerhead()
-        response = app.get('/download/1/myfilename-id/myfilename')
+        response = app.get('/download/1/myfilename')
         self.assertEqual(
             b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
         self.assertThat(
@@ -398,14 +398,14 @@ class TestDownloadUI(TestWithSimpleTree):
         app = self.setUpLoggerhead()
         e = self.assertRaises(
             AppError,
-            app.get, '/download/norev/myfilename-id/myfilename')
+            app.get, '/download/norev/myfilename')
         self.assertContainsRe(str(e), '404 Not Found')
 
     def test_download_bad_fileid(self):
         app = self.setUpLoggerhead()
         e = self.assertRaises(
             AppError,
-            app.get, '/download/1/myfilename-notid/myfilename')
+            app.get, '/download/1/notmyfilename')
         self.assertContainsRe(str(e), '404 Not Found')
 
 
