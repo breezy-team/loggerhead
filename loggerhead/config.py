@@ -71,7 +71,7 @@ def command_line_parser():
     parser.add_option("--version", action="store_true", dest="show_version",
                       help="Print the software version and exit")
     parser.add_option("--use-cdn", action="store_true", dest="use_cdn",
-                      help="Serve YUI from Yahoo!'s CDN")
+                      help="Serve jQuery from Google's CDN")
     parser.add_option("--cache-dir", dest="sql_dir",
                       help="The directory to place the SQL cache in")
     parser.add_option("--allow-writes", action="store_true",

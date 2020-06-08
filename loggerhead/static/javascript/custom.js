@@ -1,47 +1,37 @@
-Y = YUI().use("base", "node", "io-base", "anim");
-
 var global_timeout_id = null;
 var global_search_request = null;
 
-Y.on(
-  'domready',
-  function()
+$(function()
   {
-    var search_box = Y.get('#q');
-    if (!Y.Lang.isNull(search_box))
+    var search_box = $('#q');
+    if (search_box != undefined)
     {
       function get_suggestions() {
-        var query = search_box.get('value');
+        var query = search_box.value;
         var url = global_path + 'search?query=' + query;
 
-        if (!Y.Lang.isNull(global_search_request))
+        if (global_search_request != undefined)
         {
           global_search_request.abort();
         }
-        global_search_request = Y.io(
-          url,
-          {
-            on: {complete: cool_search},
-            arguments: [query]
-          }
-        );
+        global_search_request = $.get(url, {'query': query}).done(cool_search);
 
-        var region = search_box.get('region');
-        var current_query = search_box.get('value');
+        var current_query = search_box.value;
 
-        Y.get('#search_terms').setStyle('display', 'block');
-        Y.get('#search_terms').setStyle('position', 'absolute');
-        Y.get('#search_terms').setStyle('left', region.left);
-        Y.get('#search_terms').setStyle('top', region.bottom);
-        Y.get('#search_terms').set('innerHTML','Loading...');
-      }
+        $('#search_terms').css({
+            'display': 'block',
+            'position': 'absolute',
+            'left': search_box.left,
+            'top': search_box.bottom,
+            'innerHTML': 'Loading...',
+      });
       search_box.on(
         "keyup",
         function(event)
         {
-          if(search_box.get('value') == '')
+          if(search_box.value == '')
           {
-            Y.get('#search_terms').setStyle('display', 'none');
+            $('#search_terms').css({'display': 'none'});
           }
           else
           {
@@ -52,27 +42,29 @@ Y.on(
             global_timeout_id = setTimeout(get_suggestions, 200);
           }
         });
+      }
     }
-  });
+});
 
 function cool_search(tid, response, query)
 {
-  var q = Y.get('#q');
-  var region = q.get('region');
-  var current_query = q.get('value');
+  var q = $('#q');
+  var current_query = q.value;
   if (current_query == query)
   {
-    Y.get('#search_terms').set('innerHTML', response.responseText);
-    Y.get('#search_terms').setStyle('display', 'block');
-    Y.get('#search_terms').setStyle('position', 'absolute');
-    Y.get('#search_terms').setStyle('left', region.left);
-    Y.get('#search_terms').setStyle('top', region.bottom);
+    $('#search_terms').html(response.responseText);
+    $('#search_terms').css({
+       'display': 'block',
+       'position': 'absolute',
+       'left': q.left,
+       'top': q.bottom,
+    });
   }
 }
 
 function hide_search()
 {
-  setTimeout("Y.get('#search_terms').setStyle('display','none')", 300);
+  setTimeout("$('#search_terms').css({'display': 'none'})", 300);
 }
 
 function Collapsable(config)
@@ -90,13 +82,17 @@ function Collapsable(config)
 }
 
 function get_height(node) {
-  node.setStyle('position', 'absolute');
-  node.setStyle('top', -1000000000);
-  node.setStyle('display', 'block');
-  var height = node.get('region').height;
-  node.setStyle('display', 'none');
-  node.setStyle('position', 'static');
-  node.setStyle('top', 'auto');
+  $(node).css({
+     'position': 'absolute',
+     'top': -1000000000,
+     'display': 'block',
+  });
+  var height = $(node).height;
+  $(node).css({
+     'display': 'none',
+     'position': 'static',
+     'top': 'auto',
+  });
   return height;
 }
 
@@ -104,43 +100,36 @@ Collapsable.prototype._animate = function (callback)
 {
   if (this.anim) this.anim.stop();
 
-  this.anim = new Y.Anim(
-    {
-      node: this.container,
-      from: {
-        marginBottom: this.container.getStyle('marginBottom')
-      },
-      to: {
-        marginBottom: 0
-      },
-      duration: 0.2
-    });
-
-  this.anim.run();
-  this.anim.on('end', this.animComplete, this, callback);
+  this.anim = $(this.container).animate(
+     {marginBottom: 0 }, 0.2, "swing" , function(event) {
+       this.anim = null;
+       if (this._loading) return;
+       if (callback) callback();
+       this.is_open = true;
+     });
 }
 
-Collapsable.prototype._load_finished = function(tid, res, args)
+Collapsable.prototype._load_finished = function(data, callback)
 {
-  var l = res.responseText.split('\n');
+  var l = data.split('\n');
   l.splice(0, 1);
-  var newNode = Y.Node.create(l.join(''));
+  var newNode = $(l.join(''));
   if (this.node_process)
     this.node_process(newNode);
   this.source = null;
-  newNode.setStyle('display', 'none');
-  this.loading.ancestor().insertBefore(newNode, this.loading);
-  var delta = this.loading.get('region').height - get_height(newNode);
-  newNode.setStyle('display', 'block');
-  this.container.setStyle('marginBottom', parseFloat(this.container.getStyle('marginBottom')) + delta);
-  this.loading.ancestor().removeChild(this.loading);
-  this._animate(args[0]);
+  newNode.css({'display': 'none'});
+  newNode.insertBefore(this.loading);
+  var delta = this.loading.height - get_height(newNode);
+  newNode.css({'display': 'block'});
+  this.container.css({'marginBottom': parseFloat(this.container.css('marginBottom')) + delta});
+  this.loading.remove();
+  this._animate(callback);
 };
 
 Collapsable.prototype._ensure_container = function(callback)
 {
   if (this.container == null) {
-    this.container = Y.Node.create('<div></div>');
+    this.container = $('<div></div>');
     if (this.closed_node) {
       this.closed_node.ancestor().replaceChild(
         this.container, this.closed_node);
@@ -150,13 +139,12 @@ Collapsable.prototype._ensure_container = function(callback)
       }
     }
     else {
-      this.open_node.ancestor().replaceChild(
-        this.container, this.open_node);
-      this.container.appendChild(this.open_node);
+      $(this.open_node).replaceWith(this.container);
+      $(this.container).append(this.open_node);
     }
-    var outer = Y.Node.create('<div style="overflow:hidden;"></div>');
-    this.container.ancestor().replaceChild(outer, this.container);
-    outer.appendChild(this.container);
+    var outer = $('<div style="overflow:hidden;"></div>');
+    this.container.replaceWith(outer);
+    $(outer).append(this.container);
   }
 }
 
@@ -186,7 +174,7 @@ Collapsable.prototype._ensure_container = function(callback)
 
 Collapsable.prototype.open = function(callback)
 {
-  this.expand_icon.set('src', expanded_icon_path);
+  this.expand_icon.src = expanded_icon_path;
 
   this._ensure_container();
 
@@ -194,46 +182,36 @@ Collapsable.prototype.open = function(callback)
 
   var close_height;
   if (this.close_node) {
-    close_height = this.close_node.get('region').height;
+    close_height = this.close_node.height;
   }
   else {
     close_height = 0;
   }
 
-  this.container.setStyle('marginBottom', close_height - open_height);
+  $(this.container).css({'marginBottom': close_height - open_height});
   if (this.close_node) {
-    this.close_node.setStyle('display', 'none');
+    $(this.close_node).css({'display': 'none'});
   }
-  this.open_node.setStyle('display', 'block');
+  $(this.open_node).css({'display': 'block'});
 
   this._animate(callback);
 
+  var collapsable = this;
+
   if (this.source) {
-    Y.io(
-      this.source,
-      {
-        on: {complete: this._load_finished},
-        arguments: [callback],
-        context: this
+      $.get(this.source, function(data) {
+            collapsable._load_finished(data, callback);
       });
     return;
   }
 
 };
 
-Collapsable.prototype.animComplete = function(evt, callback)
-{
-  this.anim = null;
-  if (this._loading) return;
-  if (callback) callback();
-  this.is_open = true;
-};
-
 Collapsable.prototype.close = function()
 {
   this._ensure_container();
 
-  var open_height = this.open_node.get('region').height;
+  var open_height = this.open_node.height;
 
   var close_height;
   if (this.close_node) {
@@ -243,27 +221,17 @@ Collapsable.prototype.close = function()
     close_height = 0;
   }
 
-  var anim = new Y.Anim(
-    {
-      node: this.container,
-      from: {
-        marginBottom: 0
-      },
-      to: {
-        marginBottom: close_height - open_height
-      },
-      duration: 0.2
-    });
-  anim.on("end", this.closeComplete, this);
-  anim.run();
+  var anim = $(this.container).animate(
+      { marginBottom: [0, close_height - open_height]},
+      0.2, "swing", this.closeComplete);
 };
 
 Collapsable.prototype.closeComplete = function () {
-  this.open_node.setStyle('display', 'none');
+  $(this.open_node).css({'display': 'none'});
   if (this.close_node) {
-    this.close_node.setStyle('display', 'block');
+    $(this.close_node).css({'display': 'block'});
   }
-  this.container.setStyle('marginBottom', 0);
+  $(this.container).css({'marginBottom': 0});
   this.expand_icon.set('src', collapsed_icon_path);
   this.is_open = false;
 };
@@ -305,13 +273,13 @@ function setup_privacy_notification(config) {
         }
     }
     var id_selector = "#" + target_id;
-    var main = Y.get(id_selector);
-    notification_node = Y.Node.create('<div></div>')
+    var main = $(id_selector);
+    notification_node = $('<div></div>')
         .addClass('global-notification');
     if (hidden) {
         notification_node.addClass('hidden');
     }
-    var notification_span = Y.Node.create('<span></span>')
+    var notification_span = $('<span></span>')
         .addClass('sprite')
         .addClass('notification-private');
     notification_node.set('innerHTML', notification_text);
@@ -324,43 +292,29 @@ function display_privacy_notification() {
      this is because we have no way to use feature flags in
      css directly. This should be removed if the feature
      is accepted. */
-    var body = Y.get('body');
+    var body = $(document.body);
     body.addClass('feature-flag-bugs-private-notification-enabled');
     // Set the visible flag so that the content moves down.
     body.addClass('global-notification-visible');
 
     setup_privacy_notification();
-    var global_notification = Y.get('.global-notification');
+    var global_notification = $('.global-notification');
     if (global_notification.hasClass('hidden')) {
         global_notification.addClass('transparent');
         global_notification.removeClass('hidden');
 
-        var fade_in = new Y.Anim({
-            node: global_notification,
-            to: {opacity: 1},
-            duration: 0.3
-        });
-        var body_space = new Y.Anim({
-            node: 'body',
-            to: {'paddingTop': '40px'},
-            duration: 0.2,
-            easing: Y.Easing.easeOut
-        });
-        var black_link_space = new Y.Anim({
-            node: '.black-link',
-            to: {'top': '45px'},
-            duration: 0.2,
-            easing: Y.Easing.easeOut
-        });
-
-        fade_in.run();
-        body_space.run();
-        black_link_space.run();
+        $(global_notification).animate({
+            opacity: 1,
+        }, 0.3);
+        $(document.body).animate(
+            {'paddingTop': '40px'}, 0.2, "easeOutBounce");
+        $('.black-link').animate(
+            {'top': '45px'}, 0.2, "easeOutBounce");
     }
 };
 
-Y.on('domready', function() {
-    var body = Y.get('body');
+$(function() {
+    var body = $(document.body);
     if (body.hasClass('private')) {
         setup_privacy_notification();
         display_privacy_notification();
