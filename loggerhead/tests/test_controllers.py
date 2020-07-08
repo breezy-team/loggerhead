@@ -394,6 +394,15 @@ class TestDownloadUI(TestWithSimpleTree):
             response,
             MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
 
+    def test_download_with_revid(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/download/1/myfilename-id/myfilename')
+        self.assertEqual(
+            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+        self.assertThat(
+            response,
+            MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
+
     def test_download_bad_revision(self):
         app = self.setUpLoggerhead()
         e = self.assertRaises(
