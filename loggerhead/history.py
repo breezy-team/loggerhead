@@ -775,7 +775,7 @@ iso style "yyyy-mm-dd")
 
     def get_file(self, path, revid):
         """Returns (path, filename, file contents)"""
-        if path and not isinstance(path, str):
+        if not isinstance(path, str):
             raise TypeError(path)
         if not isinstance(revid, bytes):
             raise TypeError(revid)
