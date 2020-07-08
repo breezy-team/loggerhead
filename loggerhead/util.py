@@ -670,6 +670,8 @@ def convert_to_json_ready(obj):
         d = obj.__dict__.copy()
         del d['_properties']
         return d
+    elif isinstance(obj, bytes):
+        return obj.decode('UTF-8')
     elif isinstance(obj, datetime.datetime):
         return tuple(obj.utctimetuple())
     raise TypeError(repr(obj) + " is not JSON serializable")

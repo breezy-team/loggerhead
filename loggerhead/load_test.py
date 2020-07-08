@@ -70,7 +70,7 @@ try:
 except ImportError:  # Python < 3
     from Queue import Queue, Empty
 
-import simplejson
+import json
 
 from breezy import (
     errors,
@@ -157,7 +157,9 @@ class ActionScript(object):
     @classmethod
     def parse(cls, content):
         script = cls()
-        json_dict = simplejson.loads(content)
+        if isinstance(content, bytes):
+            content = content.decode('UTF-8')
+        json_dict = json.loads(content)
         if 'parameters' not in json_dict:
             raise ValueError('Missing "parameters" section')
         if 'requests' not in json_dict:

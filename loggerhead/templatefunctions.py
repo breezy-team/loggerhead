@@ -201,9 +201,6 @@ def generator_string():
 
         # TODO: On old Python versions, elementtree may be used.
 
-        import simplejson
-        versions.append(('simplejson', simplejson.__version__))
-
         try:
             Dozer = pkg_resources.get_distribution('Dozer')
         except pkg_resources.DistributionNotFound:

@@ -21,9 +21,9 @@ try:
     from html import escape
 except ImportError:
     from cgi import escape
+import json
 import logging
 import re
-import simplejson
 from io import BytesIO
 
 from breezy.tests import TestCaseWithTransport
@@ -62,7 +62,7 @@ class BasicTests(TestCaseWithTransport):
         self.assertEqual('200 OK', start[0])
         self.assertEqual('application/json', dict(start[1])['Content-Type'])
         self.assertEqual(None, start[2])
-        simplejson.loads(content)
+        json.loads(content.decode('UTF-8'))
 
     def make_branch_app(self, branch, **kw):
         branch_app = BranchWSGIApp(branch, friendly_name='friendly-name', **kw)
