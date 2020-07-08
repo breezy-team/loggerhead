@@ -397,7 +397,7 @@ class TestDownloadUI(TestWithSimpleTree):
     def test_download_with_revid(self):
         app = self.setUpLoggerhead()
         response = app.get('/download/1/myfilename-id/myfilename')
-        elf.assertEqual(
+        self.assertEqual(
             b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
         self.assertThat(
             response,
