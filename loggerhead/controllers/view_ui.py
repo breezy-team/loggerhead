@@ -76,6 +76,7 @@ class ViewUI(TemplatedBranchView):
         breezy.textfile.check_text_lines(file_lines)
 
         file_text = file_text.decode(encoding)
+        file_lines = osutils.split_lines(file_text)
 
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)
