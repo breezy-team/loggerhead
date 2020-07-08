@@ -58,7 +58,6 @@ class DownloadUI (TemplatedBranchView):
             raise httpexceptions.HTTPMovedPermanently(
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
-        path = None
         try:
             path, filename, content = h.get_file(args[1], revid)
         except (NoSuchFile, NoSuchRevision):
