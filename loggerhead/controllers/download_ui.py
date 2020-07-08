@@ -59,11 +59,12 @@ class DownloadUI (TemplatedBranchView):
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
         try:
-            path, filename, content = h.get_file(args[1].encode('UTF-8'), revid)
+            path, filename, content = h.get_file(args[1], revid)
         except (NoSuchFile, NoSuchRevision):
             # Compatibility API for /download/rev_id/file_id/<filename>
             try:
-                path, filename, content = h.get_file_by_fileid(args[1], revid)
+                path, filename, content = h.get_file_by_fileid(
+                    args[1].encode('UTF-8'), revid)
             except (NoSuchId, NoSuchRevision):
                 raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
