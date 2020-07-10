@@ -128,7 +128,7 @@ class RevisionUI(TemplatedBranchView):
                 except (KeyError, ValueError):
                     context_lines = None
                 diff_chunks = diff_chunks_for_file(
-                    self._history._branch.repository, item.file_id,
+                    self._history._branch.repository, path,
                     item.old_revision, item.new_revision,
                     context_lines=context_lines)
             else:
