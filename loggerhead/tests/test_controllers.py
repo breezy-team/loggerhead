@@ -162,7 +162,7 @@ class TestRevisionUI(BasicTests):
         path = revision_ui.parse_args(env)
         values = revision_ui.get_values(path, revision_ui.kwargs, {})
         revision_ui.add_template_values(values)
-        self.assertIs(len(values['diff_chunks']), 1)
+        self.assertEqual(len(values['diff_chunks']), 1)
 
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
