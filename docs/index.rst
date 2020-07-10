@@ -15,8 +15,6 @@ Loggerhead depends on the following Python libraries.:
 
 - SimpleTAL for templating.
 
-- simplejson for producing JSON data.
-
 - Paste for the server. (You need version 1.2 or newer of Paste).
 
 - Paste Deploy  (optional, needed when proxying through Apache).
@@ -30,7 +28,6 @@ Installing Dependencies Using Ubuntu Packages
 .. code-block:: sh
 
    $ sudo apt-get install python-simpletal
-   $ sudo apt-get install python-simplejson
    $ sudo apt-get install python-paste
    $ sudo apt-get install python-pastedeploy
    $ sudo apt-get install python-flup
@@ -43,7 +40,6 @@ Installing Dependencies Using :command:`easy_install`
    $ easy_install \
      -f http://www.owlfish.com/software/simpleTAL/py2compatible/download.html \
      SimpleTAL
-   $ easy_install simplejson
    $ easy_install Paste
    $ easy_install PasteDeploy
    $ easy_install flup

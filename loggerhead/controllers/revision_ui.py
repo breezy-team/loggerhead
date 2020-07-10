@@ -17,7 +17,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import simplejson
+import json
 
 from paste.httpexceptions import HTTPServerError
 
@@ -152,9 +152,9 @@ class RevisionUI(TemplatedBranchView):
 
         values.update({
             'history': self._history,
-            'link_data': simplejson.dumps(link_data),
-            'json_specific_path': simplejson.dumps(path),
-            'path_to_id': simplejson.dumps(path_to_id),
+            'link_data': json.dumps(link_data),
+            'json_specific_path': json.dumps(path),
+            'path_to_id': json.dumps(path_to_id),
             'directory_breadcrumbs': directory_breadcrumbs,
             'navigation': navigation,
             'remember': remember,
