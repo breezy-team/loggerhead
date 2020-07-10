@@ -148,6 +148,22 @@ class TestRevisionUI(BasicTests):
         revision_ui.add_template_values(values)
         self.assertIs(values['diff_chunks'], None)
 
+    def test_add_template_values_with_changes(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', b'content\n')], [('file', b'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/1/file',
+               'QUERY_STRING':'start_revid=1',
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
+        revision_ui = branch_app.lookup_app(env)
+        path = revision_ui.parse_args(env)
+        values = revision_ui.get_values(path, revision_ui.kwargs, {})
+        revision_ui.add_template_values(values)
+        self.assertIs(len(values['diff_chunks']), 1)
+
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
                 [('file', b'content\n'), ('other-file', b'other\n')],
