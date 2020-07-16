@@ -16,6 +16,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
+from datetime import datetime
 import itertools
 
 from ..controllers.view_ui import ViewUI
@@ -48,7 +49,12 @@ class AnnotateUI(ViewUI):
 
                 change = change_cache.get(line_revid, None)
                 if change is None:
-                    change = self._history.get_changes([line_revid])[0]
+                    changes = self._history.get_changes([line_revid])
+                    if changes:
+                        change = changes[0]
+                    else:
+                        change = util.Container(
+                            authors='', date=datetime.now(), revno='')
                     change_cache[line_revid] = change
 
                 try:
