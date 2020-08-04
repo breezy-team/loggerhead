@@ -3,4 +3,5 @@ dulwich == 0.19.16
 testtools
 breezy
 bleach
-https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-4.3.tar.gz
+https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-4.3.tar.gz; python_version < "3"
+https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-5.2.tar.gz; python_version >= "3"
