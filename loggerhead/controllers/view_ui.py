@@ -54,9 +54,7 @@ class ViewUI(TemplatedBranchView):
             raise TypeError(path)
         if not isinstance(revid, bytes):
             raise TypeError(revid)
-        rev_tree = self._history.revision_tree(revid)
-        file_revid = rev_tree.get_file_revision(path)
-        return self._history._branch.repository.revision_tree(file_revid)
+        return self._history._branch.repository.revision_tree(revid)
 
     def text_lines(self, path, revid):
         file_name = os.path.basename(path)
