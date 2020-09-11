@@ -168,18 +168,18 @@ function zoom_to_diff (path) {
 var original_diff_download_link = null;
 
 function compute_diff_links() {
-  var numlines = $('#contextLines').value;
+  var numlines = $('#contextLines').val();
   $('.diff').each(
     function(i, item)
     {
       item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + numlines;
     });
-  if(original_diff_download_link == null) original_diff_download_link = $('#download_link').href;
-  $('#download_link').href = original_diff_download_link + '?context=' + numlines;
+  if(original_diff_download_link == null) original_diff_download_link = $('#download_link').attr('href');
+  $('#download_link').attr('href', original_diff_download_link + '?context=' + numlines);
 }
 
 function get_num_lines() {
-  var numlines = $('#contextLines').value;
+  var numlines = $('#contextLines').val();
   return numlines;
 }
 
@@ -197,7 +197,7 @@ $(function () {
     }
     var diffs = $('.diff');
     if (diffs == null) return;
-    var numlines = $('#contextLines').value;
+    var numlines = $('#contextLines').val();
     diffs.each(
       function(i, item)
       {
@@ -206,7 +206,7 @@ $(function () {
           'click',
           function(e) {
             e.preventDefault();
-            item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').value;
+            item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').val();
             collapsable.toggle();
           });
         var collapsable = new Collapsable(
