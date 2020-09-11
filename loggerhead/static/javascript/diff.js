@@ -109,7 +109,7 @@ function toggle_expand_all_revisionview(action)
   var diffs = $('.diff');
   if (diffs == null) return;
   diffs.each(
-    function(item, i)
+    function(i, item)
     {
       var collapsable = item.collapsable;
       if(action == 'close')

@@ -106,7 +106,7 @@ Collapsable.prototype._animate = function (callback)
        if (this._loading) return;
        if (callback) callback();
        this.is_open = true;
-     });
+     }.bind(this));
 }
 
 Collapsable.prototype._load_finished = function(data, callback)
@@ -174,7 +174,7 @@ Collapsable.prototype._ensure_container = function(callback)
 
 Collapsable.prototype.open = function(callback)
 {
-  this.expand_icon.src = expanded_icon_path;
+  this.expand_icon[0].src = expanded_icon_path;
 
   this._ensure_container();
 
@@ -223,7 +223,7 @@ Collapsable.prototype.close = function()
 
   var anim = $(this.container).animate(
       { marginBottom: [0, close_height - open_height]},
-      0.2, "swing", this.closeComplete);
+      0.2, "swing", this.closeComplete.bind(this));
 };
 
 Collapsable.prototype.closeComplete = function () {
@@ -232,7 +232,7 @@ Collapsable.prototype.closeComplete = function () {
     $(this.close_node).css({'display': 'block'});
   }
   $(this.container).css({'marginBottom': 0});
-  this.expand_icon.set('src', collapsed_icon_path);
+  this.expand_icon[0].src = collapsed_icon_path;
   this.is_open = false;
 };
 
