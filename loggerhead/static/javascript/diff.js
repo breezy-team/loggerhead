@@ -1,6 +1,6 @@
 var unified = true;
 
-function make_unified(chunk) {
+function make_unified(index) {
   var pending_added = [];
   function flush_adds(before) {
     for (var i = 0; i < pending_added.length; i++) {
@@ -8,24 +8,25 @@ function make_unified(chunk) {
     }
     pending_added.length = 0;
   }
-  chunk.get('children').filter(".pseudorow").each(
+  $(this).children().filter(".pseudorow").each(
     function (i, line) {
+      line = $(line);
       if (line.hasClass("context-row")) {
         flush_adds(line);
-        line.removeChild($(line).find('.code'));
+        line.find('.code')[0].remove();
       }
       else if (line.hasClass("both-row")) {
-        var added_line = line.create('<div class="pseudorow insert-row"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
+        var added_line = $('<div class="pseudorow insert-row"><div class="lineNumber first">&nbsp;</div><div class="clear">&nbsp;</div></div>');
         var clear = $(added_line).find('.clear');
         $(line).find('.lineNumber.second').insertBefore(clear);
         $(line).find('.code.insert').insertBefore(clear);
         pending_added[pending_added.length] = added_line;
         $('<div class="lineNumber second">&nbsp;</div>').insertBefore($(line).find('.code.delete'));
-        line.replaceClass("both-row", "delete-row");
+        line.addClass('delete-row').removeClass('both-row');
       }
       else if (line.hasClass("insert-row")) {
         flush_adds(line);
-        line.removeChild($(line).find('.blank'));
+        line.find('.blank').remove();
       }
       else if (line.hasClass("delete-row")) {
         $(line).find('.blank').remove();
@@ -33,10 +34,10 @@ function make_unified(chunk) {
       }
     });
   flush_adds(null);
-  chunk.replaceClass('sbs', 'unified');
+  $(this).addClass('unified').removeClass('sbs');
 }
 
-function make_sbs(chunk) {
+function make_sbs(index) {
   var added = [];
   var removed = [];
   function clear_bufs(before) {
@@ -45,33 +46,34 @@ function make_sbs(chunk) {
     for (var i = 0; i < common; i++) {
       var a = added[i];
       var r = removed[i];
-      a.ancestor().removeChild(a);
-      r.removeChild($(r).find('.lineNumber.second'));
+      a.remove();
+      r.find('.lineNumber.second').remove();
       $(a).find('.lineNumber.second').insertBefore($(r).find('.clear'));
       $(a).find('.code.insert').insertBefore($(r).find('.clear'));
-      r.replaceClass('removed-row', 'both-row');
+      r.addClass('both-row').removeClass('removed-row');
     }
     if (added.length > removed.length) {
       for (var j = common; j < added.length; j++) {
         a = $(added[j]);
-        $('<div class="code blank">&nbsp;</div>').insertBefore(a.find('.lineNumber.second'));
+        a.find('.lineNumber.second').before('<div class="code blank">&nbsp;</div>');
       }
     }
     else if (added.length < removed.length) {
       for (var j = common; j < removed.length; j++) {
         r = $(removed[j]);
         r.find('.code.delete').insertBefore(r.find('.lineNumber.second'));
-        r.create('<div class="code blank">&nbsp;</div>').insertBefore(r.find('.clear'));
+        r.find('.clear').before('<div class="code blank">&nbsp;</div>')
       }
     }
     added.length = 0;
     removed.length = 0;
   }
-  chunk.get('children').filter(".pseudorow").each(
+  $(this).children().filter(".pseudorow").each(
     function (i, line) {
+      line = $(line);
       if (line.hasClass("context-row")) {
         clear_bufs(line);
-        $(line).find('.code').cloneNode(true).insertBefore($(line).find(".second"));
+        $(line).find(".second").before($(line).find('.code').clone());
       }
       else if (line.hasClass("insert-row")) {
         added[added.length] = line;
@@ -81,7 +83,7 @@ function make_sbs(chunk) {
       }
     });
   clear_bufs(null);
-  chunk.replaceClass('unified', 'sbs');
+  $(this).addClass('sbs').removeClass('unified');
 
 }
 
@@ -91,12 +93,12 @@ function toggle_unified_sbs(event) {
   if (unified) {
     pts && pts.each(make_sbs);
     unified = false;
-    $("#toggle_unified_sbs").set('innerHTML', "Show unified diffs");
+    $("#toggle_unified_sbs").html("Show unified diffs");
   }
   else {
     pts && pts.each(make_unified);
     unified = true;
-    $("#toggle_unified_sbs").set('innerHTML', "Show diffs side-by-side");
+    $("#toggle_unified_sbs").html("Show diffs side-by-side");
   }
 }
 
@@ -149,7 +151,7 @@ $('#collapse_all a').on(
 
 function node_process(node) {
   if (!unified) {
-    node.get('children').filter('.pseudotable').each(make_sbs);
+    node.children().filter('.pseudotable').each(make_sbs);
   }
 }
 
@@ -166,18 +168,18 @@ function zoom_to_diff (path) {
 var original_diff_download_link = null;
 
 function compute_diff_links() {
-  var numlines = $('#contextLines').value;
+  var numlines = $('#contextLines').val();
   $('.diff').each(
     function(i, item)
     {
       item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + numlines;
     });
-  if(original_diff_download_link == null) original_diff_download_link = $('#download_link').href;
-  $('#download_link').href = original_diff_download_link + '?context=' + numlines;
+  if(original_diff_download_link == null) original_diff_download_link = $('#download_link').attr('href');
+  $('#download_link').attr('href', original_diff_download_link + '?context=' + numlines);
 }
 
 function get_num_lines() {
-  var numlines = $('#contextLines').value;
+  var numlines = $('#contextLines').val();
   return numlines;
 }
 
@@ -195,7 +197,7 @@ $(function () {
     }
     var diffs = $('.diff');
     if (diffs == null) return;
-    var numlines = $('#contextLines').value;
+    var numlines = $('#contextLines').val();
     diffs.each(
       function(i, item)
       {
@@ -204,7 +206,7 @@ $(function () {
           'click',
           function(e) {
             e.preventDefault();
-            item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').value;
+            item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').val();
             collapsable.toggle();
           });
         var collapsable = new Collapsable(
