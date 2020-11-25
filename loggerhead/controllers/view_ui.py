@@ -50,13 +50,11 @@ class ViewUI(TemplatedBranchView):
     template_name = 'view'
 
     def tree_for(self, path, revid):
-        if not isinstance(path, str):
+        if not isinstance(path, util.text_type):
             raise TypeError(path)
         if not isinstance(revid, bytes):
             raise TypeError(revid)
-        rev_tree = self._history.revision_tree(revid)
-        file_revid = rev_tree.get_file_revision(path)
-        return self._history._branch.repository.revision_tree(file_revid)
+        return self._history._branch.repository.revision_tree(revid)
 
     def text_lines(self, path, revid):
         file_name = os.path.basename(path)
@@ -76,6 +74,7 @@ class ViewUI(TemplatedBranchView):
         breezy.textfile.check_text_lines(file_lines)
 
         file_text = file_text.decode(encoding)
+        file_lines = osutils.split_lines(file_text)
 
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)

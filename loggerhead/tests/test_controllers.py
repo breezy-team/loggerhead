@@ -148,6 +148,22 @@ class TestRevisionUI(BasicTests):
         revision_ui.add_template_values(values)
         self.assertIs(values['diff_chunks'], None)
 
+    def test_add_template_values_with_changes(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [('file', b'content\n')], [('file', b'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/1/file',
+               'QUERY_STRING':'start_revid=1',
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
+        revision_ui = branch_app.lookup_app(env)
+        path = revision_ui.parse_args(env)
+        values = revision_ui.get_values(path, revision_ui.kwargs, {})
+        revision_ui.add_template_values(values)
+        self.assertEqual(len(values['diff_chunks']), 1)
+
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
                 [('file', b'content\n'), ('other-file', b'other\n')],
@@ -200,7 +216,7 @@ class TestAnnotateUI(BasicTests):
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
         ann_ui.args = ['rev2']
-        annotate_info = ann_ui.get_values('filename',
+        annotate_info = ann_ui.get_values(u'filename',
             kwargs={'file_id': 'file_id'}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(2, len(annotated))
@@ -213,7 +229,7 @@ class TestAnnotateUI(BasicTests):
         ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev2']
         ann_ui.get_values(
-            'filename', kwargs={'file_id': 'file_id'}, headers={})
+            u'filename', kwargs={'file_id': 'file_id'}, headers={})
 
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation
@@ -221,7 +237,7 @@ class TestAnnotateUI(BasicTests):
         history = [(b'rev1', b'', '.')]
         ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
-        annotate_info = ann_ui.get_values('filename',
+        annotate_info = ann_ui.get_values(u'filename',
             kwargs={'file_id': 'file_id'}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
@@ -231,14 +247,14 @@ class TestAnnotateUI(BasicTests):
         ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['rev1']
         self.assertRaises(
-            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
+            HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
 
     def test_annotate_nonexistent_rev(self):
         history = [(b'rev1', b'', '.')]
         ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
         ann_ui.args = ['norev']
         self.assertRaises(
-            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
+            HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
 
 
 class TestFileDiffUI(BasicTests):
@@ -388,6 +404,15 @@ class TestDownloadUI(TestWithSimpleTree):
     def test_download(self):
         app = self.setUpLoggerhead()
         response = app.get('/download/1/myfilename')
+        self.assertEqual(
+            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+        self.assertThat(
+            response,
+            MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
+
+    def test_download_with_revid(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/download/1/myfilename-id/myfilename')
         self.assertEqual(
             b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
         self.assertThat(

@@ -18,7 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import simplejson
+import json
 
 from paste.httpexceptions import HTTPServerError
 
@@ -99,7 +99,7 @@ class ChangeLogUI(TemplatedBranchView):
             'branch': self._branch,
             'changes': changes,
             'show_tag_col': show_tag_col,
-            'data': simplejson.dumps(data),
+            'data': json.dumps(data),
             'util': util,
             'history': history,
             'revid': revid,

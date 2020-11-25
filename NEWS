@@ -36,6 +36,9 @@ What's changed in loggerhead?
     - Set line-height on <pre> elements in file views, fixing misaligned
       line numbers in some browsers. (Colin Watson)
 
+    - Drop dependency on simplejson in favour of the standard library's json
+      module in Python >= 2.6. (Colin Watson)
+
 1.18.2 [12Sep2012]
 ------------------
 
