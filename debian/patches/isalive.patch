@@ -1,0 +1,13 @@
+=== modified file 'loggerhead/load_test.py'
+--- old/loggerhead/load_test.py	2020-07-08 17:14:19 +0000
++++ new/loggerhead/load_test.py	2020-11-25 21:25:35 +0000
+@@ -211,7 +211,7 @@
+             # And join the controlling thread
+             for i in range(10):
+                 t.join(self.blocking_timeout / 10.0)
+-                if not t.isAlive():
++                if not t.is_alive():
+                     break
+ 
+     def _full_url(self, relpath):
+
