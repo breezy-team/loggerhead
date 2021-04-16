@@ -32,7 +32,9 @@ DEFAULT_LINE_COUNT_LIMIT = 3000
 
 
 def dq(p):
-    return urlutils.quote(urlutils.quote(p, safe=''))
+    if not isinstance(p, bytes):
+        p = p.encode('UTF-8')
+    return urlutils.quote(urlutils.quote_from_bytes(p, safe=''))
 
 
 class RevisionUI(TemplatedBranchView):

@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 
+import json
 import tarfile
 import tempfile
 
@@ -163,6 +164,28 @@ class TestRevisionUI(BasicTests):
         values = revision_ui.get_values(path, revision_ui.kwargs, {})
         revision_ui.add_template_values(values)
         self.assertEqual(len(values['diff_chunks']), 1)
+
+    def test_add_template_values_with_non_ascii(self):
+        branch_app = self.make_branch_app_for_revision_ui(
+                [(u'skr\xe1', b'content\n')], [(u'skr\xe1', b'new content\n')])
+        env = {'SCRIPT_NAME': '/',
+               'PATH_INFO': '/revision/1',
+               'QUERY_STRING': 'start_revid=1',
+               'REQUEST_METHOD': 'GET',
+               'wsgi.url_scheme': 'http',
+               'SERVER_NAME': 'localhost',
+               'SERVER_PORT': '80'}
+        revision_ui = branch_app.lookup_app(env)
+        path = revision_ui.parse_args(env)
+        values = revision_ui.get_values(path, revision_ui.kwargs, {})
+        revision_ui.add_template_values(values)
+        self.assertEqual(
+            json.loads(values['link_data']),
+            {'diff-0': 'rev-1/null%253A/%252F',
+             'diff-1': 'rev-1/null%253A/skr%25C3%25A1'})
+        self.assertEqual(
+            json.loads(values['path_to_id']),
+            {'/': 'diff-0', u'skr\xe1': 'diff-1'})
 
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
