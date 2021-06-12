@@ -17,9 +17,10 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 
-import breezy.errors
-import simplejson
+import json
 import time
+
+import breezy.errors
 
 from breezy import osutils
 
@@ -122,7 +123,7 @@ class TemplatedBranchView(object):
         z = time.time()
         w = BufferingWriter(writer, 8192)
         if environ.get('loggerhead.as_json'):
-            w.write(simplejson.dumps(values,
+            w.write(json.dumps(values,
                 default=util.convert_to_json_ready).encode('utf-8'))
         else:
             self.add_template_values(values)
