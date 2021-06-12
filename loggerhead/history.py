@@ -217,7 +217,7 @@ class RevInfoMemoryCache(object):
         finally:
             rev_info_memory_cache_lock.release()
 
-# Used to store locks that prevent multiple threads from building a 
+# Used to store locks that prevent multiple threads from building a
 # revision graph for the same branch at the same time, because that can
 # cause severe performance issues that are so bad that the system seems
 # to hang.
@@ -780,6 +780,20 @@ iso style "yyyy-mm-dd")
         if not isinstance(revid, bytes):
             raise TypeError(revid)
         rev_tree = self._branch.repository.revision_tree(revid)
+        display_path = path
+        if not display_path.startswith('/'):
+            path = '/' + path
+        return (display_path, breezy.osutils.basename(path),
+                rev_tree.get_file_text(path))
+
+    def get_file_by_fileid(self, fileid, revid):
+        """Returns (path, filename, file contents)"""
+        if not isinstance(fileid, bytes):
+            raise TypeError(fileid)
+        if not isinstance(revid, bytes):
+            raise TypeError(revid)
+        rev_tree = self._branch.repository.revision_tree(revid)
+        path = rev_tree.id2path(fileid)
         display_path = path
         if not display_path.startswith('/'):
             path = '/' + path
