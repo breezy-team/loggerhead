@@ -1,6 +1,7 @@
 loggerhead (1.19~bzr513-1) UNRELEASED; urgency=low
 
   * New upstream snapshot.
+  * Remove obsolete link for yui. Closes: #988860
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 12 Jun 2021 13:11:14 -0000
 
