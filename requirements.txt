@@ -1,4 +1,5 @@
 setuptools < 45; python_version < "3"
+packaging < 21.0; python_version < "3.6"
 Paste >= 1.6
 dulwich < 0.20; python_version < "3"
 dulwich; python_version >= "3"
