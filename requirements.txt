@@ -1,10 +1,12 @@
 setuptools < 45; python_version < "3"
+packaging < 21.0; python_version < "3.6"
 Paste >= 1.6
 dulwich < 0.20; python_version < "3"
 dulwich; python_version >= "3"
-testtools
-breezy < 3.2; python_version < "3"
-breezy ; python_version >= "3"
+testtools < 2.5.0; python_version < "3"
+testtools; python_version >= "3"
+breezy < 3.2; python_version < "3.6"
+breezy ; python_version >= "3.6"
 bleach
 https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-4.3.tar.gz; python_version < "3"
 https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-5.2.tar.gz; python_version >= "3"
