@@ -3,7 +3,8 @@ packaging < 21.0; python_version < "3.6"
 Paste >= 1.6
 dulwich < 0.20; python_version < "3"
 dulwich; python_version >= "3"
-testtools
+testtools < 2.5.0; python_version < "3"
+testtools; python_version >= "3"
 breezy < 3.2; python_version < "3.6"
 breezy ; python_version >= "3.6"
 bleach
