@@ -143,7 +143,7 @@ class RevInfoDiskCache(object):
         try:
             self.cursor.execute(
                 'delete from data where key = ?', (dbapi2.Binary(key), ))
-            blob = zlib.compress(marshal.dumps(data, version=2))
+            blob = zlib.compress(marshal.dumps(data, 2))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
                 list(map(dbapi2.Binary, [key, revid, blob])))
