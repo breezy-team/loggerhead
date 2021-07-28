@@ -130,7 +130,10 @@ class RevInfoDiskCache(object):
         elif str(row[0]) != revid:
             return None
         else:
-            return marshal.loads(zlib.decompress(row[1]))
+            try:
+                return marshal.loads(zlib.decompress(row[1]))
+            except (EOFError, ValueError, TypeError):
+                return None
 
     def set(self, key, revid, data):
         if not isinstance(key, bytes):
@@ -140,7 +143,7 @@ class RevInfoDiskCache(object):
         try:
             self.cursor.execute(
                 'delete from data where key = ?', (dbapi2.Binary(key), ))
-            blob = zlib.compress(marshal.dumps(data))
+            blob = zlib.compress(marshal.dumps(data, version=2))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
                 list(map(dbapi2.Binary, [key, revid, blob])))
