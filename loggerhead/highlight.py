@@ -17,10 +17,7 @@
 #
 
 import breezy.osutils
-try:
-    from html import escape
-except ImportError:
-    from cgi import escape
+from html import escape
 
 from pygments import highlight as _highlight_func
 from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer

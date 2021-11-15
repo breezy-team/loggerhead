@@ -17,20 +17,14 @@
 
 from __future__ import absolute_import
 
-try:
-    from html import escape
-except ImportError:
-    from cgi import escape
+from html import escape
 import json
 import logging
 import re
 from io import BytesIO
 
 from breezy.tests import TestCaseWithTransport
-try:
-    from breezy.util.configobj.configobj import ConfigObj
-except ImportError:
-    from configobj import ConfigObj
+from configobj import ConfigObj
 from breezy import config
 
 from ..apps.branch import BranchWSGIApp

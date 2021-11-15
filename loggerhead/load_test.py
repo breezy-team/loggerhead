@@ -65,10 +65,7 @@ this.
 
 import threading
 import time
-try:
-    from queue import Queue, Empty
-except ImportError:  # Python < 3
-    from Queue import Queue, Empty
+from queue import Queue, Empty
 
 import json
 

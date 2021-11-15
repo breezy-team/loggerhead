@@ -56,6 +56,6 @@ setup(
                                   'loggerheadd',
                                   'breezy.conf']),
         ],
-    install_requires=['paste', 'bleach'],
+    install_requires=['paste', 'bleach', 'breezy>=3.1'],
     testsuite='loggerhead.tests.test_suite',
     )
