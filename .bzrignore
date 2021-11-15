@@ -12,3 +12,4 @@ tags
 .pydevproject
 .testrepository
 MANIFEST
+.tox
