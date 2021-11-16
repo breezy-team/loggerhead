@@ -24,7 +24,6 @@ from loggerhead.apps.transport import BranchesFromTransportRoot
 from loggerhead.apps.error import ErrorHandlerApp
 from loggerhead.config import LoggerheadConfig
 from breezy import config as bzrconfig
-from breezy.sixish import PY3
 from paste.deploy.config import PrefixMiddleware
 from breezy.plugin import load_plugins
 
@@ -46,9 +45,8 @@ if not root_dir:
             ' %(user)s with http_root_dir set to the base directory you want'
             ' to serve bazaar repositories from' %
             {'user': pwd.getpwuid(os.geteuid()).pw_name})
-if not PY3:
-    prefix = prefix.encode('utf-8', 'ignore')
-    root_dir = root_dir.encode('utf-8', 'ignore')
+prefix = prefix.encode('utf-8', 'ignore')
+root_dir = root_dir.encode('utf-8', 'ignore')
 app = BranchesFromTransportRoot(root_dir, config)
 app = PrefixMiddleware(app, prefix=prefix)
 app = HTTPExceptionHandler(app)
