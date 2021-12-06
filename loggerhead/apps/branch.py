@@ -29,7 +29,7 @@ from breezy import urlutils
 from paste import request
 from paste import httpexceptions
 
-from ..apps import static_app
+from ..apps import static_app, health_app
 from ..controllers.annotate_ui import AnnotateUI
 from ..controllers.view_ui import ViewUI
 from ..controllers.atom_ui import AtomUI
@@ -190,6 +190,8 @@ class BranchWSGIApp(object):
         if not path:
             raise httpexceptions.HTTPMovedPermanently(
                 self.absolute_url('/changes'))
+        if path == 'health':
+            return health_app
         if path == 'static':
             return static_app
         elif path == '+json':
