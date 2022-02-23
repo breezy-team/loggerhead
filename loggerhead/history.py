@@ -465,7 +465,7 @@ iso style "yyyy-mm-dd")
         # if a "revid" is actually a dotted revno, convert it to a revid
         if revid is None:
             return revid
-        if not isinstance(revid, (str, util.text_type)):
+        if not isinstance(revid, str):
             raise TypeError(revid)
         if revid == 'head:':
             return self.last_revid

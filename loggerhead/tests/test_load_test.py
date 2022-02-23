@@ -15,10 +15,7 @@
 import socket
 import time
 import threading
-try:
-    from queue import Empty
-except ImportError:  # Python < 3
-    from Queue import Empty
+from queue import Empty
 
 from breezy import tests
 from breezy.tests import http_server

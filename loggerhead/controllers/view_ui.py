@@ -50,7 +50,7 @@ class ViewUI(TemplatedBranchView):
     template_name = 'view'
 
     def tree_for(self, path, revid):
-        if not isinstance(path, util.text_type):
+        if not isinstance(path, str):
             raise TypeError(path)
         if not isinstance(revid, bytes):
             raise TypeError(revid)

@@ -24,7 +24,7 @@ import pkg_resources
 
 __version__ = '1.20.0'  # Keep in sync with ../__init__.py.
 __revision__ = None
-required_breezy = (3, 0)
+required_breezy = (3, 1)
 
 pkg_resources.get_distribution('Paste>=1.6')
 try:

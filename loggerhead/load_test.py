@@ -65,10 +65,7 @@ this.
 
 import threading
 import time
-try:
-    from queue import Queue, Empty
-except ImportError:  # Python < 3
-    from Queue import Queue, Empty
+from queue import Queue, Empty
 
 import json
 
@@ -211,7 +208,7 @@ class ActionScript(object):
             # And join the controlling thread
             for i in range(10):
                 t.join(self.blocking_timeout / 10.0)
-                if not t.isAlive():
+                if not t.is_alive():
                     break
 
     def _full_url(self, relpath):

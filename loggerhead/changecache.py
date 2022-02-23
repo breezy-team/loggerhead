@@ -26,19 +26,13 @@ once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
 """
 
-try:
-    import cPickle as pickle
-except ImportError: # Python >= 3
-    import pickle
+import pickle
 import marshal
 import os
 import tempfile
 import zlib
 
-try:
-    from sqlite3 import dbapi2
-except ImportError:
-    from pysqlite2 import dbapi2
+from sqlite3 import dbapi2
 
 # We take an optimistic approach to concurrency here: we might do work twice
 # in the case of races, but not crash or corrupt data.
