@@ -60,7 +60,6 @@ setup(
         'paste',
         'bleach',
         'breezy>=3.1',
-        'dulwich<=0.20.25;python_version<="3.5"',
     ],
     testsuite='loggerhead.tests.test_suite',
     )
