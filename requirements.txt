@@ -9,3 +9,5 @@ bleach; python_version > "3.5"
 bleach < 4.0.0; python_version <= "3.5"
 packaging < 21.0; python_version <= "3.5"
 https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-5.2.tar.gz
+Pygments < 2.6; python_version < "3"
+Pygments; python_version >= "3"
