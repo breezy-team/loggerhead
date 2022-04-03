@@ -1,6 +1,11 @@
 What's changed in loggerhead?
 =============================
 
+unreleased
+----------
+
+    - Fix highlighting for large files. (Jürgen Gmach, #1966702)
+
 1.20.0
 ----
 

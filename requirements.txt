@@ -10,3 +10,5 @@ breezy ; python_version >= "3.6"
 bleach
 https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-4.3.tar.gz; python_version < "3"
 https://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-5.2.tar.gz; python_version >= "3"
+Pygments < 2.6; python_version < "3"
+Pygments; python_version >= "3"
