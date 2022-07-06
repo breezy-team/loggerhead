@@ -61,12 +61,7 @@ class DownloadUI (TemplatedBranchView):
         try:
             path, filename, content = h.get_file(args[1], revid)
         except (NoSuchFile, NoSuchRevision):
-            # Compatibility API for /download/rev_id/file_id/<filename>
-            try:
-                path, filename, content = h.get_file_by_fileid(
-                    args[1].encode('UTF-8'), revid)
-            except (NoSuchId, NoSuchRevision):
-                raise httpexceptions.HTTPNotFound()
+            raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
             mime_type = 'application/octet-stream'

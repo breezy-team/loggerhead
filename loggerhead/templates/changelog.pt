@@ -39,7 +39,7 @@
             </tal:no-link>
             <tal:block condition="changes">
               &#187; Changes
-              <tal:block condition="filter_file_id">to <span tal:content="python:history.get_path(revid, filter_file_id)" /></tal:block>
+              <tal:block condition="filter_path">to <span tal:content="filter_path" /></tal:block>
               <tal:block condition="start_revid">from revision
                 <span tal:content="python:history.get_revno(start_revid)"/>
               </tal:block>

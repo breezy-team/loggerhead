@@ -221,12 +221,12 @@ class TestRevisionUI(BasicTests):
 
 class TestAnnotateUI(BasicTests):
 
-    def make_annotate_ui_for_file_history(self, file_id, rev_ids_texts):
+    def make_annotate_ui_for_file_history(self, filename, rev_ids_texts):
         tree = self.make_branch_and_tree('.')
-        self.build_tree_contents([('filename', '')])
-        tree.add(['filename'], [file_id])
+        self.build_tree_contents([(filename, '')])
+        tree.add([filename])
         for rev_id, text, message in rev_ids_texts:
-            self.build_tree_contents([('filename', text)])
+            self.build_tree_contents([(filename, text)])
             tree.commit(rev_id=rev_id, message=message)
         tree.branch.lock_read()
         self.addCleanup(tree.branch.unlock)
@@ -235,12 +235,11 @@ class TestAnnotateUI(BasicTests):
 
     def test_annotate_file(self):
         history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
+        ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
         ann_ui.args = ['rev2']
-        annotate_info = ann_ui.get_values(u'filename',
-            kwargs={'file_id': 'file_id'}, headers={})
+        annotate_info = ann_ui.get_values(u'filename', kwargs={}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
@@ -249,32 +248,30 @@ class TestAnnotateUI(BasicTests):
     def test_annotate_empty_comment(self):
         # Testing empty comment handling without breaking
         history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '')]
-        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
+        ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev2']
-        ann_ui.get_values(
-            u'filename', kwargs={'file_id': 'file_id'}, headers={})
+        ann_ui.get_values(u'filename', kwargs={}, headers={})
 
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation
         # must be present.
         history = [(b'rev1', b'', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
+        ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev1']
-        annotate_info = ann_ui.get_values(u'filename',
-            kwargs={'file_id': 'file_id'}, headers={})
+        annotate_info = ann_ui.get_values(u'filename', kwargs={}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
 
     def test_annotate_nonexistent_file(self):
         history = [(b'rev1', b'', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
+        ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev1']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
 
     def test_annotate_nonexistent_rev(self):
         history = [(b'rev1', b'', '.')]
-        ann_ui = self.make_annotate_ui_for_file_history(b'file_id', history)
+        ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['norev']
         self.assertRaises(
             HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
@@ -433,15 +430,6 @@ class TestDownloadUI(TestWithSimpleTree):
             response,
             MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
 
-    def test_download_with_revid(self):
-        app = self.setUpLoggerhead()
-        response = app.get('/download/1/myfilename-id/myfilename')
-        self.assertEqual(
-            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
-        self.assertThat(
-            response,
-            MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
-
     def test_download_bad_revision(self):
         app = self.setUpLoggerhead()
         e = self.assertRaises(
@@ -449,7 +437,7 @@ class TestDownloadUI(TestWithSimpleTree):
             app.get, '/download/norev/myfilename')
         self.assertContainsRe(str(e), '404 Not Found')
 
-    def test_download_bad_fileid(self):
+    def test_download_bad_filename(self):
         app = self.setUpLoggerhead()
         e = self.assertRaises(
             AppError,

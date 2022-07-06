@@ -409,7 +409,7 @@ def fill_in_navigation(navigation):
             navigation.next_page_revid)
     start_revno = navigation.history.get_revno(navigation.start_revid)
 
-    params = {'filter_file_id': navigation.filter_file_id}
+    params = {'filter_path': navigation.filter_path}
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
 
@@ -533,9 +533,7 @@ def lsprof(f):
 #         the current beginning of navigation (navigation continues back to
 #         the original revision) -- this defines an 'alternate mainline'
 #         when the user navigates into a branch.
-#     - file_id
-#         the file being looked at
-#     - filter_file_id
+#     - filter_path
 #         if navigating the revisions that touched a file
 #     - q (query)
 #         if navigating the revisions that matched a search query
@@ -553,7 +551,7 @@ def lsprof(f):
 
 t_context = threading.local()
 _valid = (
-    'start_revid', 'filter_file_id', 'q', 'remember', 'compare_revid', 'sort')
+    'start_revid', 'filter_path', 'q', 'remember', 'compare_revid', 'sort')
 
 
 def set_context(map):
