@@ -24,14 +24,10 @@ from .. import util
 
 class AnnotateUI(ViewUI):
 
-    def annotate_file(self, info):
-        file_id = info['file_id']
+    def annotate_file(self, path, info):
         revid = info['change'].revid
-        if not isinstance(file_id, bytes):
-            raise TypeError(file_id)
         if not isinstance(revid, bytes):
             raise TypeError(revid)
-        path = self._history.get_path(revid, file_id)
 
         tree = self.tree_for(path, revid)
 
@@ -43,7 +39,7 @@ class AnnotateUI(ViewUI):
         revisions = {}
 
         lineno = 0
-        for (line_revid, text), lineno in zip(tree.annotate_iter(path, file_id), itertools.count(1)):
+        for (line_revid, text), lineno in zip(tree.annotate_iter(path), itertools.count(1)):
             if line_revid != last_line_revid:
                 last_line_revid = line_revid
 
@@ -84,6 +80,6 @@ class AnnotateUI(ViewUI):
 
     def get_values(self, path, kwargs, headers):
         values = super(AnnotateUI, self).get_values(path, kwargs, headers)
-        values['annotated'] = self.annotate_file(values)
+        values['annotated'] = self.annotate_file(path, values)
 
         return values

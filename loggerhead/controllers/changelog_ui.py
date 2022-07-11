@@ -35,21 +35,16 @@ class ChangeLogUI(TemplatedBranchView):
     def get_values(self, path, kwargs, headers):
         history = self._history
         revid = self.get_revid()
-        filter_file_id = kwargs.get('filter_file_id', None)
-        if filter_file_id is not None:
-            filter_file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(filter_file_id))
+        filter_path = kwargs.get('filter_path', path)
         query = kwargs.get('q', None)
         start_revid = history.fix_revid(kwargs.get('start_revid', None))
         orig_start_revid = start_revid
-        pagesize = 20#int(config.get('pagesize', '20'))
+        pagesize = 20  #int(config.get('pagesize', '20'))
         search_failed = False
-
-        if filter_file_id is None and path is not None:
-            filter_file_id = history.get_file_id(revid, path)
 
         try:
             revid, start_revid, revid_list = history.get_view(
-                revid, start_revid, filter_file_id, query,
+                revid, start_revid, filter_path, query,
                 extra_rev_count=pagesize+1)
             util.set_context(kwargs)
 
@@ -76,7 +71,7 @@ class ChangeLogUI(TemplatedBranchView):
 
         navigation = util.Container(
             pagesize=pagesize, revid=revid, start_revid=start_revid,
-            revid_list=revid_list, filter_file_id=filter_file_id,
+            revid_list=revid_list, filter_path=filter_path,
             scan_url='/changes', branch=self._branch, feed=True, history=history)
         if query is not None:
             navigation.query = query
@@ -104,7 +99,7 @@ class ChangeLogUI(TemplatedBranchView):
             'history': history,
             'revid': revid,
             'navigation': navigation,
-            'filter_file_id': filter_file_id,
+            'filter_path': filter_path,
             'start_revid': start_revid,
             'viewing_from': (orig_start_revid is not None) and
                             (orig_start_revid != history.last_revid),

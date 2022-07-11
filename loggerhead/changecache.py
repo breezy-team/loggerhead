@@ -26,19 +26,13 @@ once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
 """
 
-try:
-    import cPickle as pickle
-except ImportError: # Python >= 3
-    import pickle
+import pickle
 import marshal
 import os
 import tempfile
 import zlib
 
-try:
-    from sqlite3 import dbapi2
-except ImportError:
-    from pysqlite2 import dbapi2
+from sqlite3 import dbapi2
 
 # We take an optimistic approach to concurrency here: we might do work twice
 # in the case of races, but not crash or corrupt data.
@@ -130,7 +124,10 @@ class RevInfoDiskCache(object):
         elif str(row[0]) != revid:
             return None
         else:
-            return marshal.loads(zlib.decompress(row[1]))
+            try:
+                return marshal.loads(zlib.decompress(row[1]))
+            except (EOFError, ValueError, TypeError):
+                return None
 
     def set(self, key, revid, data):
         if not isinstance(key, bytes):
@@ -140,7 +137,7 @@ class RevInfoDiskCache(object):
         try:
             self.cursor.execute(
                 'delete from data where key = ?', (dbapi2.Binary(key), ))
-            blob = zlib.compress(marshal.dumps(data))
+            blob = zlib.compress(marshal.dumps(data, 2))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
                 list(map(dbapi2.Binary, [key, revid, blob])))

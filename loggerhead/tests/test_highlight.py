@@ -1,4 +1,4 @@
-# Copyright 2006, 2010, 2011 Canonical Ltd
+# Copyright 2022 Canonical Ltd
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -14,23 +14,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
+from breezy import tests
 
-from __future__ import absolute_import
+from ..highlight import highlight
 
 
-def test_suite():
-    import unittest
-    loader = unittest.TestLoader()
-    return loader.loadTestsFromNames([
-        (__name__ + '.' + x) for x in [
-            'test_controllers',
-            'test_corners',
-            'test_history',
-            'test_http_head',
-            'test_load_test',
-            'test_simple',
-            'test_revision_ui',
-            'test_templating',
-            'test_util',
-            'test_highlight',
-        ]])
+class TestHighLight(tests.TestCase):
+    def test_no_highlighting_for_big_texts(self):
+        rv = highlight(
+            path="",
+            text="text\n" * 102401,  # bigger than MAX_HIGHLIGHT_SIZE
+            encoding="utf-8",
+        )
+        self.assertIsInstance(rv, list)
+        self.assertLength(102401, rv)
+        # no highlighting applied
+        for item in rv:
+            self.assertEqual("text\n", item)

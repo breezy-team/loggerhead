@@ -17,10 +17,7 @@
 #
 
 import breezy.osutils
-try:
-    from html import escape
-except ImportError:
-    from cgi import escape
+from html import escape
 
 from pygments import highlight as _highlight_func
 from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
@@ -40,7 +37,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
 
     if len(text) > MAX_HIGHLIGHT_SIZE:
-        return map(escape,  breezy.osutils.split_lines(text))
+        return list(map(escape,  breezy.osutils.split_lines(text)))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
