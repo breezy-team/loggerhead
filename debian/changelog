@@ -5,6 +5,14 @@ loggerhead (1.19~bzr513-1) UNRELEASED; urgency=low
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 12 Jun 2021 13:11:14 -0000
 
+loggerhead (1.19~bzr511-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Add patch isalive.patch: avoid use of removed Thread.IsAlive() on
+    newer versions of Python. Closes: #975798
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 25 Nov 2020 22:30:00 +0000
+
 loggerhead (1.19~bzr501-1) unstable; urgency=medium
 
   * New upstream snapshot.
