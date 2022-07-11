@@ -5,17 +5,7 @@ from breezy import (
     errors,
     urlutils,
     )
-try:
-    from breezy.tree import find_previous_path
-except ImportError:  # breezy < 3.1
-    def find_previous_path(from_tree, to_tree, path):
-        file_id = from_tree.path2id(path)
-        if file_id is None:
-            raise errors.NoSuchFile(path)
-        try:
-            return to_tree.id2path(file_id)
-        except errors.NoSuchId:
-            return None
+from breezy.tree import find_previous_path
 
 from .. import util
 from ..controllers import TemplatedBranchView

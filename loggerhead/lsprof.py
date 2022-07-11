@@ -6,10 +6,7 @@
 # instead of just the Stats object
 
 import sys
-try:
-    from threading import get_ident
-except ImportError: # python < 3
-    from thread import get_ident
+from threading import get_ident
 import threading
 from _lsprof import Profiler, profiler_entry
 

@@ -94,7 +94,7 @@
                  <td class="date" tal:content="python:util.hide_email(file.change.committer)"></td>
                  <td class="autcell" tal:content="python:file.change.comment[:50]"></td>
                  <td class="timedate2"></td><!-- not showing sizes of folders -->
-                 <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
+                 <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_path=file.absolutepath);
                                                      title string:Show revision ${file/change/revno}">
                                       <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif')" alt="Diff" />
                                      </a>
@@ -119,7 +119,7 @@
                  <td class="date" tal:content="python:util.hide_email(file.change.committer)"></td>
                  <td class="autcell" tal:content="python:file.change.comment[:50]"></td>
                  <td class="timedate2">.</td>
-                 <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_file_id=file.file_id);
+                 <td class="expcell"><a tal:attributes="href python:url(['/changes'], start_revid=start_revid, filter_path=file.absolutepath);
                                                         title string:Show revision ${file/change/revno}">
                                           <img tal:attributes="src python:branch.static_url('/static/images/ico_planilla.gif');
                                                                title string:Show revision ${file/change/revno}" />
@@ -157,7 +157,7 @@
                                      </a>
               </td>
               <td class="expcell">
-                 <a tal:attributes="href python:url(['/download', file.revid.decode('utf-8'), file.file_id.decode('utf-8'), file.filename]);
+                 <a tal:attributes="href python:url(['/download', file.revid.decode('utf-8'), file.filename]);
                                     title string:Download ${file/filename} at revision ${file/change/revno}">
                    <img tal:attributes="src python:branch.static_url('/static/images/ico_file_download.gif')" alt="Download File" />
                  </a>

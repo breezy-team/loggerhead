@@ -95,7 +95,7 @@ class InventoryUI(TemplatedBranchView):
             file = util.Container(
                 filename=entry.name, executable=entry.executable,
                 kind=entry.kind, absolutepath=child_path,
-                file_id=entry.file_id, size=size, revid=child_revision,
+                size=size, revid=child_revision,
                 change=change_dict[child_revision], contents_changed_rev=contents_changed_rev)
             file_list.append(file)
 
@@ -125,23 +125,15 @@ class InventoryUI(TemplatedBranchView):
         except errors.NoSuchRevision:
             raise HTTPNotFound()
 
-        file_id = kwargs.get('file_id', None)
         start_revid = kwargs.get('start_revid', None)
         sort_type = kwargs.get('sort', 'filename')
 
-        if path is not None:
-            path = path.rstrip('/')
-            file_id = rev_tree.path2id(path)
-            if file_id is None:
-                raise HTTPNotFound()
-        else:
-            if file_id is None:
-                path = ''
-            else:
-                try:
-                    path = rev_tree.id2path(file_id)
-                except errors.NoSuchId:
-                    raise HTTPNotFound()
+        if path is None:
+            path = "/"
+
+        path = path.rstrip('/')
+        if not rev_tree.has_filename(path) and not is_null_rev(revid):
+            raise HTTPNotFound()
 
         # Are we at the top of the tree
         if path in ['/', '']:

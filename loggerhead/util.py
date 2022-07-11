@@ -32,10 +32,7 @@ import sys
 import os
 import subprocess
 
-try:
-    from xml.etree import ElementTree as ET
-except ImportError:
-    from elementtree import ElementTree as ET
+from xml.etree import ElementTree as ET
 
 from breezy import urlutils
 
@@ -277,7 +274,7 @@ def fill_div(s):
         except UnicodeDecodeError:
             s = s.decode('iso-8859-15')
         return s
-    elif isinstance(s, text_type):
+    elif isinstance(s, str):
         return s
     else:
         return repr(s)
@@ -288,7 +285,7 @@ def fixed_width(s):
     expand tabs and turn spaces into "non-breaking spaces", so browsers won't
     chop up the string.
     """
-    if not isinstance(s, text_type):
+    if not isinstance(s, str):
         # this kinda sucks.  file contents are just binary data, and no
         # encoding metadata is stored, so we need to guess.  this is probably
         # okay for most code, but for people using things like KOI-8, this
@@ -412,7 +409,7 @@ def fill_in_navigation(navigation):
             navigation.next_page_revid)
     start_revno = navigation.history.get_revno(navigation.start_revid)
 
-    params = {'filter_file_id': navigation.filter_file_id}
+    params = {'filter_path': navigation.filter_path}
     if getattr(navigation, 'query', None) is not None:
         params['q'] = navigation.query
 
@@ -536,9 +533,7 @@ def lsprof(f):
 #         the current beginning of navigation (navigation continues back to
 #         the original revision) -- this defines an 'alternate mainline'
 #         when the user navigates into a branch.
-#     - file_id
-#         the file being looked at
-#     - filter_file_id
+#     - filter_path
 #         if navigating the revisions that touched a file
 #     - q (query)
 #         if navigating the revisions that matched a search query
@@ -556,7 +551,7 @@ def lsprof(f):
 
 t_context = threading.local()
 _valid = (
-    'start_revid', 'filter_file_id', 'q', 'remember', 'compare_revid', 'sort')
+    'start_revid', 'filter_path', 'q', 'remember', 'compare_revid', 'sort')
 
 
 def set_context(map):
@@ -675,9 +670,3 @@ def convert_to_json_ready(obj):
     elif isinstance(obj, datetime.datetime):
         return tuple(obj.utctimetuple())
     raise TypeError(repr(obj) + " is not JSON serializable")
-
-
-if sys.version_info[0] > 2:
-    text_type = str
-else:
-    text_type = unicode  # noqa: F821

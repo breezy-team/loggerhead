@@ -18,3 +18,8 @@ favicon_app = convert_file_errors(fileapp.FileApp(
 
 robots_app = convert_file_errors(fileapp.FileApp(
     os.path.join(static, 'robots.txt')))
+
+
+def health_app(environ, start_response):
+    start_response('200 OK', [])
+    yield b'ok'
