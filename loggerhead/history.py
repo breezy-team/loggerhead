@@ -34,7 +34,6 @@ import re
 import textwrap
 import threading
 
-from breezy import version_info as breezy_version
 from breezy import tag
 import breezy.branch
 import breezy.delta
@@ -127,18 +126,11 @@ class FileChangeReporter(object):
         except breezy.errors.NoSuchFile:
             return breezy.revision.NULL_REVISION
 
-    if breezy_version >= (3, 1):
-        def report(self, paths, versioned, renamed, copied, modified,
-                   exe_change, kind):
-            return self._report(
-                    paths, versioned, renamed, copied,
-                    modified, exe_change, kind)
-    else:
-        def report(self, file_id, paths, versioned, renamed, modified,
-                   exe_change, kind):
-            return self._report(
-                    paths, versioned, renamed, None,
-                    modified, exe_change, kind)
+    def report(self, paths, versioned, renamed, copied, modified,
+               exe_change, kind):
+        return self._report(
+                paths, versioned, renamed, copied,
+                modified, exe_change, kind)
 
     def _report(self, paths, versioned, renamed, copied, modified,
                 exe_change, kind):
@@ -376,6 +368,7 @@ class History(object):
     def get_short_revision_history_by_fileid(self, file_id):
         # FIXME: would be awesome if we could get, for a folder, the list of
         # revisions where items within that folder changed.i
+        # TODO(jelmer): Avoid versionedfile-specific texts
         possible_keys = [(file_id, revid) for revid in self._rev_indices]
         get_parent_map = self._branch.repository.texts.get_parent_map
         # We chunk the requests as this works better with GraphIndex.
@@ -478,24 +471,6 @@ iso style "yyyy-mm-dd")
             revid = revid.encode('utf-8')
         return revid
 
-    def get_file_view(self, revid, file_id):
-        """
-        Given a revid and optional path, return a (revlist, revid) for
-        navigation through the current scope: from the revid (or the latest
-        revision) back to the original revision.
-
-        If file_id is None, the entire revision history is the list scope.
-        """
-        if revid is None:
-            revid = self.last_revid
-        if file_id is not None:
-            revlist = list(
-                self.get_short_revision_history_by_fileid(file_id))
-            revlist = self.get_revids_from(revlist, revid)
-        else:
-            revlist = self.get_revids_from(None, revid)
-        return revlist
-
     @staticmethod
     def _iterate_sufficiently(iterable, stop_at, extra_rev_count):
         """Return a list of iterable.
@@ -522,15 +497,33 @@ iso style "yyyy-mm-dd")
                 result.append(n)
         return result
 
-    def get_view(self, revid, start_revid, file_id, query=None,
+    def _get_file_view(self, revid, file_id):
+        """
+        Given a revid and optional path, return a (revlist, revid) for
+        navigation through the current scope: from the revid (or the latest
+        revision) back to the original revision.
+
+        If file_id is None, the entire revision history is the list scope.
+        """
+        if revid is None:
+            revid = self.last_revid
+        if file_id is not None:
+            revlist = list(
+                self.get_short_revision_history_by_fileid(file_id))
+            revlist = self.get_revids_from(revlist, revid)
+        else:
+            revlist = self.get_revids_from(None, revid)
+        return revlist
+
+    def get_view(self, revid, start_revid, path, query=None,
                  extra_rev_count=None):
         """
-        use the URL parameters (revid, start_revid, file_id, and query) to
-        determine the revision list we're viewing (start_revid, file_id, query)
+        use the URL parameters (revid, start_revid, path, and query) to
+        determine the revision list we're viewing (start_revid, path, query)
         and where we are in it (revid).
 
             - if a query is given, we're viewing query results.
-            - if a file_id is given, we're viewing revisions for a specific
+            - if a path is given, we're viewing revisions for a specific
               file.
             - if a start_revid is given, we're viewing the branch from a
               specific revision up the tree.
@@ -548,14 +541,19 @@ iso style "yyyy-mm-dd")
             - start_revid: starting revision of this view
             - revid_list: list of revision ids for this view
 
-        file_id and query are never changed so aren't returned, but they may
+        path and query are never changed so aren't returned, but they may
         contain vital context for future url navigation.
         """
         if start_revid is None:
             start_revid = self.last_revid
 
         if query is None:
-            revid_list = self.get_file_view(start_revid, file_id)
+            repo = self._branch.repository
+            if path is not None:
+                file_id = repo.revision_tree(start_revid).path2id(path)
+            else:
+                file_id = None
+            revid_list = self._get_file_view(start_revid, file_id)
             revid_list = self._iterate_sufficiently(revid_list, revid,
                                                     extra_rev_count)
             if revid is None:
@@ -563,15 +561,17 @@ iso style "yyyy-mm-dd")
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
-                revid_list = self.get_file_view(revid, file_id)
+                revid_list = self._get_file_view(revid, file_id)
                 revid_list = self._iterate_sufficiently(revid_list, revid,
                                                         extra_rev_count)
                 start_revid = revid
             return revid, start_revid, revid_list
+        else:
+            file_id = None
 
         # potentially limit the search
         if file_id is not None:
-            revid_list = self.get_file_view(start_revid, file_id)
+            revid_list = self._get_file_view(start_revid, file_id)
         else:
             revid_list = None
         revid_list = search.search_revisions(self._branch, query)
@@ -588,18 +588,13 @@ iso style "yyyy-mm-dd")
     def revision_tree(self, revid):
         return self._branch.repository.revision_tree(revid)
 
-    def get_path(self, revid, file_id):
-        if (file_id is None) or (file_id == ''):
-            return ''
-        path = self.revision_tree(revid).id2path(file_id)
+    def file_exists(self, revid, path):
         if (len(path) > 0) and not path.startswith('/'):
             path = '/' + path
-        return path
-
-    def get_file_id(self, revid, path):
-        if (len(path) > 0) and not path.startswith('/'):
-            path = '/' + path
-        return self.revision_tree(revid).path2id(path)
+        try:
+            return self.revision_tree(revid).has_filename(path)
+        except breezy.errors.NoSuchRevision:
+            return False
 
     def get_merge_point_list(self, revid):
         """
@@ -786,32 +781,15 @@ iso style "yyyy-mm-dd")
         return (display_path, breezy.osutils.basename(path),
                 rev_tree.get_file_text(path))
 
-    def get_file_by_fileid(self, fileid, revid):
-        """Returns (path, filename, file contents)"""
-        if not isinstance(fileid, bytes):
-            raise TypeError(fileid)
-        if not isinstance(revid, bytes):
-            raise TypeError(revid)
-        rev_tree = self._branch.repository.revision_tree(revid)
-        path = rev_tree.id2path(fileid)
-        display_path = path
-        if not display_path.startswith('/'):
-            path = '/' + path
-        return (display_path, breezy.osutils.basename(path),
-                rev_tree.get_file_text(path))
-
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
         Return a nested data structure containing the changes in a delta::
 
-            added: list((filename, file_id)),
-            renamed: list((old_filename, new_filename, file_id)),
-            deleted: list((filename, file_id)),
-            modified: list(
-                filename: str,
-                file_id: str,
-            ),
-            text_changes: list((filename, file_id)),
+            added: list((filename)),
+            renamed: list((old_filename, new_filename)),
+            deleted: list((filename)),
+            modified: list((filename)),
+            text_changes: list((filename)),
         """
         repo = self._branch.repository
         if (breezy.revision.is_null(old_revid) or

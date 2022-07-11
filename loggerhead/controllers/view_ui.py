@@ -99,19 +99,10 @@ class ViewUI(TemplatedBranchView):
         history = self._history
         branch = history._branch
         revid = self.get_revid()
-        file_id = kwargs.get('file_id', None)
-        if file_id is not None:
-            file_id = urlutils.unquote_to_bytes(osutils.safe_utf8(file_id))
-        if (file_id is None) and (path is None):
-            raise HTTPBadRequest('No file_id or filename '
-                                 'provided to view')
+        if path is None:
+            raise HTTPBadRequest('No filename provided to view')
 
-        try:
-            if file_id is None:
-                file_id = history.get_file_id(revid, path)
-            if path is None:
-                path = history.get_path(revid, file_id)
-        except (NoSuchId, NoSuchRevision):
+        if not history.file_exists(revid, path):
             raise HTTPNotFound()
 
         filename = os.path.basename(path)
@@ -151,7 +142,6 @@ class ViewUI(TemplatedBranchView):
             # checking whether we're in "annotated" mode.
             'annotated': {},
             'revno_url': revno_url,
-            'file_id': file_id,
             'file_path': path,
             'filename': filename,
             'navigation': navigation,

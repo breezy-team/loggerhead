@@ -78,7 +78,7 @@ class TestWithSimpleTree(BasicTests):
         # XXX: This could be cleaned up more... -- mbp 2011-11-25
         self.useFixture(self.sample_branch_fixture)
         self.tree = self.sample_branch_fixture.tree
-        self.fileid = self.sample_branch_fixture.fileid
+        self.path = self.sample_branch_fixture.path
         self.filecontents = self.sample_branch_fixture.filecontents
         self.msg = self.sample_branch_fixture.msg
 
@@ -95,7 +95,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_changes_for_file(self):
         app = self.setUpLoggerhead()
-        res = app.get('/changes?filter_file_id=myfilename-id')
+        res = app.get('/changes?filter_path=%s' % self.path)
         res.mustcontain(escape(self.msg))
 
     def test_changes_branch_from(self):
@@ -111,7 +111,7 @@ class TestWithSimpleTree(BasicTests):
 
     def test_annotate(self):
         app = self.setUpLoggerhead()
-        res = app.get('/annotate', params={'file_id': self.fileid})
+        res = app.get('/annotate/1/%s' % self.path, params={})
         # If pygments is installed, it inserts <span class="pyg" content into
         # the output, to trigger highlighting. And it specifically highlights
         # the &lt; that we are interested in seeing in the output.
@@ -137,8 +137,6 @@ class TestWithSimpleTree(BasicTests):
         res.mustcontain('myfilename')
         res = app.get('/files/1/')
         res.mustcontain('myfilename')
-        res = app.get('/files/1/?file_id=' + self.tree.path2id('').decode('utf-8'))
-        res.mustcontain('myfilename')
 
     def test_inventory_bad_rev_404(self):
         app = self.setUpLoggerhead()
@@ -148,7 +146,6 @@ class TestWithSimpleTree(BasicTests):
     def test_inventory_bad_path_404(self):
         app = self.setUpLoggerhead()
         res = app.get('/files/1/hooha', status=404)
-        res = app.get('/files/1?file_id=dssadsada', status=404)
 
     def test_revision(self):
         app = self.setUpLoggerhead()

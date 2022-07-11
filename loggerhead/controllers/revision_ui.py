@@ -46,7 +46,7 @@ class RevisionUI(TemplatedBranchView):
         h = self._history
         revid = self.get_revid()
 
-        filter_file_id = kwargs.get('filter_file_id', None)
+        filter_path = kwargs.get('filter_path', None)
         start_revid = h.fix_revid(kwargs.get('start_revid', None))
         query = kwargs.get('q', None)
         compare_revid = h.fix_revid(kwargs.get('compare_revid', None))
@@ -56,7 +56,7 @@ class RevisionUI(TemplatedBranchView):
         try:
             revid, start_revid, revid_list = h.get_view(revid,
                                                         start_revid,
-                                                        filter_file_id,
+                                                        filter_path,
                                                         query)
         except BaseException:
             self.log.exception('Exception fetching changes')
@@ -102,12 +102,12 @@ class RevisionUI(TemplatedBranchView):
         super(RevisionUI, self).add_template_values(values)
         remember = self._history.fix_revid(self.kwargs.get('remember', None))
         query = self.kwargs.get('q', None)
-        filter_file_id = self.kwargs.get('filter_file_id', None)
+        filter_path = self.kwargs.get('filter_path', None)
         start_revid = self.kwargs['start_revid']
         navigation = util.Container(
             revid_list=self.revid_list, revid=values['revid'],
             start_revid=start_revid,
-            filter_file_id=filter_file_id, pagesize=1,
+            filter_path=filter_path, pagesize=1,
             scan_url='/revision', branch=self._branch, feed=True,
             history=self._history)
         if query is not None:
@@ -161,7 +161,7 @@ class RevisionUI(TemplatedBranchView):
             'navigation': navigation,
             'remember': remember,
             'compare_revid': self.compare_revid,
-            'filter_file_id': filter_file_id,
+            'filter_path': filter_path,
             'diff_chunks': diff_chunks,
             'query': query,
             'can_export': can_export,
