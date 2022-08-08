@@ -4,7 +4,17 @@ What's changed in loggerhead?
 unreleased
 ----------
 
+    - Make RevInfoDiskCache use a marshal version supported by Python 2, to
+      ease migration. (Colin Watson)
+
+    - Drop support for Python < 3 and Breezy < 3.1. (Jelmer Vernooĳ)
+
+    - Add a ``/health`` target, convenient for health checking in e.g.
+      Kubernetes. (Jelmer Vernooĳ)
+
     - Fix highlighting for large files. (Jürgen Gmach, #1966702)
+
+    - Avoid use of file ids - use paths instead. (Jelmer Vernooĳ)
 
 1.20.0 [18Jul2021]
 ------------------
