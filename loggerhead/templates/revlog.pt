@@ -6,7 +6,7 @@
            tal:content="python:revno_with_nick(parent)"></a>
       </span>
     </li>
-    <li class="mto" tal:repeat="merge_point entry/merge_points">
+    <li class="mto" tal:repeat="merge_point entry.merge_points">
       <a tal:attributes="href python:url(['/changes', merge_point.revno])"
          tal:content="python:revno_with_nick(merge_point)"
          title="Show history" class="link"></a>

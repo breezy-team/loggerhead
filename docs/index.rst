@@ -13,7 +13,7 @@ Getting Started
 
 Loggerhead depends on the following Python libraries.:
 
-- SimpleTAL for templating.
+- Chameleon for templating.
 
 - Paste for the server. (You need version 1.2 or newer of Paste).
 
@@ -27,7 +27,7 @@ Installing Dependencies Using Ubuntu Packages
 
 .. code-block:: sh
 
-   $ sudo apt-get install python-simpletal
+   $ sudo apt-get install python-chameleon
    $ sudo apt-get install python-paste
    $ sudo apt-get install python-pastedeploy
    $ sudo apt-get install python-flup
@@ -37,9 +37,7 @@ Installing Dependencies Using :command:`easy_install`
 
 .. code-block:: sh
 
-   $ easy_install \
-     -f http://www.owlfish.com/software/simpleTAL/py2compatible/download.html \
-     SimpleTAL
+   $ easy_install Chameleon
    $ easy_install Paste
    $ easy_install PasteDeploy
    $ easy_install flup

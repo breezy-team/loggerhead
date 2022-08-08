@@ -1,10 +1,10 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
           "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros.main">
   <head>
     <title metal:fill-slot="title"
-           tal:content="string:${branch/friendly_name} : contents of ${file_path}
-                        at revision ${change/revno}">
+           tal:content="string:${branch.friendly_name} : contents of ${file_path}
+                        at revision ${change.revno}">
     </title>
     <metal:block fill-slot="header_extras">
         <link rel="stylesheet" type="text/css" media="all"
@@ -16,27 +16,27 @@
 
   <body>
       <tal:block metal:fill-slot="backlink">
-          <tal:has-link condition="branch/branch_link">
+          <tal:has-link condition="branch.branch_link">
             <div class="black-link">
-                <a tal:attributes="href branch/branch_link">
+                <a tal:attributes="href branch.branch_link">
                   &#8592; Back to branch summary
                 </a>
             </div>
           </tal:has-link>
       </tal:block>
-      <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
+      <tal:block metal:fill-slot="branchname" tal:content="branch.friendly_name" />
           <tal:block metal:fill-slot="heading">
           <div id="breadcrumbs">
-          <tal:has-link condition="branch/branch_link">
-            <a tal:attributes="href branch/branch_link"
-               tal:content="branch/friendly_name">
+          <tal:has-link condition="branch.branch_link">
+            <a tal:attributes="href branch.branch_link"
+               tal:content="branch.friendly_name">
               nice/branch/name
             </a>
           </tal:has-link>
-          <tal:no-link condition="not: branch/branch_link">
-            <span metal:use-macro="breadcrumbs/directory"></span>
+          <tal:no-link condition="not: branch.branch_link">
+            <span metal:use-macro="breadcrumbs.directory"></span>
           </tal:no-link>
-          <span>: <span metal:use-macro="breadcrumbs/branch" /> (revision <tal:revno content="change/revno"></tal:revno>)</span>
+          <span>: <span metal:use-macro="breadcrumbs.branch" /> (revision <tal:revno content="change.revno"></tal:revno>)</span>
         </div>
       </tal:block>
 
@@ -73,8 +73,8 @@
         <table id="logentries">
           <tal:rep tal:condition="annotated" tal:repeat="line contents">
             <tr>
-              <td tal:condition="python:path('repeat/line/number') in annotated"
-                  tal:define="anno python:annotated.get(path('repeat/line/number'), None)"
+              <td tal:condition="python:repeat.line.number in annotated"
+                  tal:define="anno python:annotated.get(repeat.line.number, None)"
                   tal:attributes="rowspan python:anno.revspan"
                   class="viewRev">
                 <a tal:content="python:'%s' % (anno.change.revno,)"
@@ -85,9 +85,9 @@
 
                 <span tal:content="python:anno.message"></span>
               </td>
-              <td tal:attributes="class python:path('repeat/line/number') in annotated and 'viewLine first' or 'viewLine'">
-                <pre><a tal:attributes="id string:L${repeat/line/number}; href string:#L${repeat/line/number}"
-                   tal:content="repeat/line/number">1</a></pre>
+              <td tal:attributes="class python:repeat.line.number in annotated and 'viewLine first' or 'viewLine'">
+                <pre><a tal:attributes="id string:L${repeat.line.number}; href string:#L${repeat.line.number}"
+                   tal:content="repeat.line.number">1</a></pre>
               </td>
               <td class="viewCont"><pre tal:content="structure line"></pre></td>
             </tr>

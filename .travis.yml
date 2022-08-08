@@ -10,9 +10,7 @@ git:
 matrix:
   include:
     - python: 3.5
-      env: TAL_VERSION=5.2
     - python: 3.6
-      env: TAL_VERSION=5.2
 
 script:
   - python -m coverage run -p -m unittest loggerhead.tests.test_suite
@@ -20,7 +18,7 @@ script:
 install:
   - sudo apt install subunit adduser libjs-jquery
   - travis_retry pip install -U setuptools
-  - travis_retry pip install -U pip coverage codecov flake8 testtools configobj cython testscenarios six docutils python-subunit dulwich bzr+lp:brz pygments paste http://www.owlfish.com/software/simpleTAL/downloads/SimpleTAL-$TAL_VERSION.tar.gz bleach
+  - travis_retry pip install -U pip coverage codecov flake8 testtools configobj cython testscenarios six docutils python-subunit dulwich bzr+lp:brz pygments paste Chameleon bleach
 
 after_success:
   - codecov
