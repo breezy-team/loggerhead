@@ -18,6 +18,13 @@ unreleased
 
     - Port from SimpleTAL to Chameleon. (Colin Watson)
 
+    - Modernize packaging.  There are new dependencies on
+      ``importlib_metadata`` (for Python < 3.8) and ``packaging``, in order
+      to avoid a self-import in ``setup.py``.  People proxying Loggerhead
+      through Apache should install the ``loggerhead[proxied]`` extra;
+      people running it via FastCGI, SCGI, or AJP should install the
+      ``loggerhead[flup]`` extra. (Colin Watson, #1831661)
+
 1.20.0 [18Jul2021]
 ------------------
 
