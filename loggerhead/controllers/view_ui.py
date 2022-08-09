@@ -82,7 +82,7 @@ class ViewUI(TemplatedBranchView):
             extra_lines = len(file_lines) - len(hl_lines)
             hl_lines.extend([u''] * extra_lines)
         else:
-            hl_lines = map(util.html_escape, file_lines)
+            hl_lines = [util.html_escape(line) for line in file_lines]
 
         return hl_lines
 

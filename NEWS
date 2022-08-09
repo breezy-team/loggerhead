@@ -16,6 +16,8 @@ unreleased
 
     - Avoid use of file ids - use paths instead. (Jelmer Vernooĳ)
 
+    - Port from SimpleTAL to Chameleon. (Colin Watson)
+
 1.20.0 [18Jul2021]
 ------------------
 

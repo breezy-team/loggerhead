@@ -180,8 +180,8 @@ def generator_string():
         else:
             versions.append(('PasteDeploy', PasteDeploy.version))
 
-        import simpletal
-        versions.append(('SimpleTAL', simpletal.__version__))
+        Chameleon = pkg_resources.get_distribution('Chameleon')
+        versions.append(('Chameleon', Chameleon.version))
 
         try:
             import pygments

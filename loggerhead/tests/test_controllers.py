@@ -32,7 +32,6 @@ from testtools.matchers import (
 
 from ..apps.branch import BranchWSGIApp
 from ..controllers.annotate_ui import AnnotateUI
-from ..controllers.inventory_ui import InventoryUI
 from .test_simple import (
     BasicTests,
     consume_app,
@@ -50,35 +49,51 @@ class TestInventoryUI(BasicTests):
         self.addCleanup(tree.branch.lock_read().unlock)
         return tree.branch
 
-    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape):
+    def make_bzrbranch_and_inventory_ui_for_tree_shape(self, shape, env):
         branch = self.make_bzrbranch_for_tree_shape(shape)
         branch_app = self.make_branch_app(branch)
-        return branch, InventoryUI(branch_app, branch_app.get_history)
+        return branch, branch_app.lookup_app(env)
 
     def test_get_filelist(self):
+        env = {
+            'SCRIPT_NAME': '',
+            'PATH_INFO': '/files',
+            'wsgi.url_scheme': 'http',
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': '80',
+            }
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
-            ['filename'])
+            ['filename'], env)
         revtree = bzrbranch.repository.revision_tree(bzrbranch.last_revision())
         self.assertEqual(1, len(inv_ui.get_filelist(revtree, '', 'filename', 'head')))
 
     def test_smoke(self):
+        env = {
+            'SCRIPT_NAME': '',
+            'PATH_INFO': '/files',
+            'wsgi.url_scheme': 'http',
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': '80',
+            }
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
-            ['filename'])
-        start, content = consume_app(inv_ui,
-            {'SCRIPT_NAME': '/files', 'PATH_INFO': ''})
+            ['filename'], env)
+        start, content = consume_app(inv_ui, env)
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertContainsRe(content, b'filename')
 
     def test_no_content_for_HEAD(self):
+        env = {
+            'SCRIPT_NAME': '',
+            'PATH_INFO': '/files',
+            'REQUEST_METHOD': 'HEAD',
+            'wsgi.url_scheme': 'http',
+            'SERVER_NAME': 'localhost',
+            'SERVER_PORT': '80',
+            }
         bzrbranch, inv_ui = self.make_bzrbranch_and_inventory_ui_for_tree_shape(
-            ['filename'])
-        start, content = consume_app(inv_ui,
-            {'SCRIPT_NAME': '/files', 'PATH_INFO': '',
-             'REQUEST_METHOD': 'HEAD',
-             'wsgi.url_scheme': 'http',
-               'SERVER_NAME': 'localhost',
-               'SERVER_PORT': '80'})
+            ['filename'], env)
+        start, content = consume_app(inv_ui, env)
         self.assertEqual(('200 OK', [('Content-Type', 'text/html')], None),
                          start)
         self.assertEqual(b'', content)

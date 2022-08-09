@@ -1,12 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros/main">
+<html xmlns="http://www.w3.org/1999/xhtml" metal:use-macro="macros.main">
   <head>
     <title metal:fill-slot="title"
-           tal:content="string:${branch/friendly_name} : changes"></title>
+           tal:content="string:${branch.friendly_name} : changes"></title>
     <metal:block fill-slot="header_extras">
       <link rel="alternate" type="application/atom+xml"
             tal:attributes="href python:url(['/atom']);
-                            title string:RSS feed for ${branch/friendly_name}" />
+                            title string:RSS feed for ${branch.friendly_name}" />
     <script type="text/javascript">
       var revids = <tal:block content="data" />;
     </script>
@@ -17,25 +17,25 @@
 
   <body>
       <tal:block metal:fill-slot="backlink">
-          <tal:has-link condition="branch/branch_link">
+          <tal:has-link condition="branch.branch_link">
             <div class="black-link">
-                <a tal:attributes="href branch/branch_link">
+                <a tal:attributes="href branch.branch_link">
                   &#8592; Back to branch summary
                 </a>
             </div>
           </tal:has-link>
       </tal:block>
-    <tal:block metal:fill-slot="branchname" tal:content="string:${branch/friendly_name}" />
+    <tal:block metal:fill-slot="branchname" tal:content="branch.friendly_name" />
     <tal:block metal:fill-slot="heading">
         <div id="breadcrumbs">
-            <tal:has-link condition="branch/branch_link">
-              <a tal:attributes="href branch/branch_link"
-                 tal:content="branch/friendly_name">
+            <tal:has-link condition="branch.branch_link">
+              <a tal:attributes="href branch.branch_link"
+                 tal:content="branch.friendly_name">
                 nice/branch/name
               </a>
             </tal:has-link>
-            <tal:no-link condition="not: branch/branch_link">
-              <span metal:use-macro="breadcrumbs/directory"></span>
+            <tal:no-link condition="not: branch.branch_link">
+              <span metal:use-macro="breadcrumbs.directory"></span>
             </tal:no-link>
             <tal:block condition="changes">
               &#187; Changes
@@ -60,11 +60,11 @@
         No revisions!
       </p>
 
-      <p class="fr revnolink">From Revision <a tal:attributes="href #
+      <p class="fr revnolink">From Revision <a tal:attributes="href string:#
                                                                title python:'Show revision '+history.get_revno(revid)"
                                                tal:content="python:history.get_revno(revid)"></a>
         <tal:block tal:condition="python:navigation.last_in_page_revid is not None"> to
-          <a tal:attributes="href #
+          <a tal:attributes="href string:#
                              title 'Show revision '+history.get_revno(navigation.last_in_page_revid)"
              tal:content="python:history.get_revno(navigation.last_in_page_revid)"></a>
       </tal:block></p>
@@ -89,8 +89,8 @@
           <th class="downloadcell">Files</th>
         </tr>
         <tal:block tal:repeat="entry changes">
-          <a tal:attributes="name string:entry-${entry/revno}"/>
-          <tr tal:attributes="class string:blueRow${entry/parity} revision_log; id string:log-${entry/index}">
+          <a tal:attributes="name string:entry-${entry.revno}"/>
+          <tr tal:attributes="class string:blueRow${entry.parity} revision_log; id string:log-${entry.index}">
             <td class="revnro revnolink"><a tal:attributes="title python:'Show revision '+entry.revno;
                                                             href  python:url(['/revision', entry.revno], clear=1)"
                                             tal:content="python:util.trunc(entry.revno)"></a>
@@ -110,7 +110,7 @@
                 <a tal:attributes="title python:'Show revision '+entry.revno;
                                    href  python:url(['/revision', entry.revno], clear=1);
                                    class string:link"
-                   tal:content="entry/short_comment"></a>
+                   tal:content="entry.short_comment"></a>
               </div>
               <div class="long_description" style="display: none">
                 <img tal:condition="python:entry.parents[1:]"
@@ -126,7 +126,7 @@
             </td>
             <td tal:content="python:util.trunc(util.hide_email(entry.authors[0]), 20)"
                 class="autcell"></td>
-            <td tal:condition="show_tag_col" tal:content="string:${entry/tags}"
+            <td tal:condition="show_tag_col" tal:content="string:${entry.tags}"
                 class="tagcell"></td>
             <td class="date">
               <span tal:attributes="title python:util.date_time(entry.utc_date)"
@@ -136,7 +136,7 @@
                                                  href python:url(['/revision', entry.revno], clear=1)">
                 <img tal:attributes="src python:branch.static_url('/static/images/ico_diff.gif')" alt="Diff" /></a></td>
             <td class="downr"><a tal:attributes="href python:branch.url(['/files', entry.revno]);
-                                                 title string:Files at revision ${entry/revno}">
+                                                 title string:Files at revision ${entry.revno}">
                 <img tal:attributes="src python:branch.static_url('/static/images/ico_file.gif')" alt="Files" /></a>
             </td>
           </tr>
@@ -145,9 +145,9 @@
 
       <ul tal:condition="python:navigation.prev_page_revid or navigation.next_page_revid"
           id="pages">
-        <li tal:condition="navigation/prev_page_revid"
+        <li tal:condition="navigation.prev_page_revid"
             class="previous">
-          <a tal:attributes="href navigation/prev_page_url">&laquo; Newer</a>
+          <a tal:attributes="href navigation.prev_page_url">&laquo; Newer</a>
         </li>
         <!-- FIXME: Leaving this to eventually show page numbers. Can't show all of them,
              so some magic has to be done to just show the previous and next N page numbers
@@ -157,9 +157,9 @@
                <li><a href="#"
                       tal:content="page_number"></a></li>
              </tal:block>-->
-        <li tal:condition="navigation/next_page_revid"
+        <li tal:condition="navigation.next_page_revid"
             class="next">
-          <a tal:attributes="href navigation/next_page_url">Older &raquo;</a>
+          <a tal:attributes="href navigation.next_page_url">Older &raquo;</a>
         </li>
       </ul>
 
