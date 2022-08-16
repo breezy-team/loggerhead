@@ -17,7 +17,7 @@ Loggerhead depends on the following Python libraries.:
 
 - Paste for the server. (You need version 1.2 or newer of Paste).
 
-- Paste Deploy  (optional, needed when proxying through Apache).
+- PasteDeploy (optional, needed when proxying through Apache).
 
 - flup (optional, needed to use FastCGI, SCGI or AJP).
 
@@ -32,15 +32,19 @@ Installing Dependencies Using Ubuntu Packages
    $ sudo apt-get install python-pastedeploy
    $ sudo apt-get install python-flup
 
-Installing Dependencies Using :command:`easy_install`
-#####################################################
+Installing Dependencies Using :command:`pip`
+############################################
+
+You should normally create and activate a virtual environment first.
 
 .. code-block:: sh
 
-   $ easy_install Chameleon
-   $ easy_install Paste
-   $ easy_install PasteDeploy
-   $ easy_install flup
+   # Basic installation only
+   $ pip install loggerhead
+   # Installation for proxying through Apache
+   $ pip install 'loggerhead[proxied]'
+   # Installation for FastCGI, SCGI or AJP
+   $ pip install 'loggerhead[flup]'
 
 
 Running the Standalone Loggerhead Server
