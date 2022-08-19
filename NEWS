@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-unreleased
-----------
+2.0.0 [19Aug2022]
+-----------------
 
     - Make RevInfoDiskCache use a marshal version supported by Python 2, to
       ease migration. (Colin Watson)
