@@ -1,4 +1,4 @@
-loggerhead (2.0.0-1) UNRELEASED; urgency=medium
+loggerhead (2.0.0-1) unstable; urgency=medium
 
   * Drop dependency on simpletal, move to chameleon.
   * New upstream release.
@@ -6,7 +6,7 @@ loggerhead (2.0.0-1) UNRELEASED; urgency=medium
   * Bump debhelper from old 12 to 13.
   * Update standards version to 4.6.0, no changes needed.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 21 Aug 2022 14:33:40 +0100
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 21 Aug 2022 14:38:51 +0100
 
 loggerhead (1.19~bzr524-1) unstable; urgency=low
 
