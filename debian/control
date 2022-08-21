@@ -16,7 +16,7 @@ Build-Depends: python3-all,
                python3-simpletal,
                dh-python,
                debhelper-compat (= 13)
-Standards-Version: 4.5.0
+Standards-Version: 4.6.0
 Vcs-Bzr: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 Vcs-Browser: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 Rules-Requires-Root: no

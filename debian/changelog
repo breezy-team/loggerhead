@@ -2,6 +2,7 @@ loggerhead (2.0.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
   * Bump debhelper from old 12 to 13.
+  * Update standards version to 4.6.0, no changes needed.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 21 Aug 2022 13:49:48 -0000
 
