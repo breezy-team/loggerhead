@@ -30,9 +30,19 @@ This provides a new option "--http" to the "bzr serve" command, that
 starts a web server to browse the contents of a branch.
 """
 
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 import sys
 
-version_info = (1, 20, 0) # Keep in sync with loggerhead/__init__.py
+from packaging.version import Version
+
+try:
+    version_info = Version(importlib_metadata.version("loggerhead")).release
+except importlib_metadata.PackageNotFoundError:
+    # Support running tests from the build tree without installation.
+    version_info = None
 
 import breezy
 from breezy import commands

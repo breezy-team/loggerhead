@@ -35,7 +35,7 @@
       <h1 class="branch-name">
         <span metal:define-slot="branchname" />
       </h1>
-      <tal:menu define="fileview_active fileview_active"
+      <tal:menu define="fileview_active fileview_active|False"
                 replace="structure python:menu(branch, url, fileview_active)" />
       <div id="loggerheadCont">
 

@@ -16,7 +16,7 @@
     <div id="loggerheadCont">
       <h1>
         Browsing
-        <span metal:use-macro="breadcrumbs/directory" />
+        <span metal:use-macro="breadcrumbs.directory" />
       </h1>
 
       <div >
@@ -37,17 +37,17 @@
           </tr>
           <tal:block repeat="dir dirs">
 
-            <tal:branch-row tal:condition="dir/branch">
-              <tr tal:attributes="class string:blueRow${dir/parity}">
+            <tal:branch-row tal:condition="dir.branch">
+              <tr tal:attributes="class string:blueRow${dir.parity}">
                 <td class="date">
-                    <a tal:attributes="href string:${dir/dirname}/files">
+                    <a tal:attributes="href string:${dir.dirname}/files">
                         <img tal:attributes="src python:static_url('/static/images/ico_branch.gif')" alt="Branch" />
                     </a>
-                  <a tal:attributes="href string:${dir/dirname}/files" tal:content="dir/dirname" /></td>
+                  <a tal:attributes="href string:${dir.dirname}/files" tal:content="dir.dirname" /></td>
                 <td class="date">
-                  <a tal:attributes="href string:${dir/dirname}/revision/${dir/branch/revno};
-                                     title string:Show revision ${dir/branch/revno}"
-                     tal:content="dir/branch/revno"></a>
+                  <a tal:attributes="href string:${dir.dirname}/revision/${dir.branch.revno};
+                                     title string:Show revision ${dir.branch.revno}"
+                     tal:content="dir.branch.revno"></a>
                 </td>
                 <td class="date" tal:content="python:util._approximatedate(dir.last_change_time)"></td>
                 <td class="date" tal:content="python:util.hide_email(dir.last_revision.committer) if dir.last_revision is not None else 'Nobody'"></td>
@@ -55,15 +55,15 @@
               </tr>
 
             </tal:branch-row>
-            <tal:non-branch-row tal:condition="not:dir/branch">
-              <tr tal:attributes="class string:blueRow${dir/parity}">
+            <tal:non-branch-row tal:condition="not:dir.branch">
+              <tr tal:attributes="class string:blueRow${dir.parity}">
                 <td class="date">
-                    <a tal:attributes="href string:${dir/dirname}/">
+                    <a tal:attributes="href string:${dir.dirname}/">
                         <img tal:attributes="src python:static_url('/static/images/ico_folder.gif')" alt="Folder" />
                     </a>
-                  <a tal:attributes="href string:${dir/dirname}/" tal:content="dir/dirname" /></td>
+                  <a tal:attributes="href string:${dir.dirname}/" tal:content="dir.dirname" /></td>
                 <td class="date"></td>
-                <td class="date" colspan="4" tal:content="dir/last_change"></td>
+                <td class="date" colspan="4" tal:content="dir.last_change"></td>
               </tr>
             </tal:non-branch-row>
           </tal:block>

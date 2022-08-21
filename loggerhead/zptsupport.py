@@ -13,15 +13,13 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
-"""Support for Zope Page Templates using the simpletal library."""
+"""Support for Zope Page Templates using the Chameleon library."""
 
-import logging
 import os
 import pkg_resources
 import re
-from io import StringIO
 
-from simpletal import simpleTAL, simpleTALES
+from chameleon import PageTemplate
 
 _zpt_cache = {}
 
@@ -35,7 +33,7 @@ def zpt(tfile):
         text = re.sub(r'\s*\n\s*', '\n', text)
         text = re.sub(r'[ \t]+', ' ', text)
         tinstance = _zpt_cache[tfile] = TemplateWrapper(
-            simpleTAL.compileXMLTemplate(text), tfile, stat)
+            PageTemplate(text), tfile, stat)
     return tinstance
 
 
@@ -47,18 +45,10 @@ class TemplateWrapper(object):
         self.stat = stat
 
     def expand(self, **info):
-        context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in info.items():
-            context.addGlobal(k, v)
-        s = StringIO()
-        self.template.expandInline(context, s)
-        return s.getvalue()
+        return self.template(**info)
 
     def expand_into(self, f, **info):
-        context = simpleTALES.Context(allowPythonPath=1)
-        for k, v in info.items():
-            context.addGlobal(k, v)
-        self.template.expand(context, f, outputEncoding='utf-8')
+        f.write(self.template(**info).encode('UTF-8'))
 
     @property
     def macros(self):

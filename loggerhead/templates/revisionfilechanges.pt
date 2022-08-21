@@ -1,6 +1,6 @@
 <tal:block>
-  <ul tal:repeat="added file_changes/added">
-    <tal:block condition="repeat/added/start">
+  <ul tal:repeat="added file_changes.added">
+    <tal:block condition="repeat.added.start">
       <li class="desc">files added:</li>
     </tal:block>
     <li class="files" tal:omit-tag="python:added.filename == ''"
@@ -8,47 +8,47 @@
       <tal:revision condition="python:added.kind == 'file'"
                     content="structure python:file_link(added.filename)" />
       <tal:revision condition="python:added.kind != 'file'"
-                    content="added/filename" />
+                    content="added.filename" />
     </li>
   </ul>
 
-  <ul tal:repeat="removed file_changes/removed">
-    <tal:block condition="repeat/removed/start">
+  <ul tal:repeat="removed file_changes.removed">
+    <tal:block condition="repeat.removed.start">
       <li class="desc">files removed:</li>
     </tal:block>
     <li class="files">
       <tal:revision condition="python:removed.kind == 'file'"
                     content="structure python:file_link(removed.filename)" />
       <tal:revision condition="python:removed.kind != 'file'"
-                    content="removed/filename" />
+                    content="removed.filename" />
     </li>
   </ul>
 
-  <ul tal:repeat="renamed file_changes/renamed">
-    <tal:block condition="repeat/renamed/start">
+  <ul tal:repeat="renamed file_changes.renamed">
+    <tal:block condition="repeat.renamed.start">
       <li class="desc">files renamed:</li>
     </tal:block>
     <li class="files">
-      <tal:old-name content="renamed/old_filename" class="filename">
+      <span tal:content="renamed.old_filename" class="filename">
         old_filename
-      </tal:old-name>
+      </span>
       =&gt;
-      <tal:revision condition="renamed/text_modified" content="structure python:file_link(renamed.new_filename)" />
-      <tal:old-name condition="not:renamed/text_modified" content="renamed/new_filename" class="filename">
+      <tal:revision condition="renamed.text_modified" content="structure python:file_link(renamed.new_filename)" />
+      <span tal:condition="not:renamed.text_modified" tal:content="renamed.new_filename" class="filename">
         new_filename
-      </tal:old-name>
-      <tal:prop-change condition="renamed/exe_change" content="string:*" />
+      </span>
+      <tal:prop-change condition="renamed.exe_change" content="string:*" />
     </li>
   </ul>
 
-  <ul tal:repeat="item file_changes/modified">
-    <tal:block condition="repeat/item/start">
+  <ul tal:repeat="item file_changes.modified">
+    <tal:block condition="repeat.item.start">
       <li class="desc">files modified:</li>
     </tal:block>
     <li class="files">
-      <tal:revision condition="item/text_modified" content="structure python:file_link(item.filename)" />
-      <tal:revision condition="not:item/text_modified" content="item/filename" />
-      <tal:prop-change condition="item/exe_change" content="string:*" />
+      <tal:revision condition="item.text_modified" content="structure python:file_link(item.filename)" />
+      <tal:revision condition="not:item.text_modified" content="item.filename" />
+      <tal:prop-change condition="item.exe_change" content="string:*" />
     </li>
   </ul>
 </tal:block>

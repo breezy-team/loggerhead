@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xmlns:tal="http://xml.zope.org/namespaces/tal">
   <title>
-    bazaar changes for <tal:branch-name content="branch/friendly_name">branch name</tal:branch-name>
+    bazaar changes for <tal:branch-name content="branch.friendly_name">branch name</tal:branch-name>
   </title>
   <updated tal:content="string:${updated}Z">${updated}</updated>
   <id tal:content="python:branch.absolute_url(['/atom'])">url</id>
@@ -9,22 +9,22 @@
   <link rel="alternate" type="text/html" tal:attributes="href python:branch.url(['/changes'])" />
 
   <entry tal:repeat="entry changes">
-    <title tal:content="string:${entry/revno}: ${entry/short_comment}">
-      ${entry/revno}: ${entry/short_comment}
+    <title tal:content="string:${entry.revno}: ${entry.short_comment}">
+      ${entry.revno}: ${entry.short_comment}
     </title>
-    <updated tal:content="string:${entry/utc_date/isoformat}Z">
+    <updated tal:content="string:${entry.utc_date.isoformat}Z">
       updated
     </updated>
     <!-- TODO: The feed validator will generate warnings because this is URL-encoded -->
     <id tal:content="python:branch.absolute_url(['/revision', entry.revno])">
       ID
     </id>
-    <author tal:repeat="author entry/authors">
+    <author tal:repeat="author entry.authors">
       <name tal:content="python:util.hide_email(author)">
         author
       </name>
     </author>
-    <content type="text" tal:content="entry/comment">
+    <content type="text" tal:content="entry.comment">
       comment
     </content>
     <link rel="alternate" type="text/html"

@@ -16,15 +16,15 @@
             <li class="mfrom" tal:condition="python:change.parents[1:]">
                 <strong>mfrom:</strong>
                 <span tal:repeat="parent python:change.parents[1:]">
-                    <a tal:attributes="title string:Merged From ${parent/revno};
+                    <a tal:attributes="title string:Merged From ${parent.revno};
                                        href python:url(['/revision', parent.revno], clear=1)"
                        tal:content="python:revno_with_nick(parent)"></a>
                 </span>
             </li>
-            <li class="mto" tal:condition="change/merge_points">
+            <li class="mto" tal:condition="change.merge_points">
                 <strong>mto:</strong>
-                <span tal:repeat="merge_point change/merge_points">
-                    <a tal:attributes="title string:Merged In ${merge_point/revno};
+                <span tal:repeat="merge_point change.merge_points">
+                    <a tal:attributes="title string:Merged In ${merge_point.revno};
                                        href python:url(['/revision', merge_point.revno], clear=1)"
                        tal:content="python:revno_with_nick(merge_point)"></a>
                 </span>
@@ -37,16 +37,16 @@
             </li>
             <li class="revid">
                 <strong>Revision ID:</strong>
-                <span tal:content="change/revid"></span>
+                <span tal:content="change.revid"></span>
             </li>
         </ul>
-	<div tal:attributes="class string:foreign-${change/foreign_vcs}"
-	     tal:condition="change/foreign_vcs" 
+	<div tal:attributes="class string:foreign-${change.foreign_vcs}"
+	     tal:condition="hasattr(change, 'foreign_vcs')"
 	     tal:repeat="revid_part python:change.foreign_revid.keys()"
 	     tal:content="python:'%s: %s' % (revid_part, change.foreign_revid[revid_part])"/>
-        <div class="tags" tal:condition="change/tags" tal:content="string:Tags: ${change/tags}"></div>
+        <div class="tags" tal:condition="change.tags" tal:content="string:Tags: ${change.tags}"></div>
         <div class="clear"><!-- --></div>
-        <div class="bug" tal:repeat="bug change/bugs">
+        <div class="bug" tal:repeat="bug change.bugs">
             <a tal:attributes="href bug" tal:content="bug"></a>
         </div>
         <div class="information" tal:content="structure python:util.fixed_width(change.comment)"></div>
