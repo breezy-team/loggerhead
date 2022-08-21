@@ -20,46 +20,4 @@
 
 from setuptools import setup
 
-import loggerhead
-
-
-with open("README.rst") as readme:
-    long_description = readme.read()
-
-
-setup(
-    name="loggerhead",
-    version=loggerhead.__version__,
-    description="Loggerhead is a web viewer for projects in bazaar",
-    long_description=long_description,
-    long_description_content_type="text/x-rst",
-    license="GNU GPL v2 or later",
-    maintainer="Michael Hudson",
-    maintainer_email="michael.hudson@canonical.com",
-    scripts=[
-        "loggerhead-serve",
-        ],
-    packages=["loggerhead",
-              "loggerhead/apps",
-              "loggerhead/controllers",
-              "loggerhead/middleware",
-              "loggerhead/templates",
-              "breezy.plugins.loggerhead"],
-    package_dir={'breezy.plugins.loggerhead': '.'},
-    package_data={"loggerhead": ["templates/*.pt",
-                                 "static/css/*.css",
-                                 "static/javascript/*.js",
-                                 "static/images/*"]},
-    data_files=[
-        ('share/man/man1', ['loggerhead-serve.1']),
-        ('share/doc/loggerhead', ['apache-loggerhead.conf',
-                                  'loggerheadd',
-                                  'breezy.conf']),
-        ],
-    install_requires=[
-        'paste',
-        'bleach',
-        'breezy>=3.1',
-    ],
-    testsuite='loggerhead.tests.test_suite',
-    )
+setup()

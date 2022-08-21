@@ -84,14 +84,6 @@ def setup_logging(config, init_logging=True, log_file=None):
     # if it is configured to suppress it
     handler.setLevel(logging.DEBUG)
     logger.addHandler(handler)
-    def _restrict_logging(logger_name):
-        logger = logging.getLogger(logger_name)
-        if logger.getEffectiveLevel() < logging.INFO:
-            logger.setLevel(logging.INFO)
-    # simpleTAL is *very* verbose in DEBUG mode, which is otherwise the
-    # default. So quiet it up a bit.
-    _restrict_logging('simpleTAL')
-    _restrict_logging('simpleTALES')
     return logger
 
 

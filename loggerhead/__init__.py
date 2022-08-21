@@ -15,20 +15,17 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 
-"""A simple container to turn this into a python package.
+"""A simple container to turn this into a python package."""
 
-We also check the versions of some dependencies.
-"""
+try:
+    import importlib.metadata as importlib_metadata
+except ImportError:
+    import importlib_metadata
 
-import pkg_resources
-
-__version__ = '1.20.0'  # Keep in sync with ../__init__.py.
+try:
+    __version__ = importlib_metadata.version("loggerhead")
+except importlib_metadata.PackageNotFoundError:
+    # Support running tests from the build tree without installation.
+    __version__ = None
 __revision__ = None
 required_breezy = (3, 1)
-
-pkg_resources.get_distribution('Paste>=1.6')
-try:
-    pkg_resources.get_distribution('PasteDeploy>=1.3')
-except pkg_resources.DistributionNotFound:
-    # No paste.deploy is OK, but an old paste.deploy is bad.
-    pass

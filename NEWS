@@ -1,13 +1,32 @@
 What's changed in loggerhead?
 =============================
 
-unreleased
-----------
+2.0.0 [19Aug2022]
+-----------------
 
-    - Fix highlighting for large files. (J�rgen Gmach, #1966702)
+    - Make RevInfoDiskCache use a marshal version supported by Python 2, to
+      ease migration. (Colin Watson)
 
-1.20.0
-----
+    - Drop support for Python < 3 and Breezy < 3.1. (Jelmer Vernoo議)
+
+    - Add a ``/health`` target, convenient for health checking in e.g.
+      Kubernetes. (Jelmer Vernoo議)
+
+    - Fix highlighting for large files. (J羹rgen Gmach, #1966702)
+
+    - Avoid use of file ids - use paths instead. (Jelmer Vernoo議)
+
+    - Port from SimpleTAL to Chameleon. (Colin Watson)
+
+    - Modernize packaging.  There are new dependencies on
+      ``importlib_metadata`` (for Python < 3.8) and ``packaging``, in order
+      to avoid a self-import in ``setup.py``.  People proxying Loggerhead
+      through Apache should install the ``loggerhead[proxied]`` extra;
+      people running it via FastCGI, SCGI, or AJP should install the
+      ``loggerhead[flup]`` extra. (Colin Watson, #1831661)
+
+1.20.0 [18Jul2021]
+------------------
 
     - Port to Breezy (https://www.breezy-vcs.org/). (Jelmer Vernoo議)
 
