@@ -1,5 +1,6 @@
-loggerhead (2.0.0-1) unstable; urgency=low
+loggerhead (2.0.0-1) UNRELEASED; urgency=medium
 
+  * Drop dependency on simpletal, move to chameleon.
   * New upstream release.
   * Bump debhelper from old 12 to 13.
   * Update standards version to 4.6.0, no changes needed.
