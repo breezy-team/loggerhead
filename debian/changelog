@@ -1,4 +1,4 @@
-loggerhead (2.0.0-1) unstable; urgency=medium
+loggerhead (2.0.0-1) UNRELEASED; urgency=medium
 
   * Drop dependency on simpletal, move to chameleon.
   * New upstream release.

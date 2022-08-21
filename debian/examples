@@ -1,3 +1,4 @@
 debian/loggerhead-serve.conf.example
+usr/share/doc/loggerhead/loggerheadd
 usr/share/doc/loggerhead/breezy.conf
 usr/share/doc/loggerhead/apache-loggerhead.conf
