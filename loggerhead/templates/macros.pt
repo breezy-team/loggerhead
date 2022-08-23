@@ -46,7 +46,7 @@
         <p id="footer" class="fl">
             Loggerhead is a web-based interface for <a href="https://www.breezy-vcs.org/">Breezy</a>
             <br />
-            Version: <tal:version content="loggerhead_version" /><span tal:condition="loggerhead_revision">, Revision: <tal:revision content="loggerhead_revision" /></span>
+            Version: <tal:version content="loggerhead_version()" /><span tal:condition="loggerhead_revision()">, Revision: <tal:revision content="loggerhead_revision()" /></span>
         </p>
       </div>
   </body>
