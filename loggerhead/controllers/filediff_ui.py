@@ -5,6 +5,10 @@ from breezy import (
     errors,
     urlutils,
     )
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
 from breezy.tree import find_previous_path
 
 from .. import util
@@ -71,7 +75,7 @@ def diff_chunks_for_file(repository, filename, compare_revid, revid,
     tree = repository.revision_tree(revid)
     try:
         lines[revid] = tree.get_file_lines(filename)
-    except errors.NoSuchFile:
+    except NoSuchFile:
         lines[revid] = []
         lines[compare_revid] = compare_tree.get_file_lines(filename)
     else:

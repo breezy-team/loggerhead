@@ -42,6 +42,11 @@ import breezy.foreign
 import breezy.osutils
 import breezy.revision
 
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
+
 from . import search
 from . import util
 from .wholehistory import compute_whole_history_data
@@ -123,7 +128,7 @@ class FileChangeReporter(object):
             return breezy.revision.NULL_REVISION
         try:
             return tree.get_file_revision(path)
-        except breezy.errors.NoSuchFile:
+        except NoSuchFile:
             return breezy.revision.NULL_REVISION
 
     def report(self, paths, versioned, renamed, copied, modified,

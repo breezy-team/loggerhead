@@ -22,6 +22,11 @@ import stat
 
 from breezy import branch, errors, urlutils
 
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
+
 from .. import util
 from ..controllers import TemplatedBranchView
 
@@ -77,7 +82,7 @@ class DirectoryUI(TemplatedBranchView):
                 try:
                     if not stat.S_ISDIR(self.transport.stat(d).st_mode):
                         continue
-                except errors.NoSuchFile:
+                except NoSuchFile:
                     continue
                 b = None
             else:
