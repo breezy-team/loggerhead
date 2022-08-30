@@ -22,10 +22,13 @@ import mimetypes
 import urllib
 
 from breezy.errors import (
-    NoSuchFile,
     NoSuchId,
     NoSuchRevision,
     )
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
 from breezy import osutils, urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
