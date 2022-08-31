@@ -6,6 +6,8 @@ What's changed in loggerhead?
 
     - Fix Loggerhead version/revision display in templates.
 
+    - Remove references to UbuntuBeta fonts. (Colin Watson, #1939189)
+
 2.0.0 [19Aug2022]
 -----------------
 
