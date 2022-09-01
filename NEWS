@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-2.0.1
------
+2.0.1 [01Sep2022]
+-----------------
 
     - Read version from setup.cfg when running from tree. (Jelmer Vernooĳ)
 
