@@ -4,7 +4,14 @@ What's changed in loggerhead?
 2.0.1
 -----
 
-    - Fix Loggerhead version/revision display in templates.
+    - Read version from setup.cfg when running from tree. (Jelmer Vernooĳ)
+
+    - Fix Loggerhead version/revision display in templates. (Colin Watson)
+
+    - Cope with moved errors NoSuchFile and FileExists in newer versions of
+      Breezy. (Jelmer Vernooĳ)
+
+    - Fix file download links in inventory UI. (Ioana Lasc, #1983654)
 
 2.0.0 [19Aug2022]
 -----------------
