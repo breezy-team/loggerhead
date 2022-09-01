@@ -459,6 +459,15 @@ class TestDownloadUI(TestWithSimpleTree):
             app.get, '/download/1/notmyfilename')
         self.assertContainsRe(str(e), '404 Not Found')
 
+    def test_download_from_subdirectory(self):
+        app = self.setUpLoggerhead()
+        response = app.get('/download/1/folder/myfilename')
+        self.assertEqual(
+            b'some\nmultiline\ndata\nwith<htmlspecialchars\n', response.body)
+        self.assertThat(
+            response,
+            MatchesDownloadHeaders('myfilename', 'application/octet-stream'))
+
 
 class IsTarfile(Matcher):
 
