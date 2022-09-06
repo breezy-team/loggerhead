@@ -1,12 +1,22 @@
 What's changed in loggerhead?
 =============================
 
-2.0.1
+2.0.2
 -----
 
-    - Fix Loggerhead version/revision display in templates.
-
     - Remove references to UbuntuBeta fonts. (Colin Watson, #1939189)
+
+2.0.1 [01Sep2022]
+-----------------
+
+    - Read version from setup.cfg when running from tree. (Jelmer Vernooĳ)
+
+    - Fix Loggerhead version/revision display in templates. (Colin Watson)
+
+    - Cope with moved errors NoSuchFile and FileExists in newer versions of
+      Breezy. (Jelmer Vernooĳ)
+
+    - Fix file download links in inventory UI. (Ioana Lasc, #1983654)
 
 2.0.0 [19Aug2022]
 -----------------
