@@ -4,7 +4,7 @@ What's changed in loggerhead?
 2.0.2
 -----
 
-    - Nothing yet.
+    - Remove references to UbuntuBeta fonts. (Colin Watson, #1939189)
 
 2.0.1 [01Sep2022]
 -----------------
