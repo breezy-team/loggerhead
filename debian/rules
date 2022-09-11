@@ -1,13 +1,5 @@
 #!/usr/bin/make -f
 
-PKD   = $(abspath $(dir $(MAKEFILE_LIST)))
-PKG   = $(word 2,$(shell dpkg-parsechangelog -l$(PKD)/changelog | grep ^Source))
-UVER  = $(shell dpkg-parsechangelog -l$(PKD)/changelog | perl -ne 'print $$1 if m{^Version:\s+(?:\d+:)?(\d.*)(?:\-\d+.*)};')
-REV   = $(shell echo $(VER) | perl -ne 'print "$$1" if m/(?:git|svn|hg|bzr)(\d+)/;')
-UURL = lp:loggerhead
-DTYPE = +dfsg
-VER  ?= $(subst $(DTYPE),,$(UVER))
-
 %:
 	dh $* --with python3 --buildsystem=pybuild
 
@@ -28,11 +20,3 @@ override_dh_auto_clean:
 override_dh_auto_build:
 	dh_auto_build
 	cd docs/ && PYTHONPATH=.. $(MAKE) html
-
-$(PKG)_$(VER)$(DTYPE).orig.tar.xz:
-	$(if $(wildcard $(PKG)-$(VER)),$(error $(PKG)-$(VER) exist, aborting..))
-	bzr export --revision=$(REV) $(PKG)-$(VER) $(UURL) \
-	|| $(RM) -r $(PKG)-$(VER)
-	@echo "# Packing..."
-	XZ_OPT="-6v" tar -caf "$(PKG)_$(VER)$(DTYPE).orig.tar.xz" "$(PKG)-$(VER)" \
-	&& $(RM) -r "$(PKG)-$(VER)"
