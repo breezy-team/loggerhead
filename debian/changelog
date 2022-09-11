@@ -1,6 +1,7 @@
 loggerhead (2.0.0-3) UNRELEASED; urgency=medium
 
   * Remove incorrect field Homepage from debian/upstream/metadata.
+  * Update standards version to 4.6.1, no changes needed.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 11 Sep 2022 02:07:39 +0100
 
