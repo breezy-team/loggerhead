@@ -121,6 +121,9 @@ def load_tests(loader, basic_tests, pattern):
     try:
         from .loggerhead.tests import test_suite
     except ImportError:
-        from loggerhead.tests import test_suite
-    basic_tests.addTest(test_suite())
+        from breezy.trace import mutter
+        mutter(
+            'loggerhead tests not installed, not registering tests')
+    else:
+        basic_tests.addTest(test_suite())
     return basic_tests
