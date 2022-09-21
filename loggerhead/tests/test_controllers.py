@@ -58,6 +58,7 @@ class TestInventoryUI(BasicTests):
         env = {
             'SCRIPT_NAME': '',
             'PATH_INFO': '/files',
+            'REQUEST_METHOD': 'GET',
             'wsgi.url_scheme': 'http',
             'SERVER_NAME': 'localhost',
             'SERVER_PORT': '80',
@@ -71,6 +72,7 @@ class TestInventoryUI(BasicTests):
         env = {
             'SCRIPT_NAME': '',
             'PATH_INFO': '/files',
+            'REQUEST_METHOD': 'GET',
             'wsgi.url_scheme': 'http',
             'SERVER_NAME': 'localhost',
             'SERVER_PORT': '80',
