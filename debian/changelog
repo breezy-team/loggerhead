@@ -6,6 +6,7 @@ loggerhead (2.0.1+bzr541+ds-1) UNRELEASED; urgency=medium
   * d/t/control: Add missing dependency on python-pygments. Closes:
     #1022140
   * New upstream snapshot.
+   + Fixes compatibility with newer versions of Breezy.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 21 Oct 2022 00:09:38 -0000
 
