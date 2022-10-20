@@ -1,4 +1,4 @@
-loggerhead (2.0.1+bzr541+ds-1) UNRELEASED; urgency=medium
+loggerhead (2.0.1+bzr541+ds-1) unstable; urgency=medium
 
   * Remove incorrect field Homepage from debian/upstream/metadata.
   * Update standards version to 4.6.1, no changes needed.
@@ -8,7 +8,7 @@ loggerhead (2.0.1+bzr541+ds-1) UNRELEASED; urgency=medium
   * New upstream snapshot.
    + Fixes compatibility with newer versions of Breezy.
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 21 Oct 2022 00:09:38 -0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 21 Oct 2022 00:11:09 +0100
 
 loggerhead (2.0.0-2) unstable; urgency=medium
 
