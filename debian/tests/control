@@ -1,3 +1,3 @@
 Test-Command: python3 -m unittest loggerhead.tests.test_suite
-Depends: @, brz, python3-breezy.tests, python3-subunit
+Depends: @, brz, python3-breezy.tests, python3-subunit, python3-pygments
 Restrictions: allow-stderr

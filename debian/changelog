@@ -3,6 +3,8 @@ loggerhead (2.0.0-3) UNRELEASED; urgency=medium
   * Remove incorrect field Homepage from debian/upstream/metadata.
   * Update standards version to 4.6.1, no changes needed.
   * Update watch file format version to 4.
+  * d/t/control: Add missing dependency on python-pygments. Closes:
+    #1022140
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 11 Sep 2022 02:07:39 +0100
 
