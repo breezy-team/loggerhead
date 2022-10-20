@@ -22,10 +22,13 @@ import mimetypes
 import urllib
 
 from breezy.errors import (
-    NoSuchFile,
     NoSuchId,
     NoSuchRevision,
     )
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
 from breezy import osutils, urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
@@ -59,7 +62,7 @@ class DownloadUI (TemplatedBranchView):
                 self._branch.absolute_url('/changes'))
         revid = h.fix_revid(args[0])
         try:
-            path, filename, content = h.get_file(args[1], revid)
+            path, filename, content = h.get_file("/".join(args[1:]), revid)
         except (NoSuchFile, NoSuchRevision):
             raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)

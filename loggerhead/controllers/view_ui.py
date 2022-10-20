@@ -21,10 +21,13 @@ import os
 
 from breezy.errors import (
     BinaryFile,
-    NoSuchFile,
     NoSuchId,
     NoSuchRevision,
     )
+try:
+    from breezy.transport import NoSuchFile
+except ImportError:
+    from breezy.errors import NoSuchFile
 from breezy import (
     osutils,
     urlutils,
