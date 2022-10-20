@@ -33,10 +33,10 @@ class SampleBranch(Fixture):
         self.filecontents = (
             'some\nmultiline\ndata\n'
             'with<htmlspecialchars\n')
-        filenames = ['myfilename', 'anotherfile<']
+        filenames = ['myfilename', 'anotherfile<', 'folder/', 'folder/myfilename']
         self.testcase.build_tree_contents(
             (filename, self.filecontents) for filename in filenames)
         self.tree.add(filenames)
         self.path = 'myfilename'
         self.msg = 'a very exciting commit message <'
-        self.revid = self.tree.commit(message=self.msg)
+        self.revid = self.tree.commit(message=self.msg, rev_id=b'rev-1')

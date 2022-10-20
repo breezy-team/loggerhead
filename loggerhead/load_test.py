@@ -75,6 +75,11 @@ from breezy import (
     urlutils,
     )
 
+try:
+    from breezy.transport import NoSuchFile
+except ImportError: 
+    from breezy.errors import NoSuchFile
+
 # This code will be doing multi-threaded requests against breezy.transport
 # code. We want to make sure to load everything ahead of time, so we don't get
 # lazy-import failures
@@ -129,7 +134,7 @@ class RequestWorker(object):
             #       blocking_timeout to decide when to stop trying to read
             #       content
             content = t.get_bytes(path)
-        except (errors.TransportError, errors.NoSuchFile):
+        except (errors.TransportError, NoSuchFile):
             return False
         return True
 
