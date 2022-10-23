@@ -1,3 +1,10 @@
+loggerhead (2.0.1+bzr541+ds-2) UNRELEASED; urgency=medium
+
+  * Drop running no longer installed testsuite in debian/tests/control.
+    Closes: #1016452
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Sun, 23 Oct 2022 10:29:56 +0100
+
 loggerhead (2.0.1+bzr541+ds-1) unstable; urgency=medium
 
   * Remove incorrect field Homepage from debian/upstream/metadata.
