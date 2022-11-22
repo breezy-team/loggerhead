@@ -42,7 +42,7 @@ class DirEntry(object):
             try:
                 self.last_change_time = datetime.datetime.utcfromtimestamp(
                     transport.stat(self.dirname).st_mtime)
-            except:
+            except Exception:
                 self.last_change_time = None
         else:
             # If a branch is empty, bzr raises an exception when trying this
