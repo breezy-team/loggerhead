@@ -24,19 +24,17 @@ from __future__ import print_function
 import base64
 import datetime
 import logging
+import os
 import re
 import struct
+import subprocess
+import sys
 import threading
 import time
-import sys
-import os
-import subprocess
-
 from xml.etree import ElementTree as ET
 
-from breezy import urlutils
-
 import bleach
+from breezy import urlutils
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -506,8 +504,9 @@ def decorator(unbound):
 def lsprof(f):
 
     def _f(*a, **kw):
-        from .loggerhead.lsprof import profile
         import cPickle
+
+        from .loggerhead.lsprof import profile
         z = time.time()
         ret, stats = profile(f, *a, **kw)
         log.debug('Finished profiled %s in %d msec.' % (f.__name__,
@@ -650,6 +649,7 @@ def convert_file_errors(application):
             return application(environ, start_response)
         except (IOError, OSError) as e:
             import errno
+
             from paste import httpexceptions
             if e.errno == errno.ENOENT:
                 raise httpexceptions.HTTPNotFound()

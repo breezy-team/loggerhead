@@ -34,21 +34,20 @@ import re
 import textwrap
 import threading
 
-from breezy import tag
 import breezy.branch
 import breezy.delta
 import breezy.errors
 import breezy.foreign
 import breezy.osutils
 import breezy.revision
+from breezy import tag
 
 try:
     from breezy.transport import NoSuchFile
 except ImportError:
     from breezy.errors import NoSuchFile
 
-from . import search
-from . import util
+from . import search, util
 from .wholehistory import compute_whole_history_data
 
 

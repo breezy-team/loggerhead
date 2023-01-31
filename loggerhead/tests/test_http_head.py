@@ -22,7 +22,6 @@ from breezy import tests
 
 from ..apps import http_head
 
-
 content = [b"<html>",
            b"<head><title>Listed</title></head>",
            b"<body>Content</body>",

@@ -16,12 +16,12 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import breezy.osutils
 from html import escape
 
+import breezy.osutils
 from pygments import highlight as _highlight_func
-from pygments.lexers import guess_lexer, guess_lexer_for_filename, TextLexer
 from pygments.formatters import HtmlFormatter
+from pygments.lexers import TextLexer, guess_lexer, guess_lexer_for_filename
 from pygments.util import ClassNotFound
 
 DEFAULT_PYGMENT_STYLE = 'colorful'

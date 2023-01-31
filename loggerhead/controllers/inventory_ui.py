@@ -22,18 +22,12 @@ import logging
 import posixpath
 import urllib
 
-from paste.httpexceptions import HTTPNotFound, HTTPMovedPermanently
-
-from breezy import (
-    errors,
-    osutils,
-    urlutils,
-    )
+from breezy import errors, osutils, urlutils
 from breezy.revision import is_null as is_null_rev
+from paste.httpexceptions import HTTPMovedPermanently, HTTPNotFound
 
 from .. import util
 from ..controllers import TemplatedBranchView
-
 
 
 def dirname(path):

@@ -17,24 +17,21 @@
 
 from __future__ import absolute_import
 
-from html import escape
 import json
 import logging
 import re
+from html import escape
 from io import BytesIO
 
+from breezy import config
 from breezy.tests import TestCaseWithTransport
 from configobj import ConfigObj
-from breezy import config
-
-from ..apps.branch import BranchWSGIApp
-from ..apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
-from .fixtures import (
-    SampleBranch,
-    )
+from ..apps.branch import BranchWSGIApp
+from ..apps.http_head import HeadMiddleware
+from .fixtures import SampleBranch
 
 
 class BasicTests(TestCaseWithTransport):

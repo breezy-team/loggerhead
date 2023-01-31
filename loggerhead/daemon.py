@@ -34,7 +34,7 @@ def daemonize(pidfile, home):
     else:
         os._exit(0)     # Exit parent of the first child.
 
-    import resource            # Resource usage information.
+    import resource  # Resource usage information.
     maxfd = resource.getrlimit(resource.RLIMIT_NOFILE)[1]
     if (maxfd == resource.RLIM_INFINITY):
         maxfd = MAXFD
