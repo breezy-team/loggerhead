@@ -67,12 +67,12 @@ def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
         from .loggerhead.apps.http_head import HeadMiddleware
         from .loggerhead.apps.transport import BranchesFromTransportRoot
         from .loggerhead.config import LoggerheadConfig
-        from .loggerhead.main import setup_logging
+        from .loggerhead.__main__ import setup_logging
     except ImportError:
         from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
-        from loggerhead.main import setup_logging
+        from loggerhead.__main__ import setup_logging
 
     if host is None:
         host = DEFAULT_HOST
