@@ -35,7 +35,7 @@ Load Testing Multiple Instances
 One way that Launchpad provides both high availability and performance scaling
 is by running multiple instances of loggerhead, serving the same content. A
 proxy is then used to load balance the requests. This also allows us to shut
-down one instance for upgrading, without interupting service (requests are
+down one instance for upgrading, without interrupting service (requests are
 just routed to the other instance).
 
 However, multiple processes poses an even greater risk that caches will

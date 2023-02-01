@@ -6,7 +6,7 @@ from .test_simple import BasicTests
 
 
 class TestCornerCases(BasicTests):
-    """Tests that excercise various corner cases."""
+    """Tests that exercise various corner cases."""
 
     def addFileAndCommit(self, filename, commit_msg):
         """Make a trivial commit that has 'msg' as its commit message.

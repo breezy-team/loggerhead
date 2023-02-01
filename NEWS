@@ -203,7 +203,7 @@ What's changed in loggerhead?
 1.17 [20Aug2009]
 ----------------
 
-    - Add bug links in revision informations (Alexandre Garnier, #314052)
+    - Add bug links in revision information (Alexandre Garnier, #314052)
 
     - Make sure that binary files aren't annotated. (Martin Albisetti,
       #258848)
@@ -356,7 +356,7 @@ What's changed in loggerhead?
 1.10 [22Dec2008]
 ----------------
 
-    - Add startup deamon script for Linux (Marius Kruger)
+    - Add startup daemon script for Linux (Marius Kruger)
 
     - Switch navigation from file_ids to paths. Fixes bugs #260363,
       #269365 and #128926. (Martin Albisetti)
@@ -394,7 +394,7 @@ What's changed in loggerhead?
 
     - Added COPYING file and clarified copyright headers (John Arbash Meinel)
 
-    - Remove the .py extension requiered by the Debian Policy.
+    - Remove the .py extension required by the Debian Policy.
       (Jelmer Vernooij)
 
     - New startup script serve-branches will serve Loggerhead without
