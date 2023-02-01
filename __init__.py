@@ -34,6 +34,7 @@ try:
     import importlib.metadata as importlib_metadata
 except ImportError:
     import importlib_metadata
+
 import sys
 
 from packaging.version import Version
@@ -46,7 +47,6 @@ except importlib_metadata.PackageNotFoundError:
 
 import breezy
 from breezy import commands
-
 from breezy.transport import transport_server_registry
 
 DEFAULT_HOST = '0.0.0.0'

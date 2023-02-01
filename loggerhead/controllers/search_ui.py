@@ -16,8 +16,8 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from ..controllers import TemplatedBranchView
 from .. import search
+from ..controllers import TemplatedBranchView
 
 
 class SearchUI(TemplatedBranchView):

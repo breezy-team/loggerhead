@@ -20,23 +20,13 @@ import json
 import tarfile
 import tempfile
 
-from paste.fixture import (
-    AppError,
-    )
+from paste.fixture import AppError
 from paste.httpexceptions import HTTPNotFound
-
-from testtools.matchers import (
-    Matcher,
-    Mismatch,
-    )
+from testtools.matchers import Matcher, Mismatch
 
 from ..apps.branch import BranchWSGIApp
 from ..controllers.annotate_ui import AnnotateUI
-from .test_simple import (
-    BasicTests,
-    consume_app,
-    TestWithSimpleTree,
-    )
+from .test_simple import BasicTests, TestWithSimpleTree, consume_app
 
 
 class TestInventoryUI(BasicTests):

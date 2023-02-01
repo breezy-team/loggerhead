@@ -16,18 +16,13 @@
 
 import os
 
-import pkg_resources
-
 import breezy
+import pkg_resources
 from breezy import urlutils
 
-from . import (
-    __version__,
-    __revision__,
-    )
-from .zptsupport import zpt
+from . import __revision__, __version__
 from .util import html_format
-
+from .zptsupport import zpt
 
 templatefunctions = {}
 

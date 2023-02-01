@@ -13,15 +13,14 @@
 """Tests for the load testing code."""
 
 import socket
-import time
 import threading
+import time
 from queue import Empty
 
 from breezy import tests
 from breezy.tests import http_server
 
 from .. import load_test
-
 
 empty_script = """{
     "parameters": {},

@@ -14,18 +14,21 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 
 
-import sys
 import os
 import pwd
+import sys
+
 sys.path.insert(0, os.path.dirname(__file__))
 
-from paste.httpexceptions import HTTPExceptionHandler
-from loggerhead.apps.transport import BranchesFromTransportRoot
-from loggerhead.apps.error import ErrorHandlerApp
-from loggerhead.config import LoggerheadConfig
 from breezy import config as bzrconfig
-from paste.deploy.config import PrefixMiddleware
 from breezy.plugin import load_plugins
+from paste.deploy.config import PrefixMiddleware
+from paste.httpexceptions import HTTPExceptionHandler
+
+from loggerhead.apps.error import ErrorHandlerApp
+from loggerhead.apps.transport import BranchesFromTransportRoot
+from loggerhead.config import LoggerheadConfig
+
 
 class NotConfiguredError(Exception):
     pass

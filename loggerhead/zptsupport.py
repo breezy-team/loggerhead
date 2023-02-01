@@ -16,9 +16,9 @@
 """Support for Zope Page Templates using the Chameleon library."""
 
 import os
-import pkg_resources
 import re
 
+import pkg_resources
 from chameleon import PageTemplate
 
 _zpt_cache = {}

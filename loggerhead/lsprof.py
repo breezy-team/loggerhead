@@ -6,8 +6,9 @@
 # instead of just the Stats object
 
 import sys
-from threading import get_ident
 import threading
+from threading import get_ident
+
 from _lsprof import Profiler, profiler_entry
 
 __all__ = ['profile', 'Stats']

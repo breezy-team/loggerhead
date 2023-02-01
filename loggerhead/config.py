@@ -13,9 +13,9 @@
 #
 """Configuration tools for Loggerhead."""
 
-from optparse import OptionParser
 import sys
 import tempfile
+from optparse import OptionParser
 
 from breezy import config
 
