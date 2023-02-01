@@ -304,9 +304,9 @@ class TestHistoryGetChangedUncached(TestCaseWithExamples):
     def test_native(self):
         history, revs = self.make_linear_ancestry()
         changes = history.get_changes_uncached([revs[0], revs[1]])
-        self.assertEquals(2, len(changes))
-        self.assertEquals(revs[0], changes[0].revid)
-        self.assertEquals(revs[1], changes[1].revid)
+        self.assertEqual(2, len(changes))
+        self.assertEqual(revs[0], changes[0].revid)
+        self.assertEqual(revs[1], changes[1].revid)
         self.assertIs(None, getattr(changes[0], 'foreign_vcs', None))
         self.assertIs(None, getattr(changes[0], 'foreign_revid', None))
 
@@ -320,6 +320,6 @@ class TestHistoryGetChangedUncached(TestCaseWithExamples):
             "revid-in-bzr", message="message",
             timestamp=234423423.3)
         change = history._change_from_revision(foreign_rev)
-        self.assertEquals('revid-in-bzr', change.revid)
-        self.assertEquals("('uuid', 1234)", change.foreign_revid)
-        self.assertEquals("vcs", change.foreign_vcs)
+        self.assertEqual('revid-in-bzr', change.revid)
+        self.assertEqual("('uuid', 1234)", change.foreign_revid)
+        self.assertEqual("vcs", change.foreign_vcs)

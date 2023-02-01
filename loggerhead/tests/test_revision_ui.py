@@ -44,4 +44,4 @@ class TestRevisionUI(BasicTests):
         # and the Authors are connected. However, that requires asserting the
         # exact HTML connections, which I wanted to avoid.
         res.mustcontain('Committer', 'Joe Example')
-        self.assertFalse(b'Author(s)' in res.body)
+        self.assertNotIn(b'Author(s)', res.body)

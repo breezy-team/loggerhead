@@ -154,7 +154,7 @@ class TestRevisionUI(BasicTests):
         path = revision_ui.parse_args(env)
         values = revision_ui.get_values(path, revision_ui.kwargs, {})
         revision_ui.add_template_values(values)
-        self.assertIs(values['diff_chunks'], None)
+        self.assertIsNone(values['diff_chunks'])
 
     def test_add_template_values_with_changes(self):
         branch_app = self.make_branch_app_for_revision_ui(
@@ -400,7 +400,7 @@ class TestControllerHooks(BasicTests):
         self.addCleanup(BranchWSGIApp.hooks.uninstall_named_hook, 'controller',
             'captain hook')
         BranchWSGIApp.hooks.install_named_hook('controller', myhook, "captain hook")
-        self.assertEquals("I am hooked", app.lookup_app(env))
+        self.assertEqual("I am hooked", app.lookup_app(env))
 
 
 class MatchesDownloadHeaders(Matcher):
