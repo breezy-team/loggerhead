@@ -185,3 +185,7 @@ def main(args):
             print('Unknown protocol: %s.' % (protocol))
             sys.exit(1)
         WSGIServer(app, bindAddress=(host, int(port))).run()
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

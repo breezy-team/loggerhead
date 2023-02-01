@@ -20,7 +20,7 @@
 
 import sys
 
-from loggerhead.main import main
+from loggerhead.__main__ import main
 
 
 if __name__ == "__main__":
