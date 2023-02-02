@@ -113,18 +113,18 @@ function toggle_expand_all_revisionview(action)
   diffs.each(
     function(i, item)
     {
-      var collapsable = item.collapsable;
+      var collapsible = item.collapsible;
       if(action == 'close')
       {
         $('#expand_all').css({'display': 'block'});
         $('#collapse_all').css({'display': 'none'});
-        collapsable.close();
+        collapsible.close();
       }
       else if(action == 'open')
       {
         $('#expand_all').css({'display': 'none'});
         $('#collapse_all').css({'display': 'block'});
-        collapsable.open();
+        collapsible.open();
       }
     });
 }
@@ -156,9 +156,9 @@ function node_process(node) {
 }
 
 function zoom_to_diff (path) {
-  var collapsable = $('#' + path_to_id[path]).collapsable;
-  if (!collapsable.is_open) {
-    collapsable.open(
+  var collapsible = $('#' + path_to_id[path]).collapsible;
+  if (!collapsible.is_open) {
+    collapsible.open(
       function () {
         window.location.hash = '#' + path;
       });
@@ -172,7 +172,7 @@ function compute_diff_links() {
   $('.diff').each(
     function(i, item)
     {
-      item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + numlines;
+      item.collapsible.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + numlines;
     });
   if(original_diff_download_link == null) original_diff_download_link = $('#download_link').attr('href');
   $('#download_link').attr('href', original_diff_download_link + '?context=' + numlines);
@@ -206,10 +206,10 @@ $(function () {
           'click',
           function(e) {
             e.preventDefault();
-            item.collapsable.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').val();
-            collapsable.toggle();
+            item.collapsible.source = global_path + '+filediff/' + link_data[item.id] + '?context=' + $('#contextLines').val();
+            collapsible.toggle();
           });
-        var collapsable = new Collapsable(
+        var collapsible = new Collapsible(
           {
             expand_icon: $(item).find('.expand_diff'),
             open_node: $(item).find('.diffinfo'),
@@ -219,7 +219,7 @@ $(function () {
             loading: $(item).find('.loading'),
             node_process: node_process
           });
-       item.collapsable=collapsable;
+       item.collapsible=collapsible;
        });
     compute_diff_links();
     if (window.location.hash && !specific_path) {
