@@ -122,7 +122,7 @@ class TestRequestWorkerInfrastructure(tests.TestCase):
 class TestRequestWorker(tests.TestCaseWithTransport):
 
     def setUp(self):
-        super(TestRequestWorker, self).setUp()
+        super().setUp()
         self.transport_readonly_server = http_server.HttpServer
 
     def test_request_items(self):
@@ -278,22 +278,22 @@ class TestActionScriptInfrastructure(tests.TestCase):
 class TestActionScriptIntegration(tests.TestCaseWithTransport):
 
     def setUp(self):
-        super(TestActionScriptIntegration, self).setUp()
+        super().setUp()
         self.transport_readonly_server = http_server.HttpServer
 
     def test_full_integration(self):
         self.build_tree(['first', 'second', 'third', 'fourth'])
         url = self.get_readonly_url()
-        script = load_test.ActionScript.parse("""{
-            "parameters": {"base_url": "%s", "blocking_timeout": 2.0},
+        script = load_test.ActionScript.parse("""{{
+            "parameters": {{"base_url": "{}", "blocking_timeout": 2.0}},
             "requests": [
-                {"thread": "1", "relpath": "first"},
-                {"thread": "2", "relpath": "second"},
-                {"thread": "1", "relpath": "no-this"},
-                {"thread": "2", "relpath": "or-this"},
-                {"thread": "1", "relpath": "third"},
-                {"thread": "2", "relpath": "fourth"}
-            ]}""" % (url,))
+                {{"thread": "1", "relpath": "first"}},
+                {{"thread": "2", "relpath": "second"}},
+                {{"thread": "1", "relpath": "no-this"}},
+                {{"thread": "2", "relpath": "or-this"}},
+                {{"thread": "1", "relpath": "third"}},
+                {{"thread": "2", "relpath": "fourth"}}
+            ]}}""".format(url))
         script.run()
         worker = script._get_worker("1")
         self.assertEqual([("first", True), ('no-this', False),
@@ -310,21 +310,21 @@ class TestActionScriptIntegration(tests.TestCaseWithTransport):
 class TestRunScript(tests.TestCaseWithTransport):
 
     def setUp(self):
-        super(TestRunScript, self).setUp()
+        super().setUp()
         self.transport_readonly_server = http_server.HttpServer
 
     def test_run_script(self):
         self.build_tree(['file1', 'file2', 'file3', 'file4'])
         url = self.get_readonly_url()
-        self.build_tree_contents([('localhost.script', """{
-    "parameters": {"base_url": "%s", "blocking_timeout": 0.1},
+        self.build_tree_contents([('localhost.script', """{{
+    "parameters": {{"base_url": "{}", "blocking_timeout": 0.1}},
     "requests": [
-        {"thread": "1", "relpath": "file1"},
-        {"thread": "2", "relpath": "file2"},
-        {"thread": "1", "relpath": "file3"},
-        {"thread": "2", "relpath": "file4"}
+        {{"thread": "1", "relpath": "file1"}},
+        {{"thread": "2", "relpath": "file2"}},
+        {{"thread": "1", "relpath": "file3"}},
+        {{"thread": "2", "relpath": "file4"}}
     ]
-}""" % (url,))])
+}}""".format(url))])
         script = load_test.run_script('localhost.script')
         worker = script._threads["1"][0]
         self.assertEqual([("file1", True), ('file3', True)],

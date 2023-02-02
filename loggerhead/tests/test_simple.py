@@ -15,7 +15,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from __future__ import absolute_import
 
 import json
 import logging
@@ -124,7 +123,7 @@ class TestWithSimpleTree(BasicTests):
             self.assertIn(
                 escaped,
                 body_no_span,
-                "did not find %r in %r" % (escaped, body_no_span)
+                "did not find {!r} in {!r}".format(escaped, body_no_span)
             )
 
     def test_inventory(self):
@@ -192,8 +191,8 @@ class TestHiddenBranch(BasicTests):
             ensure_config_dir_exists = config.ensure_config_dir_exists
         ensure_config_dir_exists()
         with open(locations, 'w') as f:
-            f.write('[%s]\nhttp_serve = False' % (
-                self.tree.branch.base,))
+            f.write('[{}]\nhttp_serve = False'.format(
+                self.tree.branch.base))
 
     def test_no_access(self):
         app = self.setUpLoggerhead()

@@ -15,7 +15,6 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from __future__ import absolute_import
 
 from .test_simple import BasicTests
 
@@ -25,8 +24,8 @@ class TestRevisionUI(BasicTests):
     def test_authors_vs_committer(self):
         self.createBranch()
         self.tree.commit('First', committer="Joe Example <joe@example.com>",
-            revprops={'authors': u'A Author <aauthor@example.com>\n'
-                                 u'B Author <bauthor@example.com>'})
+            revprops={'authors': 'A Author <aauthor@example.com>\n'
+                                 'B Author <bauthor@example.com>'})
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')
         # We would like to assert that Joe Example is connected to Committer,
