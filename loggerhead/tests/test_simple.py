@@ -98,8 +98,8 @@ class TestWithSimpleTree(BasicTests):
     def test_changes_branch_from(self):
         app = self.setUpLoggerhead(served_url="lp:loggerhead")
         res = app.get('/changes')
-        self.failUnless("To get this branch, use:" in res)
-        self.failUnless("lp:loggerhead" in res)
+        self.assertIn("To get this branch, use:", res)
+        self.assertIn("lp:loggerhead", res)
 
     def test_changes_search(self):
         app = self.setUpLoggerhead()
@@ -121,8 +121,11 @@ class TestWithSimpleTree(BasicTests):
         body_no_span = body_no_span.replace(b'</span>', b'')
         for line in self.filecontents.splitlines():
             escaped = escape(line).encode('utf-8')
-            self.assertTrue(escaped in body_no_span,
-                            "did not find %r in %r" % (escaped, body_no_span))
+            self.assertIn(
+                escaped,
+                body_no_span,
+                "did not find %r in %r" % (escaped, body_no_span)
+            )
 
     def test_inventory(self):
         app = self.setUpLoggerhead()

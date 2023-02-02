@@ -216,7 +216,7 @@ class TestActionScriptInfrastructure(tests.TestCase):
         # If an id is found, then we should create it
         self.assertEqual({}, script._threads)
         worker = script._get_worker('id')
-        self.assertTrue('id' in script._threads)
+        self.assertIn('id', script._threads)
         # We should have set the blocking timeout
         self.assertEqual(script.blocking_timeout / 10.0,
                          worker.blocking_time)

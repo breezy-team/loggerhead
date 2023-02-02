@@ -44,7 +44,7 @@ class TestCornerCases(BasicTests):
         self.addFileAndCommit('myfilename', msg)
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')
-        self.assertFalse(msg in res.body)
+        self.assertNotIn(msg, res.body)
 
     def test_empty_commit_message(self):
         """Check that an empty commit message does not break the rendering."""
