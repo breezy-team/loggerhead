@@ -107,7 +107,7 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
                          list(history.get_revids_from(search_revs, tip_rev)))
 
 
-class _DictProxy(object):
+class _DictProxy:
 
     def __init__(self, d):
         self._d = d
@@ -167,7 +167,7 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         # We already know revs[-1] because we passed it in.
         self.assertEqual(set(), accessed)
         self.assertEqual(revs[-2], next(result))
-        self.assertEqual(set([history._rev_indices[revs[-1]]]), accessed)
+        self.assertEqual({history._rev_indices[revs[-1]]}, accessed)
 
     def test_get_revids_doesnt_over_produce_for_merges(self):
         # get_revids_from shouldn't walk the whole ancestry just to get the
@@ -179,13 +179,13 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         self.assertEqual(revs[-3], next(result))
         # We access 'W' because we are checking that W wasn't merged into X.
         # The important bit is that we aren't getting the whole ancestry.
-        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:4]]),
+        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:4]},
                          accessed)
         self.assertEqual(revs[-5], next(result))
-        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
+        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
                          accessed)
         self.assertRaises(StopIteration, next, result)
-        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
+        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
                          accessed)
 
 
@@ -238,16 +238,16 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
         tree = self.make_branch_and_tree('test')
         rev_id = tree.commit('Commit Message', timestamp=1299838474.317,
             timezone=3600, committer='Joe Example <joe@example.com>',
-            revprops={'authors': u'A Author <aauthor@example.com>\n'
-                                 u'B Author <bauthor@example.com>'})
+            revprops={'authors': 'A Author <aauthor@example.com>\n'
+                                 'B Author <bauthor@example.com>'})
         self.addCleanup(tree.branch.lock_write().unlock)
         rev = tree.branch.repository.get_revision(rev_id)
         history = _mod_history.History(tree.branch, {})
         change = history._change_from_revision(rev)
-        self.assertEqual(u'Joe Example <joe@example.com>',
+        self.assertEqual('Joe Example <joe@example.com>',
                          change.committer)
-        self.assertEqual([u'A Author <aauthor@example.com>',
-                          u'B Author <bauthor@example.com>'],
+        self.assertEqual(['A Author <aauthor@example.com>',
+                          'B Author <bauthor@example.com>'],
                          change.authors)
 
 
@@ -295,7 +295,7 @@ class TestHistoryGetView(TestCaseWithExamples):
         self.assertEqual(list(reversed(revs))[:6], revid_list)
         self.assertEqual(revs[-1], revid)
         self.assertEqual(revs[-1], start_revid)
-        self.assertEqual(set([history._rev_indices[x] for x in list(reversed(revs))[:6]]),
+        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
                          accessed)
 
 

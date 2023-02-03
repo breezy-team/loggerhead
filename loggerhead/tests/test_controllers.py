@@ -14,7 +14,6 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from __future__ import absolute_import
 
 import json
 import tarfile
@@ -174,7 +173,7 @@ class TestRevisionUI(BasicTests):
 
     def test_add_template_values_with_non_ascii(self):
         branch_app = self.make_branch_app_for_revision_ui(
-                [(u'skr\xe1', b'content\n')], [(u'skr\xe1', b'new content\n')])
+                [('skr\xe1', b'content\n')], [('skr\xe1', b'new content\n')])
         env = {'SCRIPT_NAME': '/',
                'PATH_INFO': '/revision/1',
                'QUERY_STRING': 'start_revid=1',
@@ -192,7 +191,7 @@ class TestRevisionUI(BasicTests):
              'diff-1': 'rev-1/null%253A/skr%25C3%25A1'})
         self.assertEqual(
             json.loads(values['path_to_id']),
-            {'/': 'diff-0', u'skr\xe1': 'diff-1'})
+            {'/': 'diff-0', 'skr\xe1': 'diff-1'})
 
     def test_get_values_smoke(self):
         branch_app = self.make_branch_app_for_revision_ui(
@@ -246,7 +245,7 @@ class TestAnnotateUI(BasicTests):
         # A lot of this state is set up by __call__, but we'll do it directly
         # here.
         ann_ui.args = ['rev2']
-        annotate_info = ann_ui.get_values(u'filename', kwargs={}, headers={})
+        annotate_info = ann_ui.get_values('filename', kwargs={}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(2, len(annotated))
         self.assertEqual('2', annotated[1].change.revno)
@@ -257,7 +256,7 @@ class TestAnnotateUI(BasicTests):
         history = [(b'rev1', b'old\nold\n', '.'), (b'rev2', b'new\nold\n', '')]
         ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev2']
-        ann_ui.get_values(u'filename', kwargs={}, headers={})
+        ann_ui.get_values('filename', kwargs={}, headers={})
 
     def test_annotate_file_zero_sized(self):
         # Test against a zero-sized file without breaking. No annotation
@@ -265,7 +264,7 @@ class TestAnnotateUI(BasicTests):
         history = [(b'rev1', b'', '.')]
         ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev1']
-        annotate_info = ann_ui.get_values(u'filename', kwargs={}, headers={})
+        annotate_info = ann_ui.get_values('filename', kwargs={}, headers={})
         annotated = annotate_info['annotated']
         self.assertEqual(0, len(annotated))
 
@@ -274,14 +273,14 @@ class TestAnnotateUI(BasicTests):
         ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['rev1']
         self.assertRaises(
-            HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
+            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
     def test_annotate_nonexistent_rev(self):
         history = [(b'rev1', b'', '.')]
         ann_ui = self.make_annotate_ui_for_file_history('filename', history)
         ann_ui.args = ['norev']
         self.assertRaises(
-            HTTPNotFound, ann_ui.get_values, u'not-filename', {}, {})
+            HTTPNotFound, ann_ui.get_values, 'not-filename', {}, {})
 
 
 class TestFileDiffUI(BasicTests):
@@ -303,7 +302,7 @@ class TestFileDiffUI(BasicTests):
     def test_get_values_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+filediff/%s/%s/filename' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'PATH_INFO': '/+filediff/{}/{}/filename'.format(rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -318,7 +317,7 @@ class TestFileDiffUI(BasicTests):
     def test_json_render_smoke(self):
         branch_app, (rev1, rev2) = self.make_branch_app_for_filediff_ui()
         env = {'SCRIPT_NAME': '/',
-               'PATH_INFO': '/+json/+filediff/%s/%s/filename' % (rev2.decode('utf-8'), rev1.decode('utf-8')),
+               'PATH_INFO': '/+json/+filediff/{}/{}/filename'.format(rev2.decode('utf-8'), rev1.decode('utf-8')),
                'REQUEST_METHOD': 'GET',
                'wsgi.url_scheme': 'http',
                'SERVER_NAME': 'localhost',
@@ -422,7 +421,7 @@ class MatchesDownloadHeaders(Matcher):
                 % response.headers)
 
     def __str__(self):
-        return 'MatchesDownloadHeaders(%r, %r)' % (
+        return 'MatchesDownloadHeaders({!r}, {!r})'.format(
             self.expect_filename, self.expect_mimetype)
 
 
