@@ -317,9 +317,10 @@ class TestHistoryGetChangedUncached(TestCaseWithExamples):
         foreign_vcs = ForeignVcs(None, "vcs")
         foreign_vcs.show_foreign_revid = repr
         foreign_rev = ForeignRevision(("uuid", 1234), VcsMapping(foreign_vcs),
-            "revid-in-bzr", message="message",
-            timestamp=234423423.3)
+            b"revid-in-bzr", message="message",
+            timestamp=234423423.3, parent_ids=[], committer="Joe Example <joe@example.com>",
+            properties={})
         change = history._change_from_revision(foreign_rev)
-        self.assertEqual('revid-in-bzr', change.revid)
+        self.assertEqual(b'revid-in-bzr', change.revid)
         self.assertEqual("('uuid', 1234)", change.foreign_revid)
         self.assertEqual("vcs", change.foreign_vcs)

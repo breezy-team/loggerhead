@@ -64,12 +64,12 @@ class ViewUI(TemplatedBranchView):
             encoding = 'iso-8859-15'
             file_text.decode(encoding)
 
-        file_lines = osutils.split_lines(file_text)
+        file_lines = file_text.splitlines(True)
         # This can throw breezy.errors.BinaryFile (which our caller catches).
         breezy.textfile.check_text_lines(file_lines)
 
         file_text = file_text.decode(encoding)
-        file_lines = osutils.split_lines(file_text)
+        file_lines = file_text.splitlines(True)
 
         if highlight is not None:
             hl_lines = highlight(file_name, file_text, encoding)

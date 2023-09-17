@@ -37,7 +37,7 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
 
     if len(text) > MAX_HIGHLIGHT_SIZE:
-        return list(map(escape,  breezy.osutils.split_lines(text)))
+        return list(map(escape, text.splitlines()))
 
     formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
 
@@ -50,6 +50,6 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
             lexer = TextLexer(encoding=encoding)
 
     hl_lines = _highlight_func(text, lexer, formatter)
-    hl_lines = breezy.osutils.split_lines(hl_lines)
+    hl_lines = "".join(hl_lines).splitlines(True)
 
     return hl_lines
