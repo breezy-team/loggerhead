@@ -46,11 +46,11 @@ loggerhead_process(){
 }
 
 loggerhead_status(){
-    proccess=`loggerhead_process`
-    #echo "$proccess"
+    process=`loggerhead_process`
+    #echo "$process"
     listening=`netstat -nl |grep -e ":$PORT "`
     #echo "$listening"
-    if [ -z "$proccess" ]; then
+    if [ -z "$process" ]; then
         echo "Loggerhead is *not* running."
     else
         echo "Loggerhead is running."

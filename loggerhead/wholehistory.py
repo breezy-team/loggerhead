@@ -20,7 +20,7 @@
 import logging
 import time
 
-from breezy.revision import is_null, NULL_REVISION
+from breezy.revision import NULL_REVISION, is_null
 from breezy.tsort import merge_sort
 
 

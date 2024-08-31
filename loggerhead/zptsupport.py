@@ -16,9 +16,9 @@
 """Support for Zope Page Templates using the Chameleon library."""
 
 import os
-import pkg_resources
 import re
 
+import pkg_resources
 from chameleon import PageTemplate
 
 _zpt_cache = {}
@@ -60,7 +60,7 @@ def load_template(classname):
 
     Template files must end in ".pt" and be in legitimate packages.
     Templates are automatically checked for changes and reloaded as
-    neccessary.
+    necessary.
     """
     divider = classname.rfind(".")
     if divider > -1:

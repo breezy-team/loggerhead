@@ -22,28 +22,25 @@ import wsgiref.util
 
 import breezy.branch
 import breezy.errors
-from breezy.hooks import Hooks
 import breezy.lru_cache
 from breezy import urlutils
+from breezy.hooks import Hooks
+from paste import httpexceptions, request
 
-from paste import request
-from paste import httpexceptions
-
-from ..apps import static_app, health_app
+from .. import util
+from ..apps import health_app, static_app
 from ..controllers.annotate_ui import AnnotateUI
-from ..controllers.view_ui import ViewUI
 from ..controllers.atom_ui import AtomUI
 from ..controllers.changelog_ui import ChangeLogUI
 from ..controllers.diff_ui import DiffUI
-from ..controllers.download_ui import DownloadUI, DownloadTarballUI
+from ..controllers.download_ui import DownloadTarballUI, DownloadUI
 from ..controllers.filediff_ui import FileDiffUI
 from ..controllers.inventory_ui import InventoryUI
 from ..controllers.revision_ui import RevisionUI
 from ..controllers.revlog_ui import RevLogUI
 from ..controllers.search_ui import SearchUI
+from ..controllers.view_ui import ViewUI
 from ..history import History
-from .. import util
-
 
 _DEFAULT = object()
 

@@ -26,12 +26,11 @@ once a revision is committed in bazaar, it never changes, so once we have
 cached a change, it's good forever.
 """
 
-import pickle
 import marshal
 import os
+import pickle
 import tempfile
 import zlib
-
 from sqlite3 import dbapi2
 
 # We take an optimistic approach to concurrency here: we might do work twice

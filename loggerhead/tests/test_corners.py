@@ -1,12 +1,10 @@
-from __future__ import absolute_import
-
 import os
 
 from .test_simple import BasicTests
 
 
 class TestCornerCases(BasicTests):
-    """Tests that excercise various corner cases."""
+    """Tests that exercise various corner cases."""
 
     def addFileAndCommit(self, filename, commit_msg):
         """Make a trivial commit that has 'msg' as its commit message.
@@ -44,7 +42,7 @@ class TestCornerCases(BasicTests):
         self.addFileAndCommit('myfilename', msg)
         app = self.setUpLoggerhead()
         res = app.get('/revision/1')
-        self.assertFalse(msg in res.body)
+        self.assertNotIn(msg, res.body)
 
     def test_empty_commit_message(self):
         """Check that an empty commit message does not break the rendering."""

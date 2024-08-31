@@ -24,19 +24,17 @@ from __future__ import print_function
 import base64
 import datetime
 import logging
+import os
 import re
 import struct
+import subprocess
+import sys
 import threading
 import time
-import sys
-import os
-import subprocess
-
 from xml.etree import ElementTree as ET
 
-from breezy import urlutils
-
 import bleach
+from breezy import urlutils
 
 log = logging.getLogger("loggerhead.controllers")
 
@@ -178,7 +176,7 @@ EMAIL_PATTERN = re.compile(r'[-\w\d\+_!%\.]+@[-\w\d\+_!%\.]+')
 
 def hide_email(email):
     """
-    try to obsure any email address in a bazaar committer's name.
+    try to obscure any email address in a bazaar committer's name.
     """
     m = STANDARD_PATTERN.search(email)
     if m is not None:
@@ -260,7 +258,7 @@ def fill_div(s):
     CSS is stupid. In some cases we need to replace an empty value with
     a non breaking space (&nbsp;). There has to be a better way of doing this.
 
-    return: the same value recieved if not empty, and a '&nbsp;' if it is.
+    return: the same value received if not empty, and a '&nbsp;' if it is.
     """
     if s is None:
         return '&nbsp;'
@@ -506,8 +504,9 @@ def decorator(unbound):
 def lsprof(f):
 
     def _f(*a, **kw):
-        from .loggerhead.lsprof import profile
         import cPickle
+
+        from .loggerhead.lsprof import profile
         z = time.time()
         ret, stats = profile(f, *a, **kw)
         log.debug('Finished profiled %s in %d msec.' % (f.__name__,
@@ -563,7 +562,7 @@ def get_context(**overrides):
     Soon to be deprecated.
 
 
-    return a context map that may be overriden by specific values passed in,
+    return a context map that may be overridden by specific values passed in,
     but only contains keys from the list of valid context keys.
 
     if 'clear' is set, only the 'remember' context value will be added, and
@@ -650,6 +649,7 @@ def convert_file_errors(application):
             return application(environ, start_response)
         except (IOError, OSError) as e:
             import errno
+
             from paste import httpexceptions
             if e.errno == errno.ENOENT:
                 raise httpexceptions.HTTPNotFound()

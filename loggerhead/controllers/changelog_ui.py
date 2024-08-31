@@ -20,9 +20,8 @@
 
 import json
 
-from paste.httpexceptions import HTTPServerError
-
 from breezy import osutils, urlutils
+from paste.httpexceptions import HTTPServerError
 
 from .. import util
 from ..controllers import TemplatedBranchView

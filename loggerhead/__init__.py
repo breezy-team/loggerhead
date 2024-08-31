@@ -27,7 +27,10 @@ try:
 except importlib_metadata.PackageNotFoundError:
     # Support running tests from the build tree without installation.
     import os
-    from setuptools.config import read_configuration
+    try:
+        from setuptools.config.setupcfg import read_configuration
+    except ModuleNotFoundError:
+        from setuptools.config import read_configuration
     cfg = read_configuration(os.path.join(os.path.dirname(__file__), '..', 'setup.cfg'))
     __version__ = cfg['metadata']['version']
 __revision__ = None

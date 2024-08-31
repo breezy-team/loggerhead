@@ -19,14 +19,12 @@
 
 import json
 
-from paste.httpexceptions import HTTPServerError
-
 from breezy import urlutils
+from paste.httpexceptions import HTTPServerError
 
 from .. import util
 from ..controllers import TemplatedBranchView
 from ..controllers.filediff_ui import diff_chunks_for_file
-
 
 DEFAULT_LINE_COUNT_LIMIT = 3000
 

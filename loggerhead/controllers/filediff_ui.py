@@ -1,14 +1,12 @@
 from io import BytesIO
 
-from breezy import (
-    diff,
-    errors,
-    urlutils,
-    )
+from breezy import diff, errors, urlutils
+
 try:
     from breezy.transport import NoSuchFile
 except ImportError:
     from breezy.errors import NoSuchFile
+
 from breezy.tree import find_previous_path
 
 from .. import util

@@ -2,7 +2,7 @@
 
 import os
 
-from paste import urlparser, fileapp
+from paste import fileapp, urlparser
 
 from ..util import convert_file_errors
 

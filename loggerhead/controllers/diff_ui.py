@@ -16,13 +16,12 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from io import BytesIO
 import time
-
-from paste.request import path_info_pop, parse_querystring
+from io import BytesIO
 
 from breezy.diff import show_diff_trees
 from breezy.revision import NULL_REVISION
+from paste.request import parse_querystring, path_info_pop
 
 from ..controllers import TemplatedBranchView
 

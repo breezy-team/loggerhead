@@ -16,11 +16,11 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-from io import StringIO
 import traceback
+from io import StringIO
 
-from ..controllers import TemplatedBranchView
 from .. import util
+from ..controllers import TemplatedBranchView
 
 
 class ErrorUI(TemplatedBranchView):

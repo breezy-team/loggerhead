@@ -63,7 +63,7 @@
                     </a>
                   <a tal:attributes="href string:${dir.dirname}/" tal:content="dir.dirname" /></td>
                 <td class="date"></td>
-                <td class="date" colspan="4" tal:content="dir.last_change"></td>
+                <td class="date" colspan="4" tal:content="python:util._approximatedate(dir.last_change_time)"></td>
               </tr>
             </tal:non-branch-row>
           </tal:block>

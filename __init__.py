@@ -34,6 +34,7 @@ try:
     import importlib.metadata as importlib_metadata
 except ImportError:
     import importlib_metadata
+
 import sys
 
 from packaging.version import Version
@@ -46,7 +47,6 @@ except importlib_metadata.PackageNotFoundError:
 
 import breezy
 from breezy import commands
-
 from breezy.transport import transport_server_registry
 
 DEFAULT_HOST = '0.0.0.0'
@@ -67,12 +67,12 @@ def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
         from .loggerhead.apps.http_head import HeadMiddleware
         from .loggerhead.apps.transport import BranchesFromTransportRoot
         from .loggerhead.config import LoggerheadConfig
-        from .loggerhead.main import setup_logging
+        from .loggerhead.__main__ import setup_logging
     except ImportError:
         from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
-        from loggerhead.main import setup_logging
+        from loggerhead.__main__ import setup_logging
 
     if host is None:
         host = DEFAULT_HOST

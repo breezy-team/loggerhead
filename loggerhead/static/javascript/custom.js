@@ -67,7 +67,7 @@ function hide_search()
   setTimeout("$('#search_terms').css({'display': 'none'})", 300);
 }
 
-function Collapsable(config)
+function Collapsible(config)
 {
   this.is_open = config.is_open;
   this.open_node = config.open_node;
@@ -96,7 +96,7 @@ function get_height(node) {
   return height;
 }
 
-Collapsable.prototype._animate = function (callback)
+Collapsible.prototype._animate = function (callback)
 {
   if (this.anim) this.anim.stop();
 
@@ -109,7 +109,7 @@ Collapsable.prototype._animate = function (callback)
      }.bind(this));
 }
 
-Collapsable.prototype._load_finished = function(data, callback)
+Collapsible.prototype._load_finished = function(data, callback)
 {
   var l = data.split('\n');
   l.splice(0, 1);
@@ -126,7 +126,7 @@ Collapsable.prototype._load_finished = function(data, callback)
   this._animate(callback);
 };
 
-Collapsable.prototype._ensure_container = function(callback)
+Collapsible.prototype._ensure_container = function(callback)
 {
   if (this.container == null) {
     this.container = $('<div></div>');
@@ -172,7 +172,7 @@ Collapsable.prototype._ensure_container = function(callback)
  * 8. Start a new animation to show the rest of the new content.
  */
 
-Collapsable.prototype.open = function(callback)
+Collapsible.prototype.open = function(callback)
 {
   this.expand_icon[0].src = expanded_icon_path;
 
@@ -196,18 +196,18 @@ Collapsable.prototype.open = function(callback)
 
   this._animate(callback);
 
-  var collapsable = this;
+  var collapsible = this;
 
   if (this.source) {
       $.get(this.source, function(data) {
-            collapsable._load_finished(data, callback);
+            collapsible._load_finished(data, callback);
       });
     return;
   }
 
 };
 
-Collapsable.prototype.close = function()
+Collapsible.prototype.close = function()
 {
   this._ensure_container();
 
@@ -226,7 +226,7 @@ Collapsable.prototype.close = function()
       0.2, "swing", this.closeComplete.bind(this));
 };
 
-Collapsable.prototype.closeComplete = function () {
+Collapsible.prototype.closeComplete = function () {
   $(this.open_node).css({'display': 'none'});
   if (this.close_node) {
     $(this.close_node).css({'display': 'block'});
@@ -236,7 +236,7 @@ Collapsable.prototype.closeComplete = function () {
   this.is_open = false;
 };
 
-Collapsable.prototype.toggle = function()
+Collapsible.prototype.toggle = function()
 {
   if (this.is_open)
   {

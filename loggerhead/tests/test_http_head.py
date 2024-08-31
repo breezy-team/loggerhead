@@ -22,7 +22,6 @@ from breezy import tests
 
 from ..apps import http_head
 
-
 content = [b"<html>",
            b"<head><title>Listed</title></head>",
            b"<body>Content</body>",
@@ -32,8 +31,7 @@ headers = {'X-Ignored-Header': 'Value'}
 
 def yielding_app(environ, start_response):
     writer = start_response('200 OK', headers)
-    for chunk in content:
-        yield chunk
+    yield from content
 
 
 def list_app(environ, start_response):
