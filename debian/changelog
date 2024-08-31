@@ -1,6 +1,7 @@
 loggerhead (2.0.1+bzr541+ds-3) UNRELEASED; urgency=medium
 
   * Drop unused dependency on python3-simplejson. Closes: #1080170
+  * Drop unused dependency on python3-simpletal.
 
  -- Jelmer Vernooĳ <jelmer@debian.org>  Sat, 31 Aug 2024 01:05:01 +0100
 

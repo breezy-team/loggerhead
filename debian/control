@@ -12,7 +12,6 @@ Build-Depends: python3-all,
                python3-dulwich,
                python3-paste (>= 1.6),
                python3-pkg-resources,
-               python3-simpletal,
                dh-python,
                debhelper-compat (= 13)
 Standards-Version: 4.6.1
