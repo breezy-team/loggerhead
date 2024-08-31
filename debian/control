@@ -7,13 +7,21 @@ Uploaders: Roland Mas <lolando@debian.org>,
            Andrew Starr-Bochicchio <asb@debian.org>,
            Jelmer Vernooĳ <jelmer@debian.org>
 Homepage: https://launchpad.net/loggerhead
-Build-Depends-Indep: brz (>= 3.0.0~), python3-breezy.tests, python3-fixtures, python3-sphinx, python3-subunit, python3-testtools, python3-setuptools, python3-bleach, python3-chameleon
-Build-Depends: python3-all,
+Build-Depends-Indep: brz (>= 3.0.0~),
+                     python3-bleach,
+                     python3-breezy.tests,
+                     python3-chameleon,
+                     python3-fixtures,
+                     python3-setuptools,
+                     python3-sphinx,
+                     python3-subunit,
+                     python3-testtools
+Build-Depends: debhelper-compat (= 13),
+               dh-python,
+               python3-all,
                python3-dulwich,
                python3-paste (>= 1.6),
-               python3-pkg-resources,
-               dh-python,
-               debhelper-compat (= 13)
+               python3-pkg-resources
 Standards-Version: 4.6.1
 Vcs-Bzr: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
 Vcs-Browser: https://code.launchpad.net/~debian-bazaar/debian/sid/loggerhead/unstable
@@ -21,8 +29,20 @@ Rules-Requires-Root: no
 
 Package: loggerhead
 Architecture: all
-Depends: adduser, libjs-jquery, python3-breezy (>= 3.0.0~), python3-paste (>= 1.6), python3-pkg-resources, python3-simplejson, python3-chameleon, ${misc:Depends}, ${python3:Depends}, python3-bleach, python3-dulwich
-Suggests: brz, loggerhead-breezy-doc, python3-pastedeploy (>= 1.3.0)
+Depends: adduser,
+         libjs-jquery,
+         python3-bleach,
+         python3-breezy (>= 3.0.0~),
+         python3-chameleon,
+         python3-dulwich,
+         python3-paste (>= 1.6),
+         python3-pkg-resources,
+         python3-simplejson,
+         ${misc:Depends},
+         ${python3:Depends}
+Suggests: brz,
+          loggerhead-breezy-doc,
+          python3-pastedeploy (>= 1.3.0)
 Enhances: brz
 Recommends: python3-pygments
 Description: Web viewer for Breezy
@@ -33,7 +53,9 @@ Description: Web viewer for Breezy
 Package: loggerhead-doc
 Architecture: all
 Section: doc
-Depends: libjs-jquery, libjs-underscore, ${misc:Depends}
+Depends: libjs-jquery,
+         libjs-underscore,
+         ${misc:Depends}
 Suggests: loggerhead
 Enhances: loggerhead
 Description: Web viewer for Breezy (documentation)
