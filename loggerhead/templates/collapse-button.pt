@@ -10,7 +10,7 @@
                      class string:show-button collapse-${group}-${name}-show"
      title="expand">
     <img tal:attributes="src python:branch.static_url('/static/images/nav-small-right.gif')"
-         witdh="10" height="10" alt="expand"
+         width="10" height="10" alt="expand"
          class="collapse-triangle" />
   </a>
 </tal:block>

@@ -41,7 +41,7 @@ class ErrorHandlerApp(object):
                 raise
 
     def handle_error(self, environ, start_response):
-        """Exception hanlder."""
+        """Exception handler."""
         self.log_error(environ)
         return errapp(environ, start_response)
 

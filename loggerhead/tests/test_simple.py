@@ -15,26 +15,22 @@
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #
 
-from __future__ import absolute_import
 
-from html import escape
 import json
 import logging
 import re
+from html import escape
 from io import BytesIO
 
+from breezy import config
 from breezy.tests import TestCaseWithTransport
 from configobj import ConfigObj
-from breezy import config
-
-from ..apps.branch import BranchWSGIApp
-from ..apps.http_head import HeadMiddleware
 from paste.fixture import TestApp
 from paste.httpexceptions import HTTPExceptionHandler, HTTPMovedPermanently
 
-from .fixtures import (
-    SampleBranch,
-    )
+from ..apps.branch import BranchWSGIApp
+from ..apps.http_head import HeadMiddleware
+from .fixtures import SampleBranch
 
 
 class BasicTests(TestCaseWithTransport):
@@ -101,8 +97,8 @@ class TestWithSimpleTree(BasicTests):
     def test_changes_branch_from(self):
         app = self.setUpLoggerhead(served_url="lp:loggerhead")
         res = app.get('/changes')
-        self.failUnless("To get this branch, use:" in res)
-        self.failUnless("lp:loggerhead" in res)
+        self.assertIn("To get this branch, use:", res)
+        self.assertIn("lp:loggerhead", res)
 
     def test_changes_search(self):
         app = self.setUpLoggerhead()
@@ -124,8 +120,11 @@ class TestWithSimpleTree(BasicTests):
         body_no_span = body_no_span.replace(b'</span>', b'')
         for line in self.filecontents.splitlines():
             escaped = escape(line).encode('utf-8')
-            self.assertTrue(escaped in body_no_span,
-                            "did not find %r in %r" % (escaped, body_no_span))
+            self.assertIn(
+                escaped,
+                body_no_span,
+                "did not find {!r} in {!r}".format(escaped, body_no_span)
+            )
 
     def test_inventory(self):
         app = self.setUpLoggerhead()
@@ -192,8 +191,8 @@ class TestHiddenBranch(BasicTests):
             ensure_config_dir_exists = config.ensure_config_dir_exists
         ensure_config_dir_exists()
         with open(locations, 'w') as f:
-            f.write('[%s]\nhttp_serve = False' % (
-                self.tree.branch.base,))
+            f.write('[{}]\nhttp_serve = False'.format(
+                self.tree.branch.base))
 
     def test_no_access(self):
         app = self.setUpLoggerhead()

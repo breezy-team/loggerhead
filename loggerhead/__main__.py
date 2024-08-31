@@ -21,19 +21,18 @@ import logging
 import os
 import sys
 
-from breezy.plugin import load_plugins
 from breezy.location import location_to_url
-
+from breezy.plugin import load_plugins
 from paste import httpserver
 from paste.httpexceptions import HTTPExceptionHandler, HTTPInternalServerError
 from paste.translogger import TransLogger
 
 from . import __version__
-from .apps.transport import (
-    BranchesFromTransportRoot, UserBranchesFromTransportRoot)
+from .apps.error import ErrorHandlerApp
+from .apps.transport import (BranchesFromTransportRoot,
+                             UserBranchesFromTransportRoot)
 from .config import LoggerheadConfig
 from .util import Reloader
-from .apps.error import ErrorHandlerApp
 
 
 def get_config_and_base(args):
@@ -185,3 +184,7 @@ def main(args):
             print('Unknown protocol: %s.' % (protocol))
             sys.exit(1)
         WSGIServer(app, bindAddress=(host, int(port))).run()
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

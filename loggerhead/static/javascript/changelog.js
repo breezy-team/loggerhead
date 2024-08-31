@@ -3,18 +3,18 @@ function toggle_expand_all(action)
   $('.revision_log').each(
     function(i, item)
     {
-      var collapsable = item.collapsable;
+      var collapsible = item.collapsible;
       if(action == 'close')
       {
         $('#expand_all').css({'display': 'block'});
         $('#collapse_all').css({'display': 'none'});
-        collapsable.close();
+        collapsible.close();
       }
       else if(action == 'open')
       {
         $('#expand_all').css({'display': 'none'});
         $('#collapse_all').css({'display': 'block'});
-        collapsable.open();
+        collapsible.open();
       }
     });
 }
@@ -47,7 +47,7 @@ $(function()
       function(i, item)
       {
         var revid = revids[item.id.replace('log-', '')];
-        var collapsable = new Collapsable(
+        var collapsible = new Collapsible(
           {
             expand_icon: $(item).find('.expand_icon'),
             open_node: $(item).find('.long_description'),
@@ -61,9 +61,9 @@ $(function()
           'click',
           function(e) {
             e.preventDefault();
-            collapsable.toggle();
+            collapsible.toggle();
           });
-        item.collapsable = collapsable;
+        item.collapsible = collapsible;
       });
 
   });

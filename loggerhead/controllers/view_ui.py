@@ -19,28 +19,20 @@
 
 import os
 
-from breezy.errors import (
-    BinaryFile,
-    NoSuchId,
-    NoSuchRevision,
-    )
+from breezy.errors import BinaryFile, NoSuchId, NoSuchRevision
+
 try:
     from breezy.transport import NoSuchFile
 except ImportError:
     from breezy.errors import NoSuchFile
-from breezy import (
-    osutils,
-    urlutils,
-    )
-import breezy.textfile
 
-from paste.httpexceptions import (
-    HTTPBadRequest,
-    HTTPMovedPermanently,
-    HTTPNotFound,
-    )
+import breezy.textfile
+from breezy import osutils, urlutils
+from paste.httpexceptions import (HTTPBadRequest, HTTPMovedPermanently,
+                                  HTTPNotFound)
 
 from ..controllers import TemplatedBranchView
+
 try:
     from ..highlight import highlight
 except ImportError:

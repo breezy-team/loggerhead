@@ -18,20 +18,18 @@
 
 import threading
 
-from breezy import branch, errors, lru_cache, urlutils
-from breezy.config import LocationConfig
-from breezy.bzr.smart import request
 import breezy.ui
+from breezy import branch, errors, lru_cache, urlutils
+from breezy.bzr.smart import request
+from breezy.config import LocationConfig
 from breezy.transport import get_transport
 from breezy.transport.http import wsgi
-
+from paste import httpexceptions, urlparser
 from paste.request import path_info_pop
-from paste import httpexceptions
-from paste import urlparser
 
 from .. import util
-from ..apps.branch import BranchWSGIApp
 from ..apps import favicon_app, robots_app, static_app
+from ..apps.branch import BranchWSGIApp
 from ..controllers.directory_ui import DirectoryUI
 
 

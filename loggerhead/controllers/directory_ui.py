@@ -33,11 +33,18 @@ from ..controllers import TemplatedBranchView
 
 class DirEntry(object):
 
-    def __init__(self, dirname, parity, branch):
+    def __init__(self, dirname, parity, branch, transport):
         self.dirname = urlutils.unquote(dirname)
         self.parity = parity
         self.branch = branch
-        if branch is not None:
+        if branch is None:
+            self.last_revision = None
+            try:
+                self.last_change_time = datetime.datetime.utcfromtimestamp(
+                    transport.stat(self.dirname).st_mtime)
+            except Exception:
+                self.last_change_time = None
+        else:
             # If a branch is empty, bzr raises an exception when trying this
             try:
                 self.last_revision = branch.repository.get_revision(branch.last_revision())
@@ -88,7 +95,7 @@ class DirectoryUI(TemplatedBranchView):
             else:
                 if not b.get_config().get_user_option_as_bool('http_serve', default=True):
                     continue
-            dirs.append(DirEntry(d, parity, b))
+            dirs.append(DirEntry(d, parity, b, self.transport))
             parity = 1 - parity
         # Create breadcrumb trail
         directory_breadcrumbs = util.directory_breadcrumbs(

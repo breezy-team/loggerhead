@@ -63,17 +63,12 @@ threads active". Though if you know the load pattern, you could approximate
 this.
 """
 
+import json
 import threading
 import time
-from queue import Queue, Empty
+from queue import Empty, Queue
 
-import json
-
-from breezy import (
-    errors,
-    transport,
-    urlutils,
-    )
+from breezy import errors, transport, urlutils
 
 try:
     from breezy.transport import NoSuchFile

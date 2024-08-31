@@ -21,14 +21,11 @@ import json
 import time
 
 import breezy.errors
-
 from breezy import osutils
-
 from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
-from paste.request import path_info_pop, parse_querystring
+from paste.request import parse_querystring, path_info_pop
 
-from .. import templates
-from .. import util
+from .. import templates, util
 from ..templatefunctions import templatefunctions
 from ..zptsupport import load_template
 
