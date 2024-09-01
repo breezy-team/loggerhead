@@ -37,7 +37,6 @@ Depends: adduser,
          python3-dulwich,
          python3-paste (>= 1.6),
          python3-pkg-resources,
-         python3-simplejson,
          ${misc:Depends},
          ${python3:Depends}
 Suggests: brz,
