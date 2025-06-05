@@ -30,4 +30,4 @@ class TestHighLight(tests.TestCase):
         self.assertLength(102401, rv)
         # no highlighting applied
         for item in rv:
-            self.assertEqual("text\n", item)
+            self.assertEqual("text", item)
