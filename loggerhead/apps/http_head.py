@@ -19,6 +19,7 @@
 We should definitely not do that.
 """
 
+
 class HeadMiddleware(object):
     """When we get a HEAD request, we should not return body content.
 
@@ -42,17 +43,17 @@ class HeadMiddleware(object):
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is None:
-            self._real_writer = self._real_start_response(status,
-                response_headers)
+            self._real_writer = self._real_start_response(status, response_headers)
         else:
-            self._real_writer = self._real_start_response(status,
-                response_headers, exc_info)
+            self._real_writer = self._real_start_response(
+                status, response_headers, exc_info
+            )
         return self.noop_write
 
     def __call__(self, environ, start_response):
         self._real_environ = environ
         self._real_start_response = start_response
-        if environ.get('REQUEST_METHOD', 'GET') == 'HEAD':
+        if environ.get("REQUEST_METHOD", "GET") == "HEAD":
             result = self._wrapped_app(environ, self.start_response)
             for chunk in result:
                 pass

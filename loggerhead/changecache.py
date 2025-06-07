@@ -36,6 +36,7 @@ from sqlite3 import dbapi2
 # We take an optimistic approach to concurrency here: we might do work twice
 # in the case of races, but not crash or corrupt data.
 
+
 def safe_init_db(filename, init_sql):
     # To avoid races around creating the database, we create the db in
     # a temporary file and rename it into the ultimate location.
@@ -48,23 +49,22 @@ def safe_init_db(filename, init_sql):
     con.close()
     os.rename(temp_path, filename)
 
-class FakeShelf(object):
 
+class FakeShelf(object):
     def __init__(self, filename):
         create_table = not os.path.exists(filename)
         if create_table:
             safe_init_db(
-                filename, "create table RevisionData "
-                "(revid binary primary key, data binary)")
+                filename,
+                "create table RevisionData (revid binary primary key, data binary)",
+            )
         self.connection = dbapi2.connect(filename)
         self.cursor = self.connection.cursor()
 
     def _create_table(self, filename):
         con = dbapi2.connect(filename)
         cur = con.cursor()
-        cur.execute(
-            "create table RevisionData "
-            "(revid binary primary key, data binary)")
+        cur.execute("create table RevisionData (revid binary primary key, data binary)")
         con.commit()
         con.close()
 
@@ -75,8 +75,7 @@ class FakeShelf(object):
         return pickle.loads(str(data))
 
     def get(self, revid):
-        self.cursor.execute(
-            "select data from revisiondata where revid = ?", (revid, ))
+        self.cursor.execute("select data from revisiondata where revid = ?", (revid,))
         filechange = self.cursor.fetchone()
         if filechange is None:
             return None
@@ -87,7 +86,8 @@ class FakeShelf(object):
         try:
             self.cursor.execute(
                 "insert into revisiondata (revid, data) values (?, ?)",
-                (revid, self._serialize(object)))
+                (revid, self._serialize(object)),
+            )
             self.connection.commit()
         except dbapi2.IntegrityError:
             # If another thread or process attempted to set the same key, we
@@ -101,12 +101,13 @@ class RevInfoDiskCache(object):
     def __init__(self, cache_path):
         if not os.path.exists(cache_path):
             os.mkdir(cache_path)
-        filename = os.path.join(cache_path, 'revinfo.sql')
+        filename = os.path.join(cache_path, "revinfo.sql")
         create_table = not os.path.exists(filename)
         if create_table:
             safe_init_db(
-                filename, "create table Data "
-                "(key binary primary key, revid binary, data binary)")
+                filename,
+                "create table Data (key binary primary key, revid binary, data binary)",
+            )
         self.connection = dbapi2.connect(filename)
         self.cursor = self.connection.cursor()
 
@@ -116,7 +117,8 @@ class RevInfoDiskCache(object):
         if not isinstance(revid, bytes):
             raise TypeError(revid)
         self.cursor.execute(
-            "select revid, data from data where key = ?", (dbapi2.Binary(key),))
+            "select revid, data from data where key = ?", (dbapi2.Binary(key),)
+        )
         row = self.cursor.fetchone()
         if row is None:
             return None
@@ -134,12 +136,12 @@ class RevInfoDiskCache(object):
         if not isinstance(revid, bytes):
             raise TypeError(revid)
         try:
-            self.cursor.execute(
-                'delete from data where key = ?', (dbapi2.Binary(key), ))
+            self.cursor.execute("delete from data where key = ?", (dbapi2.Binary(key),))
             blob = zlib.compress(marshal.dumps(data, 2))
             self.cursor.execute(
                 "insert into data (key, revid, data) values (?, ?, ?)",
-                list(map(dbapi2.Binary, [key, revid, blob])))
+                list(map(dbapi2.Binary, [key, revid, blob])),
+            )
             self.connection.commit()
         except dbapi2.IntegrityError:
             # If another thread or process attempted to set the same key, we

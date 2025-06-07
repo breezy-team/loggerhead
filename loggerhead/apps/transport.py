@@ -18,9 +18,7 @@
 
 import threading
 
-import breezy.ui
 from breezy import branch, errors, lru_cache, urlutils
-from breezy.bzr.smart import request
 from breezy.config import LocationConfig
 from breezy.transport import get_transport
 from breezy.transport.http import wsgi
@@ -34,7 +32,6 @@ from ..controllers.directory_ui import DirectoryUI
 
 
 class BranchesFromTransportServer(object):
-
     def __init__(self, transport, root, name=None):
         self.transport = transport
         self.root = root
@@ -51,38 +48,38 @@ class BranchesFromTransportServer(object):
         branch_app = BranchWSGIApp(
             branch,
             name,
-            {'cachepath': self._config.SQL_DIR},
+            {"cachepath": self._config.SQL_DIR},
             self.root.graph_cache,
             is_root=is_root,
-            use_cdn=self._config.get_option('use_cdn'),
-            )
+            use_cdn=self._config.get_option("use_cdn"),
+        )
         return branch_app.app
 
     def app_for_non_branch(self, environ):
         segment = path_info_pop(environ)
         if segment is None:
             raise httpexceptions.HTTPMovedPermanently.relative_redirect(
-                environ['SCRIPT_NAME'] + '/', environ)
-        elif segment == '':
+                environ["SCRIPT_NAME"] + "/", environ
+            )
+        elif segment == "":
             if self.name:
                 name = self.name
             else:
-                name = '/'
-            return DirectoryUI(
-                environ['loggerhead.static.url'], self.transport, name)
+                name = "/"
+            return DirectoryUI(environ["loggerhead.static.url"], self.transport, name)
         else:
             new_transport = self.transport.clone(segment)
             if self.name:
                 new_name = urlutils.join(self.name, segment)
             else:
-                new_name = '/' + segment
+                new_name = "/" + segment
             return BranchesFromTransportServer(new_transport, self.root, new_name)
 
     def app_for_bazaar_data(self, relpath):
-        if relpath == '/.bzr/smart':
+        if relpath == "/.bzr/smart":
             root_transport = get_transport_for_thread(self.root.base)
             wsgi_app = wsgi.SmartWSGIApp(root_transport)
-            return wsgi.RelpathSetter(wsgi_app, '', 'loggerhead.path_info')
+            return wsgi.RelpathSetter(wsgi_app, "", "loggerhead.path_info")
         else:
             # TODO: Use something here that uses the transport API
             # rather than relying on the local filesystem API.
@@ -95,23 +92,23 @@ class BranchesFromTransportServer(object):
                 return urlparser.make_static(None, path)
 
     def check_serveable(self, config):
-        if not config.get_user_option_as_bool('http_serve', default=True):
+        if not config.get_user_option_as_bool("http_serve", default=True):
             raise httpexceptions.HTTPNotFound()
 
     def __call__(self, environ, start_response):
-        path = environ['PATH_INFO']
+        path = environ["PATH_INFO"]
         try:
             b = branch.Branch.open_from_transport(self.transport)
         except errors.NotBranchError:
-            if path.startswith('/.bzr'):
+            if path.startswith("/.bzr"):
                 self.check_serveable(LocationConfig(self.transport.base))
                 return self.app_for_bazaar_data(path)(environ, start_response)
-            if not self.transport.listable() or not self.transport.has('.'):
+            if not self.transport.listable() or not self.transport.has("."):
                 raise httpexceptions.HTTPNotFound()
             return self.app_for_non_branch(environ)(environ, start_response)
         else:
             self.check_serveable(b.get_config())
-            if path.startswith('/.bzr'):
+            if path.startswith("/.bzr"):
                 return self.app_for_bazaar_data(path)(environ, start_response)
             else:
                 return self.app_for_branch(b)(environ, start_response)
@@ -119,8 +116,9 @@ class BranchesFromTransportServer(object):
 
 _transport_store = threading.local()
 
+
 def get_transport_for_thread(base):
-    thread_transports = getattr(_transport_store, 'transports', None)
+    thread_transports = getattr(_transport_store, "transports", None)
     if thread_transports is None:
         thread_transports = _transport_store.transports = {}
     if base in thread_transports:
@@ -131,58 +129,55 @@ def get_transport_for_thread(base):
 
 
 class BranchesFromTransportRoot(object):
-
     def __init__(self, base, config):
         self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
 
     def __call__(self, environ, start_response):
-        environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
-        environ['loggerhead.path_info'] = environ['PATH_INFO']
-        if environ['PATH_INFO'].startswith('/static/'):
+        environ["loggerhead.static.url"] = environ["SCRIPT_NAME"]
+        environ["loggerhead.path_info"] = environ["PATH_INFO"]
+        if environ["PATH_INFO"].startswith("/static/"):
             segment = path_info_pop(environ)
-            assert segment == 'static'
+            assert segment == "static"
             return static_app(environ, start_response)
-        elif environ['PATH_INFO'] == '/favicon.ico':
+        elif environ["PATH_INFO"] == "/favicon.ico":
             return favicon_app(environ, start_response)
-        elif environ['PATH_INFO'] == '/robots.txt':
+        elif environ["PATH_INFO"] == "/robots.txt":
             return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
-            return BranchesFromTransportServer(
-                transport, self)(environ, start_response)
+            return BranchesFromTransportServer(transport, self)(environ, start_response)
 
 
 class UserBranchesFromTransportRoot(object):
-
     def __init__(self, base, config):
         self.graph_cache = lru_cache.LRUCache(10)
         self.base = base
         self._config = config
-        self.trunk_dir = config.get_option('trunk_dir')
+        self.trunk_dir = config.get_option("trunk_dir")
 
     def __call__(self, environ, start_response):
-        environ['loggerhead.static.url'] = environ['SCRIPT_NAME']
-        environ['loggerhead.path_info'] = environ['PATH_INFO']
-        path_info = environ['PATH_INFO']
-        if path_info.startswith('/static/'):
+        environ["loggerhead.static.url"] = environ["SCRIPT_NAME"]
+        environ["loggerhead.path_info"] = environ["PATH_INFO"]
+        path_info = environ["PATH_INFO"]
+        if path_info.startswith("/static/"):
             segment = path_info_pop(environ)
-            assert segment == 'static'
+            assert segment == "static"
             return static_app(environ, start_response)
-        elif path_info == '/favicon.ico':
+        elif path_info == "/favicon.ico":
             return favicon_app(environ, start_response)
-        elif environ['PATH_INFO'] == '/robots.txt':
+        elif environ["PATH_INFO"] == "/robots.txt":
             return robots_app(environ, start_response)
         else:
             transport = get_transport_for_thread(self.base)
             # segments starting with ~ are user branches
-            if path_info.startswith('/~'):
+            if path_info.startswith("/~"):
                 segment = path_info_pop(environ)
                 return BranchesFromTransportServer(
-                    transport.clone(segment[1:]), self, segment)(
-                    environ, start_response)
+                    transport.clone(segment[1:]), self, segment
+                )(environ, start_response)
             else:
                 return BranchesFromTransportServer(
-                    transport.clone(self.trunk_dir), self)(
-                    environ, start_response)
+                    transport.clone(self.trunk_dir), self
+                )(environ, start_response)
