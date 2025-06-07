@@ -24,9 +24,8 @@ from ..controllers.view_ui import ViewUI
 
 
 class AnnotateUI(ViewUI):
-
     def annotate_file(self, path, info):
-        revid = info['change'].revid
+        revid = info["change"].revid
         if not isinstance(revid, bytes):
             raise TypeError(revid)
 
@@ -40,7 +39,9 @@ class AnnotateUI(ViewUI):
         revisions = {}
 
         lineno = 0
-        for (line_revid, text), lineno in zip(tree.annotate_iter(path), itertools.count(1)):
+        for (line_revid, text), lineno in zip(
+            tree.annotate_iter(path), itertools.count(1)
+        ):
             if line_revid != last_line_revid:
                 last_line_revid = line_revid
 
@@ -51,7 +52,8 @@ class AnnotateUI(ViewUI):
                         change = changes[0]
                     else:
                         change = util.Container(
-                            authors='', date=datetime.now(), revno='')
+                            authors="", date=datetime.now(), revno=""
+                        )
                     change_cache[line_revid] = change
 
                 try:
@@ -81,6 +83,6 @@ class AnnotateUI(ViewUI):
 
     def get_values(self, path, kwargs, headers):
         values = super(AnnotateUI, self).get_values(path, kwargs, headers)
-        values['annotated'] = self.annotate_file(path, values)
+        values["annotated"] = self.annotate_file(path, values)
 
         return values

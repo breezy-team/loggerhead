@@ -32,7 +32,6 @@ from ..controllers import TemplatedBranchView
 
 
 class DirEntry(object):
-
     def __init__(self, dirname, parity, branch, transport):
         self.dirname = urlutils.unquote(dirname)
         self.parity = parity
@@ -41,50 +40,53 @@ class DirEntry(object):
             self.last_revision = None
             try:
                 self.last_change_time = datetime.datetime.utcfromtimestamp(
-                    transport.stat(self.dirname).st_mtime)
+                    transport.stat(self.dirname).st_mtime
+                )
             except Exception:
                 self.last_change_time = None
         else:
             # If a branch is empty, bzr raises an exception when trying this
             try:
-                self.last_revision = branch.repository.get_revision(branch.last_revision())
-                self.last_change_time = datetime.datetime.utcfromtimestamp(self.last_revision.timestamp)
+                self.last_revision = branch.repository.get_revision(
+                    branch.last_revision()
+                )
+                self.last_change_time = datetime.datetime.utcfromtimestamp(
+                    self.last_revision.timestamp
+                )
             except errors.NoSuchRevision:
                 self.last_revision = None
                 self.last_change_time = None
 
 
 class DirectoryUI(TemplatedBranchView):
-    """
-    """
+    """ """
 
-    template_name = 'directory'
+    template_name = "directory"
 
     def __init__(self, static_url_base, transport, name):
-
         class _branch(object):
             context_url = 1
 
             @staticmethod
             def static_url(path):
                 return self._static_url_base + path
+
         self._branch = _branch
         self._history_callable = lambda: None
         self._name = name
         self._static_url_base = static_url_base
         self.transport = transport
-        self.log = logging.getLogger('')
+        self.log = logging.getLogger("")
 
     def get_values(self, path, kwargs, response):
-        listing = [d for d in self.transport.list_dir('.')
-                   if not d.startswith('.')]
+        listing = [d for d in self.transport.list_dir(".") if not d.startswith(".")]
         listing.sort(key=lambda x: x.lower())
         dirs = []
         parity = 0
         for d in listing:
             try:
                 b = branch.Branch.open_from_transport(self.transport.clone(d))
-            except:
+            except BaseException:
                 # TODO(jelmer): don't catch all exceptions here
                 try:
                     if not stat.S_ISDIR(self.transport.stat(d).st_mode):
@@ -93,17 +95,18 @@ class DirectoryUI(TemplatedBranchView):
                     continue
                 b = None
             else:
-                if not b.get_config().get_user_option_as_bool('http_serve', default=True):
+                if not b.get_config().get_user_option_as_bool(
+                    "http_serve", default=True
+                ):
                     continue
             dirs.append(DirEntry(d, parity, b, self.transport))
             parity = 1 - parity
         # Create breadcrumb trail
         directory_breadcrumbs = util.directory_breadcrumbs(
-                self._name,
-                False,
-                'directory')
+            self._name, False, "directory"
+        )
         return {
-            'dirs': dirs,
-            'name': self._name,
-            'directory_breadcrumbs': directory_breadcrumbs,
-            }
+            "dirs": dirs,
+            "name": self._name,
+            "directory_breadcrumbs": directory_breadcrumbs,
+        }

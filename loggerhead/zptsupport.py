@@ -30,15 +30,13 @@ def zpt(tfile):
     if tinstance is None or tinstance.stat != stat:
         with open(tfile) as tf:
             text = tf.read()
-        text = re.sub(r'\s*\n\s*', '\n', text)
-        text = re.sub(r'[ \t]+', ' ', text)
-        tinstance = _zpt_cache[tfile] = TemplateWrapper(
-            PageTemplate(text), tfile, stat)
+        text = re.sub(r"\s*\n\s*", "\n", text)
+        text = re.sub(r"[ \t]+", " ", text)
+        tinstance = _zpt_cache[tfile] = TemplateWrapper(PageTemplate(text), tfile, stat)
     return tinstance
 
 
 class TemplateWrapper(object):
-
     def __init__(self, template, filename, stat):
         self.template = template
         self.filename = filename
@@ -48,7 +46,7 @@ class TemplateWrapper(object):
         return self.template(**info)
 
     def expand_into(self, f, **info):
-        f.write(self.template(**info).encode('UTF-8'))
+        f.write(self.template(**info).encode("UTF-8"))
 
     @property
     def macros(self):
@@ -65,10 +63,9 @@ def load_template(classname):
     divider = classname.rfind(".")
     if divider > -1:
         package = classname[0:divider]
-        basename = classname[divider+1:]
+        basename = classname[divider + 1 :]
     else:
         raise ValueError("All templates must be in a package")
 
-    tfile = pkg_resources.resource_filename(
-        package, "%s.%s" % (basename, "pt"))
+    tfile = pkg_resources.resource_filename(package, "%s.%s" % (basename, "pt"))
     return zpt(tfile)

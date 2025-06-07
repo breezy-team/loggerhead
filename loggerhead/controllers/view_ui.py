@@ -19,7 +19,7 @@
 
 import os
 
-from breezy.errors import BinaryFile, NoSuchId, NoSuchRevision
+from breezy.errors import BinaryFile
 
 try:
     from breezy.transport import NoSuchFile
@@ -27,9 +27,8 @@ except ImportError:
     from breezy.errors import NoSuchFile
 
 import breezy.textfile
-from breezy import osutils, urlutils
-from paste.httpexceptions import (HTTPBadRequest, HTTPMovedPermanently,
-                                  HTTPNotFound)
+from breezy import osutils
+from paste.httpexceptions import HTTPBadRequest, HTTPMovedPermanently, HTTPNotFound
 
 from ..controllers import TemplatedBranchView
 
@@ -41,8 +40,7 @@ from .. import util
 
 
 class ViewUI(TemplatedBranchView):
-
-    template_name = 'view'
+    template_name = "view"
 
     def tree_for(self, path, revid):
         if not isinstance(path, str):
@@ -57,11 +55,11 @@ class ViewUI(TemplatedBranchView):
         tree = self.tree_for(path, revid)
         file_text = tree.get_file_text(path)
 
-        encoding = 'utf-8'
+        encoding = "utf-8"
         try:
             file_text.decode(encoding)
         except UnicodeDecodeError:
-            encoding = 'iso-8859-15'
+            encoding = "iso-8859-15"
             file_text.decode(encoding)
 
         file_lines = osutils.split_lines(file_text)
@@ -75,7 +73,7 @@ class ViewUI(TemplatedBranchView):
             hl_lines = highlight(file_name, file_text, encoding)
             # highlight strips off extra newlines at the end of the file.
             extra_lines = len(file_lines) - len(hl_lines)
-            hl_lines.extend([u''] * extra_lines)
+            hl_lines.extend([""] * extra_lines)
         else:
             hl_lines = [util.html_escape(line) for line in file_lines]
 
@@ -86,7 +84,7 @@ class ViewUI(TemplatedBranchView):
             file_lines = self.text_lines(path, revid)
         except BinaryFile:
             # bail out; this isn't displayable text
-            return ['(This is a binary file.)']
+            return ["(This is a binary file.)"]
 
         return file_lines
 
@@ -95,7 +93,7 @@ class ViewUI(TemplatedBranchView):
         branch = history._branch
         revid = self.get_revid()
         if path is None:
-            raise HTTPBadRequest('No filename provided to view')
+            raise HTTPBadRequest("No filename provided to view")
 
         if not history.file_exists(revid, path):
             raise HTTPNotFound()
@@ -105,26 +103,25 @@ class ViewUI(TemplatedBranchView):
         change = history.get_changes([revid])[0]
         # If we're looking at the tip, use head: in the URL instead
         if revid == branch.last_revision():
-            revno_url = 'head:'
+            revno_url = "head:"
         else:
             revno_url = history.get_revno(revid)
 
         # Directory Breadcrumbs
-        directory_breadcrumbs = (
-            util.directory_breadcrumbs(
-                self._branch.friendly_name,
-                self._branch.is_root,
-                'files'))
+        directory_breadcrumbs = util.directory_breadcrumbs(
+            self._branch.friendly_name, self._branch.is_root, "files"
+        )
 
         tree = history.revision_tree(revid)
 
         # Create breadcrumb trail for the path within the branch
-        branch_breadcrumbs = util.branch_breadcrumbs(path, tree, 'files')
+        branch_breadcrumbs = util.branch_breadcrumbs(path, tree, "files")
 
         try:
             if tree.kind(path) == "directory":
                 raise HTTPMovedPermanently(
-                    self._branch.context_url(['/files', revno_url, path]))
+                    self._branch.context_url(["/files", revno_url, path])
+                )
         except NoSuchFile:
             raise HTTPNotFound()
 
@@ -135,14 +132,14 @@ class ViewUI(TemplatedBranchView):
             # In AnnotateUI, "annotated" is a dictionary mapping lines to
             # changes.  We exploit the fact that bool({}) is False when
             # checking whether we're in "annotated" mode.
-            'annotated': {},
-            'revno_url': revno_url,
-            'file_path': path,
-            'filename': filename,
-            'navigation': navigation,
-            'change': change,
-            'contents':  self.file_contents(path, revid),
-            'fileview_active': True,
-            'directory_breadcrumbs': directory_breadcrumbs,
-            'branch_breadcrumbs': branch_breadcrumbs,
+            "annotated": {},
+            "revno_url": revno_url,
+            "file_path": path,
+            "filename": filename,
+            "navigation": navigation,
+            "change": change,
+            "contents": self.file_contents(path, revid),
+            "fileview_active": True,
+            "directory_breadcrumbs": directory_breadcrumbs,
+            "branch_breadcrumbs": branch_breadcrumbs,
         }

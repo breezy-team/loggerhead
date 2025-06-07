@@ -22,53 +22,54 @@ from breezy import tests
 
 from ..apps import http_head
 
-content = [b"<html>",
-           b"<head><title>Listed</title></head>",
-           b"<body>Content</body>",
-           b"</html>",
-          ]
-headers = {'X-Ignored-Header': 'Value'}
+content = [
+    b"<html>",
+    b"<head><title>Listed</title></head>",
+    b"<body>Content</body>",
+    b"</html>",
+]
+headers = {"X-Ignored-Header": "Value"}
+
 
 def yielding_app(environ, start_response):
-    writer = start_response('200 OK', headers)
+    start_response("200 OK", headers)
     yield from content
 
 
 def list_app(environ, start_response):
-    writer = start_response('200 OK', headers)
+    start_response("200 OK", headers)
     return content
 
 
 def writer_app(environ, start_response):
-    writer = start_response('200 OK', headers)
+    writer = start_response("200 OK", headers)
     for chunk in content:
         writer(chunk)
     return []
 
 
 class TestHeadMiddleware(tests.TestCase):
-
     def _trap_start_response(self, status, response_headers, exc_info=None):
         self._write_buffer = BytesIO()
         self._start_response_passed = (status, response_headers, exc_info)
         return self._write_buffer.write
 
     def _consume_app(self, app, request_method):
-        environ = {'REQUEST_METHOD': request_method}
+        environ = {"REQUEST_METHOD": request_method}
         value = list(app(environ, self._trap_start_response))
         self._write_buffer.writelines(value)
 
     def _verify_get_passthrough(self, app):
         app = http_head.HeadMiddleware(app)
-        self._consume_app(app, 'GET')
-        self.assertEqual(('200 OK', headers, None), self._start_response_passed)
-        self.assertEqualDiff(b''.join(content), self._write_buffer.getvalue())
+        self._consume_app(app, "GET")
+        self.assertEqual(("200 OK", headers, None), self._start_response_passed)
+        self.assertEqualDiff(b"".join(content), self._write_buffer.getvalue())
 
     def _verify_head_no_body(self, app):
         app = http_head.HeadMiddleware(app)
-        self._consume_app(app, 'HEAD')
-        self.assertEqual(('200 OK', headers, None), self._start_response_passed)
-        self.assertEqualDiff(b'', self._write_buffer.getvalue())
+        self._consume_app(app, "HEAD")
+        self.assertEqual(("200 OK", headers, None), self._start_response_passed)
+        self.assertEqualDiff(b"", self._write_buffer.getvalue())
 
     def test_get_passthrough_yielding(self):
         self._verify_get_passthrough(yielding_app)
@@ -87,4 +88,3 @@ class TestHeadMiddleware(tests.TestCase):
 
     def test_head_passthrough_writer(self):
         self._verify_head_no_body(writer_app)
-

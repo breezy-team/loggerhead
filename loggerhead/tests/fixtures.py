@@ -20,7 +20,6 @@ from fixtures import Fixture
 
 
 class SampleBranch(Fixture):
-
     def __init__(self, testcase):
         # Must be a bzr TestCase to hook into branch creation, unfortunately.
         self.testcase = testcase
@@ -28,15 +27,14 @@ class SampleBranch(Fixture):
     def setUp(self):
         Fixture.setUp(self)
 
-        self.tree = self.testcase.make_branch_and_tree('.')
+        self.tree = self.testcase.make_branch_and_tree(".")
 
-        self.filecontents = (
-            'some\nmultiline\ndata\n'
-            'with<htmlspecialchars\n')
-        filenames = ['myfilename', 'anotherfile<', 'folder/', 'folder/myfilename']
+        self.filecontents = "some\nmultiline\ndata\nwith<htmlspecialchars\n"
+        filenames = ["myfilename", "anotherfile<", "folder/", "folder/myfilename"]
         self.testcase.build_tree_contents(
-            (filename, self.filecontents) for filename in filenames)
+            (filename, self.filecontents) for filename in filenames
+        )
         self.tree.add(filenames)
-        self.path = 'myfilename'
-        self.msg = 'a very exciting commit message <'
-        self.revid = self.tree.commit(message=self.msg, rev_id=b'rev-1')
+        self.path = "myfilename"
+        self.msg = "a very exciting commit message <"
+        self.revid = self.tree.commit(message=self.msg, rev_id=b"rev-1")

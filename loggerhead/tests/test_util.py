@@ -20,14 +20,11 @@ from ..util import html_escape, html_format
 
 
 class TestHTMLEscaping(tests.TestCase):
-
     def test_html_escape(self):
-        self.assertEqual(
-            "foo &quot;&#39;&lt;&gt;&amp;",
-            html_escape("foo \"'<>&"))
+        self.assertEqual("foo &quot;&#39;&lt;&gt;&amp;", html_escape("foo \"'<>&"))
 
     def test_html_format(self):
         self.assertEqual(
             '<foo bar="baz&quot;&#39;">&lt;baz&gt;&amp;</foo>',
-            html_format(
-                '<foo bar="%s">%s</foo>', "baz\"'", "<baz>&"))
+            html_format('<foo bar="%s">%s</foo>', "baz\"'", "<baz>&"),
+        )

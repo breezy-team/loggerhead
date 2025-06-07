@@ -29,10 +29,10 @@ class ErrorHandlerApp(object):
     def __call__(self, environ, start_response):
         try:
             return self.application(environ, start_response)
-        except:
+        except BaseException:
             # test if exc_info has been set, in the case that
             # the error is caused before BranchWSGGIApp middleware
-            if 'exc_info' in environ.keys() and 'branch' in environ.keys():
+            if "exc_info" in environ.keys() and "branch" in environ.keys():
                 # Log and/or report any application errors
                 return self.handle_error(environ, start_response)
             else:
@@ -46,13 +46,12 @@ class ErrorHandlerApp(object):
         return errapp(environ, start_response)
 
     def log_error(self, environ):
-        exc_type, exc_object, exc_tb = environ['exc_info']
-        logger = environ['branch'].log
-        logger.exception(self.msg, exc_type.__module__,
-                              exc_type.__name__, exc_object)
+        exc_type, exc_object, exc_tb = environ["exc_info"]
+        logger = environ["branch"].log
+        logger.exception(self.msg, exc_type.__module__, exc_type.__name__, exc_object)
 
 
 def errapp(environ, start_response):
     """Default (and trivial) error handling WSGI application."""
-    c = ErrorUI(environ['branch'], environ['exc_info'])
+    c = ErrorUI(environ["branch"], environ["exc_info"])
     return c(environ, start_response)

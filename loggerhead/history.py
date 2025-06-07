@@ -75,28 +75,28 @@ def clean_message(message):
         # We can end up where when (a) the commit message was empty or (b)
         # when the message consisted entirely of whitespace, in which case
         # textwrap.wrap() returns an empty list.
-        return [''], ''
+        return [""], ""
 
     # Make short form of commit message.
     short_message = message[0]
     if len(short_message) > 60:
-        short_message = short_message[:60] + '...'
+        short_message = short_message[:60] + "..."
 
     return message, short_message
 
 
 def rich_filename(path, kind):
-    if kind == 'directory':
-        path += '/'
-    if kind == 'symlink':
-        path += '@'
+    if kind == "directory":
+        path += "/"
+    if kind == "symlink":
+        path += "@"
     return path
 
 
 class _RevListToTimestamps(object):
     """This takes a list of revisions, and allows you to bisect by date"""
 
-    __slots__ = ['revid_list', 'repository']
+    __slots__ = ["revid_list", "repository"]
 
     def __init__(self, revid_list, repository):
         self.revid_list = revid_list
@@ -104,15 +104,15 @@ class _RevListToTimestamps(object):
 
     def __getitem__(self, index):
         """Get the date of the index'd item"""
-        return datetime.datetime.fromtimestamp(self.repository.get_revision(
-                   self.revid_list[index]).timestamp)
+        return datetime.datetime.fromtimestamp(
+            self.repository.get_revision(self.revid_list[index]).timestamp
+        )
 
     def __len__(self):
         return len(self.revid_list)
 
 
 class FileChangeReporter(object):
-
     def __init__(self, old_tree, new_tree):
         self.added = []
         self.modified = []
@@ -130,38 +130,49 @@ class FileChangeReporter(object):
         except NoSuchFile:
             return breezy.revision.NULL_REVISION
 
-    def report(self, paths, versioned, renamed, copied, modified,
-               exe_change, kind):
+    def report(self, paths, versioned, renamed, copied, modified, exe_change, kind):
         return self._report(
-                paths, versioned, renamed, copied,
-                modified, exe_change, kind)
+            paths, versioned, renamed, copied, modified, exe_change, kind
+        )
 
-    def _report(self, paths, versioned, renamed, copied, modified,
-                exe_change, kind):
-        if modified not in ('unchanged', 'kind changed'):
-            if versioned == 'removed':
+    def _report(self, paths, versioned, renamed, copied, modified, exe_change, kind):
+        if modified not in ("unchanged", "kind changed"):
+            if versioned == "removed":
                 filename = rich_filename(paths[0], kind[0])
             else:
                 filename = rich_filename(paths[1], kind[1])
-            self.text_changes.append(util.Container(
-                filename=filename,
-                old_revision=self.revid(self.old_tree, paths[0]),
-                new_revision=self.revid(self.new_tree, paths[1])))
-        if versioned == 'added':
-            self.added.append(util.Container(
-                filename=rich_filename(paths[1], kind), kind=kind[1]))
-        elif versioned == 'removed':
-            self.removed.append(util.Container(
-                filename=rich_filename(paths[0], kind), kind=kind[0]))
+            self.text_changes.append(
+                util.Container(
+                    filename=filename,
+                    old_revision=self.revid(self.old_tree, paths[0]),
+                    new_revision=self.revid(self.new_tree, paths[1]),
+                )
+            )
+        if versioned == "added":
+            self.added.append(
+                util.Container(filename=rich_filename(paths[1], kind), kind=kind[1])
+            )
+        elif versioned == "removed":
+            self.removed.append(
+                util.Container(filename=rich_filename(paths[0], kind), kind=kind[0])
+            )
         elif renamed:
-            self.renamed.append(util.Container(
-                old_filename=rich_filename(paths[0], kind[0]),
-                new_filename=rich_filename(paths[1], kind[1]),
-                text_modified=modified == 'modified', exe_change=exe_change))
+            self.renamed.append(
+                util.Container(
+                    old_filename=rich_filename(paths[0], kind[0]),
+                    new_filename=rich_filename(paths[1], kind[1]),
+                    text_modified=modified == "modified",
+                    exe_change=exe_change,
+                )
+            )
         else:
-            self.modified.append(util.Container(
-                filename=rich_filename(paths[1], kind),
-                text_modified=modified == 'modified', exe_change=exe_change))
+            self.modified.append(
+                util.Container(
+                    filename=rich_filename(paths[1], kind),
+                    text_modified=modified == "modified",
+                    exe_change=exe_change,
+                )
+            )
 
 
 # The lru_cache is not thread-safe, so we need a lock around it for
@@ -205,13 +216,13 @@ class RevInfoMemoryCache(object):
             return None
 
     def set(self, key, revid, data):
-        """Store `data` under `key`, to be checked against `revid` on get().
-        """
+        """Store `data` under `key`, to be checked against `revid` on get()."""
         rev_info_memory_cache_lock.acquire()
         try:
             self._cache[key] = (revid, data)
         finally:
             rev_info_memory_cache_lock.release()
+
 
 # Used to store locks that prevent multiple threads from building a
 # revision graph for the same branch at the same time, because that can
@@ -219,6 +230,7 @@ class RevInfoMemoryCache(object):
 # to hang.
 revision_graph_locks = {}
 revision_graph_check_lock = threading.Lock()
+
 
 class History(object):
     """Decorate a branch to provide information for rendering.
@@ -253,6 +265,7 @@ class History(object):
         self._rev_info = None
 
         missed_caches = []
+
         def update_missed_caches():
             for cache in missed_caches:
                 cache.set(cache_key, self.last_revid, self._rev_info)
@@ -286,24 +299,26 @@ class History(object):
 
         if self._rev_indices is not None:
             self._revno_revid = {}
-            for ((_, revid, _, revno_str, _), _, _) in self._rev_info:
+            for (_, revid, _, revno_str, _), _, _ in self._rev_info:
                 self._revno_revid[revno_str] = revid
         else:
             self._revno_revid = {}
             self._rev_indices = {}
-            for ((seq, revid, _, revno_str, _), _, _) in self._rev_info:
+            for (seq, revid, _, revno_str, _), _, _ in self._rev_info:
                 self._rev_indices[revid] = seq
                 self._revno_revid[revno_str] = revid
 
-    def __init__(self, branch, whole_history_data_cache,
-                 revinfo_disk_cache=None, cache_key=None):
+    def __init__(
+        self, branch, whole_history_data_cache, revinfo_disk_cache=None, cache_key=None
+    ):
         assert branch.is_locked(), (
-            "Can only construct a History object with a read-locked branch.")
+            "Can only construct a History object with a read-locked branch."
+        )
         self._branch = branch
         self._branch_tags = None
         self._inventory_cache = {}
         self._branch_nick = self._branch.get_config().get_nickname()
-        self.log = logging.getLogger('loggerhead.%s' % (self._branch_nick,))
+        self.log = logging.getLogger("loggerhead.%s" % (self._branch_nick,))
 
         self.last_revid = branch.last_revision()
 
@@ -322,7 +337,7 @@ class History(object):
     def get_revno(self, revid):
         if revid not in self._rev_indices:
             # ghost parent?
-            return 'unknown'
+            return "unknown"
         seq = self._rev_indices[revid]
         revno = self._rev_info[seq][0][3]
         return revno
@@ -355,6 +370,7 @@ class History(object):
                 r.add(self._rev_info[i][0][1])
                 i += 1
             return r
+
         while revid_set:
             if breezy.revision.is_null(revid):
                 return
@@ -381,7 +397,7 @@ class History(object):
         revids = []
         chunk_size = 1000
         for start in range(0, len(possible_keys), chunk_size):
-            next_keys = possible_keys[start:start + chunk_size]
+            next_keys = possible_keys[start : start + chunk_size]
             revids += [k[1] for k in get_parent_map(next_keys)]
         del possible_keys, next_keys
         return revids
@@ -393,9 +409,9 @@ class History(object):
         # our revid list is sorted in REVERSE date order,
         # so go thru some hoops here...
         revid_list.reverse()
-        index = bisect.bisect(_RevListToTimestamps(revid_list,
-                                                   self._branch.repository),
-                              date)
+        index = bisect.bisect(
+            _RevListToTimestamps(revid_list, self._branch.repository), date
+        )
         if index == 0:
             return []
         revid_list.reverse()
@@ -428,21 +444,21 @@ iso style "yyyy-mm-dd")
         date = None
         m = self.us_date_re.match(query)
         if m is not None:
-            date = datetime.datetime(util.fix_year(int(m.group(3))),
-                                     int(m.group(1)),
-                                     int(m.group(2)))
+            date = datetime.datetime(
+                util.fix_year(int(m.group(3))), int(m.group(1)), int(m.group(2))
+            )
         else:
             m = self.earth_date_re.match(query)
             if m is not None:
-                date = datetime.datetime(util.fix_year(int(m.group(3))),
-                                         int(m.group(2)),
-                                         int(m.group(1)))
+                date = datetime.datetime(
+                    util.fix_year(int(m.group(3))), int(m.group(2)), int(m.group(1))
+                )
             else:
                 m = self.iso_date_re.match(query)
                 if m is not None:
-                    date = datetime.datetime(util.fix_year(int(m.group(1))),
-                                             int(m.group(2)),
-                                             int(m.group(3)))
+                    date = datetime.datetime(
+                        util.fix_year(int(m.group(1))), int(m.group(2)), int(m.group(3))
+                    )
         if date is not None:
             if revid_list is None:
                 # if no limit to the query was given,
@@ -450,13 +466,13 @@ iso style "yyyy-mm-dd")
                 revid_list = list(self.get_revids_from(None, self.last_revid))
             return self.get_revision_history_since(revid_list, date)
 
-    revno_re = re.compile(r'^[\d\.]+$')
+    revno_re = re.compile(r"^[\d\.]+$")
     # the date regex are without a final '$' so that queries like
     # "2006-11-30 12:15" still mostly work.  (i think it's better to give
     # them 90% of what they want instead of nothing at all.)
-    us_date_re = re.compile(r'^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))')
-    earth_date_re = re.compile(r'^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))')
-    iso_date_re = re.compile(r'^(\d\d\d\d)-(\d\d)-(\d\d)')
+    us_date_re = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d\d(\d\d?))")
+    earth_date_re = re.compile(r"^(\d{1,2})-(\d{1,2})-(\d\d(\d\d?))")
+    iso_date_re = re.compile(r"^(\d\d\d\d)-(\d\d)-(\d\d)")
 
     def fix_revid(self, revid):
         # if a "revid" is actually a dotted revno, convert it to a revid
@@ -464,7 +480,7 @@ iso style "yyyy-mm-dd")
             return revid
         if not isinstance(revid, str):
             raise TypeError(revid)
-        if revid == 'head:':
+        if revid == "head:":
             return self.last_revid
         try:
             if self.revno_re.match(revid):
@@ -472,7 +488,7 @@ iso style "yyyy-mm-dd")
         except KeyError:
             raise breezy.errors.NoSuchRevision(self._branch_nick, revid)
         if not isinstance(revid, bytes):
-            revid = revid.encode('utf-8')
+            revid = revid.encode("utf-8")
         return revid
 
     @staticmethod
@@ -512,15 +528,13 @@ iso style "yyyy-mm-dd")
         if revid is None:
             revid = self.last_revid
         if file_id is not None:
-            revlist = list(
-                self.get_short_revision_history_by_fileid(file_id))
+            revlist = list(self.get_short_revision_history_by_fileid(file_id))
             revlist = self.get_revids_from(revlist, revid)
         else:
             revlist = self.get_revids_from(None, revid)
         return revlist
 
-    def get_view(self, revid, start_revid, path, query=None,
-                 extra_rev_count=None):
+    def get_view(self, revid, start_revid, path, query=None, extra_rev_count=None):
         """
         use the URL parameters (revid, start_revid, path, and query) to
         determine the revision list we're viewing (start_revid, path, query)
@@ -558,16 +572,16 @@ iso style "yyyy-mm-dd")
             else:
                 file_id = None
             revid_list = self._get_file_view(start_revid, file_id)
-            revid_list = self._iterate_sufficiently(revid_list, revid,
-                                                    extra_rev_count)
+            revid_list = self._iterate_sufficiently(revid_list, revid, extra_rev_count)
             if revid is None:
                 revid = start_revid
             if revid not in revid_list:
                 # if the given revid is not in the revlist, use a revlist that
                 # starts at the given revid.
                 revid_list = self._get_file_view(revid, file_id)
-                revid_list = self._iterate_sufficiently(revid_list, revid,
-                                                        extra_rev_count)
+                revid_list = self._iterate_sufficiently(
+                    revid_list, revid, extra_rev_count
+                )
                 start_revid = revid
             return revid, start_revid, revid_list
         else:
@@ -593,8 +607,8 @@ iso style "yyyy-mm-dd")
         return self._branch.repository.revision_tree(revid)
 
     def file_exists(self, revid, path):
-        if (len(path) > 0) and not path.startswith('/'):
-            path = '/' + path
+        if (len(path) > 0) and not path.startswith("/"):
+            path = "/" + path
         try:
             return self.revision_tree(revid).has_filename(path)
         except breezy.errors.NoSuchRevision:
@@ -604,7 +618,7 @@ iso style "yyyy-mm-dd")
         """
         Return the list of revids that have merged this node.
         """
-        if '.' not in self.get_revno(revid):
+        if "." not in self.get_revno(revid):
             return []
 
         merge_point = []
@@ -653,12 +667,12 @@ iso style "yyyy-mm-dd")
             if p.revid in p_change_dict:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
             else:
-                p.branch_nick = '(missing)'
+                p.branch_nick = "(missing)"
         for p in change.merge_points:
             if p.revid in p_change_dict:
                 p.branch_nick = p_change_dict[p.revid].branch_nick
             else:
-                p.branch_nick = '(missing)'
+                p.branch_nick = "(missing)"
 
     def get_changes(self, revid_list):
         """Return a list of changes objects for the given revids.
@@ -676,13 +690,16 @@ iso style "yyyy-mm-dd")
         # change as new revisions are added.
         for change in changes:
             merge_revids = self.simplify_merge_point_list(
-                               self.get_merge_point_list(change.revid))
+                self.get_merge_point_list(change.revid)
+            )
             change.merge_points = [
-                util.Container(revid=r,
-                revno=self.get_revno(r)) for r in merge_revids]
+                util.Container(revid=r, revno=self.get_revno(r)) for r in merge_revids
+            ]
             if len(change.parents) > 0:
-                change.parents = [util.Container(revid=r,
-                    revno=self.get_revno(r)) for r in change.parents]
+                change.parents = [
+                    util.Container(revid=r, revno=self.get_revno(r))
+                    for r in change.parents
+                ]
             change.revno = self.get_revno(change.revid)
 
         parity = 0
@@ -694,14 +711,13 @@ iso style "yyyy-mm-dd")
 
     def get_changes_uncached(self, revid_list):
         # FIXME: deprecated method in getting a null revision
-        revid_list = list(filter(lambda revid: not breezy.revision.is_null(revid),
-                            revid_list))
-        parent_map = self._branch.repository.get_graph().get_parent_map(
-                         revid_list)
+        revid_list = list(
+            filter(lambda revid: not breezy.revision.is_null(revid), revid_list)
+        )
+        parent_map = self._branch.repository.get_graph().get_parent_map(revid_list)
         # We need to return the answer in the same order as the input,
         # less any ghosts.
-        present_revids = [revid for revid in revid_list
-                          if revid in parent_map]
+        present_revids = [revid for revid in revid_list if revid in parent_map]
         rev_list = self._branch.repository.get_revisions(present_revids)
 
         return [self._change_from_revision(rev) for rev in rev_list]
@@ -718,39 +734,43 @@ iso style "yyyy-mm-dd")
 
         revtags = None
         if revision.revision_id in self._branch_tags:
-          # tag.sort_* functions expect (tag, data) pairs, so we generate them,
-          # and then strip them
-          tags = [(t, None) for t in self._branch_tags[revision.revision_id]]
-          sort_func = getattr(tag, 'sort_natural', None)
-          if sort_func is None:
-              tags.sort()
-          else:
-              sort_func(self._branch, tags)
-          revtags = u', '.join([t[0] for t in tags])
+            # tag.sort_* functions expect (tag, data) pairs, so we generate them,
+            # and then strip them
+            tags = [(t, None) for t in self._branch_tags[revision.revision_id]]
+            sort_func = getattr(tag, "sort_natural", None)
+            if sort_func is None:
+                tags.sort()
+            else:
+                sort_func(self._branch, tags)
+            revtags = ", ".join([t[0] for t in tags])
 
         entry = {
-            'revid': revision.revision_id,
-            'date': datetime.datetime.fromtimestamp(revision.timestamp),
-            'utc_date': datetime.datetime.utcfromtimestamp(revision.timestamp),
-            'timestamp': revision.timestamp,
-            'committer': revision.committer,
-            'authors': revision.get_apparent_authors(),
-            'branch_nick': revision.properties.get('branch-nick', None),
-            'short_comment': short_message,
-            'comment': revision.message,
-            'comment_clean': [util.html_clean(s) for s in message],
-            'parents': revision.parent_ids,
-            'bugs': [bug.split()[0] for bug in revision.properties.get('bugs', '').splitlines()],
-            'tags': revtags,
+            "revid": revision.revision_id,
+            "date": datetime.datetime.fromtimestamp(revision.timestamp),
+            "utc_date": datetime.datetime.utcfromtimestamp(revision.timestamp),
+            "timestamp": revision.timestamp,
+            "committer": revision.committer,
+            "authors": revision.get_apparent_authors(),
+            "branch_nick": revision.properties.get("branch-nick", None),
+            "short_comment": short_message,
+            "comment": revision.message,
+            "comment_clean": [util.html_clean(s) for s in message],
+            "parents": revision.parent_ids,
+            "bugs": [
+                bug.split()[0]
+                for bug in revision.properties.get("bugs", "").splitlines()
+            ],
+            "tags": revtags,
         }
         if isinstance(revision, breezy.foreign.ForeignRevision):
-            foreign_revid, mapping = (
-                revision.foreign_revid, revision.mapping)
+            foreign_revid, mapping = (revision.foreign_revid, revision.mapping)
         elif b":" in revision.revision_id:
             try:
-                foreign_revid, mapping = \
+                foreign_revid, mapping = (
                     breezy.foreign.foreign_vcs_registry.parse_revision_id(
-                        revision.revision_id)
+                        revision.revision_id
+                    )
+                )
             except breezy.errors.InvalidRevisionId:
                 foreign_revid = None
                 mapping = None
@@ -780,10 +800,13 @@ iso style "yyyy-mm-dd")
             raise TypeError(revid)
         rev_tree = self._branch.repository.revision_tree(revid)
         display_path = path
-        if not display_path.startswith('/'):
-            path = '/' + path
-        return (display_path, breezy.osutils.basename(path),
-                rev_tree.get_file_text(path))
+        if not display_path.startswith("/"):
+            path = "/" + path
+        return (
+            display_path,
+            breezy.osutils.basename(path),
+            rev_tree.get_file_text(path),
+        )
 
     def file_changes_for_revision_ids(self, old_revid, new_revid):
         """
@@ -796,11 +819,12 @@ iso style "yyyy-mm-dd")
             text_changes: list((filename)),
         """
         repo = self._branch.repository
-        if (breezy.revision.is_null(old_revid) or
-                breezy.revision.is_null(new_revid) or
-                old_revid == new_revid):
-            old_tree, new_tree = map(
-                repo.revision_tree, [old_revid, new_revid])
+        if (
+            breezy.revision.is_null(old_revid)
+            or breezy.revision.is_null(new_revid)
+            or old_revid == new_revid
+        ):
+            old_tree, new_tree = map(repo.revision_tree, [old_revid, new_revid])
         else:
             old_tree, new_tree = repo.revision_trees([old_revid, new_revid])
 
@@ -813,6 +837,5 @@ iso style "yyyy-mm-dd")
             renamed=sorted(reporter.renamed, key=lambda x: x.new_filename),
             removed=sorted(reporter.removed, key=lambda x: x.filename),
             modified=sorted(reporter.modified, key=lambda x: x.filename),
-            text_changes=sorted(reporter.text_changes,
-                                key=lambda x: x.filename))
-
+            text_changes=sorted(reporter.text_changes, key=lambda x: x.filename),
+        )

@@ -20,27 +20,30 @@ from .test_simple import BasicTests
 
 
 class TestRevisionUI(BasicTests):
-
     def test_authors_vs_committer(self):
         self.createBranch()
-        self.tree.commit('First', committer="Joe Example <joe@example.com>",
-            revprops={'authors': 'A Author <aauthor@example.com>\n'
-                                 'B Author <bauthor@example.com>'})
+        self.tree.commit(
+            "First",
+            committer="Joe Example <joe@example.com>",
+            revprops={
+                "authors": "A Author <aauthor@example.com>\n"
+                "B Author <bauthor@example.com>"
+            },
+        )
         app = self.setUpLoggerhead()
-        res = app.get('/revision/1')
+        res = app.get("/revision/1")
         # We would like to assert that Joe Example is connected to Committer,
         # and the Authors are connected. However, that requires asserting the
         # exact HTML connections, which I wanted to avoid.
-        res.mustcontain('Committer', 'Joe Example',
-                        'Author(s)', 'A Author, B Author')
+        res.mustcontain("Committer", "Joe Example", "Author(s)", "A Author, B Author")
 
     def test_author_is_committer(self):
         self.createBranch()
-        self.tree.commit('First', committer="Joe Example <joe@example.com>")
+        self.tree.commit("First", committer="Joe Example <joe@example.com>")
         app = self.setUpLoggerhead()
-        res = app.get('/revision/1')
+        res = app.get("/revision/1")
         # We would like to assert that Joe Example is connected to Committer,
         # and the Authors are connected. However, that requires asserting the
         # exact HTML connections, which I wanted to avoid.
-        res.mustcontain('Committer', 'Joe Example')
-        self.assertNotIn(b'Author(s)', res.body)
+        res.mustcontain("Committer", "Joe Example")
+        self.assertNotIn(b"Author(s)", res.body)

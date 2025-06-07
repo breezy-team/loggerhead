@@ -24,12 +24,13 @@ from pygments.formatters import HtmlFormatter
 from pygments.lexers import TextLexer, guess_lexer, guess_lexer_for_filename
 from pygments.util import ClassNotFound
 
-DEFAULT_PYGMENT_STYLE = 'colorful'
+DEFAULT_PYGMENT_STYLE = "colorful"
 
 # Trying to highlight very large files using pygments was killing
 # loggerhead on launchpad.net, because pygments isn't very fast.
 # So we only highlight files if they're 512K or smaller.
-MAX_HIGHLIGHT_SIZE = 512000;
+MAX_HIGHLIGHT_SIZE = 512000
+
 
 def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
@@ -37,9 +38,9 @@ def highlight(path, text, encoding, style=DEFAULT_PYGMENT_STYLE):
     """
 
     if len(text) > MAX_HIGHLIGHT_SIZE:
-        return list(map(escape,  breezy.osutils.split_lines(text)))
+        return list(map(escape, breezy.osutils.split_lines(text)))
 
-    formatter = HtmlFormatter(style=style, nowrap=True, classprefix='pyg-')
+    formatter = HtmlFormatter(style=style, nowrap=True, classprefix="pyg-")
 
     try:
         lexer = guess_lexer_for_filename(path, text[:1024], encoding=encoding)

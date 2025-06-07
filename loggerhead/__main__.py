@@ -29,8 +29,7 @@ from paste.translogger import TransLogger
 
 from . import __version__
 from .apps.error import ErrorHandlerApp
-from .apps.transport import (BranchesFromTransportRoot,
-                             UserBranchesFromTransportRoot)
+from .apps.transport import BranchesFromTransportRoot, UserBranchesFromTransportRoot
 from .config import LoggerheadConfig
 from .util import Reloader
 
@@ -38,7 +37,7 @@ from .util import Reloader
 def get_config_and_base(args):
     config = LoggerheadConfig(args)
 
-    if config.get_option('show_version'):
+    if config.get_option("show_version"):
         print("loggerhead %s" % (__version__,))
         sys.exit(0)
 
@@ -48,12 +47,12 @@ def get_config_and_base(args):
     elif config.arg_count == 1:
         base = config.get_arg(0)
     else:
-        base = '.'
+        base = "."
 
     base = location_to_url(base)
 
-    if not config.get_option('allow_writes'):
-        base = 'readonly+' + base
+    if not config.get_option("allow_writes"):
+        base = "readonly+" + base
 
     return config, base
 
@@ -63,21 +62,23 @@ def setup_logging(config, init_logging=True, log_file=None):
     if init_logging:
         logging.basicConfig()
         if log_level is not None:
-            logging.getLogger('').setLevel(log_level)
-    logger = logging.getLogger('loggerhead')
+            logging.getLogger("").setLevel(log_level)
+    logger = logging.getLogger("loggerhead")
     if log_level is not None:
         logger.setLevel(log_level)
     if log_file is not None:
         handler = logging.StreamHandler(log_file)
     else:
-        if config.get_option('log_folder'):
+        if config.get_option("log_folder"):
             logfile_path = os.path.join(
-                config.get_option('log_folder'), 'loggerhead-serve.log')
+                config.get_option("log_folder"), "loggerhead-serve.log"
+            )
         else:
-            logfile_path = 'loggerhead-serve.log'
-        handler = logging.FileHandler(logfile_path, 'a')
-        formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)s:'
-                                      ' %(message)s')
+            logfile_path = "loggerhead-serve.log"
+        handler = logging.FileHandler(logfile_path, "a")
+        formatter = logging.Formatter(
+            "%(asctime)s %(levelname)-8s %(name)s: %(message)s"
+        )
         handler.setFormatter(formatter)
     # We set the handler to accept all messages, the *logger* won't emit them
     # if it is configured to suppress it
@@ -87,18 +88,18 @@ def setup_logging(config, init_logging=True, log_file=None):
 
 
 def make_app_for_config_and_base(config, base):
-    if config.get_option('trunk_dir') and not config.get_option('user_dirs'):
+    if config.get_option("trunk_dir") and not config.get_option("user_dirs"):
         print("--trunk-dir is only valid with --user-dirs")
         sys.exit(1)
 
-    if config.get_option('reload'):
+    if config.get_option("reload"):
         if Reloader.is_installed():
             Reloader.install()
         else:
             return Reloader.restart_with_reloader()
 
-    if config.get_option('user_dirs'):
-        if not config.get_option('trunk_dir'):
+    if config.get_option("user_dirs"):
+        if not config.get_option("trunk_dir"):
             print("You didn't specify a directory for the trunk directories.")
             sys.exit(1)
         app = UserBranchesFromTransportRoot(base, config)
@@ -107,44 +108,51 @@ def make_app_for_config_and_base(config, base):
 
     setup_logging(config)
 
-    if config.get_option('profile'):
+    if config.get_option("profile"):
         from loggerhead.middleware.profile import LSProfMiddleware
+
         app = LSProfMiddleware(app)
-    if config.get_option('memory_profile'):
+    if config.get_option("memory_profile"):
         from dozer import Dozer
+
         app = Dozer(app)
 
-    if not config.get_option('user_prefix'):
-        prefix = '/'
+    if not config.get_option("user_prefix"):
+        prefix = "/"
     else:
-        prefix = config.get_option('user_prefix')
-        if not prefix.startswith('/'):
-            prefix = '/' + prefix
+        prefix = config.get_option("user_prefix")
+        if not prefix.startswith("/"):
+            prefix = "/" + prefix
 
     try:
         from paste.deploy.config import PrefixMiddleware
     except ImportError:
         cant_proxy_correctly_message = (
-            'Unsupported configuration: PasteDeploy not available, but '
-            'loggerhead appears to be behind a proxy.')
+            "Unsupported configuration: PasteDeploy not available, but "
+            "loggerhead appears to be behind a proxy."
+        )
+
         def check_not_proxied(app):
             def wrapped(environ, start_response):
-                if 'HTTP_X_FORWARDED_SERVER' in environ:
+                if "HTTP_X_FORWARDED_SERVER" in environ:
                     exc = HTTPInternalServerError()
                     exc.explanation = cant_proxy_correctly_message
                     raise exc
                 return app(environ, start_response)
+
             return wrapped
+
         logging.warning(
-                'PasteDeploy not available; unable to support '
-                'access through a reverse proxy.')
+            "PasteDeploy not available; unable to support "
+            "access through a reverse proxy."
+        )
         app = check_not_proxied(app)
     else:
         app = PrefixMiddleware(app, prefix=prefix)
 
     app = HTTPExceptionHandler(app)
     app = ErrorHandlerApp(app)
-    app = TransLogger(app, logger=logging.getLogger('loggerhead'))
+    app = TransLogger(app, logger=logging.getLogger("loggerhead"))
 
     return app
 
@@ -156,35 +164,35 @@ def main(args):
 
     app = make_app_for_config_and_base(config, base)
 
-    if not config.get_option('user_port'):
-        port = '8080'
+    if not config.get_option("user_port"):
+        port = "8080"
     else:
-        port = config.get_option('user_port')
+        port = config.get_option("user_port")
 
-    if not config.get_option('user_host'):
-        host = '0.0.0.0'
+    if not config.get_option("user_host"):
+        host = "0.0.0.0"
     else:
-        host = config.get_option('user_host')
+        host = config.get_option("user_host")
 
-    if not config.get_option('protocol'):
-        protocol = 'http'
+    if not config.get_option("protocol"):
+        protocol = "http"
     else:
-        protocol = config.get_option('protocol')
+        protocol = config.get_option("protocol")
 
-    if protocol == 'http':
+    if protocol == "http":
         httpserver.serve(app, host=host, port=port)
     else:
-        if protocol == 'fcgi':
+        if protocol == "fcgi":
             from flup.server.fcgi import WSGIServer
-        elif protocol == 'scgi':
+        elif protocol == "scgi":
             from flup.server.scgi import WSGIServer
-        elif protocol == 'ajp':
+        elif protocol == "ajp":
             from flup.server.ajp import WSGIServer
         else:
-            print('Unknown protocol: %s.' % (protocol))
+            print("Unknown protocol: %s." % (protocol))
             sys.exit(1)
         WSGIServer(app, bindAddress=(host, int(port))).run()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
