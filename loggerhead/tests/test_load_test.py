@@ -158,7 +158,7 @@ class TestRequestWorker(tests.TestCaseWithTransport):
 
 
 class NoActionScript(load_test.ActionScript):
-    _thread_class = NoopRequestWorker
+    _worker_class = NoopRequestWorker
     _default_blocking_timeout = 0.01
 
 
