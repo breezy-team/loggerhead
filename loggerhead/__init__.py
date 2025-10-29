@@ -29,10 +29,12 @@ except importlib_metadata.PackageNotFoundError:
     import os
 
     try:
-        from setuptools.config.setupcfg import read_configuration
+        import tomllib
     except ModuleNotFoundError:
-        from setuptools.config import read_configuration
-    cfg = read_configuration(os.path.join(os.path.dirname(__file__), "..", "setup.cfg"))
-    __version__ = cfg["metadata"]["version"]
+        import tomli as tomllib
+
+    with open(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml"), "rb") as f:
+        cfg = tomllib.load(f)
+    __version__ = cfg["project"]["version"]
 __revision__ = None
 required_breezy = (3, 1)
