@@ -1,0 +1,26 @@
+Description: Read version from pyproject.toml instead of setup.cfg
+ The project has migrated to pyproject.toml, so read the version from there
+ instead of the non-existent setup.cfg file.
+Author: Jelmer Vernooĳ <jelmer@debian.org>
+Forwarded: not-needed
+Last-Update: 2025-10-29
+
+--- a/loggerhead/__init__.py
++++ b/loggerhead/__init__.py
+@@ -29,10 +29,12 @@ except importlib_metadata.PackageNotFou
+     import os
+
+     try:
+-        from setuptools.config.setupcfg import read_configuration
++        import tomllib
+     except ModuleNotFoundError:
+-        from setuptools.config import read_configuration
+-    cfg = read_configuration(os.path.join(os.path.dirname(__file__), "..", "setup.cfg"))
+-    __version__ = cfg["metadata"]["version"]
++        import tomli as tomllib
++
++    with open(os.path.join(os.path.dirname(__file__), "..", "pyproject.toml"), "rb") as f:
++        cfg = tomllib.load(f)
++    __version__ = cfg["project"]["version"]
+ __revision__ = None
+ required_breezy = (3, 1)
