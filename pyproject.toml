@@ -13,7 +13,6 @@ dependencies = [
     "Paste>=1.6",
     "bleach",
     "breezy>=3.1",
-    'importlib-metadata; python_version < "3.8"',
     "packaging",
 ]
 
@@ -24,7 +23,7 @@ content-type = "text/x-rst"
 [project.optional-dependencies]
 proxied = ["PasteDeploy>=1.3"]
 flup = ["flup"]
-dev = ["fixtures"]
+dev = ["fixtures", "testtools", "testscenarios"]
 
 [tool.setuptools]
 script-files = ["loggerhead-serve"]
