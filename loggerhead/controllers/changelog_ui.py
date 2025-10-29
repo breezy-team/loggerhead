@@ -20,7 +20,7 @@
 
 import json
 
-from breezy import osutils, urlutils
+from breezy import urlutils
 from paste.httpexceptions import HTTPServerError
 
 from .. import util
@@ -28,23 +28,22 @@ from ..controllers import TemplatedBranchView
 
 
 class ChangeLogUI(TemplatedBranchView):
-
-    template_name = 'changelog'
+    template_name = "changelog"
 
     def get_values(self, path, kwargs, headers):
         history = self._history
         revid = self.get_revid()
-        filter_path = kwargs.get('filter_path', path)
-        query = kwargs.get('q', None)
-        start_revid = history.fix_revid(kwargs.get('start_revid', None))
+        filter_path = kwargs.get("filter_path", path)
+        query = kwargs.get("q", None)
+        start_revid = history.fix_revid(kwargs.get("start_revid", None))
         orig_start_revid = start_revid
-        pagesize = 20  #int(config.get('pagesize', '20'))
+        pagesize = 20  # int(config.get('pagesize', '20'))
         search_failed = False
 
         try:
             revid, start_revid, revid_list = history.get_view(
-                revid, start_revid, filter_path, query,
-                extra_rev_count=pagesize+1)
+                revid, start_revid, filter_path, query, extra_rev_count=pagesize + 1
+            )
             util.set_context(kwargs)
 
             if (query is not None) and (len(revid_list) == 0):
@@ -53,7 +52,7 @@ class ChangeLogUI(TemplatedBranchView):
             if len(revid_list) == 0:
                 scan_list = revid_list
             else:
-                if revid in revid_list: # XXX is this always true?
+                if revid in revid_list:  # XXX is this always true?
                     i = revid_list.index(revid)
                 else:
                     i = None
@@ -63,25 +62,32 @@ class ChangeLogUI(TemplatedBranchView):
             data = {}
             for i, c in enumerate(changes):
                 c.index = i
-                data[str(i)] = urlutils.quote(urlutils.quote_from_bytes(c.revid, safe=''))
-        except:
-            self.log.exception('Exception fetching changes')
-            raise HTTPServerError('Could not fetch changes')
+                data[str(i)] = urlutils.quote(
+                    urlutils.quote_from_bytes(c.revid, safe="")
+                )
+        except BaseException as e:
+            self.log.exception("Exception fetching changes")
+            raise HTTPServerError("Could not fetch changes") from e
 
         navigation = util.Container(
-            pagesize=pagesize, revid=revid, start_revid=start_revid,
-            revid_list=revid_list, filter_path=filter_path,
-            scan_url='/changes', branch=self._branch, feed=True, history=history)
+            pagesize=pagesize,
+            revid=revid,
+            start_revid=start_revid,
+            revid_list=revid_list,
+            filter_path=filter_path,
+            scan_url="/changes",
+            branch=self._branch,
+            feed=True,
+            history=history,
+        )
         if query is not None:
             navigation.query = query
         util.fill_in_navigation(navigation)
 
         # Directory Breadcrumbs
-        directory_breadcrumbs = (
-            util.directory_breadcrumbs(
-                self._branch.friendly_name,
-                self._branch.is_root,
-                'changes'))
+        directory_breadcrumbs = util.directory_breadcrumbs(
+            self._branch.friendly_name, self._branch.is_root, "changes"
+        )
 
         show_tag_col = False
         for change in changes:
@@ -90,20 +96,20 @@ class ChangeLogUI(TemplatedBranchView):
                 break
 
         return {
-            'branch': self._branch,
-            'changes': changes,
-            'show_tag_col': show_tag_col,
-            'data': json.dumps(data),
-            'util': util,
-            'history': history,
-            'revid': revid,
-            'navigation': navigation,
-            'filter_path': filter_path,
-            'start_revid': start_revid,
-            'viewing_from': (orig_start_revid is not None) and
-                            (orig_start_revid != history.last_revid),
-            'query': query,
-            'search_failed': search_failed,
-            'url': self._branch.context_url,
-            'directory_breadcrumbs': directory_breadcrumbs,
+            "branch": self._branch,
+            "changes": changes,
+            "show_tag_col": show_tag_col,
+            "data": json.dumps(data),
+            "util": util,
+            "history": history,
+            "revid": revid,
+            "navigation": navigation,
+            "filter_path": filter_path,
+            "start_revid": start_revid,
+            "viewing_from": (orig_start_revid is not None)
+            and (orig_start_revid != history.last_revid),
+            "query": query,
+            "search_failed": search_failed,
+            "url": self._branch.context_url,
+            "directory_breadcrumbs": directory_breadcrumbs,
         }

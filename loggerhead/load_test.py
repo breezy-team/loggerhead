@@ -72,21 +72,21 @@ from breezy import errors, transport, urlutils
 
 try:
     from breezy.transport import NoSuchFile
-except ImportError: 
+except ImportError:
     from breezy.errors import NoSuchFile
 
 # This code will be doing multi-threaded requests against breezy.transport
 # code. We want to make sure to load everything ahead of time, so we don't get
 # lazy-import failures
-_ = transport.get_transport('http://example.com')
+_ = transport.get_transport("http://example.com")
 
 
 class RequestDescription(object):
     """Describes info about a request."""
 
     def __init__(self, descrip_dict):
-        self.thread = descrip_dict.get('thread', '1')
-        self.relpath = descrip_dict['relpath']
+        self.thread = descrip_dict.get("thread", "1")
+        self.relpath = descrip_dict["relpath"]
 
 
 class RequestWorker(object):
@@ -103,7 +103,7 @@ class RequestWorker(object):
 
     def step_next(self):
         url = self.queue.get(True, self.blocking_time)
-        if url == '<noop>':
+        if url == "<noop>":
             # This is usually an indicator that we want to stop, so just skip
             # this one.
             self.queue.task_done()
@@ -128,7 +128,7 @@ class RequestWorker(object):
             # TODO: We should probably look into using some part of
             #       blocking_timeout to decide when to stop trying to read
             #       content
-            content = t.get_bytes(path)
+            t.get_bytes(path)
         except (errors.TransportError, NoSuchFile):
             return False
         return True
@@ -141,7 +141,7 @@ class ActionScript(object):
     """This tracks the actions that we want to perform."""
 
     _worker_class = RequestWorker
-    _default_base_url = 'http://localhost:8080'
+    _default_base_url = "http://localhost:8080"
     _default_blocking_timeout = 60.0
 
     def __init__(self):
@@ -155,18 +155,18 @@ class ActionScript(object):
     def parse(cls, content):
         script = cls()
         if isinstance(content, bytes):
-            content = content.decode('UTF-8')
+            content = content.decode("UTF-8")
         json_dict = json.loads(content)
-        if 'parameters' not in json_dict:
+        if "parameters" not in json_dict:
             raise ValueError('Missing "parameters" section')
-        if 'requests' not in json_dict:
+        if "requests" not in json_dict:
             raise ValueError('Missing "requests" section')
-        param_dict = json_dict['parameters']
-        request_list = json_dict['requests']
-        base_url = param_dict.get('base_url', None)
+        param_dict = json_dict["parameters"]
+        request_list = json_dict["requests"]
+        base_url = param_dict.get("base_url", None)
         if base_url is not None:
             script.base_url = base_url
-        blocking_timeout = param_dict.get('blocking_timeout', None)
+        blocking_timeout = param_dict.get("blocking_timeout", None)
         if blocking_timeout is not None:
             script.blocking_timeout = blocking_timeout
         for request_dict in request_list:
@@ -180,11 +180,13 @@ class ActionScript(object):
     def _get_worker(self, thread_id):
         if thread_id in self._threads:
             return self._threads[thread_id][0]
-        handler = self._worker_class(thread_id,
-                                     blocking_time=self.blocking_timeout/10.0)
+        handler = self._worker_class(
+            thread_id, blocking_time=self.blocking_timeout / 10.0
+        )
 
-        t = threading.Thread(target=handler.run, args=(self.stop_event,),
-                             name='Thread-%s' % (thread_id,))
+        t = threading.Thread(
+            target=handler.run, args=(self.stop_event,), name="Thread-%s" % (thread_id,)
+        )
         self._threads[thread_id] = (handler, t)
         t.start()
         return handler
@@ -204,7 +206,7 @@ class ActionScript(object):
             # Signal the queue that it should stop blocking, we don't have to
             # wait for the queue to empty, because we may see stop_event before
             # we see the <noop>
-            h.queue.put('<noop>')
+            h.queue.put("<noop>")
             # And join the controlling thread
             for i in range(10):
                 t.join(self.blocking_timeout / 10.0)
@@ -225,7 +227,7 @@ class ActionScript(object):
 
 
 def run_script(filename):
-    with open(filename, 'rb') as f:
+    with open(filename, "rb") as f:
         content = f.read()
     script = ActionScript.parse(content)
     script.run()

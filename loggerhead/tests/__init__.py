@@ -20,17 +20,22 @@ from __future__ import absolute_import
 
 def test_suite():
     import unittest
+
     loader = unittest.TestLoader()
-    return loader.loadTestsFromNames([
-        (__name__ + '.' + x) for x in [
-            'test_controllers',
-            'test_corners',
-            'test_history',
-            'test_http_head',
-            'test_load_test',
-            'test_simple',
-            'test_revision_ui',
-            'test_templating',
-            'test_util',
-            'test_highlight',
-        ]])
+    return loader.loadTestsFromNames(
+        [
+            (__name__ + "." + x)
+            for x in [
+                "test_controllers",
+                "test_corners",
+                "test_history",
+                "test_http_head",
+                "test_load_test",
+                "test_simple",
+                "test_revision_ui",
+                "test_templating",
+                "test_util",
+                "test_highlight",
+            ]
+        ]
+    )

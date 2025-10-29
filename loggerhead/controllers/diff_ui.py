@@ -44,11 +44,11 @@ class DiffUI(TemplatedBranchView):
                 break
             args.append(arg)
 
-        numlines = 3 # This is the default.
+        numlines = 3  # This is the default.
 
         opts = parse_querystring(environ)
         for opt in opts:
-            if opt[0] == 'context':
+            if opt[0] == "context":
                 try:
                     numlines = int(opt[1])
                 except ValueError:
@@ -71,21 +71,29 @@ class DiffUI(TemplatedBranchView):
         revtree2 = repo.revision_tree(revid_from)
 
         diff_content_stream = BytesIO()
-        show_diff_trees(revtree1, revtree2, diff_content_stream,
-                        old_label='', new_label='', context=numlines)
+        show_diff_trees(
+            revtree1,
+            revtree2,
+            diff_content_stream,
+            old_label="",
+            new_label="",
+            context=numlines,
+        )
 
         content = diff_content_stream.getvalue()
 
-        self.log.info('/diff %r:%r in %r secs with %r context' % (revid_from, revid_to,
-                                                  time.time() - z, numlines))
+        self.log.info(
+            "/diff %r:%r in %r secs with %r context"
+            % (revid_from, revid_to, time.time() - z, numlines)
+        )
 
         revno1 = self._history.get_revno(revid_from)
         revno2 = self._history.get_revno(revid_to)
-        filename = '%s_%s.diff' % (revno1, revno2)
+        filename = "%s_%s.diff" % (revno1, revno2)
         headers = [
-            ('Content-Type', 'application/octet-stream'),
-            ('Content-Length', str(len(content))),
-            ('Content-Disposition', 'attachment; filename=%s' % (filename,)),
-            ]
-        start_response('200 OK', headers)
+            ("Content-Type", "application/octet-stream"),
+            ("Content-Length", str(len(content))),
+            ("Content-Disposition", "attachment; filename=%s" % (filename,)),
+        ]
+        start_response("200 OK", headers)
         return [content]

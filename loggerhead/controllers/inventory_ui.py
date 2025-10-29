@@ -18,9 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Suite 500, Boston, MA 02110-1335  USA
 #
 
-import logging
 import posixpath
-import urllib
 
 from breezy import errors, osutils, urlutils
 from breezy.revision import is_null as is_null_rev
@@ -32,14 +30,13 @@ from ..controllers import TemplatedBranchView
 
 def dirname(path):
     if path is not None:
-        path = path.rstrip('/')
+        path = path.rstrip("/")
         path = urlutils.escape(posixpath.dirname(path))
     return path
 
 
 class InventoryUI(TemplatedBranchView):
-
-    template_name = 'inventory'
+    template_name = "inventory"
     supports_json = True
 
     def get_filelist(self, tree, path, sort_type, revno_url):
@@ -53,8 +50,10 @@ class InventoryUI(TemplatedBranchView):
         """
         file_list = []
 
-        if tree.kind(path) != 'directory':
-            raise HTTPMovedPermanently(self._branch.context_url(['/view', revno_url, path]))
+        if tree.kind(path) != "directory":
+            raise HTTPMovedPermanently(
+                self._branch.context_url(["/view", revno_url, path])
+            )
 
         revid_set = set()
 
@@ -73,13 +72,13 @@ class InventoryUI(TemplatedBranchView):
         for child_path, entry, child_revision in child_entries:
             pathname = entry.name
             contents_changed_rev = None
-            if entry.kind == 'directory':
-                pathname += '/'
+            if entry.kind == "directory":
+                pathname += "/"
                 size = None
             else:
                 size = entry.text_size
 
-            file_timestamp = change_dict[child_revision].timestamp
+            change_dict[child_revision].timestamp
 
             # TODO: For the JSON rendering, this inlines the "change" aka
             # revision information attached to each file. Consider either
@@ -87,26 +86,33 @@ class InventoryUI(TemplatedBranchView):
             # including the revision id and having a separate request to get
             # back the revision info.
             file = util.Container(
-                filename=entry.name, executable=entry.executable,
-                kind=entry.kind, absolutepath=child_path,
-                size=size, revid=child_revision,
-                change=change_dict[child_revision], contents_changed_rev=contents_changed_rev)
+                filename=entry.name,
+                executable=entry.executable,
+                kind=entry.kind,
+                absolutepath=child_path,
+                size=size,
+                revid=child_revision,
+                change=change_dict[child_revision],
+                contents_changed_rev=contents_changed_rev,
+            )
             file_list.append(file)
 
-        if sort_type == 'filename':
-            file_list.sort(key=lambda x: x.filename.lower()) # case-insensitive
-        elif sort_type == 'size':
+        if sort_type == "filename":
+            file_list.sort(key=lambda x: x.filename.lower())  # case-insensitive
+        elif sort_type == "size":
+
             def size_key(x):
                 if x.size is None:
                     return -1
                 return x.size
+
             file_list.sort(key=size_key)
-        elif sort_type == 'date':
+        elif sort_type == "date":
             file_list.sort(key=lambda x: x.change.date, reverse=True)
 
-        if sort_type != 'date':
-        # Don't always sort directories first.
-            file_list.sort(key=lambda x: x.kind != 'directory')
+        if sort_type != "date":
+            # Don't always sort directories first.
+            file_list.sort(key=lambda x: x.kind != "directory")
 
         return file_list
 
@@ -119,18 +125,18 @@ class InventoryUI(TemplatedBranchView):
         except errors.NoSuchRevision:
             raise HTTPNotFound()
 
-        start_revid = kwargs.get('start_revid', None)
-        sort_type = kwargs.get('sort', 'filename')
+        start_revid = kwargs.get("start_revid", None)
+        sort_type = kwargs.get("sort", "filename")
 
         if path is None:
             path = "/"
 
-        path = path.rstrip('/')
+        path = path.rstrip("/")
         if not rev_tree.has_filename(path) and not is_null_rev(revid):
             raise HTTPNotFound()
 
         # Are we at the top of the tree
-        if path in ['/', '']:
+        if path in ["/", ""]:
             updir = None
         else:
             updir = dirname(path)
@@ -139,7 +145,7 @@ class InventoryUI(TemplatedBranchView):
             change = history.get_changes([revid])[0]
             # If we're looking at the tip, use head: in the URL instead
             if revid == branch.last_revision():
-                revno_url = 'head:'
+                revno_url = "head:"
             else:
                 revno_url = history.get_revno(revid)
             history.add_branch_nicks(change)
@@ -150,29 +156,28 @@ class InventoryUI(TemplatedBranchView):
             change = None
             path = "/"
             updir = None
-            revno_url = 'head:'
+            revno_url = "head:"
             filelist = []
 
         return {
-            'revid': revid,
-            'revno_url': revno_url,
-            'change': change,
-            'path': path,
-            'updir': updir,
-            'filelist': filelist,
-            'start_revid': start_revid,
+            "revid": revid,
+            "revno_url": revno_url,
+            "change": change,
+            "path": path,
+            "updir": updir,
+            "filelist": filelist,
+            "start_revid": start_revid,
         }
 
     def add_template_values(self, values):
         super(InventoryUI, self).add_template_values(values)
         # Directory Breadcrumbs
         directory_breadcrumbs = util.directory_breadcrumbs(
-                self._branch.friendly_name,
-                self._branch.is_root,
-                'files')
+            self._branch.friendly_name, self._branch.is_root, "files"
+        )
 
-        path = values['path']
-        revid = values['revid']
+        path = values["path"]
+        revid = values["revid"]
         # no navbar for revisions
         navigation = util.Container()
 
@@ -182,10 +187,12 @@ class InventoryUI(TemplatedBranchView):
             # Create breadcrumb trail for the path within the branch
             branch = self._history._branch
             rev_tree = branch.repository.revision_tree(revid)
-            branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, 'files')
-        values.update({
-            'fileview_active': True,
-            'directory_breadcrumbs': directory_breadcrumbs,
-            'branch_breadcrumbs': branch_breadcrumbs,
-            'navigation': navigation,
-        })
+            branch_breadcrumbs = util.branch_breadcrumbs(path, rev_tree, "files")
+        values.update(
+            {
+                "fileview_active": True,
+                "directory_breadcrumbs": directory_breadcrumbs,
+                "branch_breadcrumbs": branch_breadcrumbs,
+                "navigation": navigation,
+            }
+        )

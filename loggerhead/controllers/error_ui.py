@@ -24,8 +24,7 @@ from ..controllers import TemplatedBranchView
 
 
 class ErrorUI(TemplatedBranchView):
-
-    template_name = 'error'
+    template_name = "error"
 
     def __init__(self, branch, exc_info):
         super(ErrorUI, self).__init__(branch, lambda: None)
@@ -36,11 +35,13 @@ class ErrorUI(TemplatedBranchView):
         description = StringIO()
         traceback.print_exception(exc_type, exc_object, None, file=description)
         directory_breadcrumbs = util.directory_breadcrumbs(
-            self._branch.friendly_name, self._branch.is_root, 'changes')
+            self._branch.friendly_name, self._branch.is_root, "changes"
+        )
         return {
-            'branch': self._branch,
-            'error_title': ('An unexpected error occurred while'
-                            'processing the request:'),
-            'error_description': description.getvalue(),
-            'directory_breadcrumbs': directory_breadcrumbs,
+            "branch": self._branch,
+            "error_title": (
+                "An unexpected error occurred whileprocessing the request:"
+            ),
+            "error_description": description.getvalue(),
+            "directory_breadcrumbs": directory_breadcrumbs,
         }

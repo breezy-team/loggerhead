@@ -20,20 +20,19 @@
 from ..controllers import TemplatedBranchView
 
 
-class AtomUI (TemplatedBranchView):
-
-    template_name = 'atom'
+class AtomUI(TemplatedBranchView):
+    template_name = "atom"
 
     def get_values(self, path, kwargs, headers):
         history = self._history
-        pagesize = int(20)#self._branch.config.get('pagesize', '20'))
+        pagesize = int(20)  # self._branch.config.get('pagesize', '20'))
 
         revid_list = history.get_file_view(history.last_revid, None)
         entries = list(history.get_changes(list(revid_list)[:pagesize]))
 
-        headers['Content-Type'] = 'application/atom+xml'
+        headers["Content-Type"] = "application/atom+xml"
         return {
-            'changes': entries,
-            'updated': entries[0].utc_date.isoformat(),
-            'history': self._history,
+            "changes": entries,
+            "updated": entries[0].utc_date.isoformat(),
+            "history": self._history,
         }

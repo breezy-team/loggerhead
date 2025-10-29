@@ -21,8 +21,7 @@ import json
 import time
 
 import breezy.errors
-from breezy import osutils
-from paste.httpexceptions import HTTPNotFound, HTTPSeeOther
+from paste.httpexceptions import HTTPNotFound
 from paste.request import parse_querystring, path_info_pop
 
 from .. import templates, util
@@ -31,7 +30,6 @@ from ..zptsupport import load_template
 
 
 class BufferingWriter(object):
-
     def __init__(self, writefunc, buf_limit):
         self.bytes = 0
         self.buf = []
@@ -40,7 +38,7 @@ class BufferingWriter(object):
         self.buf_limit = buf_limit
 
     def flush(self):
-        self.writefunc(b''.join(self.buf))
+        self.writefunc(b"".join(self.buf))
         self.buf = []
         self.buflen = 0
 
@@ -53,7 +51,6 @@ class BufferingWriter(object):
 
 
 class TemplatedBranchView(object):
-
     template_name = None
     supports_json = False
 
@@ -82,66 +79,71 @@ class TemplatedBranchView(object):
 
         path = None
         if len(args) > 1:
-            path = '/'.join(args[1:])
+            path = "/".join(args[1:])
             if isinstance(path, bytes):
                 # Python 2
-                path = path.decode('utf-8')
+                path = path.decode("utf-8")
         self.args = args
         self.kwargs = kwargs
         return path
 
     def add_template_values(self, values):
-        values.update({
-            'static_url': self._branch.static_url,
-            'branch': self._branch,
-            'util': util,
-            'url': self._branch.context_url,
-        })
+        values.update(
+            {
+                "static_url": self._branch.static_url,
+                "branch": self._branch,
+                "util": util,
+                "url": self._branch.context_url,
+            }
+        )
         values.update(templatefunctions)
 
     def __call__(self, environ, start_response):
         z = time.time()
-        if environ.get('loggerhead.as_json') and not self.supports_json:
+        if environ.get("loggerhead.as_json") and not self.supports_json:
             raise HTTPNotFound
         path = self.parse_args(environ)
         headers = {}
         values = self.get_values(path, self.kwargs, headers)
 
-        self.log.info('Getting information for %s: %.3f secs' % (
-            self.__class__.__name__, time.time() - z))
-        if environ.get('loggerhead.as_json'):
-            headers['Content-Type'] = 'application/json'
-        elif 'Content-Type' not in headers:
-            headers['Content-Type'] = 'text/html'
+        self.log.info(
+            "Getting information for %s: %.3f secs"
+            % (self.__class__.__name__, time.time() - z)
+        )
+        if environ.get("loggerhead.as_json"):
+            headers["Content-Type"] = "application/json"
+        elif "Content-Type" not in headers:
+            headers["Content-Type"] = "text/html"
         writer = start_response("200 OK", list(headers.items()))
-        if environ.get('REQUEST_METHOD') == 'HEAD':
+        if environ.get("REQUEST_METHOD") == "HEAD":
             # No content for a HEAD request
             return []
         z = time.time()
         w = BufferingWriter(writer, 8192)
-        if environ.get('loggerhead.as_json'):
-            w.write(json.dumps(values,
-                default=util.convert_to_json_ready).encode('utf-8'))
+        if environ.get("loggerhead.as_json"):
+            w.write(
+                json.dumps(values, default=util.convert_to_json_ready).encode("utf-8")
+            )
         else:
             self.add_template_values(values)
-            template = load_template(
-                    '%s.%s' % (templates.__name__, self.template_name))
+            template = load_template("%s.%s" % (templates.__name__, self.template_name))
             template.expand_into(w, **values)
         w.flush()
         self.log.info(
-            'Rendering %s: %.3f secs, %s bytes' % (
-                self.__class__.__name__, time.time() - z, w.bytes))
+            "Rendering %s: %.3f secs, %s bytes"
+            % (self.__class__.__name__, time.time() - z, w.bytes)
+        )
         return []
 
     def get_revid(self):
         h = self._history
         if h is None:
             return None
-        if len(self.args) > 0 and self.args != ['']:
+        if len(self.args) > 0 and self.args != [""]:
             try:
                 revid = h.fix_revid(self.args[0])
             except breezy.errors.NoSuchRevision:
-                raise HTTPNotFound;
+                raise HTTPNotFound
             assert isinstance(revid, bytes)
         else:
             revid = h.last_revid

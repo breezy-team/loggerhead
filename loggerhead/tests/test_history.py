@@ -26,7 +26,6 @@ from .. import history as _mod_history
 
 
 class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
-
     def make_linear_ancestry(self):
         # Time goes up
         # rev-3
@@ -34,10 +33,11 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         # rev-2
         #  |
         # rev-1
-        builder = self.make_branch_builder('branch')
+        builder = self.make_branch_builder("branch")
         builder.start_series()
-        rev1 = builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', None))])
+        rev1 = builder.build_snapshot(
+            None, [("add", ("", b"root-id", "directory", None))]
+        )
         rev2 = builder.build_snapshot([rev1], [])
         rev3 = builder.build_snapshot([rev2], [])
         builder.finish_series()
@@ -46,11 +46,12 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         return _mod_history.History(b, {}), [rev1, rev2, rev3]
 
     def make_long_linear_ancestry(self):
-        builder = self.make_branch_builder('branch')
+        builder = self.make_branch_builder("branch")
         revs = []
         builder.start_series()
-        revs.append(builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', None))]))
+        revs.append(
+            builder.build_snapshot(None, [("add", ("", b"root-id", "directory", None))])
+        )
         for r in "BCDEFGHIJKLMNOPQRSTUVWXYZ":
             revs.append(builder.build_snapshot(None, []))
         builder.finish_series()
@@ -65,10 +66,11 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         #  |  rev-2
         #  |  /
         # rev-1
-        builder = self.make_branch_builder('branch')
+        builder = self.make_branch_builder("branch")
         builder.start_series()
-        rev1 = builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', None))])
+        rev1 = builder.build_snapshot(
+            None, [("add", ("", b"root-id", "directory", None))]
+        )
         rev2 = builder.build_snapshot([rev1], [])
         rev3 = builder.build_snapshot([rev1, rev2], [])
         builder.finish_series()
@@ -87,10 +89,11 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         # B C
         # |/
         # A
-        builder = self.make_branch_builder('branch')
+        builder = self.make_branch_builder("branch")
         builder.start_series()
-        rev_a = builder.build_snapshot(None, [
-            ('add', ('', b'root-id', 'directory', None))])
+        rev_a = builder.build_snapshot(
+            None, [("add", ("", b"root-id", "directory", None))]
+        )
         rev_b = builder.build_snapshot([rev_a], [])
         rev_c = builder.build_snapshot([rev_a], [])
         rev_d = builder.build_snapshot([rev_c], [])
@@ -99,16 +102,13 @@ class TestCaseWithExamples(tests.TestCaseWithMemoryTransport):
         builder.finish_series()
         b = builder.get_branch()
         self.addCleanup(b.lock_read().unlock)
-        return (_mod_history.History(b, {}),
-                [rev_a, rev_b, rev_c, rev_d, rev_e, rev_f])
+        return (_mod_history.History(b, {}), [rev_a, rev_b, rev_c, rev_d, rev_e, rev_f])
 
     def assertRevidsFrom(self, expected, history, search_revs, tip_rev):
-        self.assertEqual(expected,
-                         list(history.get_revids_from(search_revs, tip_rev)))
+        self.assertEqual(expected, list(history.get_revids_from(search_revs, tip_rev)))
 
 
 class _DictProxy:
-
     def __init__(self, d):
         self._d = d
         self._accessed = set()
@@ -132,15 +132,13 @@ def track_rev_info_accesses(h):
 
 
 class TestHistoryGetRevidsFrom(TestCaseWithExamples):
-
     def test_get_revids_from_simple_mainline(self):
         history, revs = self.make_linear_ancestry()
         self.assertRevidsFrom(list(reversed(revs)), history, None, revs[2])
 
     def test_get_revids_from_merged_mainline(self):
         history, revs = self.make_merged_ancestry()
-        self.assertRevidsFrom([revs[2], revs[0]],
-                              history, None, revs[2])
+        self.assertRevidsFrom([revs[2], revs[0]], history, None, revs[2])
 
     def test_get_revids_given_one_rev(self):
         history, revs = self.make_merged_ancestry()
@@ -179,24 +177,29 @@ class TestHistoryGetRevidsFrom(TestCaseWithExamples):
         self.assertEqual(revs[-3], next(result))
         # We access 'W' because we are checking that W wasn't merged into X.
         # The important bit is that we aren't getting the whole ancestry.
-        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:4]},
-                         accessed)
+        self.assertEqual(
+            {history._rev_indices[x] for x in list(reversed(revs))[:4]}, accessed
+        )
         self.assertEqual(revs[-5], next(result))
-        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
-                         accessed)
+        self.assertEqual(
+            {history._rev_indices[x] for x in list(reversed(revs))[:6]}, accessed
+        )
         self.assertRaises(StopIteration, next, result)
-        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
-                         accessed)
-
+        self.assertEqual(
+            {history._rev_indices[x] for x in list(reversed(revs))[:6]}, accessed
+        )
 
 
 class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
-
     def make_single_commit(self):
-        tree = self.make_branch_and_tree('test')
-        rev_id = tree.commit('Commit Message', timestamp=1299838474.317,
-            timezone=3600, committer='Joe Example <joe@example.com>',
-            revprops={})
+        tree = self.make_branch_and_tree("test")
+        rev_id = tree.commit(
+            "Commit Message",
+            timestamp=1299838474.317,
+            timezone=3600,
+            committer="Joe Example <joe@example.com>",
+            revprops={},
+        )
         self.addCleanup(tree.branch.lock_write().unlock)
         rev = tree.branch.repository.get_revision(rev_id)
         history = _mod_history.History(tree.branch, {})
@@ -206,16 +209,13 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
         history, rev = self.make_single_commit()
         change = history._change_from_revision(rev)
         self.assertEqual(rev.revision_id, change.revid)
-        self.assertEqual(datetime.fromtimestamp(1299838474.317),
-                         change.date)
-        self.assertEqual(datetime.utcfromtimestamp(1299838474.317),
-                         change.utc_date)
-        self.assertEqual(['Joe Example <joe@example.com>'],
-                         change.authors)
-        self.assertEqual('test', change.branch_nick)
-        self.assertEqual('Commit Message', change.short_comment)
-        self.assertEqual('Commit Message', change.comment)
-        self.assertEqual(['Commit&nbsp;Message'], change.comment_clean)
+        self.assertEqual(datetime.fromtimestamp(1299838474.317), change.date)
+        self.assertEqual(datetime.utcfromtimestamp(1299838474.317), change.utc_date)
+        self.assertEqual(["Joe Example <joe@example.com>"], change.authors)
+        self.assertEqual("test", change.branch_nick)
+        self.assertEqual("Commit Message", change.short_comment)
+        self.assertEqual("Commit Message", change.comment)
+        self.assertEqual(["Commit&nbsp;Message"], change.comment_clean)
         self.assertEqual([], change.parents)
         self.assertEqual([], change.bugs)
         self.assertEqual(None, change.tags)
@@ -223,92 +223,100 @@ class TestHistoryChangeFromRevision(tests.TestCaseWithTransport):
     def test_tags(self):
         history, rev = self.make_single_commit()
         b = history._branch
-        b.tags.set_tag('tag-1', rev.revision_id)
-        b.tags.set_tag('tag-2', rev.revision_id)
-        b.tags.set_tag('Tag-10', rev.revision_id)
+        b.tags.set_tag("tag-1", rev.revision_id)
+        b.tags.set_tag("tag-2", rev.revision_id)
+        b.tags.set_tag("Tag-10", rev.revision_id)
         change = history._change_from_revision(rev)
         # If available, tags are 'naturally' sorted. (sorting numbers in order,
         # and ignoring case, etc.)
-        if getattr(tag, 'sort_natural', None) is not None:
-            self.assertEqual('tag-1, tag-2, Tag-10', change.tags)
+        if getattr(tag, "sort_natural", None) is not None:
+            self.assertEqual("tag-1, tag-2, Tag-10", change.tags)
         else:
-            self.assertEqual('Tag-10, tag-1, tag-2', change.tags)
+            self.assertEqual("Tag-10, tag-1, tag-2", change.tags)
 
     def test_committer_vs_authors(self):
-        tree = self.make_branch_and_tree('test')
-        rev_id = tree.commit('Commit Message', timestamp=1299838474.317,
-            timezone=3600, committer='Joe Example <joe@example.com>',
-            revprops={'authors': 'A Author <aauthor@example.com>\n'
-                                 'B Author <bauthor@example.com>'})
+        tree = self.make_branch_and_tree("test")
+        rev_id = tree.commit(
+            "Commit Message",
+            timestamp=1299838474.317,
+            timezone=3600,
+            committer="Joe Example <joe@example.com>",
+            revprops={
+                "authors": "A Author <aauthor@example.com>\n"
+                "B Author <bauthor@example.com>"
+            },
+        )
         self.addCleanup(tree.branch.lock_write().unlock)
         rev = tree.branch.repository.get_revision(rev_id)
         history = _mod_history.History(tree.branch, {})
         change = history._change_from_revision(rev)
-        self.assertEqual('Joe Example <joe@example.com>',
-                         change.committer)
-        self.assertEqual(['A Author <aauthor@example.com>',
-                          'B Author <bauthor@example.com>'],
-                         change.authors)
+        self.assertEqual("Joe Example <joe@example.com>", change.committer)
+        self.assertEqual(
+            ["A Author <aauthor@example.com>", "B Author <bauthor@example.com>"],
+            change.authors,
+        )
 
 
 class TestHistory_IterateSufficiently(tests.TestCase):
-
     def assertIterate(self, expected, iterable, stop_at, extra_rev_count):
-        self.assertEqual(expected, _mod_history.History._iterate_sufficiently(
-            iterable, stop_at, extra_rev_count))
+        self.assertEqual(
+            expected,
+            _mod_history.History._iterate_sufficiently(
+                iterable, stop_at, extra_rev_count
+            ),
+        )
 
     def test_iter_no_extra(self):
-        lst = list('abcdefghijklmnopqrstuvwxyz')
-        self.assertIterate(['a', 'b', 'c'], iter(lst), 'c', 0)
-        self.assertIterate(['a', 'b', 'c', 'd'], iter(lst), 'd', 0)
+        lst = list("abcdefghijklmnopqrstuvwxyz")
+        self.assertIterate(["a", "b", "c"], iter(lst), "c", 0)
+        self.assertIterate(["a", "b", "c", "d"], iter(lst), "d", 0)
 
     def test_iter_not_found(self):
         # If the key in question isn't found, we just exhaust the list
-        lst = list('abcdefghijklmnopqrstuvwxyz')
-        self.assertIterate(lst, iter(lst), 'not-there', 0)
+        lst = list("abcdefghijklmnopqrstuvwxyz")
+        self.assertIterate(lst, iter(lst), "not-there", 0)
 
     def test_iter_with_extra(self):
-        lst = list('abcdefghijklmnopqrstuvwxyz')
-        self.assertIterate(['a', 'b', 'c'], iter(lst), 'b', 1)
-        self.assertIterate(['a', 'b', 'c', 'd', 'e'], iter(lst), 'c', 2)
+        lst = list("abcdefghijklmnopqrstuvwxyz")
+        self.assertIterate(["a", "b", "c"], iter(lst), "b", 1)
+        self.assertIterate(["a", "b", "c", "d", "e"], iter(lst), "c", 2)
 
     def test_iter_with_too_many_extra(self):
-        lst = list('abcdefghijklmnopqrstuvwxyz')
-        self.assertIterate(lst, iter(lst), 'y', 10)
-        self.assertIterate(lst, iter(lst), 'z', 10)
+        lst = list("abcdefghijklmnopqrstuvwxyz")
+        self.assertIterate(lst, iter(lst), "y", 10)
+        self.assertIterate(lst, iter(lst), "z", 10)
 
     def test_iter_with_extra_None(self):
-        lst = list('abcdefghijklmnopqrstuvwxyz')
-        self.assertIterate(lst, iter(lst), 'z', None)
-
+        lst = list("abcdefghijklmnopqrstuvwxyz")
+        self.assertIterate(lst, iter(lst), "z", None)
 
 
 class TestHistoryGetView(TestCaseWithExamples):
-
     def test_get_view_limited_history(self):
         # get_view should only load enough history to serve the result, not all
         # history.
         history, revs = self.make_long_linear_ancestry()
         accessed = track_rev_info_accesses(history)
-        revid, start_revid, revid_list = history.get_view(revs[-1], revs[-1], None,
-                                                      extra_rev_count=5)
+        revid, start_revid, revid_list = history.get_view(
+            revs[-1], revs[-1], None, extra_rev_count=5
+        )
         self.assertEqual(list(reversed(revs))[:6], revid_list)
         self.assertEqual(revs[-1], revid)
         self.assertEqual(revs[-1], start_revid)
-        self.assertEqual({history._rev_indices[x] for x in list(reversed(revs))[:6]},
-                         accessed)
+        self.assertEqual(
+            {history._rev_indices[x] for x in list(reversed(revs))[:6]}, accessed
+        )
 
 
 class TestHistoryGetChangedUncached(TestCaseWithExamples):
-
     def test_native(self):
         history, revs = self.make_linear_ancestry()
         changes = history.get_changes_uncached([revs[0], revs[1]])
         self.assertEqual(2, len(changes))
         self.assertEqual(revs[0], changes[0].revid)
         self.assertEqual(revs[1], changes[1].revid)
-        self.assertIs(None, getattr(changes[0], 'foreign_vcs', None))
-        self.assertIs(None, getattr(changes[0], 'foreign_revid', None))
+        self.assertIs(None, getattr(changes[0], "foreign_vcs", None))
+        self.assertIs(None, getattr(changes[0], "foreign_revid", None))
 
     def test_foreign(self):
         # Test with a mocked foreign revision, as it's not possible
@@ -316,10 +324,14 @@ class TestHistoryGetChangedUncached(TestCaseWithExamples):
         history, revs = self.make_linear_ancestry()
         foreign_vcs = ForeignVcs(None, "vcs")
         foreign_vcs.show_foreign_revid = repr
-        foreign_rev = ForeignRevision(("uuid", 1234), VcsMapping(foreign_vcs),
-            "revid-in-bzr", message="message",
-            timestamp=234423423.3)
+        foreign_rev = ForeignRevision(
+            ("uuid", 1234),
+            VcsMapping(foreign_vcs),
+            "revid-in-bzr",
+            message="message",
+            timestamp=234423423.3,
+        )
         change = history._change_from_revision(foreign_rev)
-        self.assertEqual('revid-in-bzr', change.revid)
+        self.assertEqual("revid-in-bzr", change.revid)
         self.assertEqual("('uuid', 1234)", change.foreign_revid)
         self.assertEqual("vcs", change.foreign_vcs)

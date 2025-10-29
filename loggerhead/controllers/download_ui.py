@@ -19,16 +19,15 @@
 
 import logging
 import mimetypes
-import urllib
 
-from breezy.errors import NoSuchId, NoSuchRevision
+from breezy.errors import NoSuchRevision
 
 try:
     from breezy.transport import NoSuchFile
 except ImportError:
     from breezy.errors import NoSuchFile
 
-from breezy import osutils, urlutils
+from breezy import urlutils
 from paste import httpexceptions
 from paste.request import path_info_pop
 
@@ -37,10 +36,8 @@ from ..controllers import TemplatedBranchView
 log = logging.getLogger("loggerhead.controllers")
 
 
-class DownloadUI (TemplatedBranchView):
-
+class DownloadUI(TemplatedBranchView):
     def encode_filename(self, filename):
-
         return urlutils.escape(filename)
 
     def get_args(self, environ):
@@ -58,7 +55,8 @@ class DownloadUI (TemplatedBranchView):
         args = self.get_args(environ)
         if len(args) < 2:
             raise httpexceptions.HTTPMovedPermanently(
-                self._branch.absolute_url('/changes'))
+                self._branch.absolute_url("/changes")
+            )
         revid = h.fix_revid(args[0])
         try:
             path, filename, content = h.get_file("/".join(args[1:]), revid)
@@ -66,51 +64,52 @@ class DownloadUI (TemplatedBranchView):
             raise httpexceptions.HTTPNotFound()
         mime_type, encoding = mimetypes.guess_type(filename)
         if mime_type is None:
-            mime_type = 'application/octet-stream'
-        self.log.info('/download %s @ %s (%d bytes)',
-                      path,
-                      h.get_revno(revid),
-                      len(content))
+            mime_type = "application/octet-stream"
+        self.log.info(
+            "/download %s @ %s (%d bytes)", path, h.get_revno(revid), len(content)
+        )
         encoded_filename = self.encode_filename(filename)
         headers = [
-            ('Content-Type', mime_type),
-            ('Content-Length', str(len(content))),
-            ('Content-Disposition',
-             "attachment; filename*=utf-8''%s" % (encoded_filename,)),
-            ]
-        start_response('200 OK', headers)
+            ("Content-Type", mime_type),
+            ("Content-Length", str(len(content))),
+            (
+                "Content-Disposition",
+                "attachment; filename*=utf-8''%s" % (encoded_filename,),
+            ),
+        ]
+        start_response("200 OK", headers)
         return [content]
 
 
 class DownloadTarballUI(DownloadUI):
-
     def __call__(self, environ, start_response):
         """Stream a tarball from a bazaar branch."""
         # Tried to re-use code from downloadui, not very successful
         if not self._branch.export_tarballs:
-            raise httpexceptions.HTTPForbidden(
-                "Tarball downloads are not allowed")
+            raise httpexceptions.HTTPForbidden("Tarball downloads are not allowed")
         archive_format = "tgz"
         history = self._history
         self.args = self.get_args(environ)
         if len(self.args):
             revid = history.fix_revid(self.args[0])
-            version_part = '-r' + self.args[0]
+            version_part = "-r" + self.args[0]
         else:
             revid = self.get_revid()
-            version_part = ''
+            version_part = ""
         # XXX: Perhaps some better suggestion based on the URL or path?
         #
         # TODO: Perhaps set the tarball suggested mtime to the revision
         # mtime.
-        root = self._branch.friendly_name or 'branch'
-        filename = root + version_part + '.' + archive_format
+        root = self._branch.friendly_name or "branch"
+        filename = root + version_part + "." + archive_format
         encoded_filename = self.encode_filename(filename)
         headers = [
-            ('Content-Type', 'application/octet-stream'),
-            ('Content-Disposition',
-                "attachment; filename*=utf-8''%s" % (encoded_filename,)),
-            ]
-        start_response('200 OK', headers)
+            ("Content-Type", "application/octet-stream"),
+            (
+                "Content-Disposition",
+                "attachment; filename*=utf-8''%s" % (encoded_filename,),
+            ),
+        ]
+        start_response("200 OK", headers)
         tree = history._branch.repository.revision_tree(revid)
         return tree.archive(root=root, format=archive_format, name=filename)

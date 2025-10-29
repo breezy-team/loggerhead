@@ -18,7 +18,7 @@ class LSProfMiddleware(object):
         try:
             return list(app_iter)
         finally:
-            if getattr(app_iter, 'close', None):
+            if getattr(app_iter, "close", None):
                 app_iter.close()
 
     def __call__(self, environ, start_response):

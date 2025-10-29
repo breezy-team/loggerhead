@@ -26,7 +26,7 @@ class SearchUI(TemplatedBranchView):
     Class to output progressive search result terms.
     """
 
-    template_name = 'search'
+    template_name = "search"
 
     def get_values(self, path, kwargs, response):
         """
@@ -36,7 +36,7 @@ class SearchUI(TemplatedBranchView):
         templating engine.
         """
         terms = []
-        query = kwargs['query']
+        query = kwargs["query"]
         if len(query) > 0:
             terms = search.search_revisions(self._branch.branch, query, True)
             if terms is not None:
@@ -45,4 +45,4 @@ class SearchUI(TemplatedBranchView):
                 # Should show a 'search is not available' etc box.
                 terms = []
 
-        return {'terms': terms}
+        return {"terms": terms}

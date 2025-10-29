@@ -45,14 +45,14 @@ except importlib_metadata.PackageNotFoundError:
     # Support running tests from the build tree without installation.
     version_info = None
 
-import breezy
 from breezy import commands
 from breezy.transport import transport_server_registry
 
-DEFAULT_HOST = '0.0.0.0'
+DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 8080
-HELP = ('Loggerhead, a web-based code viewer and server. (default port: %d)' %
-        (DEFAULT_PORT,))
+HELP = "Loggerhead, a web-based code viewer and server. (default port: %d)" % (
+    DEFAULT_PORT,
+)
 
 
 def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
@@ -64,12 +64,10 @@ def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
     from paste.httpserver import serve
 
     try:
-        from .loggerhead.apps.http_head import HeadMiddleware
         from .loggerhead.apps.transport import BranchesFromTransportRoot
         from .loggerhead.config import LoggerheadConfig
         from .loggerhead.__main__ import setup_logging
     except ImportError:
-        from loggerhead.apps.http_head import HeadMiddleware
         from loggerhead.apps.transport import BranchesFromTransportRoot
         from loggerhead.config import LoggerheadConfig
         from loggerhead.__main__ import setup_logging
@@ -78,20 +76,18 @@ def serve_http(transport, host=None, port=None, inet=None, client_timeout=None):
         host = DEFAULT_HOST
     if port is None:
         port = DEFAULT_PORT
-    argv = ['--host', host, '--port', str(port), '--', transport.base]
+    argv = ["--host", host, "--port", str(port), "--", transport.base]
     if not transport.is_readonly():
-        argv.insert(0, '--allow-writes')
+        argv.insert(0, "--allow-writes")
     config = LoggerheadConfig(argv)
     setup_logging(config, init_logging=False, log_file=sys.stderr)
     app = BranchesFromTransportRoot(transport.base, config)
-    # Bug #758618, HeadMiddleware seems to break HTTPExceptionHandler from
-    # actually sending appropriate return codes to the client. Since nobody
-    # desperately needs HeadMiddleware right now, just ignoring it.
-    # app = HeadMiddleware(app)
     app = HTTPExceptionHandler(app)
     serve(app, host=host, port=port)
 
-transport_server_registry.register('http', serve_http, help=HELP)
+
+transport_server_registry.register("http", serve_http, help=HELP)
+
 
 class cmd_load_test_loggerhead(commands.Command):
     """Run a load test against a live loggerhead instance.
@@ -112,18 +108,19 @@ class cmd_load_test_loggerhead(commands.Command):
         for thread_id in sorted(script._threads):
             worker = script._threads[thread_id][0]
             for url, success, time in worker.stats:
-                self.outf.write(' %5.3fs %s %s\n'
-                                % (time, str(success)[0], url))
+                self.outf.write(" %5.3fs %s %s\n" % (time, str(success)[0], url))
+
 
 commands.register_command(cmd_load_test_loggerhead)
+
 
 def load_tests(loader, basic_tests, pattern):
     try:
         from .loggerhead.tests import test_suite
     except ImportError:
         from breezy.trace import mutter
-        mutter(
-            'loggerhead tests not installed, not registering tests')
+
+        mutter("loggerhead tests not installed, not registering tests")
     else:
         basic_tests.addTest(test_suite())
     return basic_tests

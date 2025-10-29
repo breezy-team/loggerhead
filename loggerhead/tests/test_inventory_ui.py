@@ -19,13 +19,12 @@ from .test_simple import TestWithSimpleTree
 
 
 class TestInventoryUI(TestWithSimpleTree):
-
     def test_authors_vs_committer(self):
         app = self.setUpLoggerhead()
-        res = app.get('/files')
+        res = app.get("/files")
         # download url in top directory is composed correctly
-        res.mustcontain('/download/rev-1/myfilename')
+        res.mustcontain("/download/rev-1/myfilename")
 
-        res2 = app.get('/files/head:/folder')
+        res2 = app.get("/files/head:/folder")
         # download url in subdirectory is composed correctly
-        res2.mustcontain('/download/rev-1/folder/myfilename')
+        res2.mustcontain("/download/rev-1/folder/myfilename")
