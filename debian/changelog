@@ -1,10 +1,10 @@
-loggerhead (2.0.3-1) UNRELEASED; urgency=medium
+loggerhead (2.0.3-1) unstable; urgency=medium
 
   * Really remove all references to python3-json. Closes: #1080170
   * New upstream release.
     + Removes use of pkg-resources. Closes: #1083518
 
- -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 29 Oct 2025 20:42:19 +0000
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Wed, 29 Oct 2025 22:52:49 +0000
 
 loggerhead (2.0.1+bzr548-1) unstable; urgency=medium
 
