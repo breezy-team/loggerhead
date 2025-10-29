@@ -13,3 +13,6 @@ tags
 .testrepository
 MANIFEST
 .tox
+__pycache__
+loggerhead.egg-info/
+*~
