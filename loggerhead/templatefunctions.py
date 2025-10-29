@@ -15,9 +15,9 @@
 #
 
 import os
+from importlib.metadata import PackageNotFoundError, version
 
 import breezy
-import pkg_resources
 from breezy import urlutils
 
 from . import __revision__, __version__
@@ -196,18 +196,16 @@ def generator_string():
 
         versions.append(("Breezy", breezy.__version__))
 
-        Paste = pkg_resources.get_distribution("Paste")
-        versions.append(("Paste", Paste.version))
+        versions.append(("Paste", version("Paste")))
 
         try:
-            PasteDeploy = pkg_resources.get_distribution("PasteDeploy")
-        except pkg_resources.DistributionNotFound:
+            paste_deploy_version = version("PasteDeploy")
+        except PackageNotFoundError:
             pass
         else:
-            versions.append(("PasteDeploy", PasteDeploy.version))
+            versions.append(("PasteDeploy", paste_deploy_version))
 
-        Chameleon = pkg_resources.get_distribution("Chameleon")
-        versions.append(("Chameleon", Chameleon.version))
+        versions.append(("Chameleon", version("Chameleon")))
 
         try:
             import pygments
@@ -227,11 +225,11 @@ def generator_string():
         # TODO: On old Python versions, elementtree may be used.
 
         try:
-            Dozer = pkg_resources.get_distribution("Dozer")
-        except pkg_resources.DistributionNotFound:
+            dozer_version = version("Dozer")
+        except PackageNotFoundError:
             pass
         else:
-            versions.append(("Dozer", Dozer.version))
+            versions.append(("Dozer", dozer_version))
 
         version_strings = ("%s/%s" % t for t in versions)
         _cached_generator_string = " ".join(version_strings)

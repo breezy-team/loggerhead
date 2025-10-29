@@ -18,10 +18,10 @@
 import os
 import re
 
-import pkg_resources
 from chameleon import PageTemplate
+from importlib.resources import files
 
-_zpt_cache = {}
+_zpt_cache: dict[str, "TemplateWrapper"] = {}
 
 
 def zpt(tfile):
@@ -67,5 +67,5 @@ def load_template(classname):
     else:
         raise ValueError("All templates must be in a package")
 
-    tfile = pkg_resources.resource_filename(package, "%s.%s" % (basename, "pt"))
+    tfile = str(files(package) / f"{basename}.pt")
     return zpt(tfile)
