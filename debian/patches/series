@@ -1,1 +1,2 @@
 read-version-from-pyproject-toml.patch
+fix-test-load_test-failures.patch
