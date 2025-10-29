@@ -115,7 +115,7 @@ class RequestWorker(object):
         self.queue.task_done()
 
     def run(self, stop_event):
-        while not stop_event.isSet():
+        while not stop_event.is_set():
             try:
                 self.step_next()
             except Empty:
