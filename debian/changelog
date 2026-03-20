@@ -1,3 +1,10 @@
+loggerhead (2.0.3-3) UNRELEASED; urgency=medium
+
+  * Actually drop dependency on pkg-resources; support
+    was previously already removed. Closes: #1083464
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 20 Mar 2026 12:24:22 +0000
+
 loggerhead (2.0.3-2) unstable; urgency=medium
 
   * Add systemd unit file. Closes: #1039254

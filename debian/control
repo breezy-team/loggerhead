@@ -20,8 +20,7 @@ Build-Depends: debhelper-compat (= 13),
                dh-python,
                python3-all,
                python3-dulwich,
-               python3-paste (>= 1.6),
-               python3-pkg-resources
+               python3-paste (>= 1.6)
 Standards-Version: 4.6.1
 Vcs-Bzr: https://salsa.debian.org/breezy-team/loggerhead.git -b debian/main
 Vcs-Browser: https://salsa.debian.org/breezy-team/loggerhead/tree/debian/main
