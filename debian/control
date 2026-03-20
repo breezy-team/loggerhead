@@ -22,7 +22,7 @@ Build-Depends: debhelper-compat (= 13),
                python3-dulwich,
                python3-paste (>= 1.6)
 Standards-Version: 4.6.1
-Vcs-Bzr: https://salsa.debian.org/breezy-team/loggerhead.git -b debian/main
+Vcs-Git: https://salsa.debian.org/breezy-team/loggerhead.git -b debian/main
 Vcs-Browser: https://salsa.debian.org/breezy-team/loggerhead/tree/debian/main
 Rules-Requires-Root: no
 

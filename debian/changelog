@@ -1,3 +1,9 @@
+loggerhead (2.0.3-4) UNRELEASED; urgency=medium
+
+  * Fix Vcs header: Bzr => Git.
+
+ -- Jelmer Vernooĳ <jelmer@debian.org>  Fri, 20 Mar 2026 12:38:41 +0000
+
 loggerhead (2.0.3-3) unstable; urgency=medium
 
   * Actually drop dependency on pkg-resources; support
