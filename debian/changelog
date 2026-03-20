@@ -1,4 +1,4 @@
-loggerhead (2.0.3-3) UNRELEASED; urgency=medium
+loggerhead (2.0.3-3) unstable; urgency=medium
 
   * Actually drop dependency on pkg-resources; support
     was previously already removed. Closes: #1083464
