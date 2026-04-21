@@ -36,7 +36,20 @@ struct ChangelogTemplate {
     served_url: String,
     // page-specific
     last_revno: String,
+    /// Revno at the end of the current page (for the "From Revision X to Y"
+    /// header). Empty if the page is empty.
+    end_revno: String,
+    /// Does any row on this page have tags? If so, the template renders
+    /// the extra "Tags" column.
+    show_tag_col: bool,
     changes: Vec<ChangeView>,
+    /// URL for the Newer (previous page) link, if there is one.
+    prev_page_url: Option<String>,
+    /// URL for the Older (next page) link, if there is one.
+    next_page_url: Option<String>,
+    /// The filter_path query echoed back so the header can say "Changes
+    /// to <path>". Empty when there's no filter.
+    filter_path: String,
 }
 
 struct ChangeView {
@@ -45,18 +58,11 @@ struct ChangeView {
     author: String,
     utc_iso: String,
     relative_date: String,
-}
-
-impl From<Change> for ChangeView {
-    fn from(c: Change) -> Self {
-        ChangeView {
-            revno: c.revno,
-            short_message: c.short_message,
-            author: hide_email(&c.committer),
-            utc_iso: utc_iso(c.timestamp, c.timezone),
-            relative_date: approximate_date(c.timestamp),
-        }
-    }
+    /// Comma-separated list of tag names attached to this revision.
+    tags: String,
+    /// True iff the commit is a merge (has more than one parent). The
+    /// template shows a small merge-from icon next to the summary.
+    is_merge: bool,
 }
 
 /// `GET /changes` — full mainline from the branch tip.
@@ -77,65 +83,199 @@ pub async fn show_from(
     render(state, Some(revno), q).await
 }
 
+/// Build the base query-string for pagination links: echoes `filter_path`
+/// and the effective `start_revid` (as a revno, matching Python's format).
+fn pagination_query(filter_path: &Option<String>, start_revno: Option<&str>) -> String {
+    let mut parts: Vec<(&str, String)> = Vec::new();
+    if let Some(fp) = filter_path.as_deref() {
+        if !fp.is_empty() {
+            parts.push(("filter_path", fp.to_string()));
+        }
+    }
+    if let Some(sr) = start_revno {
+        if !sr.is_empty() {
+            parts.push(("start_revid", sr.to_string()));
+        }
+    }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        let joined: Vec<String> = parts
+            .into_iter()
+            .map(|(k, v)| {
+                format!(
+                    "{k}={}",
+                    percent_encoding::utf8_percent_encode(&v, percent_encoding::NON_ALPHANUMERIC)
+                )
+            })
+            .collect();
+        format!("?{}", joined.join("&"))
+    }
+}
+
+struct PageData {
+    nick: String,
+    start_revno: String,
+    end_revno: String,
+    show_tag_col: bool,
+    changes: Vec<ChangeView>,
+    /// Revno of the revision one page older (larger offset) than the
+    /// current view's start, if it exists.
+    next_start_revno: Option<String>,
+    /// Revno of the revision one page newer (smaller offset) than the
+    /// current view's start, if it exists.
+    prev_start_revno: Option<String>,
+}
+
 async fn render(
     state: Arc<AppState>,
     start_ref: Option<String>,
     q: ChangelogQuery,
 ) -> AppResult<Html<String>> {
+    let filter_path_for_query = q.filter_path.clone();
     let filter_path = q.filter_path.clone();
     let state2 = state.clone();
-    let (nick, last_revno, changes) = tokio::task::spawn_blocking(move || -> AppResult<_> {
+    let data = tokio::task::spawn_blocking(move || -> AppResult<PageData> {
         let branch = open_branch(&state2.root)?;
         let _lock = branch.lock_read()?;
         let whole = state2.load_whole_history(&branch)?;
         let history = History::from_whole(&branch, (*whole).clone())?;
-        // Resolve starting point: explicit URL segment, query param, then tip.
+
+        // Resolve starting point: explicit URL segment, query param, tip.
         let start_revid = match start_ref.as_deref().or(q.start_revid.as_deref()) {
             Some(r) => history
                 .fix_revid(r)
                 .ok_or_else(|| AppError::NotFound(format!("no revision {r}")))?,
             None => history.last_revid.clone(),
         };
-        let mainline = history.mainline_from(&start_revid);
 
-        // Optional file filter — keep only revisions that touched the
-        // path. A revision R touched `path` iff its tree's recorded
-        // "last revision for this file" (`get_file_revision`) points
-        // at R itself.
-        let filtered: Vec<RevisionId> = if let Some(fp) = filter_path.as_deref() {
-            let repo = branch.repository();
-            let path = PathBuf::from(fp);
-            let mut out = Vec::new();
-            for rid in &mainline {
-                if rid.is_null() {
-                    continue;
-                }
-                let tree = repo.revision_tree(rid)?;
-                if let Ok(file_rev) = tree.get_file_revision(&path) {
-                    if file_rev == *rid {
-                        out.push(rid.clone());
-                    }
-                }
+        // Full filtered mainline from the branch tip down. We build the
+        // whole list once so we can (a) compute next-page cheaply and
+        // (b) compute prev-page by looking *above* start_revid in the
+        // tip-down mainline.
+        let full_mainline = history.mainline_from(&history.last_revid);
+        let full_filtered: Vec<RevisionId> = if let Some(fp) = filter_path.as_deref() {
+            if fp.is_empty() {
+                full_mainline
+            } else {
+                filter_by_path(&branch, &full_mainline, fp)?
             }
-            out
         } else {
-            mainline
+            full_mainline
         };
 
-        let page: Vec<_> = filtered.into_iter().take(PAGE_SIZE).collect();
+        // Find the index of `start_revid` within the filtered mainline.
+        let start_pos = full_filtered
+            .iter()
+            .position(|r| *r == start_revid)
+            .unwrap_or(0);
+        let end_exclusive = (start_pos + PAGE_SIZE).min(full_filtered.len());
+        let page: Vec<RevisionId> = full_filtered[start_pos..end_exclusive].to_vec();
+
         let changes = history.get_changes(&branch, &page)?;
-        let last_revno = history.whole.get_revno(&start_revid);
-        Ok::<_, AppError>((history.nick, last_revno, changes))
+
+        // Is there a Next (Older) page?
+        let next_start_revno = full_filtered
+            .get(end_exclusive)
+            .map(|r| history.whole.get_revno(r));
+        // Is there a Previous (Newer) page?
+        let prev_start_revno = if start_pos >= PAGE_SIZE {
+            full_filtered
+                .get(start_pos - PAGE_SIZE)
+                .map(|r| history.whole.get_revno(r))
+        } else if start_pos > 0 {
+            // Prev page isn't a full PAGE_SIZE away — snap to the tip.
+            Some(history.whole.get_revno(&full_filtered[0]))
+        } else {
+            None
+        };
+
+        let start_revno = history.whole.get_revno(&start_revid);
+        let end_revno = changes.last().map(|c| c.revno.clone()).unwrap_or_default();
+
+        let show_tag_col = changes.iter().any(|c| !c.tags.is_empty());
+        let views: Vec<ChangeView> = changes.into_iter().map(ChangeView::from).collect();
+
+        Ok::<_, AppError>(PageData {
+            nick: history.nick,
+            start_revno,
+            end_revno,
+            show_tag_col,
+            changes: views,
+            next_start_revno,
+            prev_start_revno,
+        })
     })
     .await??;
 
+    // Pagination link construction is URL-routing-shaped so we do it
+    // out here where we already have the url_prefix.
+    let url_prefix = &state.url_prefix;
+    let next_page_url = data.next_start_revno.as_ref().map(|r| {
+        format!(
+            "{}/changes{}",
+            url_prefix,
+            pagination_query(&filter_path_for_query, Some(r))
+        )
+    });
+    let prev_page_url = data.prev_start_revno.as_ref().map(|r| {
+        format!(
+            "{}/changes{}",
+            url_prefix,
+            pagination_query(&filter_path_for_query, Some(r))
+        )
+    });
+
     let tmpl = ChangelogTemplate {
-        nick,
+        nick: data.nick,
         fileview_active: false,
         url_prefix: state.url_prefix.clone(),
         served_url: state.root.clone(),
-        last_revno,
-        changes: changes.into_iter().map(Into::into).collect(),
+        last_revno: data.start_revno,
+        end_revno: data.end_revno,
+        show_tag_col: data.show_tag_col,
+        changes: data.changes,
+        prev_page_url,
+        next_page_url,
+        filter_path: filter_path_for_query.unwrap_or_default(),
     };
     Ok(Html(tmpl.render()?))
+}
+
+impl From<Change> for ChangeView {
+    fn from(c: Change) -> Self {
+        let is_merge = c.parents.len() > 1;
+        let tags = c.tags.join(", ");
+        ChangeView {
+            revno: c.revno,
+            short_message: c.short_message,
+            author: hide_email(&c.committer),
+            utc_iso: utc_iso(c.timestamp, c.timezone),
+            relative_date: approximate_date(c.timestamp),
+            tags,
+            is_merge,
+        }
+    }
+}
+
+fn filter_by_path(
+    branch: &dyn Branch,
+    mainline: &[RevisionId],
+    path: &str,
+) -> Result<Vec<RevisionId>, AppError> {
+    let repo = branch.repository();
+    let p = PathBuf::from(path);
+    let mut out = Vec::new();
+    for rid in mainline {
+        if rid.is_null() {
+            continue;
+        }
+        let tree = repo.revision_tree(rid)?;
+        if let Ok(file_rev) = tree.get_file_revision(&p) {
+            if file_rev == *rid {
+                out.push(rid.clone());
+            }
+        }
+    }
+    Ok(out)
 }

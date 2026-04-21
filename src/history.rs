@@ -259,20 +259,28 @@ impl History {
         branch: &dyn Branch,
         revid: &RevisionId,
     ) -> Result<Vec<FileChange>, AppError> {
-        use breezyshim::intertree;
-        let repo = branch.repository();
-        let new_tree = repo.revision_tree(revid)?;
         let parents = self
             .whole
             .index
             .get(revid)
             .map(|&i| self.whole.entries[i].parents.clone())
             .unwrap_or_default();
-        let old_tree = if let Some(p) = parents.first() {
-            repo.revision_tree(p)?
-        } else {
-            repo.revision_tree(&RevisionId::null())?
-        };
+        let base = parents.first().cloned().unwrap_or_else(RevisionId::null);
+        self.file_changes_between(branch, &base, revid)
+    }
+
+    /// Compute the per-file change list between two arbitrary revisions.
+    /// Used for the `?compare_revid=…` mode on the revision page.
+    pub fn file_changes_between(
+        &self,
+        branch: &dyn Branch,
+        base: &RevisionId,
+        new: &RevisionId,
+    ) -> Result<Vec<FileChange>, AppError> {
+        use breezyshim::intertree;
+        let repo = branch.repository();
+        let old_tree = repo.revision_tree(base)?;
+        let new_tree = repo.revision_tree(new)?;
         let inter = intertree::get(&old_tree, &new_tree);
         let delta = inter.compare();
 

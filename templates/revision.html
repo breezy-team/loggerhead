@@ -23,10 +23,29 @@ var path_to_id = {{ path_to_id|safe }};
 
 <ul id="submenuTabs">
 <li id="first"><a href="{{ url_prefix }}/files/{{ revno }}" title="browse files at revision {{ revno }}">browse files at revision {{ revno }}</a></li>
+<li><a href="{{ url_prefix }}/revision/{{ revno }}?remember={{ revno }}" title="compare with another revision">compare with another revision</a></li>
 <li><a id="download_link" href="{{ url_prefix }}/diff/{{ revno }}">download diff</a></li>
 <li><a href="{{ url_prefix }}/tarball/{{ revno }}">download tarball</a></li>
-<li id="last"><a href="{{ url_prefix }}/changes" title="view history from revision {{ revno }}">view history from revision {{ revno }}</a></li>
+<li id="last"><a href="{{ url_prefix }}/changes/{{ revno }}" title="view history from revision {{ revno }}">view history from revision {{ revno }}</a></li>
 </ul>
+
+{% match compare_revno %}
+  {% when Some with (cr) %}
+  <p class="compare-banner" style="background:#f4f4f4;padding:0.4em 0.8em;border-radius:3px;border-left:3px solid #58a;">
+    Showing diff vs revision <a href="{{ url_prefix }}/revision/{{ cr }}">{{ cr }}</a>.
+    <a href="{{ url_prefix }}/revision/{{ revno }}{{ nav_qs }}">Stop comparing</a>.
+  </p>
+  {% when None %}
+{% endmatch %}
+
+{% match remember_revno %}
+  {% when Some with (rr) %}
+  <p class="remember-banner" style="background:#fff4d0;padding:0.4em 0.8em;border-radius:3px;border-left:3px solid #c90;">
+    Click another revision to compare with revision {{ rr }}.
+    <a href="{{ url_prefix }}/revision/{{ revno }}{{ nav_qs }}">Cancel</a>.
+  </p>
+  {% when None %}
+{% endmatch %}
 
 <div class="infoContainer">
 <div id="infTxt">
@@ -35,7 +54,13 @@ var path_to_id = {{ path_to_id|safe }};
 <li class="timer"><strong>Date:</strong> <span>{{ utc_iso }}</span></li>
 {% if !parents.is_empty() %}
 <li class="parent"><strong>Parent:</strong>
-  {% for p in parents %}<a href="{{ url_prefix }}/revision/{{ p.revno }}">{{ p.revno }}</a>{% if !loop.last %}, {% endif %}{% endfor %}
+  {% for p in parents %}
+    {% match remember_revno %}
+      {% when Some with (rr) %}<a href="{{ url_prefix }}/revision/{{ p.revno }}?compare_revid={{ rr }}">{{ p.revno }}</a>
+      {% when None %}<a href="{{ url_prefix }}/revision/{{ p.revno }}{{ nav_qs }}">{{ p.revno }}</a>
+    {% endmatch %}
+    {% if !loop.last %}, {% endif %}
+  {% endfor %}
 </li>
 {% endif %}
 <li class="revid"><strong>Revision ID:</strong> <span>{{ revid_hex }}</span></li>
