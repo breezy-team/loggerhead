@@ -1,0 +1,10 @@
+[book]
+title = "Loggerhead"
+description = "Web viewer for Bazaar/Breezy branches"
+authors = ["Loggerhead contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "light"
+git-repository-url = "https://github.com/breezy-team/loggerhead"

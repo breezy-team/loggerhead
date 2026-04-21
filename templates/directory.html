@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ nick }}{% endblock %}
+{% block menu %}{% endblock %}
+
+{% block heading %}
+<div id="breadcrumbs">
+<span class="breadcrumb"><a href="/">{{ nick }}</a></span>
+</div>
+{% endblock %}
+
+{% block content %}
+<table id="logentries">
+<tr class="logheader">
+<th class="summarycell">Name</th>
+<th class="datecell">Last committer</th>
+<th class="datecell">Last commit</th>
+</tr>
+{% for e in entries %}
+<tr class="{% if loop.index0 % 2 == 0 %}blueRow0{% else %}blueRow1{% endif %}">
+<td class="summcell"><a class="link" href="{{ e.href }}">{{ e.name }}{% if !e.is_branch %}/{% endif %}</a></td>
+<td class="date">{% if e.is_branch %}{{ e.last_committer }}{% endif %}</td>
+<td class="date">{% if e.is_branch %}{{ e.last_date }}{% endif %}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}

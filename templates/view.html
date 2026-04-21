@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ nick }} : contents of {{ path }} at revision {{ revno }}{% endblock %}
+
+{% block head_extras %}
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/view.css"/>
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/highlight.css"/>
+{% endblock %}
+
+{% block heading %}
+<div id="breadcrumbs">
+<a href="{{ url_prefix }}/">{{ nick }}</a> : <span class="breadcrumb">/{{ path }}</span> (revision {{ revno }})
+</div>
+{% endblock %}
+
+{% block content %}
+<ul id="submenuTabs">
+<li id="first"><a href="{{ url_prefix }}/files/{{ revno }}">browse files</a></li>
+<li><a href="{{ url_prefix }}/annotate/{{ revno }}/{{ path }}">view with revision information</a></li>
+<li><a href="{{ url_prefix }}/revision/{{ revno }}">view revision</a></li>
+<li id="last"><a href="{{ url_prefix }}/download/{{ revno }}/{{ path }}">download file</a></li>
+</ul>
+
+<div class="view">
+{% if is_binary %}
+<p class="binary">(binary file, not displayed)</p>
+{% else %}
+<table id="logentries">
+<tr>
+  <td class="viewLine">
+    <pre>{% for l in lines %}<a id="L{{ l.n }}" href="#L{{ l.n }}">{{ l.n }}</a>
+{% endfor %}</pre>
+  </td>
+  <td class="viewCont">
+    <pre>{% for l in lines %}{{ l.html|safe }}
+{% endfor %}</pre>
+  </td>
+</tr>
+</table>
+{% endif %}
+</div>
+{% endblock %}

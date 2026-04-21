@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ nick }} : files for revision {{ revno }}{% endblock %}
+
+{% block head_extras %}
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/files.css"/>
+{% endblock %}
+
+{% block heading %}
+<div id="breadcrumbs">
+<span class="breadcrumb"><a href="{{ url_prefix }}/">{{ nick }}</a></span>
+<span>: <span class="breadcrumb"><a href="{{ url_prefix }}/files/{{ revno }}">/</a>{% for c in breadcrumbs %}<a href="{{ c.href }}">{{ c.name }}</a>/{% endfor %}</span>
+(Revision {{ revno }})</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div>
+<div id="branch-info">
+To get this branch, use: <br/>
+<code>bzr branch {{ nick }}</code>
+</div>
+
+<ul id="submenuTabs">
+<li id="first"><a href="{{ url_prefix }}/revision/{{ revno }}">view revision</a></li>
+<li id="last"><a href="{{ url_prefix }}/changes">view branch changes</a></li>
+</ul>
+
+{% match tip_change %}{% when Some with (c) %}
+<div class="infoContainer">
+<div id="infTxt">
+<ul>
+<li class="committer"><strong>Committer:</strong> <span>{{ c.committer }}</span></li>
+<li class="timer"><strong>Date:</strong> <span>{{ c.utc_iso }}</span></li>
+<li class="revid"><strong>Revision ID:</strong> <span>{{ revid_hex }}</span></li>
+</ul>
+<div class="clear"><!-- --></div>
+<div class="information">{{ c.message }}</div>
+</div>
+<div class="clear"><!-- --></div>
+</div>
+{% when None %}{% endmatch %}
+
+<table id="logentries">
+<tr class="logheader">
+<th class="datecell"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=filename">Filename</a>{% if sort == "filename" %} &#9660;{% endif %}</th>
+<th class="timedate">Latest Rev</th>
+<th class="datecell"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=date">Last Changed</a>{% if sort == "date" %} &#9660;{% endif %}</th>
+<th class="datecell">Committer</th>
+<th class="summarycell">Comment</th>
+<th class="timedate"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=size">Size</a>{% if sort == "size" %} &#9660;{% endif %}</th>
+<th class="expandcell"></th>
+<th class="expandcell"></th>
+</tr>
+
+{% match parent_path %}{% when Some with (p) %}
+<tr class="blueRow0">
+<td class="summcell" colspan="6"><a href="{{ url_prefix }}/files/{{ revno }}/{{ p }}"><img src="/static/images/ico_folder_up.gif" />..</a></td>
+</tr>
+{% when None %}{% endmatch %}
+
+{% for e in entries %}
+<tr class="{% if loop.index0 % 2 == 0 %}blueRoweven{% else %}blueRow{% endif %}">
+<td class="date">
+  <a href="{{ e.href }}">
+    <img src="/static/images/ico_{% if e.is_dir %}folder{% else %}file{% endif %}.gif" title="View {{ e.name }}" />
+  </a>
+  <a class="link" href="{{ e.href }}">{{ e.name }}{% if e.is_dir %}/{% endif %}</a>
+</td>
+<td class="date"><a href="{{ url_prefix }}/revision/{{ e.last_revno }}" title="Show revision {{ e.last_revno }}">{{ e.last_revno }}</a></td>
+<td class="date">{{ e.last_relative }}</td>
+<td class="date">{{ e.last_committer }}</td>
+<td class="autcell">{{ e.last_message }}</td>
+<td class="timedate2">{% match e.size %}{% when Some with (s) %}{{ s }} bytes{% when None %}{% endmatch %}</td>
+<td class="expcell">
+  {% if !e.is_dir %}
+  <a href="{{ e.href }}" title="View {{ e.name }}"><img alt="View" src="/static/images/ico_planilla.gif" /></a>
+  {% endif %}
+</td>
+<td class="expcell">
+  {% if !e.is_dir %}
+  <a href="{{ url_prefix }}/download/{{ e.last_revid_hex }}/{{ e.name }}" title="Download {{ e.name }} at revision {{ e.last_revno }}"><img alt="Download File" src="/static/images/ico_file_download.gif" /></a>
+  {% endif %}
+</td>
+</tr>
+{% endfor %}
+</table>
+</div>
+{% endblock %}

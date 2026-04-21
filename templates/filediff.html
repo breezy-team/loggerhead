@@ -1,0 +1,22 @@
+<div>
+  {% for chunk in chunks %}
+    {% if !loop.first %}
+    <div class="pseudorow context-row">
+      <div class="lineNumber separate"></div>
+      <div class="lineNumber second separate"></div>
+      <div class="code separate"></div>
+      <div class="clear"><!-- --></div>
+    </div>
+    {% endif %}
+    <div class="pseudotable unified">
+      {% for line in chunk.lines %}
+      <div class="pseudorow {{ line.kind }}-row">
+        <div class="lineNumber first">{% match line.old_lineno %}{% when Some with (n) %}{{ n }}{% when None %}&nbsp;{% endmatch %}</div>
+        <div class="lineNumber second">{% match line.new_lineno %}{% when Some with (n) %}{{ n }}{% when None %}&nbsp;{% endmatch %}</div>
+        <div class="code {{ line.kind }}">{% if line.text.is_empty() %}&nbsp;{% else %}{{ line.text|safe }}{% endif %}</div>
+        <div class="clear"><!-- --></div>
+      </div>
+      {% endfor %}
+    </div>
+  {% endfor %}
+</div>

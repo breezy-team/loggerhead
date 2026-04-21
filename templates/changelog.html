@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ nick }} : changes{% endblock %}
+
+{% block head_extras %}
+<link rel="alternate" type="application/atom+xml" href="{{ url_prefix }}/atom" title="RSS feed for {{ nick }}" />
+<script type="text/javascript">
+var revids = {{ revids_json|safe }};
+</script>
+<script type="text/javascript" src="/static/javascript/changelog.js"></script>
+{% endblock %}
+
+{% block heading %}
+<div id="branch-info">
+To get this branch, use: <br/>
+<code>bzr branch {{ served_url }}</code>
+</div>
+{% if !filter_path.is_empty() %}
+<div id="breadcrumbs">&#187; Changes to <span>{{ filter_path }}</span></div>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if changes.is_empty() %}
+<p>No revisions.</p>
+{% else %}
+<p class="fr revnolink">From Revision
+  <a href="{{ url_prefix }}/revision/{{ last_revno }}" title="Show revision {{ last_revno }}">{{ last_revno }}</a>
+  {% if !end_revno.is_empty() && end_revno != last_revno %}
+    to <a href="{{ url_prefix }}/revision/{{ end_revno }}" title="Show revision {{ end_revno }}">{{ end_revno }}</a>
+  {% endif %}
+</p>
+<p class="expand show_if_js" id="expand_all"><a href="#"><img alt="expand all" src="/static/images/treeCollapsed.png" /> expand all</a></p>
+<p class="expand" id="collapse_all" style="display:none;"><a href="#"><img alt="collapse all" src="/static/images/treeExpanded.png" /> collapse all</a></p>
+
+<table id="logentries">
+<tr class="logheader">
+<th class="revisionnumber">Rev</th>
+<th class="expandcell show_if_js">&nbsp;</th>
+<th class="summarycell">Summary</th>
+<th class="authorcell">Authors</th>
+{% if show_tag_col %}<th class="tagscell">Tags</th>{% endif %}
+<th class="datecell">Date</th>
+<th class="diffcell">Diff</th>
+<th class="downloadcell">Files</th>
+</tr>
+
+{% for c in changes %}
+<a name="entry-{{ c.revno }}"/>
+<tr class="blueRow{{ loop.index0 % 2 }} revision_log" id="log-{{ loop.index0 }}">
+<td class="revnro revnolink"{% if c.merge_depth > 0 %} style="padding-left: {{ c.merge_depth }}em;"{% endif %}><a title="Show revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}">{{ c.revno }}</a></td>
+<td class="expcell show_if_js">
+  <div class="expand_revisioninfo"><a href="#"><img class="expand_icon" src="/static/images/treeCollapsed.png" /></a></div>
+</td>
+<td class="summcell">
+  <div class="short_description">
+    {% if c.is_merge %}<img src="/static/images/ico_mergefrom.gif" alt="merge" /> {% endif %}<a title="Show revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}" class="link">{{ c.short_message }}</a>
+  </div>
+  <div class="long_description" style="display: none">
+    {% if c.is_merge %}<img src="/static/images/ico_mergefrom.gif" alt="merge" /> {% endif %}<a title="Show revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}" class="link">{{ c.short_message }}</a>
+    <div class="loading"><img src="/static/images/spinner.gif" /></div>
+  </div>
+</td>
+<td class="autcell">{{ c.author }}</td>
+{% if show_tag_col %}<td class="tagcell">{{ c.tags }}</td>{% endif %}
+<td class="date"><span title="{{ c.utc_iso }}">{{ c.relative_date }}</span></td>
+<td class="diffr"><a title="Show diff at revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}"><img alt="Diff" src="/static/images/ico_diff.gif" /></a></td>
+<td class="downr"><a href="{{ url_prefix }}/files/{{ c.revno }}" title="Files at revision {{ c.revno }}"><img alt="Files" src="/static/images/ico_file.gif" /></a></td>
+</tr>
+{% endfor %}
+</table>
+
+{% if prev_page_url.is_some() || next_page_url.is_some() %}
+<ul id="pages">
+{% match prev_page_url %}
+  {% when Some with (u) %}<li class="previous"><a href="{{ u }}">&laquo; Newer</a></li>
+  {% when None %}
+{% endmatch %}
+{% match next_page_url %}
+  {% when Some with (u) %}<li class="next"><a href="{{ u }}">Older &raquo;</a></li>
+  {% when None %}
+{% endmatch %}
+</ul>
+{% endif %}
+{% endif %}
+{% endblock %}
