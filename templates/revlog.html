@@ -1,0 +1,23 @@
+
+<div class="revisioninfo">
+  <ul class="expandrev">
+    {% for p in parents %}
+    <li class="mfrom">
+      <span class="revnolink">
+        <a href="{{ url_prefix }}/revision/{{ p.revno }}">{{ p.revno }}</a>
+      </span>
+    </li>
+    {% endfor %}
+    <li class="committerli">{{ author }}</li>
+    {% if !bugs.is_empty() %}
+      {% for b in bugs %}
+      <li class="bug"><a href="{{ b }}">{{ b }}</a></li>
+      {% endfor %}
+    {% endif %}
+    {% for f in file_changes %}
+    <li class="file-{{ f.kind }}">
+      <span class="filename">{{ f.kind }}: {{ f.path }}</span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
