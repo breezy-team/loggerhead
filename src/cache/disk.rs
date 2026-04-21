@@ -95,13 +95,24 @@ const WHOLE_HISTORY_KEY: &[u8] = b"whole_history";
 
 /// Magic+version header so we can change the encoding later and reject
 /// stale entries rather than misinterpret them.
+///
+/// v1: entries only.
+/// v2: entries + optional tip timestamp (for Last-Modified).
 const MAGIC: &[u8; 4] = b"LHWH";
-const VERSION: u8 = 1;
+const VERSION: u8 = 2;
 
 fn encode_whole_history(wh: &WholeHistory) -> Vec<u8> {
     let mut out = Vec::with_capacity(256 + wh.entries.len() * 64);
     out.extend_from_slice(MAGIC);
     out.push(VERSION);
+    // v2: optional tip timestamp (flag byte + f64 bits).
+    match wh.tip_timestamp {
+        Some(t) => {
+            out.push(1);
+            out.extend_from_slice(&t.to_bits().to_le_bytes());
+        }
+        None => out.push(0),
+    }
     put_u64(&mut out, wh.entries.len() as u64);
     for e in &wh.entries {
         put_u64(&mut out, e.sequence as u64);
@@ -131,6 +142,16 @@ fn decode_whole_history(blob: &[u8]) -> Result<WholeHistory, DecodeError> {
     if version != VERSION {
         return Err(DecodeError::BadVersion(version));
     }
+    let tip_timestamp = match cur.take_u8()? {
+        0 => None,
+        1 => {
+            let bytes = cur.take(8)?;
+            let mut arr = [0u8; 8];
+            arr.copy_from_slice(bytes);
+            Some(f64::from_bits(u64::from_le_bytes(arr)))
+        }
+        _ => return Err(DecodeError::BadMagic), // treat as corrupt
+    };
     let n = cur.take_u64()? as usize;
     let mut entries = Vec::with_capacity(n);
     let mut index = std::collections::HashMap::with_capacity(n);
@@ -163,7 +184,11 @@ fn decode_whole_history(blob: &[u8]) -> Result<WholeHistory, DecodeError> {
             children,
         });
     }
-    Ok(WholeHistory { entries, index })
+    Ok(WholeHistory {
+        entries,
+        index,
+        tip_timestamp,
+    })
 }
 
 fn put_u64(out: &mut Vec<u8>, v: u64) {
@@ -256,7 +281,11 @@ mod tests {
         let mut index = HashMap::new();
         index.insert(r2, 0);
         index.insert(r1, 1);
-        WholeHistory { entries, index }
+        WholeHistory {
+            entries,
+            index,
+            tip_timestamp: Some(1_700_000_000.0),
+        }
     }
 
     #[test]

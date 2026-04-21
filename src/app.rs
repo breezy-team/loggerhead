@@ -1,7 +1,11 @@
 use std::sync::Arc;
 
-use axum::response::Redirect;
+use axum::extract::{Request, State};
+use axum::http::{header, HeaderValue, StatusCode};
+use axum::middleware::Next;
+use axum::response::{IntoResponse, Redirect, Response};
 use axum::{routing::get, Router};
+use chrono::{DateTime, Utc};
 use moka::sync::Cache;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -121,6 +125,60 @@ async fn root_redirect(
     axum::extract::State(state): axum::extract::State<Arc<AppState>>,
 ) -> Redirect {
     Redirect::permanent(&state.url("/changes"))
+}
+
+/// Returns the most recent tip-timestamp known for this branch, if any.
+/// We consult the in-memory LRU by picking the maximum timestamp across
+/// currently-cached `WholeHistory` entries. Usually there's just one.
+fn cached_last_modified(state: &AppState) -> Option<f64> {
+    let mut best: Option<f64> = None;
+    for (_, wh) in state.whole_history_cache.iter() {
+        if let Some(t) = wh.tip_timestamp {
+            best = Some(best.map_or(t, |b| b.max(t)));
+        }
+    }
+    best
+}
+
+/// Axum middleware that adds `Last-Modified` to successful responses
+/// and short-circuits to 304 Not Modified when the client's
+/// `If-Modified-Since` is at least as new as the branch tip. Only
+/// attached to per-branch HTML routers.
+async fn last_modified_layer(
+    State(state): State<Arc<AppState>>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let ims = req
+        .headers()
+        .get(header::IF_MODIFIED_SINCE)
+        .and_then(|v| v.to_str().ok())
+        .and_then(|s| httpdate::parse_http_date(s).ok());
+    let last_ts = cached_last_modified(&state);
+
+    if let (Some(ims), Some(ts)) = (ims, last_ts) {
+        let tip_secs = ts as i64;
+        let ims_secs = ims
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0);
+        if ims_secs >= tip_secs {
+            return StatusCode::NOT_MODIFIED.into_response();
+        }
+    }
+
+    let mut resp = next.run(req).await;
+    if resp.status().is_success() {
+        if let Some(ts) = last_ts {
+            if let Some(dt) = DateTime::<Utc>::from_timestamp(ts as i64, 0) {
+                let rfc = dt.format("%a, %d %b %Y %H:%M:%S GMT").to_string();
+                if let Ok(v) = HeaderValue::from_str(&rfc) {
+                    resp.headers_mut().insert(header::LAST_MODIFIED, v);
+                }
+            }
+        }
+    }
+    resp
 }
 
 /// Serve mode determined at startup.
@@ -319,5 +377,9 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
             "/+json/+filediff/:new_revid/:old_revid/*path",
             get(json::filediff),
         )
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            last_modified_layer,
+        ))
         .with_state(state)
 }

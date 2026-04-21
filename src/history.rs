@@ -37,6 +37,9 @@ pub struct RevInfo {
 pub struct WholeHistory {
     pub entries: Vec<RevInfo>,
     pub index: HashMap<RevisionId, usize>,
+    /// Unix timestamp of the branch tip, for Last-Modified / 304
+    /// responses. `None` for an empty branch.
+    pub tip_timestamp: Option<f64>,
 }
 
 impl WholeHistory {
@@ -105,7 +108,19 @@ impl WholeHistory {
             }
         }
 
-        Ok(WholeHistory { entries, index })
+        // Tip timestamp for Last-Modified. Fetch the tip's Revision
+        // once; cheap compared to the merge-sort we just did.
+        let tip_timestamp = if last_revid.is_null() {
+            None
+        } else {
+            repo.get_revision(&last_revid).ok().map(|r| r.timestamp)
+        };
+
+        Ok(WholeHistory {
+            entries,
+            index,
+            tip_timestamp,
+        })
     }
 
     pub fn len(&self) -> usize {
@@ -159,6 +174,10 @@ pub struct Change {
     pub short_message: String,
     pub parents: Vec<(RevisionId, String)>, // (revid, revno)
     pub tags: Vec<String>,
+    /// Bug URLs from the `bugs` revision property. Each entry is a
+    /// URL (first whitespace-delimited token of a line). Rendered as
+    /// clickable links on the revision page.
+    pub bugs: Vec<String>,
 }
 
 /// Branch-scoped history object, analogous to `loggerhead.history.History`.
@@ -401,6 +420,19 @@ impl History {
                 .map(|p| (p.clone(), self.whole.get_revno(p)))
                 .collect();
             let tags = self.branch_tags.get(&revid).cloned().unwrap_or_default();
+            // Extract bug URLs from the `bugs` revision property.
+            // Each line is `<url> <status>`; we take the URL and
+            // drop anything empty.
+            let bugs: Vec<String> = rev
+                .properties
+                .get("bugs")
+                .map(|raw| {
+                    raw.lines()
+                        .filter_map(|line| line.split_whitespace().next().map(String::from))
+                        .filter(|s| !s.is_empty())
+                        .collect()
+                })
+                .unwrap_or_default();
             out.push(Change {
                 revid: rev.revision_id,
                 revno: self.whole.get_revno(&revid),
@@ -411,6 +443,7 @@ impl History {
                 short_message,
                 parents,
                 tags,
+                bugs,
             });
         }
         Ok(out)

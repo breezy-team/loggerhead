@@ -45,6 +45,7 @@ pub struct ChangeEntry {
     pub timestamp: f64,
     pub message: String,
     pub tags: Vec<String>,
+    pub bugs: Vec<String>,
     pub parents: Vec<ParentEntry>,
     pub is_merge: bool,
 }
@@ -142,6 +143,7 @@ async fn changes_render(
                     timestamp: c.timestamp,
                     message: c.message,
                     tags: c.tags,
+                    bugs: c.bugs,
                     parents: c
                         .parents
                         .into_iter()
@@ -178,6 +180,7 @@ pub struct RevisionJson {
     pub message: String,
     pub parents: Vec<ParentEntry>,
     pub tags: Vec<String>,
+    pub bugs: Vec<String>,
     pub file_changes: Vec<FileChangeEntry>,
     /// If the request included `compare_revid`, this is the revno of
     /// the comparison base; otherwise null.
@@ -233,6 +236,7 @@ pub async fn revision(
                 })
                 .collect(),
             tags: change.tags,
+            bugs: change.bugs,
             file_changes: file_changes
                 .into_iter()
                 .map(|f| FileChangeEntry {

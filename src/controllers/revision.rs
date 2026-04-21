@@ -49,6 +49,9 @@ struct RevisionTemplate {
     #[allow(dead_code)]
     date: String,
     message: String,
+    /// Bug URLs attached to this revision (from the `bugs` revision
+    /// property). Rendered as clickable links above the message.
+    bugs: Vec<String>,
     parents: Vec<ParentView>,
     added: Vec<FileChangeView>,
     removed: Vec<FileChangeView>,
@@ -253,6 +256,7 @@ async fn render(state: Arc<AppState>, idref: String, q: RevisionQuery) -> AppRes
         committer: change.committer,
         date,
         message: change.message,
+        bugs: change.bugs,
         parents: change
             .parents
             .into_iter()

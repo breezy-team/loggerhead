@@ -68,6 +68,12 @@ var path_to_id = {{ path_to_id|safe }};
 
 <div class="clear"><!-- --></div>
 
+{% if !bugs.is_empty() %}
+{% for b in bugs %}
+<div class="bug"><a href="{{ b }}">{{ b }}</a></div>
+{% endfor %}
+{% endif %}
+
 <div class="information">{{ message }}</div>
 </div>
 
