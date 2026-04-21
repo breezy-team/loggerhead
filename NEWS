@@ -9,6 +9,11 @@ UNRELEASED
       middleware no longer overwrites a header already set by the
       handler. (Jelmer Vernooĳ, #503144)
 
+    - Shrink the changelog "Tags" column from 240px to 120px and ellipsize
+      overflowing tag lists, freeing horizontal space for the summary
+      column. The full tag text is still available as a cell tooltip.
+      (Jelmer Vernooĳ, #708900)
+
 3.0.0 [22Apr2026]
 -----------------
 

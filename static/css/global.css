@@ -223,10 +223,19 @@ td.icocell {
     width: 18px;
     }
 th.authorcell,
-td.autcell,
+td.autcell {
+    width: 240px;
+    }
+/* Tags are usually absent or short; don't steal space from the
+   summary column. Long tag lists are truncated with an ellipsis
+   and shown in full via the cell's `title` tooltip (bug #708900). */
 th.tagscell,
 td.tagcell {
-    width: 240px;
+    width: 120px;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     }
 th.datecell,
 td.date {

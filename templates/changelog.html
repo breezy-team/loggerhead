@@ -61,7 +61,7 @@ To get this branch, use: <br/>
   </div>
 </td>
 <td class="autcell">{{ c.author }}</td>
-{% if show_tag_col %}<td class="tagcell">{{ c.tags }}</td>{% endif %}
+{% if show_tag_col %}<td class="tagcell" title="{{ c.tags }}">{{ c.tags }}</td>{% endif %}
 <td class="date"><span title="{{ c.utc_iso }}">{{ c.relative_date }}</span></td>
 <td class="diffr"><a title="Show diff at revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}"><img alt="Diff" src="/static/images/ico_diff.gif" /></a></td>
 <td class="downr"><a href="{{ url_prefix }}/files/{{ c.revno }}" title="Files at revision {{ c.revno }}"><img alt="Files" src="/static/images/ico_file.gif" /></a></td>
