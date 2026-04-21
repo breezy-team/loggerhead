@@ -3,6 +3,9 @@
 
 {% block head_extras %}
 <link rel="alternate" type="application/atom+xml" href="{{ url_prefix }}/atom" title="RSS feed for {{ nick }}" />
+<script type="text/javascript">
+var revids = {{ revids_json|safe }};
+</script>
 <script type="text/javascript" src="/static/javascript/changelog.js"></script>
 {% endblock %}
 

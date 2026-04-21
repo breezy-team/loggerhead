@@ -50,6 +50,11 @@ struct ChangelogTemplate {
     /// The filter_path query echoed back so the header can say "Changes
     /// to <path>". Empty when there's no filter.
     filter_path: String,
+    /// JSON map `{ "0": "<urlencoded-revid>", "1": ..., ... }` consumed
+    /// by `static/javascript/changelog.js` to build `/+revlog/<revid>`
+    /// URLs for the expand-a-row feature. The key is the row index
+    /// (`log-N` element id suffix).
+    revids_json: String,
 }
 
 struct ChangeView {
@@ -123,6 +128,8 @@ struct PageData {
     end_revno: String,
     show_tag_col: bool,
     changes: Vec<ChangeView>,
+    /// JSON blob: `{ "0": "<urlencoded-revid>", ... }` for changelog.js.
+    revids_json: String,
     /// Revno of the revision one page older (larger offset) than the
     /// current view's start, if it exists.
     next_start_revno: Option<String>,
@@ -198,9 +205,20 @@ async fn render(
         let end_revno = changes.last().map(|c| c.revno.clone()).unwrap_or_default();
 
         let show_tag_col = changes.iter().any(|c| !c.tags.is_empty());
+        // Build `revids_json` in parallel with the ChangeView list so
+        // changelog.js can expand rows via /+revlog/<revid>. Key is
+        // the row index as a string, value is the percent-encoded revid.
+        let mut revid_map = serde_json::Map::new();
         let views: Vec<ChangeView> = changes
             .into_iter()
-            .map(|c| {
+            .enumerate()
+            .map(|(i, c)| {
+                let revid_enc = percent_encoding::utf8_percent_encode(
+                    &String::from_utf8_lossy(c.revid.as_bytes()),
+                    percent_encoding::NON_ALPHANUMERIC,
+                )
+                .to_string();
+                revid_map.insert(i.to_string(), serde_json::Value::String(revid_enc));
                 let merge_depth = history
                     .whole
                     .index
@@ -212,6 +230,7 @@ async fn render(
                 view
             })
             .collect();
+        let revids_json = serde_json::Value::Object(revid_map).to_string();
 
         Ok::<_, AppError>(PageData {
             nick: history.nick,
@@ -219,6 +238,7 @@ async fn render(
             end_revno,
             show_tag_col,
             changes: views,
+            revids_json,
             next_start_revno,
             prev_start_revno,
         })
@@ -255,6 +275,7 @@ async fn render(
         prev_page_url,
         next_page_url,
         filter_path: filter_path_for_query.unwrap_or_default(),
+        revids_json: data.revids_json,
     };
     Ok(Html(tmpl.render()?))
 }
