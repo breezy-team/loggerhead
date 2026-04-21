@@ -16,6 +16,7 @@ use crate::app::AppState;
 use crate::breezy::open_branch;
 use crate::history::History;
 use crate::util::errors::{AppError, AppResult};
+use crate::util::fmt::http_date;
 
 /// GET /download (no args) — permanent redirect to `/changes`. Matches
 /// Python's DownloadUI, which redirects when fewer than two args are given.
@@ -41,7 +42,7 @@ pub async fn show_file(
         .unwrap_or_else(|| path.clone());
 
     let path_for_task = path.clone();
-    let content = tokio::task::spawn_blocking(move || -> AppResult<Vec<u8>> {
+    let (content, timestamp) = tokio::task::spawn_blocking(move || -> AppResult<(Vec<u8>, f64)> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
         let whole = state.load_whole_history(&branch)?;
@@ -52,7 +53,11 @@ pub async fn show_file(
         let repo = branch.repository();
         let tree = repo.revision_tree(&revid)?;
         let p = PathBuf::from(&path_for_task);
-        Ok(tree.get_file_text(&p)?)
+        let bytes = tree.get_file_text(&p)?;
+        // `Last-Modified` for the download: timestamp of the revision
+        // being served, not the branch tip. See Launchpad bug #503144.
+        let timestamp = repo.get_revision(&revid)?.timestamp;
+        Ok((bytes, timestamp))
     })
     .await??;
 
@@ -60,16 +65,17 @@ pub async fn show_file(
         .first_or_octet_stream()
         .to_string();
     let encoded = utf8_percent_encode(&filename, NON_ALPHANUMERIC).to_string();
-    Ok(Response::builder()
+    let mut builder = Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, mime)
         .header(
             header::CONTENT_DISPOSITION,
             format!("attachment; filename*=utf-8''{encoded}"),
-        )
-        .body(Body::from(content))
-        .unwrap()
-        .into_response())
+        );
+    if let Some(d) = http_date(timestamp) {
+        builder = builder.header(header::LAST_MODIFIED, d);
+    }
+    Ok(builder.body(Body::from(content)).unwrap().into_response())
 }
 
 /// GET /tarball/:revid — stream a tgz of the tree at the given
@@ -89,7 +95,7 @@ pub async fn tarball(
     // iterator across the async boundary while still holding the GIL is
     // awkward; for the sizes most loggerhead deployments see this is a fair
     // tradeoff, and we can revisit with a bounded mpsc channel if needed.
-    let (bytes, filename) = tokio::task::spawn_blocking(move || -> AppResult<_> {
+    let (bytes, filename, timestamp) = tokio::task::spawn_blocking(move || -> AppResult<_> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
         let whole = state.load_whole_history(&branch)?;
@@ -108,23 +114,25 @@ pub async fn tarball(
         // be a dotted revno.
         let revno_part = history.whole.get_revno(&revid);
         let filename = format!("{nick}-r{revno_part}.tgz");
+        let timestamp = repo.get_revision(&revid)?.timestamp;
         let mut out = Vec::new();
         for chunk in archive(&tree, ArchiveFormat::Tgz, &filename, None, Some(&nick))? {
             out.extend_from_slice(&chunk?);
         }
-        Ok::<_, AppError>((out, filename))
+        Ok::<_, AppError>((out, filename, timestamp))
     })
     .await??;
 
     let encoded = utf8_percent_encode(&filename, NON_ALPHANUMERIC).to_string();
-    Ok(Response::builder()
+    let mut builder = Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/octet-stream")
         .header(
             header::CONTENT_DISPOSITION,
             format!("attachment; filename*=utf-8''{encoded}"),
-        )
-        .body(Body::from(bytes))
-        .unwrap()
-        .into_response())
+        );
+    if let Some(d) = http_date(timestamp) {
+        builder = builder.header(header::LAST_MODIFIED, d);
+    }
+    Ok(builder.body(Body::from(bytes)).unwrap().into_response())
 }

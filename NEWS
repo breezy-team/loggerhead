@@ -1,6 +1,14 @@
 What's changed in loggerhead?
 =============================
 
+UNRELEASED
+----------
+
+    - Send ``Last-Modified`` based on the revision being served for file
+      downloads and tarballs, rather than the branch tip. The tip-based
+      middleware no longer overwrites a header already set by the
+      handler. (Jelmer Vernooĳ, #503144)
+
 3.0.0 [22Apr2026]
 -----------------
 

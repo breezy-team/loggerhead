@@ -12,6 +12,14 @@ pub fn hide_email(author: &str) -> String {
     }
 }
 
+/// Render a Breezy (unix) timestamp as an RFC 7231 HTTP-date, suitable
+/// for the `Last-Modified` header. Returns `None` if the timestamp is
+/// outside the representable range.
+pub fn http_date(timestamp: f64) -> Option<String> {
+    DateTime::<Utc>::from_timestamp(timestamp as i64, 0)
+        .map(|dt| dt.format("%a, %d %b %Y %H:%M:%S GMT").to_string())
+}
+
 /// Render a Breezy timestamp+timezone as the "2026-04-21 17:09:44 UTC" form
 /// Python loggerhead uses as the `<span title>` tooltip.
 pub fn utc_iso(timestamp: f64, timezone: i32) -> String {
@@ -79,5 +87,14 @@ mod tests {
     fn approximate_date_hours_ago() {
         let t = (Utc::now() - chrono::Duration::hours(3)).timestamp() as f64;
         assert_eq!(approximate_date(t), "3 hours ago");
+    }
+
+    #[test]
+    fn http_date_formats_rfc7231() {
+        // 2024-01-02T03:04:05Z
+        assert_eq!(
+            http_date(1_704_164_645.0).as_deref(),
+            Some("Tue, 02 Jan 2024 03:04:05 GMT"),
+        );
     }
 }
