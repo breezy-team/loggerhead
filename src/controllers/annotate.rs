@@ -20,6 +20,7 @@ struct AnnotateTemplate {
     // base
     nick: String,
     fileview_active: bool,
+    url_prefix: String,
     // page
     revno: String,
     path: String,
@@ -44,6 +45,7 @@ pub async fn show(
         return Err(AppError::Other("no filename provided".into()));
     }
     let path_for_task = path_norm.clone();
+    let url_prefix = state.url_prefix.clone();
 
     let (nick, annotated, revno) = tokio::task::spawn_blocking(move || -> AppResult<_> {
         let branch = open_branch(&state.root)?;
@@ -96,6 +98,7 @@ pub async fn show(
     let tmpl = AnnotateTemplate {
         nick,
         fileview_active: true,
+        url_prefix,
         revno,
         path: path_norm,
         lines: annotated,

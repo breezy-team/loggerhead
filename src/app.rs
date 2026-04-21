@@ -16,10 +16,20 @@ use crate::util::errors::AppError;
 
 /// Shared application state handed to every handler.
 pub struct AppState {
-    /// Location (filesystem path or URL) of the branch, or a directory
-    /// containing branches (see `serve_mode`).
+    /// Location (filesystem path or URL) of the branch served by this
+    /// router instance. In directory mode each sub-branch gets its own
+    /// nested `AppState`, so every handler can just read this without
+    /// knowing whether we're in single- or multi-branch mode.
     pub root: String,
+    /// URL prefix under which this branch is served. Empty (`""`) in
+    /// single-branch mode; `"/<name>"` in directory mode. Every
+    /// template-facing link computed by a controller is prefixed with
+    /// this so that output works behind an additional mount point.
+    pub url_prefix: String,
     /// Whether `root` is a single branch or a directory of branches.
+    /// Only meaningful on the top-level AppState; the per-branch
+    /// AppState created for each nested directory mount is always
+    /// `ServeMode::Branch`.
     pub serve_mode: ServeMode,
     /// Cached whole-branch graph, invalidated when the branch tip changes.
     pub whole_history_cache: Cache<RevisionId, Arc<WholeHistory>>,
@@ -42,11 +52,36 @@ impl AppState {
         let serve_mode = detect_serve_mode(&root);
         Self {
             root,
+            url_prefix: String::new(),
             serve_mode,
             whole_history_cache: Cache::new(10),
             disk_cache,
             export_tarballs,
             static_dir,
+        }
+    }
+
+    /// Build a per-branch `AppState` for a sub-branch inside a
+    /// directory-mode deployment. Shares the disk cache and static-dir
+    /// with the parent; gets its own in-memory history cache.
+    pub fn nested(parent: &AppState, root: String, name: &str) -> Self {
+        Self {
+            root,
+            url_prefix: format!("/{name}"),
+            serve_mode: ServeMode::Branch,
+            whole_history_cache: Cache::new(10),
+            disk_cache: parent.disk_cache.clone(),
+            export_tarballs: parent.export_tarballs,
+            static_dir: parent.static_dir.clone(),
+        }
+    }
+
+    /// Produce an absolute URL for `path` under this branch's prefix.
+    pub fn url(&self, path: &str) -> String {
+        if self.url_prefix.is_empty() {
+            path.to_string()
+        } else {
+            format!("{}{}", self.url_prefix, path)
         }
     }
 
@@ -81,8 +116,10 @@ impl AppState {
 
 /// Permanent redirect to `/changes`, matching Python loggerhead's root
 /// behaviour (see `apps/branch.py::lookup_app`).
-async fn root_redirect() -> Redirect {
-    Redirect::permanent("/changes")
+async fn root_redirect(
+    axum::extract::State(state): axum::extract::State<Arc<AppState>>,
+) -> Redirect {
+    Redirect::permanent(&state.url("/changes"))
 }
 
 /// Serve mode determined at startup.
@@ -121,14 +158,59 @@ pub fn build_router(state: Arc<AppState>) -> Router {
 
 fn build_directory_router(state: Arc<AppState>) -> Router {
     use crate::controllers::directory;
-    Router::new()
+    let static_dir = state.static_dir.clone();
+    let subdirs = list_subdirs(&state.root);
+    let top = Router::new()
         .route("/", get(directory::show))
-        .nest_service("/static", ServeDir::new(&state.static_dir))
-        .layer(TraceLayer::new_for_http())
-        .with_state(state)
+        .with_state(state.clone());
+    let mut router: Router<()> = top.nest_service("/static", ServeDir::new(&static_dir));
+    // Discover branches once at startup and mount each under /<name>.
+    // New branches added to the directory after startup will 404 until
+    // the server restarts — acceptable for a loggerhead deployment.
+    for name in subdirs {
+        let child_root = format!("{}/{}", state.root.trim_end_matches('/'), name);
+        if crate::breezy::open_branch(&child_root).is_err() {
+            continue;
+        }
+        let child_state = Arc::new(AppState::nested(&state, child_root, &name));
+        let branch_router = build_branch_router_inner(child_state);
+        router = router.nest(&format!("/{name}"), branch_router);
+    }
+    router.layer(TraceLayer::new_for_http())
+}
+
+fn list_subdirs(root: &str) -> Vec<String> {
+    let Ok(read) = std::fs::read_dir(root) else {
+        return Vec::new();
+    };
+    let mut names: Vec<String> = read
+        .filter_map(|e| e.ok())
+        .filter_map(|e| {
+            let n = e.file_name().to_string_lossy().into_owned();
+            if n.starts_with('.') {
+                None
+            } else if e.file_type().ok().is_some_and(|t| t.is_dir()) {
+                Some(n)
+            } else {
+                None
+            }
+        })
+        .collect();
+    names.sort_by_key(|s| s.to_lowercase());
+    names
 }
 
 fn build_branch_router(state: Arc<AppState>) -> Router {
+    let static_dir = state.static_dir.clone();
+    build_branch_router_inner(state)
+        .nest_service("/static", ServeDir::new(&static_dir))
+        .layer(TraceLayer::new_for_http())
+}
+
+/// Per-branch routes, without the top-level `/static` mount or tracing
+/// layer. Used both directly in single-branch mode and from
+/// `build_directory_router` at each `/<branch>` nesting point.
+fn build_branch_router_inner(state: Arc<AppState>) -> Router {
     use crate::controllers::{
         annotate, atom, diff, download, filediff, inventory, revlog, search, view,
     };
@@ -154,7 +236,5 @@ fn build_branch_router(state: Arc<AppState>) -> Router {
         .route("/atom", get(atom::show))
         .route("/+revlog/:revid", get(revlog::show))
         .route("/search", get(search::show))
-        .nest_service("/static", ServeDir::new(&state.static_dir))
-        .layer(TraceLayer::new_for_http())
         .with_state(state)
 }

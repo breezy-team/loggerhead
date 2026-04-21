@@ -1,32 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>search — loggerhead</title>
-<style>
-body { font-family: sans-serif; margin: 1em; }
-.unavailable { background: #fff4d0; border: 1px solid #c90; padding: 0.5em 0.8em; border-radius: 3px; }
-</style>
-</head>
-<body>
-<h1>Search</h1>
-<p><a href="/">overview</a> · <a href="/changes">changes</a></p>
-<form method="get" action="/search">
+{% extends "base.html" %}
+{% block title %}{{ nick }} : search{% endblock %}
+
+{% block heading %}
+<div id="breadcrumbs">
+<span class="breadcrumb"><a href="{{ url_prefix }}/">{{ nick }}</a></span>
+<span>&#187; Search</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<form method="get" action="{{ url_prefix }}/search">
   <input type="text" name="q" value="{{ query }}" placeholder="query…">
   <button type="submit">Search</button>
 </form>
 {% if !available %}
-<p class="unavailable">Search is not available in this loggerhead build. The <code>breezy.plugins.search</code> plugin must be installed and the branch indexed.</p>
+<p class="unavailable" style="background: #fff4d0; border: 1px solid #c90; padding: 0.5em 0.8em; border-radius: 3px;">
+Search is not available in this loggerhead build. The <code>breezy.plugins.search</code> plugin must be installed and the branch indexed.
+</p>
 {% else %}
 {% if results.is_empty() %}
 <p>No results.</p>
 {% else %}
 <ul>
   {% for r in results %}
-    <li><code>{{ r.revno }}</code> — {{ r.short_message }}</li>
+    <li><a href="{{ url_prefix }}/revision/{{ r.revno }}"><code>{{ r.revno }}</code></a> — {{ r.short_message }}</li>
   {% endfor %}
 </ul>
 {% endif %}
 {% endif %}
-</body>
-</html>
+{% endblock %}

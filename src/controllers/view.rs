@@ -20,6 +20,7 @@ struct ViewTemplate {
     // shared base
     nick: String,
     fileview_active: bool,
+    url_prefix: String,
     // page-specific
     revno: String,
     path: String,
@@ -53,6 +54,7 @@ async fn render(
         return Err(AppError::Other("no filename provided".into()));
     }
     let path_for_task = path_norm.clone();
+    let url_prefix = state.url_prefix.clone();
 
     let (nick, content, revno) = tokio::task::spawn_blocking(move || -> AppResult<_> {
         let branch = open_branch(&state.root)?;
@@ -103,6 +105,7 @@ async fn render(
     let tmpl = ViewTemplate {
         nick,
         fileview_active: true,
+        url_prefix,
         revno,
         path: path_norm,
         lines,

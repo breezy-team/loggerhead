@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="/static/css/global.css" />
 <link rel="shortcut icon" href="/static/images/favicon.png" />
 <script type="text/javascript">
-var global_path = '/';
+var global_path = '{{ url_prefix }}/';
 var collapsed_icon_path = '/static/images/treeCollapsed.png';
 var expanded_icon_path = '/static/images/treeExpanded.png';
 </script>
@@ -22,15 +22,17 @@ var expanded_icon_path = '/static/images/treeExpanded.png';
 {{ nick }}
 </h1>
 
+{% block menu %}
 <ul id="menuTabs">
 {% if fileview_active %}
-<li><a href="/changes" title="Changes">Changes</a></li>
-<li><a href="/files" title="Files" id="on">Files</a></li>
+<li><a href="{{ url_prefix }}/changes" title="Changes">Changes</a></li>
+<li><a href="{{ url_prefix }}/files" title="Files" id="on">Files</a></li>
 {% else %}
-<li><a href="/changes" title="Changes" id="on">Changes</a></li>
-<li><a href="/files" title="Files">Files</a></li>
+<li><a href="{{ url_prefix }}/changes" title="Changes" id="on">Changes</a></li>
+<li><a href="{{ url_prefix }}/files" title="Files">Files</a></li>
 {% endif %}
 </ul>
+{% endblock %}
 
 <div id="loggerheadCont">
 <div id="search_terms"></div>

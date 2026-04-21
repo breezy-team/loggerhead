@@ -8,23 +8,23 @@
 
 {% block heading %}
 <div id="breadcrumbs">
-<a href="/">{{ nick }}</a> : <span class="breadcrumb">/{{ path }}</span> (revision {{ revno }})
+<a href="{{ url_prefix }}/">{{ nick }}</a> : <span class="breadcrumb">/{{ path }}</span> (revision {{ revno }})
 </div>
 {% endblock %}
 
 {% block content %}
 <ul id="submenuTabs">
-<li id="first"><a href="/files/{{ revno }}">browse files</a></li>
-<li><a href="/view/{{ revno }}/{{ path }}">view without revision information</a></li>
-<li><a href="/revision/{{ revno }}">view revision</a></li>
-<li id="last"><a href="/download/{{ revno }}/{{ path }}">download file</a></li>
+<li id="first"><a href="{{ url_prefix }}/files/{{ revno }}">browse files</a></li>
+<li><a href="{{ url_prefix }}/view/{{ revno }}/{{ path }}">view without revision information</a></li>
+<li><a href="{{ url_prefix }}/revision/{{ revno }}">view revision</a></li>
+<li id="last"><a href="{{ url_prefix }}/download/{{ revno }}/{{ path }}">download file</a></li>
 </ul>
 
 <div class="view">
 <table id="logentries">
 {% for l in lines %}
 <tr>
-  <td class="viewRev" title="{{ l.revid_short }}"><a href="/revision/{{ l.revno }}">{{ l.revno }}</a></td>
+  <td class="viewRev" title="{{ l.revid_short }}"><a href="{{ url_prefix }}/revision/{{ l.revno }}">{{ l.revno }}</a></td>
   <td class="viewLine"><pre><a id="L{{ l.n }}" href="#L{{ l.n }}">{{ l.n }}</a></pre></td>
   <td class="viewCont"><pre>{{ l.text }}</pre></td>
 </tr>

@@ -32,6 +32,7 @@ struct ChangelogTemplate {
     // shared base-template fields
     nick: String,
     fileview_active: bool,
+    url_prefix: String,
     served_url: String,
     // page-specific
     last_revno: String,
@@ -131,6 +132,7 @@ async fn render(
     let tmpl = ChangelogTemplate {
         nick,
         fileview_active: false,
+        url_prefix: state.url_prefix.clone(),
         served_url: state.root.clone(),
         last_revno,
         changes: changes.into_iter().map(Into::into).collect(),

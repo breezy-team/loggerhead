@@ -21,6 +21,7 @@ struct InventoryTemplate {
     // base
     nick: String,
     fileview_active: bool,
+    url_prefix: String,
     // page
     revno: String,
     revid_hex: String,
@@ -90,6 +91,7 @@ async fn render(
     revno_req: Option<String>,
     path: String,
 ) -> AppResult<Html<String>> {
+    let state_for_tmpl = state.clone();
     let (nick, revno, revid_hex, tip_change, entries, path_display, parent_path, normalized) =
         tokio::task::spawn_blocking(move || -> AppResult<_> {
             let branch = open_branch(&state.root)?;
@@ -182,9 +184,9 @@ async fn render(
                         format!("{normalized}/{name}")
                     };
                     let href = if is_dir {
-                        format!("/files/{}/{}", revno, full)
+                        format!("{}/files/{}/{}", state.url_prefix, revno, full)
                     } else {
-                        format!("/view/{}/{}", revno, full)
+                        format!("{}/view/{}/{}", state.url_prefix, revno, full)
                     };
                     let ch = change_by_id.get(&child_revid);
                     Entry {
@@ -244,6 +246,7 @@ async fn render(
     let tmpl = InventoryTemplate {
         nick,
         fileview_active: true,
+        url_prefix: state_for_tmpl.url_prefix.clone(),
         revno,
         revid_hex,
         path: normalized,

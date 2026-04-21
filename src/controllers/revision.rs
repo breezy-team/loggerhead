@@ -19,6 +19,7 @@ struct RevisionTemplate {
     // shared base fields
     nick: String,
     fileview_active: bool,
+    url_prefix: String,
     // page-specific
     revno: String,
     revid_hex: String,
@@ -34,6 +35,11 @@ struct RevisionTemplate {
     removed: Vec<FileChangeView>,
     modified: Vec<FileChangeView>,
     renamed: Vec<FileChangeView>,
+    /// JSON map `{ "diff-N": "<new_revid>/<old_revid>/<path>" }` consumed
+    /// by `static/javascript/diff.js` to build `/+filediff/...` URLs.
+    link_data: String,
+    /// JSON map `{ "<path>": "diff-N" }` for anchor → diff-box lookup.
+    path_to_id: String,
 }
 
 struct ParentView {
@@ -125,9 +131,44 @@ async fn render(state: Arc<AppState>, idref: String) -> AppResult<Html<String>> 
         }
     }
 
+    // Build the JSON maps consumed by static/javascript/diff.js.
+    // `link_data["diff-N"]` is the `<new>/<old>/<path>` fragment that
+    // diff.js uses to build /+filediff URLs; `path_to_id` is the
+    // inverse anchor lookup. Each element is percent-encoded the same
+    // way Python's util.dq wraps it.
+    let new_revid_enc = percent_encoding::utf8_percent_encode(
+        &String::from_utf8_lossy(change.revid.as_bytes()),
+        percent_encoding::NON_ALPHANUMERIC,
+    )
+    .to_string();
+    let old_revid_enc = change
+        .parents
+        .first()
+        .map(|(p, _)| {
+            percent_encoding::utf8_percent_encode(
+                &String::from_utf8_lossy(p.as_bytes()),
+                percent_encoding::NON_ALPHANUMERIC,
+            )
+            .to_string()
+        })
+        .unwrap_or_default();
+    let mut link_obj = serde_json::Map::new();
+    let mut path_obj = serde_json::Map::new();
+    for (i, f) in modified.iter().enumerate() {
+        let id = format!("diff-{i}");
+        link_obj.insert(
+            id.clone(),
+            serde_json::Value::String(format!("{}/{}/{}", new_revid_enc, old_revid_enc, f.path)),
+        );
+        path_obj.insert(f.path.clone(), serde_json::Value::String(id));
+    }
+    let link_data = serde_json::Value::Object(link_obj).to_string();
+    let path_to_id = serde_json::Value::Object(path_obj).to_string();
+
     let tmpl = RevisionTemplate {
         nick,
         fileview_active: false,
+        url_prefix: state.url_prefix.clone(),
         revno: change.revno,
         revid_hex: String::from_utf8_lossy(change.revid.as_bytes()).into_owned(),
         author: hide_email(&change.committer),
@@ -147,6 +188,8 @@ async fn render(state: Arc<AppState>, idref: String) -> AppResult<Html<String>> 
         removed,
         modified,
         renamed,
+        link_data,
+        path_to_id,
     };
     Ok(Html(tmpl.render()?))
 }

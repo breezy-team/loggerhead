@@ -17,13 +17,11 @@ use crate::util::errors::{AppError, AppResult};
 #[derive(Template)]
 #[template(path = "filediff.html")]
 struct FileDiffTemplate {
-    path: String,
-    new_revid_hex: String,
-    old_revid_hex: String,
     chunks: Vec<Chunk>,
 }
 
 struct Chunk {
+    #[allow(dead_code)]
     header: String,
     lines: Vec<DiffLine>,
 }
@@ -47,14 +45,13 @@ pub async fn show(
         .decode_utf8_lossy()
         .into_owned();
 
-    let path_for_task = path.clone();
     let (old_lines, new_lines) = tokio::task::spawn_blocking(move || -> AppResult<_> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
         let repo = branch.repository();
         let new_tree = repo.revision_tree(&new_revid)?;
         let old_tree = repo.revision_tree(&old_revid)?;
-        let p = std::path::Path::new(&path_for_task);
+        let p = std::path::Path::new(&path);
         let new_lines = read_file_lines(&new_tree, p);
         let old_lines = read_file_lines(&old_tree, p);
         Ok::<_, AppError>((old_lines, new_lines))
@@ -62,12 +59,7 @@ pub async fn show(
     .await??;
 
     let chunks = render_chunks(&old_lines, &new_lines);
-    let tmpl = FileDiffTemplate {
-        path,
-        new_revid_hex: String::from_utf8_lossy(new_revid_enc.as_bytes()).into_owned(),
-        old_revid_hex: String::from_utf8_lossy(old_revid_enc.as_bytes()).into_owned(),
-        chunks,
-    };
+    let tmpl = FileDiffTemplate { chunks };
     Ok(Html(tmpl.render()?))
 }
 

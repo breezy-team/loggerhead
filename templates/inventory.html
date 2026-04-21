@@ -7,7 +7,7 @@
 
 {% block heading %}
 <div id="breadcrumbs">
-<span class="breadcrumb"><a href="/">{{ nick }}</a></span>
+<span class="breadcrumb"><a href="{{ url_prefix }}/">{{ nick }}</a></span>
 <span>: <span class="breadcrumb">{{ path_display }}</span> (Revision {{ revno }})</span>
 </div>
 {% endblock %}
@@ -20,8 +20,8 @@ To get this branch, use: <br/>
 </div>
 
 <ul id="submenuTabs">
-<li id="first"><a href="/revision/{{ revno }}">view revision</a></li>
-<li id="last"><a href="/changes">view branch changes</a></li>
+<li id="first"><a href="{{ url_prefix }}/revision/{{ revno }}">view revision</a></li>
+<li id="last"><a href="{{ url_prefix }}/changes">view branch changes</a></li>
 </ul>
 
 {% match tip_change %}{% when Some with (c) %}
@@ -53,7 +53,7 @@ To get this branch, use: <br/>
 
 {% match parent_path %}{% when Some with (p) %}
 <tr class="blueRow0">
-<td class="summcell" colspan="6"><a href="/files/{{ revno }}/{{ p }}"><img src="/static/images/ico_folder_up.gif" />..</a></td>
+<td class="summcell" colspan="6"><a href="{{ url_prefix }}/files/{{ revno }}/{{ p }}"><img src="/static/images/ico_folder_up.gif" />..</a></td>
 </tr>
 {% when None %}{% endmatch %}
 
@@ -65,7 +65,7 @@ To get this branch, use: <br/>
   </a>
   <a class="link" href="{{ e.href }}">{{ e.name }}{% if e.is_dir %}/{% endif %}</a>
 </td>
-<td class="date"><a href="/revision/{{ e.last_revno }}" title="Show revision {{ e.last_revno }}">{{ e.last_revno }}</a></td>
+<td class="date"><a href="{{ url_prefix }}/revision/{{ e.last_revno }}" title="Show revision {{ e.last_revno }}">{{ e.last_revno }}</a></td>
 <td class="date">{{ e.last_relative }}</td>
 <td class="date">{{ e.last_committer }}</td>
 <td class="autcell">{{ e.last_message }}</td>
@@ -77,7 +77,7 @@ To get this branch, use: <br/>
 </td>
 <td class="expcell">
   {% if !e.is_dir %}
-  <a href="/download/{{ e.last_revid_hex }}/{{ e.name }}" title="Download {{ e.name }} at revision {{ e.last_revno }}"><img alt="Download File" src="/static/images/ico_file_download.gif" /></a>
+  <a href="{{ url_prefix }}/download/{{ e.last_revid_hex }}/{{ e.name }}" title="Download {{ e.name }} at revision {{ e.last_revno }}"><img alt="Download File" src="/static/images/ico_file_download.gif" /></a>
   {% endif %}
 </td>
 </tr>

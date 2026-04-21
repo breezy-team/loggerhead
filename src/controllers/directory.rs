@@ -17,7 +17,9 @@ use crate::util::fmt::hide_email;
 struct DirectoryTemplate {
     // base-template fields — `nick` is the root name here
     nick: String,
+    #[allow(dead_code)]
     fileview_active: bool,
+    url_prefix: String,
     entries: Vec<Entry>,
 }
 
@@ -114,6 +116,7 @@ pub async fn show(State(state): State<Arc<AppState>>) -> AppResult<Html<String>>
     let tmpl = DirectoryTemplate {
         nick: root_name,
         fileview_active: false,
+        url_prefix: state.url_prefix.clone(),
         entries,
     };
     Ok(Html(tmpl.render()?))
