@@ -55,6 +55,8 @@ async fn main() -> anyhow::Result<()> {
         disk_cache,
         args.export_tarballs,
         static_dir,
+        args.user_dirs,
+        args.trunk_dir.clone(),
     ));
 
     let router = build_router(state);

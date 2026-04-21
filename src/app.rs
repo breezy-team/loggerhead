@@ -47,8 +47,10 @@ impl AppState {
         disk_cache: Option<Arc<RevInfoDiskCache>>,
         export_tarballs: bool,
         static_dir: std::path::PathBuf,
+        user_dirs: bool,
+        trunk_dir: Option<String>,
     ) -> Self {
-        let serve_mode = detect_serve_mode(&root);
+        let serve_mode = detect_serve_mode(&root, user_dirs, trunk_dir);
         Self {
             root,
             url_prefix: String::new(),
@@ -122,23 +124,34 @@ async fn root_redirect(
 }
 
 /// Serve mode determined at startup.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub enum ServeMode {
-    /// `root` points directly at a single branch. The usual
-    /// per-branch routes (`/changes`, `/revision/…`, `/files/…`,
-    /// etc.) are mounted at the URL root.
+    /// `root` points directly at a single branch.
     Branch,
-    /// `root` points at a directory containing zero or more
-    /// branches. `/` shows a DirectoryUI-style listing;
-    /// `/name/...` drills into a sub-branch. (Drill-down is not
-    /// yet wired — it's a TODO.)
+    /// `root` is a directory containing branches at `<root>/<name>`.
+    /// `/` shows a listing; `/<name>/…` drills into the branch.
     Directory,
+    /// `root` is a directory structured as `<root>/<user>/<branch>`.
+    /// Each user branch is exposed at `/~<user>/<branch>/…`.
+    /// Optionally a `trunk_dir` subdir under `<root>` hosts
+    /// "common" branches served at `/<branch>/…` without a
+    /// `~user` prefix.
+    UserDirs {
+        /// Subdirectory under `<root>` whose children are branches
+        /// served at `/<name>/`. `None` means no trunk section.
+        trunk_dir: Option<String>,
+    },
 }
 
 /// Detect at startup whether `root` is itself a branch or a directory
-/// containing branches. Errors fall back to Branch mode — the per-branch
-/// handlers will produce a sensible error on the first request.
-pub fn detect_serve_mode(root: &str) -> ServeMode {
+/// containing branches. The `user_dirs_config` option forces UserDirs
+/// mode regardless of whether `root` itself is openable as a branch.
+/// Errors fall back to Branch mode — the per-branch handlers will
+/// produce a sensible error on the first request.
+pub fn detect_serve_mode(root: &str, user_dirs: bool, trunk_dir: Option<String>) -> ServeMode {
+    if user_dirs {
+        return ServeMode::UserDirs { trunk_dir };
+    }
     if crate::breezy::open_branch(root).is_ok() {
         ServeMode::Branch
     } else if std::path::Path::new(root).is_dir() {
@@ -149,9 +162,13 @@ pub fn detect_serve_mode(root: &str) -> ServeMode {
 }
 
 pub fn build_router(state: Arc<AppState>) -> Router {
-    match state.serve_mode {
+    match &state.serve_mode {
         ServeMode::Directory => build_directory_router(state),
         ServeMode::Branch => build_branch_router(state),
+        ServeMode::UserDirs { trunk_dir } => {
+            let trunk = trunk_dir.clone();
+            build_user_dirs_router(state, trunk)
+        }
     }
 }
 
@@ -175,6 +192,61 @@ fn build_directory_router(state: Arc<AppState>) -> Router {
         let branch_router = build_branch_router_inner(child_state);
         router = router.nest(&format!("/{name}"), branch_router);
     }
+    router.layer(TraceLayer::new_for_http())
+}
+
+fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Router {
+    use crate::controllers::directory;
+    let static_dir = state.static_dir.clone();
+    let top = Router::new()
+        .route("/", get(directory::show))
+        .with_state(state.clone());
+    let mut router: Router<()> = top.nest_service("/static", ServeDir::new(&static_dir));
+
+    // ~user/branch branches. Each user directory under <root> holds
+    // branches; each branch is mounted at /~<user>/<branch>/.
+    let root_trimmed = state.root.trim_end_matches('/');
+    for user in list_subdirs(&state.root) {
+        // Users whose name starts with `.` are skipped by list_subdirs,
+        // but also skip the trunk_dir here to avoid double-mounting.
+        if Some(&user) == trunk_dir.as_ref() {
+            continue;
+        }
+        let user_root = format!("{root_trimmed}/{user}");
+        for branch_name in list_subdirs(&user_root) {
+            let child_root = format!("{user_root}/{branch_name}");
+            if crate::breezy::open_branch(&child_root).is_err() {
+                continue;
+            }
+            let prefix = format!("/~{user}/{branch_name}");
+            let child_state = Arc::new(AppState {
+                root: child_root,
+                url_prefix: prefix.clone(),
+                serve_mode: ServeMode::Branch,
+                whole_history_cache: Cache::new(10),
+                disk_cache: state.disk_cache.clone(),
+                export_tarballs: state.export_tarballs,
+                static_dir: state.static_dir.clone(),
+            });
+            let branch_router = build_branch_router_inner(child_state);
+            router = router.nest(&prefix, branch_router);
+        }
+    }
+
+    // Optional trunk area: <root>/<trunk_dir>/<branch> at /<branch>/.
+    if let Some(trunk) = trunk_dir.as_deref() {
+        let trunk_root = format!("{root_trimmed}/{trunk}");
+        for branch_name in list_subdirs(&trunk_root) {
+            let child_root = format!("{trunk_root}/{branch_name}");
+            if crate::breezy::open_branch(&child_root).is_err() {
+                continue;
+            }
+            let child_state = Arc::new(AppState::nested(&state, child_root, &branch_name));
+            let branch_router = build_branch_router_inner(child_state);
+            router = router.nest(&format!("/{branch_name}"), branch_router);
+        }
+    }
+
     router.layer(TraceLayer::new_for_http())
 }
 

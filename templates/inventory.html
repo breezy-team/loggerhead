@@ -8,7 +8,8 @@
 {% block heading %}
 <div id="breadcrumbs">
 <span class="breadcrumb"><a href="{{ url_prefix }}/">{{ nick }}</a></span>
-<span>: <span class="breadcrumb">{{ path_display }}</span> (Revision {{ revno }})</span>
+<span>: <span class="breadcrumb"><a href="{{ url_prefix }}/files/{{ revno }}">/</a>{% for c in breadcrumbs %}<a href="{{ c.href }}">{{ c.name }}</a>/{% endfor %}</span>
+(Revision {{ revno }})</span>
 </div>
 {% endblock %}
 

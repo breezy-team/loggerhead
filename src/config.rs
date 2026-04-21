@@ -49,4 +49,16 @@ pub struct Args {
     /// checkout; override for a Debian install (e.g. `/usr/share/loggerhead/static`).
     #[arg(long, value_name = "DIR")]
     pub static_dir: Option<PathBuf>,
+
+    /// Serve the root as a directory of user branches. Each
+    /// `<root>/<user>/<branch>` is exposed at `/~<user>/<branch>/`.
+    /// Useful for Launchpad-style layouts.
+    #[arg(long)]
+    pub user_dirs: bool,
+
+    /// When `--user-dirs` is set, the subdirectory under `<root>`
+    /// that contains "trunk" branches to serve under `/` without
+    /// the `~user` prefix. No-op otherwise.
+    #[arg(long, value_name = "DIR")]
+    pub trunk_dir: Option<String>,
 }

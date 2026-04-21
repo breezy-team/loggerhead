@@ -57,14 +57,24 @@ struct InventoryTemplate {
     revno: String,
     revid_hex: String,
     path: String,
+    #[allow(dead_code)]
     path_display: String,
     parent_path: Option<String>,
+    /// Segments along `path`, each with a clickable URL. e.g.
+    /// `/files/3/src/controllers/` → [("src", "/files/3/src"),
+    /// ("controllers", "/files/3/src/controllers")].
+    breadcrumbs: Vec<Crumb>,
     tip_change: Option<ChangeView>,
     entries: Vec<Entry>,
     /// Current sort mode, as the query param string ("filename",
     /// "date", "size"). The template uses this to style the active
     /// column header.
     sort: String,
+}
+
+struct Crumb {
+    name: String,
+    href: String,
 }
 
 #[allow(dead_code)]
@@ -309,6 +319,22 @@ async fn render(
         })
         .await??;
 
+    // Build path-descent breadcrumbs from the normalized path.
+    let mut breadcrumbs = Vec::new();
+    if !normalized.is_empty() {
+        let mut acc = String::new();
+        for segment in normalized.split('/').filter(|s| !s.is_empty()) {
+            if !acc.is_empty() {
+                acc.push('/');
+            }
+            acc.push_str(segment);
+            breadcrumbs.push(Crumb {
+                name: segment.to_string(),
+                href: format!("{}/files/{}/{}", state_for_tmpl.url_prefix, revno, acc),
+            });
+        }
+    }
+
     let tmpl = InventoryTemplate {
         nick,
         fileview_active: true,
@@ -318,6 +344,7 @@ async fn render(
         path: normalized,
         path_display,
         parent_path,
+        breadcrumbs,
         tip_change,
         entries,
         sort: sort_for_tmpl,
