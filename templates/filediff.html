@@ -13,7 +13,7 @@
       <div class="pseudorow {{ line.kind }}-row">
         <div class="lineNumber first">{% match line.old_lineno %}{% when Some with (n) %}{{ n }}{% when None %}&nbsp;{% endmatch %}</div>
         <div class="lineNumber second">{% match line.new_lineno %}{% when Some with (n) %}{{ n }}{% when None %}&nbsp;{% endmatch %}</div>
-        <div class="code {{ line.kind }}">{% if line.text.is_empty() %}&nbsp;{% else %}{{ line.text }}{% endif %}</div>
+        <div class="code {{ line.kind }}">{% if line.text.is_empty() %}&nbsp;{% else %}{{ line.text|safe }}{% endif %}</div>
         <div class="clear"><!-- --></div>
       </div>
       {% endfor %}

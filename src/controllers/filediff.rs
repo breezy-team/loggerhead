@@ -30,6 +30,10 @@ struct DiffLine {
     old_lineno: Option<usize>,
     new_lineno: Option<usize>,
     kind: &'static str,
+    /// HTML-ready fragment: characters are escaped and tabs/spaces
+    /// are rewritten to `&nbsp;` so the `<div>` container preserves
+    /// leading indentation the way Python's `util.html_clean` does.
+    /// Rendered through Askama's `|safe` filter.
     text: String,
 }
 
@@ -77,6 +81,31 @@ fn read_file_lines(tree: &dyn Tree, path: &std::path::Path) -> String {
     }
 }
 
+/// HTML-escape a diff line and rewrite whitespace so a non-`<pre>`
+/// container preserves leading indentation. Tabs are expanded to
+/// 8 spaces (matching Python's `str.expandtabs`) and every space
+/// becomes `&nbsp;`. Matches `loggerhead.util.html_clean`.
+fn html_clean(s: &str) -> String {
+    // Escape HTML first, then substitute whitespace.
+    let mut escaped = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&#39;"),
+            _ => escaped.push(c),
+        }
+    }
+    // expandtabs: replace each `\t` with enough spaces to reach the
+    // next 8-column tab stop. We do a simple uniform expansion to
+    // 8 spaces — precise column tracking isn't needed for diff
+    // rendering.
+    let expanded = escaped.replace('\t', "        ");
+    expanded.replace(' ', "&nbsp;")
+}
+
 fn render_chunks(old: &str, new: &str) -> Vec<Chunk> {
     let diff = TextDiff::from_lines(old, new);
     let mut chunks = Vec::new();
@@ -99,16 +128,13 @@ fn render_chunks(old: &str, new: &str) -> Vec<Chunk> {
                     ChangeTag::Delete => "delete",
                     ChangeTag::Insert => "insert",
                 };
-                let text = change
-                    .value()
-                    .to_string()
-                    .trim_end_matches('\n')
-                    .to_string();
+                let raw = change.value();
+                let trimmed = raw.trim_end_matches('\n');
                 lines.push(DiffLine {
                     old_lineno: change.old_index().map(|i| i + 1),
                     new_lineno: change.new_index().map(|i| i + 1),
                     kind,
-                    text,
+                    text: html_clean(trimmed),
                 });
             }
         }
