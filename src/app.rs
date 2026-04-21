@@ -57,11 +57,12 @@ impl AppState {
         static_dir: std::path::PathBuf,
         user_dirs: bool,
         trunk_dir: Option<String>,
+        url_prefix: String,
     ) -> Self {
         let serve_mode = detect_serve_mode(&root, user_dirs, trunk_dir);
         Self {
             root,
-            url_prefix: String::new(),
+            url_prefix,
             serve_mode,
             whole_history_cache: Cache::new(10),
             disk_cache,
@@ -77,7 +78,7 @@ impl AppState {
     pub fn nested(parent: &AppState, root: String, name: &str) -> Self {
         Self {
             root,
-            url_prefix: format!("/{name}"),
+            url_prefix: format!("{}/{name}", parent.url_prefix),
             serve_mode: ServeMode::Branch,
             whole_history_cache: Cache::new(10),
             disk_cache: parent.disk_cache.clone(),
@@ -122,10 +123,13 @@ impl AppState {
         if let Some(w) = self.whole_history_cache.get(&tip) {
             return Ok(w);
         }
+        // Scope disk-cache entries by branch root so a single shared cache
+        // file can back multiple branches (directory / user-dirs mode).
+        let branch_key = self.root.as_bytes();
         if let Some(from_disk) = self
             .disk_cache
             .as_ref()
-            .and_then(|d| d.get_whole_history(&tip))
+            .and_then(|d| d.get_whole_history(branch_key, &tip))
         {
             tracing::debug!("whole_history: disk cache hit");
             let w = Arc::new(from_disk);
@@ -135,7 +139,7 @@ impl AppState {
         tracing::debug!("whole_history: computing (miss on memory & disk)");
         let computed = WholeHistory::compute(branch)?;
         if let Some(d) = self.disk_cache.as_ref() {
-            d.set_whole_history(&tip, &computed);
+            d.set_whole_history(branch_key, &tip, &computed);
         }
         let w = Arc::new(computed);
         self.whole_history_cache.insert(tip, w.clone());
@@ -149,6 +153,11 @@ async fn root_redirect(
     axum::extract::State(state): axum::extract::State<Arc<AppState>>,
 ) -> Redirect {
     Redirect::permanent(&state.url("/changes"))
+}
+
+/// Trivial liveness probe, matching Python loggerhead's `/health`.
+async fn health() -> &'static str {
+    "ok"
 }
 
 /// Middleware that 404s a request when the branch's config has
@@ -285,7 +294,9 @@ fn build_directory_router(state: Arc<AppState>) -> Router {
     let top = Router::new()
         .route("/", get(directory::show))
         .with_state(state.clone());
-    let mut router: Router<()> = top.nest_service("/static", ServeDir::new(&static_dir));
+    let mut router: Router<()> = top
+        .nest_service("/static", ServeDir::new(&static_dir))
+        .route("/favicon.ico", get(favicon_redirect));
     // Discover branches once at startup and mount each under /<name>.
     // New branches added to the directory after startup will 404 until
     // the server restarts — acceptable for a loggerhead deployment.
@@ -314,7 +325,9 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
     let top = Router::new()
         .route("/", get(directory::show))
         .with_state(state.clone());
-    let mut router: Router<()> = top.nest_service("/static", ServeDir::new(&static_dir));
+    let mut router: Router<()> = top
+        .nest_service("/static", ServeDir::new(&static_dir))
+        .route("/favicon.ico", get(favicon_redirect));
 
     // ~user/branch branches. Each user directory under <root> holds
     // branches; each branch is mounted at /~<user>/<branch>/.
@@ -339,10 +352,10 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
                 Ok(_) => {}
                 Err(_) => continue,
             }
-            let prefix = format!("/~{user}/{branch_name}");
+            let nested_prefix = format!("/~{user}/{branch_name}");
             let child_state = Arc::new(AppState {
                 root: child_root,
-                url_prefix: prefix.clone(),
+                url_prefix: format!("{}{nested_prefix}", state.url_prefix),
                 serve_mode: ServeMode::Branch,
                 whole_history_cache: Cache::new(10),
                 disk_cache: state.disk_cache.clone(),
@@ -351,7 +364,7 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
                 http_serve_cache: std::sync::OnceLock::new(),
             });
             let branch_router = build_branch_router_inner(child_state);
-            router = router.nest(&prefix, branch_router);
+            router = router.nest(&nested_prefix, branch_router);
         }
     }
 
@@ -405,8 +418,21 @@ fn build_branch_router(state: Arc<AppState>) -> Router {
     let static_dir = state.static_dir.clone();
     build_branch_router_inner(state)
         .nest_service("/static", ServeDir::new(&static_dir))
+        .route("/favicon.ico", get(favicon_redirect))
         .layer(TraceLayer::new_for_http())
 }
+
+/// Redirect `/favicon.ico` to the static asset so browsers that request
+/// the conventional path don't hit a 404. Matches Python loggerhead's
+/// top-level `favicon_app` handler.
+async fn favicon_redirect() -> Redirect {
+    Redirect::permanent("/static/images/favicon.ico")
+}
+
+// TODO: Python loggerhead also served `/.bzr/smart` (bzr+http smart protocol)
+// via breezy.transport.http.wsgi. Not yet ported — users who need `bzr branch
+// http://host/path` over the loggerhead port will need an external solution
+// until this lands.
 
 /// Per-branch routes, without the top-level `/static` mount or tracing
 /// layer. Used both directly in single-branch mode and from
@@ -418,6 +444,7 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
     };
     Router::new()
         .route("/", get(root_redirect))
+        .route("/health", get(health))
         .route("/changes", get(changelog::show))
         .route("/changes/:revno", get(changelog::show_from))
         .route("/revision/:revid", get(revision::show))
@@ -433,6 +460,8 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
         .route("/files/:revno/*path", get(inventory::show_rev_path))
         .route("/view/:revno/*path", get(view::show))
         .route("/annotate/:revno/*path", get(annotate::show))
+        .route("/download", get(download::show_bare))
+        .route("/download/", get(download::show_bare))
         .route("/download/:revid/*path", get(download::show_file))
         .route("/tarball/:revid", get(download::tarball))
         .route("/atom", get(atom::show))

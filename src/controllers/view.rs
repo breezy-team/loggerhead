@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use askama::Template;
 use axum::extract::{Path, State};
-use axum::response::Html;
+use axum::response::{Html, IntoResponse, Redirect, Response};
 use breezyshim::branch::Branch;
 use breezyshim::repository::Repository;
 use breezyshim::tree::{Kind, Tree};
@@ -35,12 +35,23 @@ struct Line {
     html: String,
 }
 
+/// One of two outcomes when looking up a /view target.
+enum Lookup {
+    File {
+        nick: String,
+        content: Vec<u8>,
+        revno: String,
+    },
+    /// Target is a directory; redirect to `/files/<revno>/<path>`.
+    Directory { revno: String },
+}
+
 /// `GET /view/:revno/*path` — view file at a specific revision.
 /// Use `/view/head:/path` for the branch tip.
 pub async fn show(
     State(state): State<Arc<AppState>>,
     Path((revno, path)): Path<(String, String)>,
-) -> AppResult<Html<String>> {
+) -> AppResult<Response> {
     render(state, Some(revno), path).await
 }
 
@@ -48,15 +59,16 @@ async fn render(
     state: Arc<AppState>,
     revno_req: Option<String>,
     path: String,
-) -> AppResult<Html<String>> {
+) -> AppResult<Response> {
     let path_norm = path.trim_matches('/').to_string();
     if path_norm.is_empty() {
         return Err(AppError::Other("no filename provided".into()));
     }
     let path_for_task = path_norm.clone();
     let url_prefix = state.url_prefix.clone();
+    let state_for_redirect = state.clone();
 
-    let (nick, content, revno) = tokio::task::spawn_blocking(move || -> AppResult<_> {
+    let outcome = tokio::task::spawn_blocking(move || -> AppResult<Lookup> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
         let whole = state.load_whole_history(&branch)?;
@@ -76,6 +88,7 @@ async fn render(
         }
         match tree.kind(&p) {
             Ok(Kind::File) => {}
+            Ok(Kind::Directory) => return Ok(Lookup::Directory { revno }),
             Ok(_) => {
                 return Err(AppError::Other(format!(
                     "{path_for_task} is not a regular file"
@@ -84,9 +97,25 @@ async fn render(
             Err(e) => return Err(AppError::from(e)),
         }
         let bytes = tree.get_file_text(&p)?;
-        Ok::<_, AppError>((history.nick, bytes, revno))
+        Ok(Lookup::File {
+            nick: history.nick,
+            content: bytes,
+            revno,
+        })
     })
     .await??;
+
+    let (nick, content, revno) = match outcome {
+        Lookup::File {
+            nick,
+            content,
+            revno,
+        } => (nick, content, revno),
+        Lookup::Directory { revno } => {
+            let target = state_for_redirect.url(&format!("/files/{revno}/{path_norm}"));
+            return Ok(Redirect::permanent(&target).into_response());
+        }
+    };
 
     let (lines, background, is_binary) = match std::str::from_utf8(&content) {
         Ok(text) => {
@@ -112,5 +141,5 @@ async fn render(
         background,
         is_binary,
     };
-    Ok(Html(tmpl.render()?))
+    Ok(Html(tmpl.render()?).into_response())
 }

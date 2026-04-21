@@ -1,0 +1,37 @@
+/*table*/
+#logentries,
+.viewLine {
+    border: 1px solid #d2d2d2;
+    }
+.viewRev {
+    border-right: none;
+    width: 20%;
+    padding: .3em .6em;
+    }
+.viewComm,
+.viewCont {
+    border: none;
+    }
+.viewLine {
+    border-style: none solid none none;
+    }
+.viewLine.first {
+    border-style: solid solid none none;
+    }
+.viewCont {
+    padding: 0.2em 0.5em;
+    }
+.viewLine {
+    padding: 0.2em 0.2em;
+    }
+.viewLine pre,
+.viewCont pre {
+    font-family: 'Ubuntu Mono', monospace;
+    line-height: 1.1;
+    }
+.viewLine pre {
+    text-align: right;
+    }
+.viewAuthors {
+    color: #999999;
+    }

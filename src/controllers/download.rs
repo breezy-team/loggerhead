@@ -5,7 +5,7 @@ use std::sync::Arc;
 use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::{header, StatusCode};
-use axum::response::{IntoResponse, Response};
+use axum::response::{IntoResponse, Redirect, Response};
 use breezyshim::branch::Branch;
 use breezyshim::export::{archive, ArchiveFormat};
 use breezyshim::repository::Repository;
@@ -16,6 +16,12 @@ use crate::app::AppState;
 use crate::breezy::open_branch;
 use crate::history::History;
 use crate::util::errors::{AppError, AppResult};
+
+/// GET /download (no args) — permanent redirect to `/changes`. Matches
+/// Python's DownloadUI, which redirects when fewer than two args are given.
+pub async fn show_bare(State(state): State<Arc<AppState>>) -> Redirect {
+    Redirect::permanent(&state.url("/changes"))
+}
 
 /// GET /download/:revid/*path — stream a single file at `path` from
 /// `revid` (a dotted revno, `head:`, or a raw revid).

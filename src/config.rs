@@ -6,7 +6,8 @@ use clap::Parser;
 #[derive(Parser, Debug, Clone)]
 #[command(
     name = "loggerhead-serve",
-    about = "Web viewer for Bazaar/Breezy branches"
+    about = "Web viewer for Bazaar/Breezy branches",
+    version
 )]
 pub struct Args {
     /// Path or URL of the branch (or root directory of branches) to serve.
@@ -25,8 +26,10 @@ pub struct Args {
     #[arg(long, default_value = "")]
     pub prefix: String,
 
-    /// Path to the on-disk revision-info cache (SQLite).
-    #[arg(long, value_name = "DIR")]
+    /// Directory to place the on-disk revision-info cache (SQLite).
+    /// Python loggerhead calls this flag `--cache-dir`; `--cachepath`
+    /// is kept as an alias.
+    #[arg(long = "cache-dir", alias = "cachepath", value_name = "DIR")]
     pub cachepath: Option<PathBuf>,
 
     /// Allow tarball downloads of revisions.

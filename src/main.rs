@@ -1,12 +1,28 @@
 use std::net::SocketAddr;
 use std::sync::Arc;
 
+use axum::Router;
 use clap::Parser;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 use loggerhead::app::{build_router, AppState};
 use loggerhead::cache::RevInfoDiskCache;
 use loggerhead::config::Args;
+
+/// Normalize a `--prefix` value: empty stays empty; otherwise a leading `/`
+/// is ensured and any trailing `/` stripped, so it composes cleanly into
+/// URLs as `{prefix}{path}`.
+fn normalize_prefix(raw: &str) -> String {
+    let trimmed = raw.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return String::new();
+    }
+    if trimmed.starts_with('/') {
+        trimmed.to_string()
+    } else {
+        format!("/{trimmed}")
+    }
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -26,6 +42,15 @@ async fn main() -> anyhow::Result<()> {
         tracing::info!(path = ?dir, "--log-folder accepted but file logging is not yet implemented; logging to stderr");
     }
 
+    // Matches Python's "--trunk-dir is only valid with --user-dirs"
+    // and "--user-dirs requires --trunk-dir" validations.
+    if args.trunk_dir.is_some() && !args.user_dirs {
+        anyhow::bail!("--trunk-dir is only valid with --user-dirs");
+    }
+    if args.user_dirs && args.trunk_dir.is_none() {
+        anyhow::bail!("--user-dirs requires --trunk-dir");
+    }
+
     // Initialize breezy/Python once on the main thread.
     breezyshim::init();
 
@@ -42,13 +67,15 @@ async fn main() -> anyhow::Result<()> {
 
     let addr = SocketAddr::new(args.host, args.port);
     let static_dir = args.static_dir.clone().unwrap_or_else(|| {
-        // Default to the sibling Python loggerhead static dir so a checkout
-        // "just works" without a separate install step.
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("loggerhead/static")
+        // Default to the in-tree `static/` dir so a checkout "just works"
+        // without a separate install step.
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("static")
     });
     if !static_dir.is_dir() {
         tracing::warn!(path = ?static_dir, "static asset directory not found; /static/* will 404");
     }
+
+    let prefix = normalize_prefix(&args.prefix);
 
     let state = Arc::new(AppState::new(
         args.root.clone(),
@@ -57,11 +84,19 @@ async fn main() -> anyhow::Result<()> {
         static_dir,
         args.user_dirs,
         args.trunk_dir.clone(),
+        prefix.clone(),
     ));
 
-    let router = build_router(state);
+    let inner = build_router(state);
+    let router = if prefix.is_empty() {
+        inner
+    } else {
+        // Serve the same app under `<prefix>/…` when deployed behind a
+        // reverse proxy that forwards the original path.
+        Router::new().nest(&prefix, inner)
+    };
 
-    tracing::info!(%addr, root = %args.root, "loggerhead starting");
+    tracing::info!(%addr, root = %args.root, prefix = %args.prefix, "loggerhead starting");
     let listener = tokio::net::TcpListener::bind(addr).await?;
     axum::serve(listener, router).await?;
     Ok(())

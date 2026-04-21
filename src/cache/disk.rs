@@ -58,12 +58,19 @@ impl RevInfoDiskCache {
     /// stored tip doesn't match `current_tip`, or if the payload can't be
     /// decoded (which is treated as a miss — the cache will be overwritten
     /// on the next `set`).
-    pub fn get_whole_history(&self, current_tip: &RevisionId) -> Option<WholeHistory> {
+    ///
+    /// `branch_key` scopes the entry to a particular branch so multiple
+    /// branches can share one cache file (directory / user-dirs mode).
+    pub fn get_whole_history(
+        &self,
+        branch_key: &[u8],
+        current_tip: &RevisionId,
+    ) -> Option<WholeHistory> {
         let conn = self.conn.lock().ok()?;
         let row: (Vec<u8>, Vec<u8>) = conn
             .query_row(
                 "SELECT revid, data FROM data WHERE key = ?",
-                params![WHOLE_HISTORY_KEY],
+                params![whole_history_key(branch_key)],
                 |r| Ok((r.get::<_, Vec<u8>>(0)?, r.get::<_, Vec<u8>>(1)?)),
             )
             .optional()
@@ -75,23 +82,30 @@ impl RevInfoDiskCache {
         decode_whole_history(&row.1).ok()
     }
 
-    /// Store `wh` under the logical `WHOLE_HISTORY_KEY`, stamped with `tip`.
-    /// Errors are logged but not propagated — a cache-write failure is
-    /// never fatal for a read.
-    pub fn set_whole_history(&self, tip: &RevisionId, wh: &WholeHistory) {
+    /// Store `wh` for `branch_key`, stamped with `tip`. Errors are logged
+    /// but not propagated — a cache-write failure is never fatal for a read.
+    pub fn set_whole_history(&self, branch_key: &[u8], tip: &RevisionId, wh: &WholeHistory) {
         let blob = encode_whole_history(wh);
         let Ok(conn) = self.conn.lock() else { return };
         if let Err(e) = conn.execute(
             "INSERT INTO data (key, revid, data) VALUES (?, ?, ?)
              ON CONFLICT(key) DO UPDATE SET revid = excluded.revid, data = excluded.data",
-            params![WHOLE_HISTORY_KEY, tip.as_bytes(), blob],
+            params![whole_history_key(branch_key), tip.as_bytes(), blob],
         ) {
             tracing::warn!(error = %e, "disk cache write failed");
         }
     }
 }
 
-const WHOLE_HISTORY_KEY: &[u8] = b"whole_history";
+fn whole_history_key(branch_key: &[u8]) -> Vec<u8> {
+    let mut v = Vec::with_capacity(WHOLE_HISTORY_PREFIX.len() + 1 + branch_key.len());
+    v.extend_from_slice(WHOLE_HISTORY_PREFIX);
+    v.push(b':');
+    v.extend_from_slice(branch_key);
+    v
+}
+
+const WHOLE_HISTORY_PREFIX: &[u8] = b"whole_history";
 
 /// Magic+version header so we can change the encoding later and reject
 /// stale entries rather than misinterpret them.
@@ -307,16 +321,20 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let cache = RevInfoDiskCache::open(tmp.path()).unwrap();
         let tip = RevisionId::from(b"rev-2".to_vec());
-        assert!(cache.get_whole_history(&tip).is_none());
+        let bk = b"branch-a".as_slice();
+        assert!(cache.get_whole_history(bk, &tip).is_none());
 
         let wh = sample_whole_history();
-        cache.set_whole_history(&tip, &wh);
-        let fetched = cache.get_whole_history(&tip).unwrap();
+        cache.set_whole_history(bk, &tip, &wh);
+        let fetched = cache.get_whole_history(bk, &tip).unwrap();
         assert_eq!(fetched.entries.len(), 2);
 
         // Different tip → treated as miss.
         let other = RevisionId::from(b"other".to_vec());
-        assert!(cache.get_whole_history(&other).is_none());
+        assert!(cache.get_whole_history(bk, &other).is_none());
+
+        // Different branch key → also a miss.
+        assert!(cache.get_whole_history(b"branch-b", &tip).is_none());
     }
 
     #[test]

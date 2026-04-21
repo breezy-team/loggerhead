@@ -1,0 +1,68 @@
+.hll { background-color: #ffffcc }
+.pyg-c { color: #888888 } /* Comment */
+.pyg-err { color: #FF0000; background-color: #FFAAAA } /* Error */
+.pyg-k { color: #008800; font-weight: bold } /* Keyword */
+.pyg-o { color: #333333 } /* Operator */
+.pyg-ch { color: #888888 } /* Comment.Hashbang */
+.pyg-cm { color: #888888 } /* Comment.Multiline */
+.pyg-cp { color: #557799 } /* Comment.Preproc */
+.pyg-cpf { color: #888888 } /* Comment.PreprocFile */
+.pyg-c1 { color: #888888 } /* Comment.Single */
+.pyg-cs { color: #cc0000; font-weight: bold } /* Comment.Special */
+.pyg-gd { color: #A00000 } /* Generic.Deleted */
+.pyg-ge { font-style: italic } /* Generic.Emph */
+.pyg-gr { color: #FF0000 } /* Generic.Error */
+.pyg-gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.pyg-gi { color: #00A000 } /* Generic.Inserted */
+.pyg-go { color: #888888 } /* Generic.Output */
+.pyg-gp { color: #c65d09; font-weight: bold } /* Generic.Prompt */
+.pyg-gs { font-weight: bold } /* Generic.Strong */
+.pyg-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.pyg-gt { color: #0044DD } /* Generic.Traceback */
+.pyg-kc { color: #008800; font-weight: bold } /* Keyword.Constant */
+.pyg-kd { color: #008800; font-weight: bold } /* Keyword.Declaration */
+.pyg-kn { color: #008800; font-weight: bold } /* Keyword.Namespace */
+.pyg-kp { color: #003388; font-weight: bold } /* Keyword.Pseudo */
+.pyg-kr { color: #008800; font-weight: bold } /* Keyword.Reserved */
+.pyg-kt { color: #333399; font-weight: bold } /* Keyword.Type */
+.pyg-m { color: #6600EE; font-weight: bold } /* Literal.Number */
+.pyg-s { background-color: #fff0f0 } /* Literal.String */
+.pyg-na { color: #0000CC } /* Name.Attribute */
+.pyg-nb { color: #007020 } /* Name.Builtin */
+.pyg-nc { color: #BB0066; font-weight: bold } /* Name.Class */
+.pyg-no { color: #003366; font-weight: bold } /* Name.Constant */
+.pyg-nd { color: #555555; font-weight: bold } /* Name.Decorator */
+.pyg-ni { color: #880000; font-weight: bold } /* Name.Entity */
+.pyg-ne { color: #FF0000; font-weight: bold } /* Name.Exception */
+.pyg-nf { color: #0066BB; font-weight: bold } /* Name.Function */
+.pyg-nl { color: #997700; font-weight: bold } /* Name.Label */
+.pyg-nn { color: #0e84b5; font-weight: bold } /* Name.Namespace */
+.pyg-nt { color: #007700 } /* Name.Tag */
+.pyg-nv { color: #996633 } /* Name.Variable */
+.pyg-ow { color: #000000; font-weight: bold } /* Operator.Word */
+.pyg-w { color: #bbbbbb } /* Text.Whitespace */
+.pyg-mb { color: #6600EE; font-weight: bold } /* Literal.Number.Bin */
+.pyg-mf { color: #6600EE; font-weight: bold } /* Literal.Number.Float */
+.pyg-mh { color: #005588; font-weight: bold } /* Literal.Number.Hex */
+.pyg-mi { color: #0000DD; font-weight: bold } /* Literal.Number.Integer */
+.pyg-mo { color: #4400EE; font-weight: bold } /* Literal.Number.Oct */
+.pyg-sa { background-color: #fff0f0 } /* Literal.String.Affix */
+.pyg-sb { background-color: #fff0f0 } /* Literal.String.Backtick */
+.pyg-sc { color: #0044DD } /* Literal.String.Char */
+.pyg-dl { background-color: #fff0f0 } /* Literal.String.Delimiter */
+.pyg-sd { color: #DD4422 } /* Literal.String.Doc */
+.pyg-s2 { background-color: #fff0f0 } /* Literal.String.Double */
+.pyg-se { color: #666666; font-weight: bold; background-color: #fff0f0 } /* Literal.String.Escape */
+.pyg-sh { background-color: #fff0f0 } /* Literal.String.Heredoc */
+.pyg-si { background-color: #eeeeee } /* Literal.String.Interpol */
+.pyg-sx { color: #DD2200; background-color: #fff0f0 } /* Literal.String.Other */
+.pyg-sr { color: #000000; background-color: #fff0ff } /* Literal.String.Regex */
+.pyg-s1 { background-color: #fff0f0 } /* Literal.String.Single */
+.pyg-ss { color: #AA6600 } /* Literal.String.Symbol */
+.pyg-bp { color: #007020 } /* Name.Builtin.Pseudo */
+.pyg-fm { color: #0066BB; font-weight: bold } /* Name.Function.Magic */
+.pyg-vc { color: #336699 } /* Name.Variable.Class */
+.pyg-vg { color: #dd7700; font-weight: bold } /* Name.Variable.Global */
+.pyg-vi { color: #3333BB } /* Name.Variable.Instance */
+.pyg-vm { color: #996633 } /* Name.Variable.Magic */
+.pyg-il { color: #0000DD; font-weight: bold } /* Literal.Number.Integer.Long */
