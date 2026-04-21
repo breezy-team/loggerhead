@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>diff — {{ path }} — loggerhead</title>
+<style>
+body { font-family: sans-serif; margin: 1em; }
+.chunk { border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1em; overflow: hidden; }
+.chunk-header { background: #f4f4f4; padding: 0.3em 0.8em; font-family: monospace; color: #555; border-bottom: 1px solid #ccc; }
+table.diff { border-collapse: collapse; width: 100%; font-family: ui-monospace, monospace; font-size: 0.9em; }
+table.diff td { padding: 0 0.4em; vertical-align: top; }
+td.ln { color: #888; text-align: right; user-select: none; width: 3em; }
+tr.insert td { background: #e6ffec; }
+tr.delete td { background: #ffebe9; }
+tr.context td { background: #fff; }
+tr.insert td.ln, tr.delete td.ln, tr.context td.ln { background: inherit; }
+</style>
+</head>
+<body>
+<h1>{{ path }}</h1>
+<p><a href="/">overview</a> · <a href="/changes">changes</a></p>
+<p class="revid">from <code>{{ old_revid_hex }}</code> to <code>{{ new_revid_hex }}</code></p>
+
+{% if chunks.is_empty() %}
+<p><em>No differences.</em></p>
+{% else %}
+{% for chunk in chunks %}
+<div class="chunk">
+  <div class="chunk-header">{{ chunk.header }}</div>
+  <table class="diff">
+    {% for line in chunk.lines %}
+    <tr class="{{ line.kind }}">
+      <td class="ln">{% match line.old_lineno %}{% when Some with (n) %}{{ n }}{% when None %}{% endmatch %}</td>
+      <td class="ln">{% match line.new_lineno %}{% when Some with (n) %}{{ n }}{% when None %}{% endmatch %}</td>
+      <td>{{ line.text }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endfor %}
+{% endif %}
+</body>
+</html>

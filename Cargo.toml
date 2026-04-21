@@ -1,0 +1,49 @@
+[package]
+name = "loggerhead"
+version = "3.0.0-dev"
+edition = "2021"
+rust-version = "1.83"
+license = "GPL-2.0-or-later"
+description = "Web viewer for Bazaar/Breezy branches"
+homepage = "https://www.breezy-vcs.org/"
+repository = "https://code.launchpad.net/loggerhead"
+authors = ["Jelmer Vernooij <jelmer@jelmer.uk>"]
+
+[[bin]]
+name = "loggerhead-serve"
+path = "src/main.rs"
+
+[lib]
+name = "loggerhead"
+path = "src/lib.rs"
+
+[dependencies]
+axum = "0.7"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "signal", "sync"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["trace", "compression-br", "compression-gzip", "fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+askama = "0.12"
+clap = { version = "4", features = ["derive"] }
+# Depending on the local checkout until the unreleased changes land on
+# crates.io. Swap to a version requirement (e.g. `breezyshim = "0.7.16"`)
+# once a release including the iter_ancestry/tsort/export::archive/
+# list_files/annotate_iter/get_file_revision additions is published.
+breezyshim = { path = "../breezyshim" }
+url = "2"
+thiserror = "2"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+moka = { version = "0.12", features = ["sync"] }
+num_cpus = "1"
+chrono = "0.4"
+rusqlite = { version = "0.33", features = ["bundled"] }
+similar = "2"
+percent-encoding = "2"
+syntect = { version = "5", default-features = false, features = ["default-syntaxes", "default-themes", "html", "parsing", "regex-fancy"] }
+mime_guess = "2"
+
+[dev-dependencies]
+tempfile = "3"
+reqwest = { version = "0.12", default-features = false, features = ["blocking"] }

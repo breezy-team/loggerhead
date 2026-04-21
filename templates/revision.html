@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ nick }} : revision {{ revno }}{% endblock %}
+
+{% block head_extras %}
+<link rel="stylesheet" type="text/css" media="all" href="/static/css/diff.css"/>
+<script type="text/javascript" src="/static/javascript/diff.js"></script>
+{% endblock %}
+
+{% block heading %}
+<div id="breadcrumbs">
+<span class="breadcrumb"><a href="/">{{ nick }}</a></span>
+<span class="breadcrumb">&#187; Revision {{ revno }}</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Viewing all changes in revision {{ revno }}.</h1>
+
+<ul id="submenuTabs">
+<li id="first"><a href="/files/{{ revno }}" title="browse files at revision {{ revno }}">browse files at revision {{ revno }}</a></li>
+<li><a id="download_link" href="/diff/{{ revno }}">download diff</a></li>
+<li><a href="/tarball/{{ revno }}">download tarball</a></li>
+<li id="last"><a href="/changes" title="view history from revision {{ revno }}">view history from revision {{ revno }}</a></li>
+</ul>
+
+<div class="infoContainer">
+<div id="infTxt">
+<ul>
+<li class="committer"><strong>Committer:</strong> <span>{{ author }}</span></li>
+<li class="timer"><strong>Date:</strong> <span>{{ utc_iso }}</span></li>
+{% if !parents.is_empty() %}
+<li class="parent"><strong>Parent:</strong>
+  {% for p in parents %}<a href="/revision/{{ p.revno }}">{{ p.revno }}</a>{% if !loop.last %}, {% endif %}{% endfor %}
+</li>
+{% endif %}
+<li class="revid"><strong>Revision ID:</strong> <span>{{ revid_hex }}</span></li>
+</ul>
+
+<div class="clear"><!-- --></div>
+
+<div class="information">{{ message }}</div>
+</div>
+
+<ul id="list-files">
+{% if !added.is_empty() %}
+<ul>
+<li class="desc">added:</li>
+{% for f in added %}
+<li class="files"><a href="/revision/{{ revno }}/{{ f.path }}#{{ f.path }}" title="View changes to {{ f.path }} in revision {{ revno }}">{{ f.path }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if !removed.is_empty() %}
+<ul>
+<li class="desc">removed:</li>
+{% for f in removed %}
+<li class="files">{{ f.path }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if !modified.is_empty() %}
+<ul>
+<li class="desc">files modified:</li>
+{% for f in modified %}
+<li class="files"><a href="/revision/{{ revno }}/{{ f.path }}#{{ f.path }}" title="View changes to {{ f.path }} in revision {{ revno }}">{{ f.path }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+{% if !renamed.is_empty() %}
+<ul>
+<li class="desc">renamed:</li>
+{% for f in renamed %}
+<li class="files">{% match f.old_path %}{% when Some with (o) %}{{ o }} → {{ f.path }}{% when None %}{{ f.path }}{% endmatch %}</li>
+{% endfor %}
+</ul>
+{% endif %}
+</ul>
+<div class="clear"><!-- --></div>
+</div>
+
+<p class="expand show_if_js" id="expand_all"><a href="#"><img alt="expand all" src="/static/images/treeCollapsed.png" /> expand all</a></p>
+<p class="expand" id="collapse_all" style="display:none;"><a href="#"><img alt="collapse all" src="/static/images/treeExpanded.png" /> collapse all</a></p>
+<p class="codin"><img alt="added" src="/static/images/newCode.gif" /> added</p>
+<p class="codin"><img alt="removed" src="/static/images/deleteCode.gif" /> removed</p>
+<div class="clear"><!-- --></div>
+
+<div>
+{% for f in modified %}
+<div class="diff" id="diff-{{ loop.index0 }}">
+<div class="diffBox">
+<a class="the-link" href="/revision/{{ revno }}/{{ f.path }}" id="{{ f.path }}" title="View changes to {{ f.path }} only">
+<img class="expand_diff" src="/static/images/treeCollapsed.png" /> {{ f.path }}
+</a>
+</div>
+<div class="diffinfo" style="display:none"><div class="loading"><img src="/static/images/spinner.gif" /></div></div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}
