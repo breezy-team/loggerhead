@@ -1,6 +1,15 @@
 What's changed in loggerhead?
 =============================
 
+3.0.0 [22Apr2026]
+-----------------
+
+    - Rewrite loggerhead in Rust. The Python implementation has been
+      removed. The ``loggerhead-serve`` binary is now a native executable.
+      (Jelmer Vernooĳ)
+
+    - Switch documentation from Sphinx to mdBook. (Jelmer Vernooĳ)
+
 2.0.2
 -----
 
