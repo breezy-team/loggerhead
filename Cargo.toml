@@ -26,11 +26,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 askama = "0.12"
 clap = { version = "4", features = ["derive"] }
-# Depending on the local checkout until the unreleased changes land on
-# crates.io. Swap to a version requirement (e.g. `breezyshim = "0.7.16"`)
-# once a release including the iter_ancestry/tsort/export::archive/
-# list_files/annotate_iter/get_file_revision additions is published.
-breezyshim = { path = "../breezyshim" }
+breezyshim = "0.7.16"
 url = "2"
 thiserror = "2"
 anyhow = "1"
