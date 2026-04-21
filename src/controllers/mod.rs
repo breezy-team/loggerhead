@@ -2,6 +2,7 @@ pub mod annotate;
 pub mod atom;
 pub mod changelog;
 pub mod diff;
+pub mod directory;
 pub mod download;
 pub mod filediff;
 pub mod inventory;

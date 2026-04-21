@@ -16,8 +16,11 @@ use crate::util::errors::AppError;
 
 /// Shared application state handed to every handler.
 pub struct AppState {
-    /// Location (filesystem path or URL) of the branch being served.
+    /// Location (filesystem path or URL) of the branch, or a directory
+    /// containing branches (see `serve_mode`).
     pub root: String,
+    /// Whether `root` is a single branch or a directory of branches.
+    pub serve_mode: ServeMode,
     /// Cached whole-branch graph, invalidated when the branch tip changes.
     pub whole_history_cache: Cache<RevisionId, Arc<WholeHistory>>,
     /// Optional SQLite-backed persistent cache.
@@ -36,8 +39,10 @@ impl AppState {
         export_tarballs: bool,
         static_dir: std::path::PathBuf,
     ) -> Self {
+        let serve_mode = detect_serve_mode(&root);
         Self {
             root,
+            serve_mode,
             whole_history_cache: Cache::new(10),
             disk_cache,
             export_tarballs,
@@ -80,14 +85,59 @@ async fn root_redirect() -> Redirect {
     Redirect::permanent("/changes")
 }
 
+/// Serve mode determined at startup.
+#[derive(Clone, Copy, Debug)]
+pub enum ServeMode {
+    /// `root` points directly at a single branch. The usual
+    /// per-branch routes (`/changes`, `/revision/…`, `/files/…`,
+    /// etc.) are mounted at the URL root.
+    Branch,
+    /// `root` points at a directory containing zero or more
+    /// branches. `/` shows a DirectoryUI-style listing;
+    /// `/name/...` drills into a sub-branch. (Drill-down is not
+    /// yet wired — it's a TODO.)
+    Directory,
+}
+
+/// Detect at startup whether `root` is itself a branch or a directory
+/// containing branches. Errors fall back to Branch mode — the per-branch
+/// handlers will produce a sensible error on the first request.
+pub fn detect_serve_mode(root: &str) -> ServeMode {
+    if crate::breezy::open_branch(root).is_ok() {
+        ServeMode::Branch
+    } else if std::path::Path::new(root).is_dir() {
+        ServeMode::Directory
+    } else {
+        ServeMode::Branch
+    }
+}
+
 pub fn build_router(state: Arc<AppState>) -> Router {
+    match state.serve_mode {
+        ServeMode::Directory => build_directory_router(state),
+        ServeMode::Branch => build_branch_router(state),
+    }
+}
+
+fn build_directory_router(state: Arc<AppState>) -> Router {
+    use crate::controllers::directory;
+    Router::new()
+        .route("/", get(directory::show))
+        .nest_service("/static", ServeDir::new(&state.static_dir))
+        .layer(TraceLayer::new_for_http())
+        .with_state(state)
+}
+
+fn build_branch_router(state: Arc<AppState>) -> Router {
     use crate::controllers::{
         annotate, atom, diff, download, filediff, inventory, revlog, search, view,
     };
     Router::new()
         .route("/", get(root_redirect))
         .route("/changes", get(changelog::show))
+        .route("/changes/:revno", get(changelog::show_from))
         .route("/revision/:revid", get(revision::show))
+        .route("/revision/:revid/*path", get(revision::show_with_path))
         .route("/diff/:new_revid", get(diff::show_one))
         .route("/diff/:new_revid/:old_revid", get(diff::show_two))
         .route(

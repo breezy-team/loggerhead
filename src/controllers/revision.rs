@@ -56,10 +56,26 @@ impl From<FileChange> for FileChangeView {
     }
 }
 
+/// `GET /revision/:revid` — render the revision page.
 pub async fn show(
     State(state): State<Arc<AppState>>,
     Path(idref): Path<String>,
 ) -> AppResult<Html<String>> {
+    render(state, idref).await
+}
+
+/// `GET /revision/:revid/*path` — same page; the path is used by the
+/// anchor in the URL, which Python loggerhead links to from the file
+/// list inside each revision view. Our template already assigns
+/// `id="<path>"` to each diff box.
+pub async fn show_with_path(
+    State(state): State<Arc<AppState>>,
+    Path((idref, _path)): Path<(String, String)>,
+) -> AppResult<Html<String>> {
+    render(state, idref).await
+}
+
+async fn render(state: Arc<AppState>, idref: String) -> AppResult<Html<String>> {
     let idref = percent_decode_str(&idref).decode_utf8_lossy().into_owned();
 
     let state2 = state.clone();
