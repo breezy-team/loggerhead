@@ -21,7 +21,11 @@ import logging
 import time
 
 from breezy.revision import NULL_REVISION, is_null
-from breezy.tsort import merge_sort
+
+try:
+    from breezy.tsort import merge_sort
+except ImportError:
+    from vcsgraph.tsort import merge_sort
 
 
 def _strip_NULL_ghosts(revision_graph):
