@@ -5,7 +5,6 @@ use axum::http::{header, HeaderValue, StatusCode};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
 use axum::{routing::get, Router};
-use chrono::{DateTime, Utc};
 use moka::sync::Cache;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -225,10 +224,9 @@ async fn last_modified_layer(
     }
 
     let mut resp = next.run(req).await;
-    if resp.status().is_success() {
+    if resp.status().is_success() && !resp.headers().contains_key(header::LAST_MODIFIED) {
         if let Some(ts) = last_ts {
-            if let Some(dt) = DateTime::<Utc>::from_timestamp(ts as i64, 0) {
-                let rfc = dt.format("%a, %d %b %Y %H:%M:%S GMT").to_string();
+            if let Some(rfc) = crate::util::fmt::http_date(ts) {
                 if let Ok(v) = HeaderValue::from_str(&rfc) {
                     resp.headers_mut().insert(header::LAST_MODIFIED, v);
                 }
