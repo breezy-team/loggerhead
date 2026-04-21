@@ -1,3 +1,4 @@
+use std::path::Path as StdPath;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -8,25 +9,23 @@ use axum::response::{IntoResponse, Response};
 use breezyshim::branch::Branch;
 use breezyshim::export::{archive, ArchiveFormat};
 use breezyshim::repository::Repository;
-use breezyshim::revisionid::RevisionId;
 use breezyshim::tree::Tree;
 use percent_encoding::{percent_decode_str, utf8_percent_encode, NON_ALPHANUMERIC};
 
 use crate::app::AppState;
 use crate::breezy::open_branch;
+use crate::history::History;
 use crate::util::errors::{AppError, AppResult};
 
-/// GET /download/:revid/*path — stream a single file at `path` from `revid`.
+/// GET /download/:revid/*path — stream a single file at `path` from
+/// `revid` (a dotted revno, `head:`, or a raw revid).
 pub async fn show_file(
     State(state): State<Arc<AppState>>,
     Path((revid_enc, path_enc)): Path<(String, String)>,
 ) -> AppResult<Response> {
-    let revid = RevisionId::from(
-        percent_decode_str(&revid_enc)
-            .decode_utf8_lossy()
-            .into_owned()
-            .into_bytes(),
-    );
+    let idref = percent_decode_str(&revid_enc)
+        .decode_utf8_lossy()
+        .into_owned();
     let path = percent_decode_str(&path_enc)
         .decode_utf8_lossy()
         .into_owned();
@@ -39,6 +38,11 @@ pub async fn show_file(
     let content = tokio::task::spawn_blocking(move || -> AppResult<Vec<u8>> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
+        let whole = state.load_whole_history(&branch)?;
+        let history = History::from_whole(&branch, (*whole).clone())?;
+        let revid = history
+            .fix_revid(&idref)
+            .ok_or_else(|| AppError::NotFound(format!("no revision {idref}")))?;
         let repo = branch.repository();
         let tree = repo.revision_tree(&revid)?;
         let p = PathBuf::from(&path_for_task);
@@ -62,7 +66,8 @@ pub async fn show_file(
         .into_response())
 }
 
-/// GET /tarball/:revid — stream a tgz of the tree at `revid`.
+/// GET /tarball/:revid — stream a tgz of the tree at the given
+/// revision reference (dotted revno, `head:`, or raw revid).
 pub async fn tarball(
     State(state): State<Arc<AppState>>,
     Path(revid_enc): Path<String>,
@@ -70,12 +75,9 @@ pub async fn tarball(
     if !state.export_tarballs {
         return Err(AppError::Other("tarball export is disabled".into()));
     }
-    let revid = RevisionId::from(
-        percent_decode_str(&revid_enc)
-            .decode_utf8_lossy()
-            .into_owned()
-            .into_bytes(),
-    );
+    let idref = percent_decode_str(&revid_enc)
+        .decode_utf8_lossy()
+        .into_owned();
 
     // Gather the archive into memory inside spawn_blocking. Streaming the
     // iterator across the async boundary while still holding the GIL is
@@ -84,13 +86,22 @@ pub async fn tarball(
     let (bytes, filename) = tokio::task::spawn_blocking(move || -> AppResult<_> {
         let branch = open_branch(&state.root)?;
         let _lock = branch.lock_read()?;
+        let whole = state.load_whole_history(&branch)?;
+        let history = History::from_whole(&branch, (*whole).clone())?;
+        let revid = history
+            .fix_revid(&idref)
+            .ok_or_else(|| AppError::NotFound(format!("no revision {idref}")))?;
         let nick = branch
             .get_config()
             .get_nickname()
             .unwrap_or_else(|_| "branch".into());
         let repo = branch.repository();
         let tree = repo.revision_tree(&revid)?;
-        let filename = format!("{nick}.tgz");
+        // Python names the file `<nick>-r<ref>.tgz` when a rev is
+        // specified; we use the revno form since `idref` may already
+        // be a dotted revno.
+        let revno_part = history.whole.get_revno(&revid);
+        let filename = format!("{nick}-r{revno_part}.tgz");
         let mut out = Vec::new();
         for chunk in archive(&tree, ArchiveFormat::Tgz, &filename, None, Some(&nick))? {
             out.extend_from_slice(&chunk?);
@@ -111,5 +122,3 @@ pub async fn tarball(
         .unwrap()
         .into_response())
 }
-
-use std::path::Path as StdPath;
