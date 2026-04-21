@@ -16,8 +16,7 @@ jobs:
 
       - name: Install Breezy
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-breezy
+          pip install 'breezy>=3.3.6'
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
