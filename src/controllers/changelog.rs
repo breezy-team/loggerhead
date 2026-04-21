@@ -63,6 +63,10 @@ struct ChangeView {
     /// True iff the commit is a merge (has more than one parent). The
     /// template shows a small merge-from icon next to the summary.
     is_merge: bool,
+    /// Merge depth (0 = mainline). The template renders an extra
+    /// `padding-left` proportional to this so the log visualises the
+    /// merge structure.
+    merge_depth: usize,
 }
 
 /// `GET /changes` — full mainline from the branch tip.
@@ -149,19 +153,19 @@ async fn render(
             None => history.last_revid.clone(),
         };
 
-        // Full filtered mainline from the branch tip down. We build the
-        // whole list once so we can (a) compute next-page cheaply and
-        // (b) compute prev-page by looking *above* start_revid in the
-        // tip-down mainline.
-        let full_mainline = history.mainline_from(&history.last_revid);
+        // Full merge-sorted list reachable from the branch tip. Unlike
+        // the mainline-only view this includes merged revisions with
+        // merge_depth > 0 so the template can render a graph indent.
+        let full_entries = history.merge_sorted_from(&history.last_revid);
         let full_filtered: Vec<RevisionId> = if let Some(fp) = filter_path.as_deref() {
             if fp.is_empty() {
-                full_mainline
+                full_entries.into_iter().map(|e| e.revid).collect()
             } else {
-                filter_by_path(&branch, &full_mainline, fp)?
+                let ids: Vec<_> = full_entries.into_iter().map(|e| e.revid).collect();
+                filter_by_path(&branch, &ids, fp)?
             }
         } else {
-            full_mainline
+            full_entries.into_iter().map(|e| e.revid).collect()
         };
 
         // Find the index of `start_revid` within the filtered mainline.
@@ -194,7 +198,20 @@ async fn render(
         let end_revno = changes.last().map(|c| c.revno.clone()).unwrap_or_default();
 
         let show_tag_col = changes.iter().any(|c| !c.tags.is_empty());
-        let views: Vec<ChangeView> = changes.into_iter().map(ChangeView::from).collect();
+        let views: Vec<ChangeView> = changes
+            .into_iter()
+            .map(|c| {
+                let merge_depth = history
+                    .whole
+                    .index
+                    .get(&c.revid)
+                    .map(|&i| history.whole.entries[i].merge_depth)
+                    .unwrap_or(0);
+                let mut view = ChangeView::from(c);
+                view.merge_depth = merge_depth;
+                view
+            })
+            .collect();
 
         Ok::<_, AppError>(PageData {
             nick: history.nick,
@@ -254,6 +271,7 @@ impl From<Change> for ChangeView {
             relative_date: approximate_date(c.timestamp),
             tags,
             is_merge,
+            merge_depth: 0,
         }
     }
 }

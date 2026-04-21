@@ -44,7 +44,7 @@ To get this branch, use: <br/>
 {% for c in changes %}
 <a name="entry-{{ c.revno }}"/>
 <tr class="blueRow{{ loop.index0 % 2 }} revision_log" id="log-{{ loop.index0 }}">
-<td class="revnro revnolink"><a title="Show revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}">{{ c.revno }}</a></td>
+<td class="revnro revnolink"{% if c.merge_depth > 0 %} style="padding-left: {{ c.merge_depth }}em;"{% endif %}><a title="Show revision {{ c.revno }}" href="{{ url_prefix }}/revision/{{ c.revno }}">{{ c.revno }}</a></td>
 <td class="expcell show_if_js">
   <div class="expand_revisioninfo"><a href="#"><img class="expand_icon" src="/static/images/treeCollapsed.png" /></a></div>
 </td>

@@ -10,7 +10,6 @@ use breezyshim::branch::Branch;
 use breezyshim::revisionid::RevisionId;
 
 use crate::cache::RevInfoDiskCache;
-use crate::controllers::{changelog, revision};
 use crate::history::WholeHistory;
 use crate::util::errors::AppError;
 
@@ -212,7 +211,8 @@ fn build_branch_router(state: Arc<AppState>) -> Router {
 /// `build_directory_router` at each `/<branch>` nesting point.
 fn build_branch_router_inner(state: Arc<AppState>) -> Router {
     use crate::controllers::{
-        annotate, atom, diff, download, filediff, inventory, revlog, search, view,
+        annotate, atom, changelog, diff, download, filediff, inventory, json, revision, revlog,
+        search, view,
     };
     Router::new()
         .route("/", get(root_redirect))
@@ -236,5 +236,16 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
         .route("/atom", get(atom::show))
         .route("/+revlog/:revid", get(revlog::show))
         .route("/search", get(search::show))
+        // +json variants: machine-readable versions of the HTML views.
+        .route("/+json/changes", get(json::changes))
+        .route("/+json/changes/:revno", get(json::changes_from))
+        .route("/+json/revision/:revid", get(json::revision))
+        .route("/+json/files", get(json::files_root))
+        .route("/+json/files/:revno", get(json::files_rev))
+        .route("/+json/files/:revno/*path", get(json::files_rev_path))
+        .route(
+            "/+json/+filediff/:new_revid/:old_revid/*path",
+            get(json::filediff),
+        )
         .with_state(state)
 }

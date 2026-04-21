@@ -6,6 +6,7 @@ pub mod directory;
 pub mod download;
 pub mod filediff;
 pub mod inventory;
+pub mod json;
 pub mod revision;
 pub mod revlog;
 pub mod search;

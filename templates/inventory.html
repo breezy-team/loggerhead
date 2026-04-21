@@ -41,12 +41,12 @@ To get this branch, use: <br/>
 
 <table id="logentries">
 <tr class="logheader">
-<th class="datecell">Filename</th>
+<th class="datecell"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=filename">Filename</a>{% if sort == "filename" %} &#9660;{% endif %}</th>
 <th class="timedate">Latest Rev</th>
-<th class="datecell">Last Changed</th>
+<th class="datecell"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=date">Last Changed</a>{% if sort == "date" %} &#9660;{% endif %}</th>
 <th class="datecell">Committer</th>
 <th class="summarycell">Comment</th>
-<th class="timedate">Size</th>
+<th class="timedate"><a href="{{ url_prefix }}/files/{{ revno }}{% if !path.is_empty() %}/{{ path }}{% endif %}?sort=size">Size</a>{% if sort == "size" %} &#9660;{% endif %}</th>
 <th class="expandcell"></th>
 <th class="expandcell"></th>
 </tr>

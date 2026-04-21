@@ -2,18 +2,49 @@ use std::path::{Path as StdPath, PathBuf};
 use std::sync::Arc;
 
 use askama::Template;
-use axum::extract::{Path, State};
+use axum::extract::{Path, Query, State};
 use axum::response::Html;
 use breezyshim::branch::Branch;
 use breezyshim::repository::Repository;
 use breezyshim::revisionid::RevisionId;
 use breezyshim::tree::{Kind, Tree};
+use serde::Deserialize;
 
 use crate::app::AppState;
 use crate::breezy::open_branch;
 use crate::history::{Change, History};
 use crate::util::errors::{AppError, AppResult};
 use crate::util::fmt::{approximate_date, hide_email, utc_iso};
+
+#[derive(Debug, Deserialize, Default)]
+pub struct FilesQuery {
+    /// `filename` (default), `date`, or `size`. Matches Python loggerhead.
+    pub sort: Option<String>,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq)]
+enum Sort {
+    Filename,
+    Date,
+    Size,
+}
+
+impl Sort {
+    fn from_str(s: Option<&str>) -> Self {
+        match s {
+            Some("date") => Sort::Date,
+            Some("size") => Sort::Size,
+            _ => Sort::Filename,
+        }
+    }
+    fn as_str(&self) -> &'static str {
+        match self {
+            Sort::Filename => "filename",
+            Sort::Date => "date",
+            Sort::Size => "size",
+        }
+    }
+}
 
 #[derive(Template)]
 #[template(path = "inventory.html")]
@@ -25,12 +56,15 @@ struct InventoryTemplate {
     // page
     revno: String,
     revid_hex: String,
-    #[allow(dead_code)]
     path: String,
     path_display: String,
     parent_path: Option<String>,
     tip_change: Option<ChangeView>,
     entries: Vec<Entry>,
+    /// Current sort mode, as the query param string ("filename",
+    /// "date", "size"). The template uses this to style the active
+    /// column header.
+    sort: String,
 }
 
 #[allow(dead_code)]
@@ -66,32 +100,42 @@ struct Entry {
     last_committer: String,
     last_relative: String,
     last_message: String,
+    /// Unix timestamp of the last-changed revision, used for the
+    /// ?sort=date mode. Zero when we couldn't resolve the change.
+    last_timestamp: f64,
 }
 
-pub async fn show_root(State(state): State<Arc<AppState>>) -> AppResult<Html<String>> {
-    render(state, None, String::new()).await
+pub async fn show_root(
+    State(state): State<Arc<AppState>>,
+    Query(q): Query<FilesQuery>,
+) -> AppResult<Html<String>> {
+    render(state, None, String::new(), q).await
 }
 
 pub async fn show_rev(
     State(state): State<Arc<AppState>>,
     Path(revno): Path<String>,
+    Query(q): Query<FilesQuery>,
 ) -> AppResult<Html<String>> {
-    render(state, Some(revno), String::new()).await
+    render(state, Some(revno), String::new(), q).await
 }
 
 pub async fn show_rev_path(
     State(state): State<Arc<AppState>>,
     Path((revno, path)): Path<(String, String)>,
+    Query(q): Query<FilesQuery>,
 ) -> AppResult<Html<String>> {
-    render(state, Some(revno), path).await
+    render(state, Some(revno), path, q).await
 }
 
 async fn render(
     state: Arc<AppState>,
     revno_req: Option<String>,
     path: String,
+    q: FilesQuery,
 ) -> AppResult<Html<String>> {
     let state_for_tmpl = state.clone();
+    let sort_for_tmpl = Sort::from_str(q.sort.as_deref()).as_str().to_string();
     let (nick, revno, revid_hex, tip_change, entries, path_display, parent_path, normalized) =
         tokio::task::spawn_blocking(move || -> AppResult<_> {
             let branch = open_branch(&state.root)?;
@@ -205,14 +249,36 @@ async fn render(
                             .map(|c| approximate_date(c.timestamp))
                             .unwrap_or_default(),
                         last_message: ch.map(|c| c.short_message.clone()).unwrap_or_default(),
+                        last_timestamp: ch.map(|c| c.timestamp).unwrap_or(0.0),
                     }
                 })
                 .collect();
-            entries.sort_by(|a, b| {
-                b.is_dir
-                    .cmp(&a.is_dir)
-                    .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
-            });
+            // Apply the requested sort. For date: newest first. For
+            // size: largest first, ignoring directories (size None).
+            // For filename (default): alphabetical, dirs first.
+            let sort = Sort::from_str(q.sort.as_deref());
+            match sort {
+                Sort::Date => entries.sort_by(|a, b| {
+                    b.last_timestamp
+                        .partial_cmp(&a.last_timestamp)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                        .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+                }),
+                Sort::Size => entries.sort_by(|a, b| {
+                    // Put directories at the bottom of size sort; among
+                    // files, largest first.
+                    b.is_dir
+                        .cmp(&a.is_dir)
+                        .reverse()
+                        .then(b.size.unwrap_or(0).cmp(&a.size.unwrap_or(0)))
+                        .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+                }),
+                Sort::Filename => entries.sort_by(|a, b| {
+                    b.is_dir
+                        .cmp(&a.is_dir)
+                        .then(a.name.to_lowercase().cmp(&b.name.to_lowercase()))
+                }),
+            }
 
             let path_display = if normalized.is_empty() {
                 "/".to_string()
@@ -254,6 +320,7 @@ async fn render(
         parent_path,
         tip_change,
         entries,
+        sort: sort_for_tmpl,
     };
     Ok(Html(tmpl.render()?))
 }

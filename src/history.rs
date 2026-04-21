@@ -231,6 +231,46 @@ impl History {
         !self.last_revid.is_null()
     }
 
+    /// Return the full merge-sorted list of revisions reachable from
+    /// `start`, in the same order as `whole.entries` (topological from
+    /// the branch tip down) but restricted to the ancestors of `start`.
+    /// Each entry carries `merge_depth`, so a consumer that wants to
+    /// render a merge-graph indentation can read it off.
+    pub fn merge_sorted_from(&self, start: &RevisionId) -> Vec<RevInfo> {
+        let Some(&start_idx) = self.whole.index.get(start) else {
+            return Vec::new();
+        };
+
+        // Walk the DAG from `start`, collecting all ancestors (not
+        // just the mainline). We iterate by BFS over whole.index so
+        // each revision is visited once.
+        let mut reachable = std::collections::HashSet::new();
+        let mut queue = std::collections::VecDeque::new();
+        queue.push_back(start.clone());
+        while let Some(rid) = queue.pop_front() {
+            if !reachable.insert(rid.clone()) {
+                continue;
+            }
+            if let Some(&i) = self.whole.index.get(&rid) {
+                for p in &self.whole.entries[i].parents {
+                    if !reachable.contains(p) {
+                        queue.push_back(p.clone());
+                    }
+                }
+            }
+        }
+
+        // Emit entries in whole.entries order (which is merge-sort
+        // order from the branch tip), starting at start_idx — anything
+        // before `start_idx` is a descendant of `start` and should be
+        // skipped.
+        self.whole.entries[start_idx..]
+            .iter()
+            .filter(|e| reachable.contains(&e.revid))
+            .cloned()
+            .collect()
+    }
+
     /// Yield revisions along the mainline starting at `start`, walking
     /// first-parent pointers. Matches `get_revids_from(None, start)`.
     pub fn mainline_from(&self, start: &RevisionId) -> Vec<RevisionId> {
