@@ -11,6 +11,19 @@ use url::Url;
 
 use crate::util::errors::AppError;
 
+/// True iff the branch's config permits being served over HTTP.
+/// Mirrors Python loggerhead's
+/// `branch.get_config().get_user_option_as_bool("http_serve",
+/// default=True)` check. Errors reading the config fall back to
+/// `true` (permissive) — matching Python's behaviour when the key
+/// is missing.
+pub fn is_http_serveable(branch: &dyn Branch) -> bool {
+    branch
+        .get_config()
+        .get_user_option_as_bool("http_serve", true)
+        .unwrap_or(true)
+}
+
 /// Open a Breezy branch from a filesystem path or URL.
 pub fn open_branch(location: &str) -> Result<GenericBranch, AppError> {
     let url = match Url::parse(location) {

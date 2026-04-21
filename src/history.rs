@@ -178,7 +178,15 @@ pub struct Change {
     /// URL (first whitespace-delimited token of a line). Rendered as
     /// clickable links on the revision page.
     pub bugs: Vec<String>,
+    /// If the branch is git- / hg- / svn-backed, the foreign VCS
+    /// abbreviation (e.g. `"git"`) and the native foreign revid
+    /// (e.g. the git SHA-1) displayed alongside the bzr revid.
+    pub foreign: Option<ForeignInfo>,
 }
+
+/// Alias re-export so controllers can refer to the type through the
+/// crate-local `history::ForeignInfo`.
+pub use breezyshim::foreign::ForeignInfo;
 
 /// Branch-scoped history object, analogous to `loggerhead.history.History`.
 pub struct History {
@@ -433,6 +441,7 @@ impl History {
                         .collect()
                 })
                 .unwrap_or_default();
+            let foreign = breezyshim::foreign::parse_foreign_revid(&rev.revision_id);
             out.push(Change {
                 revid: rev.revision_id,
                 revno: self.whole.get_revno(&revid),
@@ -444,6 +453,7 @@ impl History {
                 parents,
                 tags,
                 bugs,
+                foreign,
             });
         }
         Ok(out)

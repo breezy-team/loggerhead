@@ -64,6 +64,11 @@ var path_to_id = {{ path_to_id|safe }};
 </li>
 {% endif %}
 <li class="revid"><strong>Revision ID:</strong> <span>{{ revid_hex }}</span></li>
+{% match foreign %}
+  {% when Some with (f) %}
+  <li class="foreign-revid"><strong>{{ f.abbreviation }} commit:</strong> <span>{{ f.foreign_revid }}</span></li>
+  {% when None %}
+{% endmatch %}
 </ul>
 
 <div class="clear"><!-- --></div>

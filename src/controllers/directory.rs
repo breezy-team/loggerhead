@@ -8,7 +8,7 @@ use breezyshim::repository::Repository;
 use chrono::{DateTime, Utc};
 
 use crate::app::AppState;
-use crate::breezy::open_branch;
+use crate::breezy::{is_http_serveable, open_branch};
 use crate::util::errors::{AppError, AppResult};
 use crate::util::fmt::hide_email;
 
@@ -74,6 +74,10 @@ pub async fn show(State(state): State<Arc<AppState>>) -> AppResult<Html<String>>
         for name in names {
             let child_path = format!("{}/{}", state2.root.trim_end_matches('/'), name);
             let (is_branch, last_committer, last_date) = match open_branch(&child_path) {
+                Ok(branch) if !is_http_serveable(&branch) => {
+                    // Hide branches whose config says http_serve=false.
+                    continue;
+                }
                 Ok(branch) => {
                     let (committer, date) = branch
                         .lock_read()

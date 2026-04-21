@@ -52,6 +52,9 @@ struct RevisionTemplate {
     /// Bug URLs attached to this revision (from the `bugs` revision
     /// property). Rendered as clickable links above the message.
     bugs: Vec<String>,
+    /// Foreign-VCS metadata shown alongside the bzr revid (e.g. the
+    /// git SHA-1 for a git-backed branch).
+    foreign: Option<ForeignView>,
     parents: Vec<ParentView>,
     added: Vec<FileChangeView>,
     removed: Vec<FileChangeView>,
@@ -77,6 +80,11 @@ struct ParentView {
     revno: String,
     #[allow(dead_code)]
     revid_hex: String,
+}
+
+struct ForeignView {
+    abbreviation: String,
+    foreign_revid: String,
 }
 
 struct FileChangeView {
@@ -257,6 +265,10 @@ async fn render(state: Arc<AppState>, idref: String, q: RevisionQuery) -> AppRes
         date,
         message: change.message,
         bugs: change.bugs,
+        foreign: change.foreign.map(|f| ForeignView {
+            abbreviation: f.abbreviation,
+            foreign_revid: f.foreign_revid,
+        }),
         parents: change
             .parents
             .into_iter()

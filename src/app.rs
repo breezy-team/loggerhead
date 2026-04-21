@@ -43,6 +43,10 @@ pub struct AppState {
     /// Filesystem directory containing CSS/JS/image assets (served under
     /// `/static`).
     pub static_dir: std::path::PathBuf,
+    /// Cached value of the branch-config `http_serve` flag. Filled on
+    /// first request via `http_serveable()` so subsequent requests
+    /// don't re-read the config.
+    pub http_serve_cache: std::sync::OnceLock<bool>,
 }
 
 impl AppState {
@@ -63,6 +67,7 @@ impl AppState {
             disk_cache,
             export_tarballs,
             static_dir,
+            http_serve_cache: std::sync::OnceLock::new(),
         }
     }
 
@@ -78,7 +83,26 @@ impl AppState {
             disk_cache: parent.disk_cache.clone(),
             export_tarballs: parent.export_tarballs,
             static_dir: parent.static_dir.clone(),
+            http_serve_cache: std::sync::OnceLock::new(),
         }
+    }
+
+    /// Resolve whether this branch may be served over HTTP. On first
+    /// call, opens the branch (GIL-bound) to read the
+    /// `http_serve` user option; result is cached.
+    pub fn http_serveable(&self) -> Result<bool, AppError> {
+        if let Some(v) = self.http_serve_cache.get() {
+            return Ok(*v);
+        }
+        let root = self.root.clone();
+        let computed = tokio::task::block_in_place(move || -> Result<bool, AppError> {
+            let branch = crate::breezy::open_branch(&root)?;
+            Ok(crate::breezy::is_http_serveable(&branch))
+        })?;
+        // If another thread won the race it's fine: OnceLock::set just
+        // fails with Err(existing); we use `get_or_init` semantics.
+        let _ = self.http_serve_cache.set(computed);
+        Ok(computed)
     }
 
     /// Produce an absolute URL for `path` under this branch's prefix.
@@ -125,6 +149,30 @@ async fn root_redirect(
     axum::extract::State(state): axum::extract::State<Arc<AppState>>,
 ) -> Redirect {
     Redirect::permanent(&state.url("/changes"))
+}
+
+/// Middleware that 404s a request when the branch's config has
+/// `http_serve=false`. Runs on every request to a per-branch router.
+/// The check is done inside `spawn_blocking` because it touches
+/// breezy. Uses a small per-state cache (an `OnceLock`) so repeated
+/// requests don't re-read the config.
+async fn http_serve_layer(
+    State(state): State<Arc<AppState>>,
+    req: Request,
+    next: Next,
+) -> Response {
+    let allowed = state.http_serveable();
+    let allowed = match allowed {
+        Ok(v) => v,
+        Err(e) => {
+            tracing::warn!(error = %e, "failed to read http_serve; allowing by default");
+            true
+        }
+    };
+    if !allowed {
+        return (StatusCode::NOT_FOUND, "not found").into_response();
+    }
+    next.run(req).await
 }
 
 /// Returns the most recent tip-timestamp known for this branch, if any.
@@ -241,10 +289,17 @@ fn build_directory_router(state: Arc<AppState>) -> Router {
     // Discover branches once at startup and mount each under /<name>.
     // New branches added to the directory after startup will 404 until
     // the server restarts — acceptable for a loggerhead deployment.
+    // Branches whose config sets `http_serve=false` are skipped here
+    // (mirrors Python's per-branch gate).
     for name in subdirs {
         let child_root = format!("{}/{}", state.root.trim_end_matches('/'), name);
-        if crate::breezy::open_branch(&child_root).is_err() {
-            continue;
+        match crate::breezy::open_branch(&child_root) {
+            Ok(b) if !crate::breezy::is_http_serveable(&b) => {
+                tracing::info!(branch = %name, "skipping: http_serve=false");
+                continue;
+            }
+            Ok(_) => {}
+            Err(_) => continue,
         }
         let child_state = Arc::new(AppState::nested(&state, child_root, &name));
         let branch_router = build_branch_router_inner(child_state);
@@ -273,8 +328,16 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
         let user_root = format!("{root_trimmed}/{user}");
         for branch_name in list_subdirs(&user_root) {
             let child_root = format!("{user_root}/{branch_name}");
-            if crate::breezy::open_branch(&child_root).is_err() {
-                continue;
+            match crate::breezy::open_branch(&child_root) {
+                Ok(b) if !crate::breezy::is_http_serveable(&b) => {
+                    tracing::info!(
+                        branch = %format!("~{user}/{branch_name}"),
+                        "skipping: http_serve=false"
+                    );
+                    continue;
+                }
+                Ok(_) => {}
+                Err(_) => continue,
             }
             let prefix = format!("/~{user}/{branch_name}");
             let child_state = Arc::new(AppState {
@@ -285,6 +348,7 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
                 disk_cache: state.disk_cache.clone(),
                 export_tarballs: state.export_tarballs,
                 static_dir: state.static_dir.clone(),
+                http_serve_cache: std::sync::OnceLock::new(),
             });
             let branch_router = build_branch_router_inner(child_state);
             router = router.nest(&prefix, branch_router);
@@ -296,8 +360,16 @@ fn build_user_dirs_router(state: Arc<AppState>, trunk_dir: Option<String>) -> Ro
         let trunk_root = format!("{root_trimmed}/{trunk}");
         for branch_name in list_subdirs(&trunk_root) {
             let child_root = format!("{trunk_root}/{branch_name}");
-            if crate::breezy::open_branch(&child_root).is_err() {
-                continue;
+            match crate::breezy::open_branch(&child_root) {
+                Ok(b) if !crate::breezy::is_http_serveable(&b) => {
+                    tracing::info!(
+                        branch = %branch_name,
+                        "skipping trunk: http_serve=false"
+                    );
+                    continue;
+                }
+                Ok(_) => {}
+                Err(_) => continue,
             }
             let child_state = Arc::new(AppState::nested(&state, child_root, &branch_name));
             let branch_router = build_branch_router_inner(child_state);
@@ -380,6 +452,10 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
         .layer(axum::middleware::from_fn_with_state(
             state.clone(),
             last_modified_layer,
+        ))
+        .layer(axum::middleware::from_fn_with_state(
+            state.clone(),
+            http_serve_layer,
         ))
         .with_state(state)
 }

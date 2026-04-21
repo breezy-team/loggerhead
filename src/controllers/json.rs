@@ -46,6 +46,7 @@ pub struct ChangeEntry {
     pub message: String,
     pub tags: Vec<String>,
     pub bugs: Vec<String>,
+    pub foreign: Option<ForeignEntry>,
     pub parents: Vec<ParentEntry>,
     pub is_merge: bool,
 }
@@ -144,6 +145,10 @@ async fn changes_render(
                     message: c.message,
                     tags: c.tags,
                     bugs: c.bugs,
+                    foreign: c.foreign.map(|f| ForeignEntry {
+                        abbreviation: f.abbreviation,
+                        foreign_revid: f.foreign_revid,
+                    }),
                     parents: c
                         .parents
                         .into_iter()
@@ -181,10 +186,19 @@ pub struct RevisionJson {
     pub parents: Vec<ParentEntry>,
     pub tags: Vec<String>,
     pub bugs: Vec<String>,
+    /// `{ "abbreviation": "git", "foreign_revid": "<sha>" }` when
+    /// this revision came from a non-bzr VCS; null otherwise.
+    pub foreign: Option<ForeignEntry>,
     pub file_changes: Vec<FileChangeEntry>,
     /// If the request included `compare_revid`, this is the revno of
     /// the comparison base; otherwise null.
     pub compare_revno: Option<String>,
+}
+
+#[derive(Serialize)]
+pub struct ForeignEntry {
+    pub abbreviation: String,
+    pub foreign_revid: String,
 }
 
 pub async fn revision(
@@ -237,6 +251,10 @@ pub async fn revision(
                 .collect(),
             tags: change.tags,
             bugs: change.bugs,
+            foreign: change.foreign.map(|f| ForeignEntry {
+                abbreviation: f.abbreviation,
+                foreign_revid: f.foreign_revid,
+            }),
             file_changes: file_changes
                 .into_iter()
                 .map(|f| FileChangeEntry {
