@@ -14,6 +14,12 @@ UNRELEASED
       column. The full tag text is still available as a cell tooltip.
       (Jelmer Vernooĳ, #708900)
 
+    - Break unbreakable strings (such as long URLs) in the revision
+      detail's commit-message block so they no longer overflow and
+      cover up the files-changed list next to it. Move the
+      ``.information`` styling out of an inline ``style=`` attribute
+      into ``diff.css``. (Jelmer Vernooĳ, #449980)
+
 3.0.0 [22Apr2026]
 -----------------
 

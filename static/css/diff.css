@@ -32,6 +32,16 @@ ul#list-files li.desc {
     font-size:  77%;
     color: #666;
     }
+/* Commit message body inside the infobox. Preserve the author's
+   linebreaks and indentation (pre-wrap), but break unbreakable strings
+   such as long URLs so they don't overflow into the files list on the
+   right (bug #449980). */
+.information {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-family: ui-monospace, monospace;
+    }
 /*Diff Boxes*/
 .diffBox {
     width: 100%;
