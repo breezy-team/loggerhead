@@ -297,10 +297,21 @@ li.files#directory {
 /* =========================
    Pagination
 */
-ul#pages {
+ul#pages,
+ul.pages {
     float: right;
+    list-style: none;
+    padding: 0;
     }
-#pages li {
+/* The top copy sits on its own line above the table so the
+   controls don't collide with the expand/collapse row
+   (bug #522118). */
+ul.pages-top {
+    clear: both;
+    margin-bottom: 4px;
+    }
+#pages li,
+.pages li {
     font-size: 77%;
     font-weight: bold;
     float: left;
