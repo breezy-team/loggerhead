@@ -6,8 +6,9 @@ rust-version = "1.83"
 license = "GPL-2.0-or-later"
 description = "Web viewer for Bazaar/Breezy branches"
 homepage = "https://www.breezy-vcs.org/"
-repository = "https://code.launchpad.net/loggerhead"
+repository = "https://github.com/breezy-team/loggerhead"
 authors = ["Jelmer Vernooij <jelmer@jelmer.uk>"]
+readme = "README.md"
 
 [[bin]]
 name = "loggerhead-serve"

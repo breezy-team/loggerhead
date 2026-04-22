@@ -1,8 +1,6 @@
-Loggerhead
-==========
+# Loggerhead
 
-Overview
---------
+## Overview
 
 Loggerhead is a web viewer for Breezy. Its lets users do stuff like:
 
@@ -12,15 +10,13 @@ Loggerhead is a web viewer for Breezy. Its lets users do stuff like:
 * perform searches.
 
 
-Documentation
--------------
+## Documentation
 
 See docs/index.rst for installation instructions and basic
 documentation.
 
 
-Licensing
----------
+## Licensing
 
 This software is licensed under the GPL Version 2 or later.
 Please see the file COPYING.txt for the licence details.
