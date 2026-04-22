@@ -32,6 +32,19 @@ To get this branch, use: <br/>
 <p class="expand show_if_js" id="expand_all"><a href="#"><img alt="expand all" src="/static/images/treeCollapsed.png" /> expand all</a></p>
 <p class="expand" id="collapse_all" style="display:none;"><a href="#"><img alt="collapse all" src="/static/images/treeExpanded.png" /> collapse all</a></p>
 
+{% if prev_page_url.is_some() || next_page_url.is_some() %}
+<ul class="pages pages-top">
+{% match prev_page_url %}
+  {% when Some with (u) %}<li class="previous"><a href="{{ u }}">&laquo; Newer</a></li>
+  {% when None %}
+{% endmatch %}
+{% match next_page_url %}
+  {% when Some with (u) %}<li class="next"><a href="{{ u }}">Older &raquo;</a></li>
+  {% when None %}
+{% endmatch %}
+</ul>
+{% endif %}
+
 <table id="logentries">
 <tr class="logheader">
 <th class="revisionnumber">Rev</th>

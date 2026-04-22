@@ -20,6 +20,11 @@ UNRELEASED
       ``.information`` styling out of an inline ``style=`` attribute
       into ``diff.css``. (Jelmer Vernooĳ, #449980)
 
+    - Also render the Newer/Older pagination controls above the
+      changelog table, not only below it, so users don't have to
+      scroll past the full page to navigate. (Jelmer Vernooĳ,
+      #522118)
+
 3.0.0 [22Apr2026]
 -----------------
 
