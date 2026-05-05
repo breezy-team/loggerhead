@@ -1,8 +1,8 @@
 What's changed in loggerhead?
 =============================
 
-UNRELEASED
-----------
+3.0.1 [05May2026]
+-----------------
 
     - Send ``Last-Modified`` based on the revision being served for file
       downloads and tarballs, rather than the branch tip. The tip-based
@@ -24,6 +24,8 @@ UNRELEASED
       changelog table, not only below it, so users don't have to
       scroll past the full page to navigate. (Jelmer Vernooĳ,
       #522118)
+
+    - Bump axum to 0.8. (Jelmer Vernooĳ)
 
 3.0.0 [22Apr2026]
 -----------------
