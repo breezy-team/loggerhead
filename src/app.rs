@@ -444,36 +444,36 @@ fn build_branch_router_inner(state: Arc<AppState>) -> Router {
         .route("/", get(root_redirect))
         .route("/health", get(health))
         .route("/changes", get(changelog::show))
-        .route("/changes/:revno", get(changelog::show_from))
-        .route("/revision/:revid", get(revision::show))
-        .route("/revision/:revid/*path", get(revision::show_with_path))
-        .route("/diff/:new_revid", get(diff::show_one))
-        .route("/diff/:new_revid/:old_revid", get(diff::show_two))
+        .route("/changes/{revno}", get(changelog::show_from))
+        .route("/revision/{revid}", get(revision::show))
+        .route("/revision/{revid}/{*path}", get(revision::show_with_path))
+        .route("/diff/{new_revid}", get(diff::show_one))
+        .route("/diff/{new_revid}/{old_revid}", get(diff::show_two))
         .route(
-            "/+filediff/:new_revid/:old_revid/*path",
+            "/+filediff/{new_revid}/{old_revid}/{*path}",
             get(filediff::show),
         )
         .route("/files", get(inventory::show_root))
-        .route("/files/:revno", get(inventory::show_rev))
-        .route("/files/:revno/*path", get(inventory::show_rev_path))
-        .route("/view/:revno/*path", get(view::show))
-        .route("/annotate/:revno/*path", get(annotate::show))
+        .route("/files/{revno}", get(inventory::show_rev))
+        .route("/files/{revno}/{*path}", get(inventory::show_rev_path))
+        .route("/view/{revno}/{*path}", get(view::show))
+        .route("/annotate/{revno}/{*path}", get(annotate::show))
         .route("/download", get(download::show_bare))
         .route("/download/", get(download::show_bare))
-        .route("/download/:revid/*path", get(download::show_file))
-        .route("/tarball/:revid", get(download::tarball))
+        .route("/download/{revid}/{*path}", get(download::show_file))
+        .route("/tarball/{revid}", get(download::tarball))
         .route("/atom", get(atom::show))
-        .route("/+revlog/:revid", get(revlog::show))
+        .route("/+revlog/{revid}", get(revlog::show))
         .route("/search", get(search::show))
         // +json variants: machine-readable versions of the HTML views.
         .route("/+json/changes", get(json::changes))
-        .route("/+json/changes/:revno", get(json::changes_from))
-        .route("/+json/revision/:revid", get(json::revision))
+        .route("/+json/changes/{revno}", get(json::changes_from))
+        .route("/+json/revision/{revid}", get(json::revision))
         .route("/+json/files", get(json::files_root))
-        .route("/+json/files/:revno", get(json::files_rev))
-        .route("/+json/files/:revno/*path", get(json::files_rev_path))
+        .route("/+json/files/{revno}", get(json::files_rev))
+        .route("/+json/files/{revno}/{*path}", get(json::files_rev_path))
         .route(
-            "/+json/+filediff/:new_revid/:old_revid/*path",
+            "/+json/+filediff/{new_revid}/{old_revid}/{*path}",
             get(json::filediff),
         )
         .layer(axum::middleware::from_fn_with_state(

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use axum::body::Body;
-use axum::extract::{Host, State};
+use axum::extract::State;
 use axum::http::{header, HeaderMap, StatusCode};
 use axum::response::{IntoResponse, Response};
 use breezyshim::branch::Branch;
@@ -21,13 +21,15 @@ const PAGE_SIZE: usize = 20;
 /// id, rel=self, rel=alternate, and per-entry ids all resolve to
 /// absolute `http(s)://host/<path>` URLs. The Host header gives
 /// us the scheme+host.
-pub async fn show(
-    State(state): State<Arc<AppState>>,
-    Host(host): Host,
-    headers: HeaderMap,
-) -> AppResult<Response> {
-    // axum 0.7 `Host` extractor doesn't give us the scheme; we infer
-    // "https" if the X-Forwarded-Proto header says so, else "http".
+pub async fn show(State(state): State<Arc<AppState>>, headers: HeaderMap) -> AppResult<Response> {
+    // axum 0.8 dropped the `Host` extractor; pull the Host header
+    // straight off the request. Scheme comes from X-Forwarded-Proto
+    // when set, else defaults to "http".
+    let host = headers
+        .get(header::HOST)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("")
+        .to_string();
     let scheme = headers
         .get("x-forwarded-proto")
         .and_then(|v| v.to_str().ok())
