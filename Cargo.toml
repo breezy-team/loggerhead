@@ -27,7 +27,7 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 askama = "0.12"
 clap = { version = "4", features = ["derive"] }
-breezyshim = "0.7.16"
+breezyshim = ">=0.7.16, <0.9"
 url = "2"
 thiserror = "2"
 anyhow = "1"
