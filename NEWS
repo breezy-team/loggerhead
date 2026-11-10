@@ -1,6 +1,12 @@
 What's changed in loggerhead?
 =============================
 
+3.0.2 [10Nov2026]
+-----------------
+
+    - Support breezyshim 0.8, while keeping support for 0.7.
+      (Jelmer Vernooĳ)
+
 3.0.1 [05May2026]
 -----------------
 
