@@ -12,4 +12,5 @@ pub mod config;
 pub mod controllers;
 pub mod highlight;
 pub mod history;
+pub mod smart;
 pub mod util;

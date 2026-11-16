@@ -1,6 +1,21 @@
 What's changed in loggerhead?
 =============================
 
+unreleased
+----------
+
+    - Serve the Bazaar smart protocol at ``POST /.bzr/smart``, letting
+      ``bzr branch`` and ``bzr pull`` work against a loggerhead URL.
+      The backing transport is wrapped in ``readonly+`` so writes are
+      rejected; loggerhead remains a viewer, not a push target.
+      Also exposed as a reusable ``loggerhead::smart::run_exchange``
+      helper for callers that want to serve smart requests from their
+      own router. (Jelmer Vernooĳ)
+
+    - Drop support for breezyshim 0.7; minimum is now 0.8. The smart
+      module needs the 0.8 ``factory.build`` signature.
+      (Jelmer Vernooĳ)
+
 3.0.2 [10Nov2026]
 -----------------
 
