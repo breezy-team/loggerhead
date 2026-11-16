@@ -4,7 +4,10 @@ use axum::extract::{Request, State};
 use axum::http::{header, HeaderValue, StatusCode};
 use axum::middleware::Next;
 use axum::response::{IntoResponse, Redirect, Response};
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use moka::sync::Cache;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
@@ -427,22 +430,18 @@ async fn favicon_redirect() -> Redirect {
     Redirect::permanent("/static/images/favicon.ico")
 }
 
-// TODO: Python loggerhead also served `/.bzr/smart` (bzr+http smart protocol)
-// via breezy.transport.http.wsgi. Not yet ported — users who need `bzr branch
-// http://host/path` over the loggerhead port will need an external solution
-// until this lands.
-
 /// Per-branch routes, without the top-level `/static` mount or tracing
 /// layer. Used both directly in single-branch mode and from
 /// `build_directory_router` at each `/<branch>` nesting point.
 fn build_branch_router_inner(state: Arc<AppState>) -> Router {
     use crate::controllers::{
         annotate, atom, changelog, diff, download, filediff, inventory, json, revision, revlog,
-        search, view,
+        search, smart, view,
     };
     Router::new()
         .route("/", get(root_redirect))
         .route("/health", get(health))
+        .route("/.bzr/smart", post(smart::handle))
         .route("/changes", get(changelog::show))
         .route("/changes/{revno}", get(changelog::show_from))
         .route("/revision/{revid}", get(revision::show))

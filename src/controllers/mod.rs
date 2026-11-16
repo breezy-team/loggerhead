@@ -10,4 +10,5 @@ pub mod json;
 pub mod revision;
 pub mod revlog;
 pub mod search;
+pub mod smart;
 pub mod view;
